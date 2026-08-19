@@ -1069,10 +1069,23 @@ export function pollActiveClients() {
   fetch('/api/active-clients', { cache: 'no-store' })
     .then(r => r.json())
     .then(res => {
-      const list = (res && res.activeClients) ? res.activeClients : (Array.isArray(res) ? res : null);
-      if (res && res.disabledClients) {
+      if (!res) return;
+      const list = res.activeClients !== undefined ? res.activeClients : (Array.isArray(res) ? res : null);
+      if (res.disabledClients) {
         disabledClients = res.disabledClients;
       }
+
+      // Real-time 2-Way Sync: Update Overlay Checkbox immediately if toggled from overlay [X]
+      if (res.enableOverlay !== undefined) {
+        const overlayCb = document.getElementById('enable-overlay-checkbox');
+        if (overlayCb && overlayCb.checked !== res.enableOverlay) {
+          overlayCb.checked = res.enableOverlay;
+          if (fullConfig.globalSettings) {
+            fullConfig.globalSettings.enableOverlay = res.enableOverlay;
+          }
+        }
+      }
+
       if (Array.isArray(list)) {
         const changed = JSON.stringify(activeClients) !== JSON.stringify(list);
         activeClients = list;

@@ -5,16 +5,13 @@
   const overlayRows = document.getElementById('overlay-rows');
   const btnCloseOverlay = document.getElementById('btn-close-overlay');
 
-  let currentActiveClients = [];
+  let lastAppliedHeight = null;
 
   if (btnCloseOverlay) {
     btnCloseOverlay.onclick = () => {
       if (api && typeof api.closeOverlay === 'function') {
         api.closeOverlay();
       }
-      try {
-        fetch('http://localhost:3000/api/overlay/disable', { method: 'POST' }).catch(() => {});
-      } catch (e) {}
     };
   }
 
@@ -36,7 +33,16 @@
     }
   }
 
+  function applyResize(newHeight) {
+    if (lastAppliedHeight === newHeight) return; // Resize Guard: do not interrupt user drag
+    lastAppliedHeight = newHeight;
+    if (api && typeof api.resizeOverlay === 'function') {
+      api.resizeOverlay(210, newHeight);
+    }
+  }
+
   function renderClients(data) {
+    if (!data) return;
     const activeClients = (data.activeClients || []).sort((a, b) => a - b);
     const clientStatuses = data.clientStatuses || {};
     const clientAliases = data.clientAliases || {};
@@ -50,10 +56,7 @@
           <span class="empty-text">${isSuspended ? 'BOT PAUSED' : 'Standby'}</span>
         </div>
       `;
-      // Resize window for empty state
-      if (api && typeof api.resizeOverlay === 'function') {
-        api.resizeOverlay(210, 60);
-      }
+      applyResize(60);
       return;
     }
 
@@ -82,34 +85,19 @@
 
     // Dynamic height calculation: header (24px) + rows (each ~26px + 4px gap) + padding (12px)
     const targetHeight = 24 + (activeClients.length * 30) + 14;
-    if (api && typeof api.resizeOverlay === 'function') {
-      api.resizeOverlay(210, Math.min(targetHeight, 400));
-    }
+    applyResize(Math.min(targetHeight, 400));
   }
 
-  // Listen to IPC updates from Main Process
+  // Listen to real-time IPC updates from Main Process
   if (api && typeof api.onOverlayUpdate === 'function') {
     api.onOverlayUpdate((data) => {
       renderClients(data);
     });
   }
 
-  // Fallback direct polling to local API if needed
-  function pollStatus() {
-    fetch('http://localhost:3000/api/config', { cache: 'no-store' })
-      .then(res => res.json())
-      .then(json => {
-        renderClients({
-          activeClients: json.activeClients || [],
-          clientStatuses: json.clientStatuses || {},
-          clientAliases: (json.globalSettings && json.globalSettings.clientAliases) || {},
-          isSuspended: !!json.isSuspended,
-          disabledClients: json.disabledClients || []
-        });
-      })
-      .catch(() => {});
-  }
-
-  setInterval(pollStatus, 1000);
-  pollStatus();
+  // Initial single fetch on startup
+  fetch('http://localhost:3000/api/config', { cache: 'no-store' })
+    .then(res => res.json())
+    .then(json => renderClients(json))
+    .catch(() => {});
 })();
