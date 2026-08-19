@@ -93,8 +93,28 @@ copyFolderSync(
   }
 );
 
-// 5. Create Standalone Launchers
-console.log('[4/5] 🛠️ Creating Standalone Launchers...');
+// 5. Create Standalone Launchers & Auto-Sync Version Info
+console.log('[4/5] 🛠️ Creating Standalone Launchers & Version Metadata...');
+
+let currentCommit = 'unknown';
+try {
+  currentCommit = execSync('git rev-parse --short HEAD', { cwd: rootDir, encoding: 'utf8' }).trim();
+} catch (e) {
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.join(rootDir, 'version.json'), 'utf8'));
+    currentCommit = pkg.commit || '3.0.0';
+  } catch (err) {}
+}
+
+// Write version.json with latest git commit hash
+const versionData = {
+  version: "3.0.0",
+  commit: currentCommit,
+  buildTime: new Date().toISOString()
+};
+fs.writeFileSync(path.join(rootDir, 'version.json'), JSON.stringify(versionData, null, 2), 'utf8');
+fs.writeFileSync(path.join(appDistDir, 'version.json'), JSON.stringify(versionData, null, 2), 'utf8');
+console.log(`      ✓ Embedded version.json with Git Commit: ${currentCommit}`);
 
 // Launcher Batch (Launches Electron Desktop Launcher)
 const batLauncherContent = `@echo off
