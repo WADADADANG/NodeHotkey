@@ -21,7 +21,17 @@ contextBridge.exposeInMainWorld('launcherAPI', {
   maximizeWindow: () => ipcRenderer.send('window:maximize'),
   closeWindow: () => ipcRenderer.send('window:close'),
 
+  // Overlay HUD Controls
+  closeOverlay: () => ipcRenderer.send('overlay:close'),
+  resizeOverlay: (w, h) => ipcRenderer.send('overlay:resize', { width: w, height: h }),
+  toggleOverlay: () => ipcRenderer.invoke('overlay:toggle'),
+
   // Event Listeners from Main Process
+  onOverlayUpdate: (callback) => {
+    const subscription = (event, data) => callback(data);
+    ipcRenderer.on('overlay:update', subscription);
+    return () => ipcRenderer.removeListener('overlay:update', subscription);
+  },
   onLogMessage: (callback) => {
     const subscription = (event, data) => callback(data);
     ipcRenderer.on('bot:log', subscription);

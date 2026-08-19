@@ -354,14 +354,6 @@ function sendOverlayUpdate() {
             }
         }
     });
-    syncOverlayProcess();
-    if (!overlayProcess || !overlayProcess.stdin) return;
-    const payload = JSON.stringify({ activeClients: activeList, clientStatuses, clientAliases, isSuspended: !!global.isSuspended, disabledClients: global.disabledClients || [] });
-    try {
-        overlayProcess.stdin.write(payload + "\n");
-    } catch (err) {
-        // Ignored
-    }
 }
 global.sendOverlayUpdate = sendOverlayUpdate;
 
@@ -428,80 +420,10 @@ function syncOverlayProcess(enableOverlay) {
     if (enableOverlay !== undefined) {
         lastEnableOverlaySetting = !!enableOverlay;
     }
-
-    if (!isSystemInitialized) return; // Delay overlay launch until system initialization is complete
-
-    if (overlayAutoRestartTimer) {
-        clearTimeout(overlayAutoRestartTimer);
-        overlayAutoRestartTimer = null;
-    }
-
-    const shouldRun = lastEnableOverlaySetting && (activeClients.length > 0);
-
-    if (shouldRun) {
-        if (overlayProcess) return; // Already running
-
-        console.log(`[Overlay] Starting Python Desktop Overlay...`);
-        const overlayPath = path.join(__dirname, 'overlay.py');
-
-        function spawnOverlay(cmd) {
-            // Capture reference locally to detect race condition in close handler
-            const proc = spawn(cmd, ['-u', overlayPath], {
-                stdio: ['pipe', 'ignore', 'ignore'],
-                detached: true,
-                windowsHide: true
-            });
-
-            proc.on('error', (err) => {
-                if (overlayProcess === proc) {
-                    overlayProcess = null;
-                    if (cmd === 'python') spawnOverlay('py');
-                    else if (cmd === 'py') spawnOverlay('python3');
-                    else console.error(`[Overlay Error] Python is not installed or not available in the system PATH.`);
-                }
-            });
-
-            proc.on('close', (code) => {
-                console.log(`[Overlay] Desktop Overlay process closed (exit code: ${code}).`);
-                // Only clear if this is still the active process (avoid race condition)
-                if (overlayProcess === proc) {
-                    overlayProcess = null;
-                    // Auto-restart if overlay was supposed to be enabled and clients are active
-                    if (lastEnableOverlaySetting && isSystemInitialized && activeClients.length > 0) {
-                        console.log(`[Overlay] Overlay expected to be active. Auto-restarting in 3 seconds...`);
-                        overlayAutoRestartTimer = setTimeout(() => {
-                            overlayAutoRestartTimer = null;
-                            if (lastEnableOverlaySetting && activeClients.length > 0) {
-                                syncOverlayProcess();
-                            }
-                        }, 3000);
-                    }
-                }
-            });
-
-            proc.unref();
-            return proc;
-        }
-
-        overlayProcess = spawnOverlay('python');
-
-        // Send initial state update
-        setTimeout(sendOverlayUpdate, 300);
-    } else {
-        if (overlayProcess) {
-            console.log(`[Overlay] Stopping Desktop Overlay...`);
-            const dyingProc = overlayProcess;
-            overlayProcess = null; // Clear first to prevent race with close handler
-            try { dyingProc.kill('SIGINT'); } catch (e) { }
-        }
-    }
 }
 
-// Clean up subprocess on main process exit
+// Clean up resources on main process exit
 process.on('exit', () => {
-    if (overlayProcess) {
-        overlayProcess.kill();
-    }
     clearAllProfileLockFiles();
 });
 

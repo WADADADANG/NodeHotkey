@@ -65,7 +65,7 @@ rootEntries.forEach(entry => {
   if (name === 'build-installer.js' || name.endsWith('.bak') || name.endsWith('.log') || name.endsWith('.exe')) return;
 
   const ext = path.extname(name).toLowerCase();
-  if (['.js', '.json', '.ico', '.png', '.py', '.pyw', '.md'].includes(ext)) {
+  if (['.js', '.json', '.ico', '.png', '.md'].includes(ext)) {
     const src = path.join(rootDir, name);
     fs.copyFileSync(src, path.join(appDistDir, name));
     console.log(`      ✓ Copied ${name}`);

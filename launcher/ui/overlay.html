@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NodeHotkey HUD Overlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="overlay.css">
+</head>
+<body>
+  <div class="overlay-container" id="overlay-root">
+    <!-- Header bar (Draggable) -->
+    <div class="overlay-header">
+      <div class="header-left">
+        <span class="overlay-logo">⚡</span>
+        <span class="overlay-title">NodeHotkey</span>
+      </div>
+      <button class="overlay-close-btn" id="btn-close-overlay" title="ซ่อน Overlay">✕</button>
+    </div>
+
+    <!-- Client Status Rows Container -->
+    <div class="overlay-rows" id="overlay-rows">
+      <div class="overlay-empty">
+        <span class="empty-icon">💤</span>
+        <span class="empty-text">Standby</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="overlay.js"></script>
+</body>
+</html>

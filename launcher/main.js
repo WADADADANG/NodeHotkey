@@ -88,6 +88,22 @@ function createTray() {
         label: '📂 Open Logs Folder',
         click: () => openLogFolder()
       },
+      {
+        label: '🪟 Toggle HUD Overlay',
+        click: () => {
+          isOverlayExplicitlyClosed = false;
+          if (overlayWindow && !overlayWindow.isDestroyed()) {
+            if (overlayWindow.isVisible()) {
+              overlayWindow.hide();
+              isOverlayExplicitlyClosed = true;
+            } else {
+              overlayWindow.show();
+            }
+          } else {
+            createOverlayWindow();
+          }
+        }
+      },
       { type: 'separator' },
       {
         label: '🗗 Show Launcher Window',
@@ -225,6 +241,39 @@ function broadcastLog(text, level = null) {
   });
 }
 
+let overlayWindow = null;
+let isOverlayExplicitlyClosed = false;
+
+function createOverlayWindow() {
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.show();
+    return;
+  }
+
+  overlayWindow = new BrowserWindow({
+    width: 210,
+    height: 60,
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    skipTaskbar: true, // 100% hidden from Taskbar!
+    resizable: false,
+    hasShadow: false,
+    icon: path.join(PROJECT_DIR, 'icon.ico'),
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  });
+
+  overlayWindow.loadFile(path.join(__dirname, 'ui', 'overlay.html'));
+
+  overlayWindow.on('closed', () => {
+    overlayWindow = null;
+  });
+}
+
 function checkBotHealth() {
   const req = http.get('http://localhost:3000/api/config', { timeout: 1500 }, (res) => {
     let data = '';
@@ -239,6 +288,27 @@ function checkBotHealth() {
             activeProfiles: json.activeProfiles || [json.activeProfile || 'Default'],
             activeClientsCount: json.activeClients ? json.activeClients.length : 0
           });
+        }
+
+        // Overlay Sync
+        const gs = json.globalSettings || {};
+        const shouldShowOverlay = gs.enableOverlay && !isOverlayExplicitlyClosed && (json.activeClients && json.activeClients.length > 0);
+
+        if (shouldShowOverlay) {
+          if (!overlayWindow || overlayWindow.isDestroyed()) {
+            createOverlayWindow();
+          }
+          if (overlayWindow && !overlayWindow.isDestroyed()) {
+            overlayWindow.webContents.send('overlay:update', {
+              activeClients: json.activeClients || [],
+              clientStatuses: json.clientStatuses || {},
+              clientAliases: gs.clientAliases || {},
+              isSuspended: !!json.isSuspended,
+              disabledClients: json.disabledClients || []
+            });
+          }
+        } else if (!gs.enableOverlay && overlayWindow && !overlayWindow.isDestroyed()) {
+          overlayWindow.hide();
         }
       } catch (e) {
         if (mainWindow && !mainWindow.isDestroyed()) {
@@ -430,6 +500,35 @@ ipcMain.on('window:close', () => {
     // Hide to tray instead of quitting if user closes window
     mainWindow.hide();
   }
+});
+
+// Overlay HUD Handlers
+ipcMain.on('overlay:close', () => {
+  isOverlayExplicitlyClosed = true;
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.hide();
+  }
+});
+
+ipcMain.on('overlay:resize', (event, { width, height }) => {
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.setSize(width, height);
+  }
+});
+
+ipcMain.handle('overlay:toggle', () => {
+  isOverlayExplicitlyClosed = false;
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    if (overlayWindow.isVisible()) {
+      overlayWindow.hide();
+      isOverlayExplicitlyClosed = true;
+    } else {
+      overlayWindow.show();
+    }
+  } else {
+    createOverlayWindow();
+  }
+  return { visible: overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible() };
 });
 
 // App Lifecycle
