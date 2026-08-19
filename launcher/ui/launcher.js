@@ -6,14 +6,24 @@
     return;
   }
 
-  // DOM Elements
+  // Navigation Tabs & Views
+  const tabNavLauncher = document.getElementById('tab-nav-launcher');
+  const tabNavEditor = document.getElementById('tab-nav-editor');
+  const tabEditorDot = document.getElementById('tab-editor-dot');
+  const viewLauncher = document.getElementById('view-launcher');
+  const viewEditor = document.getElementById('view-editor');
+  const editorFrame = document.getElementById('editor-frame');
+  const btnSwitchToEditor = document.getElementById('btn-switch-to-editor');
+  const btnReloadCanvas = document.getElementById('btn-reload-canvas');
+  const btnOpenExternalBrowser = document.getElementById('btn-open-external-browser');
+
+  // DOM Elements (Controls)
   const btnToggleEngine = document.getElementById('btn-toggle-engine');
   const heroIcon = document.getElementById('hero-icon');
   const heroTitle = document.getElementById('hero-title');
   const heroSub = document.getElementById('hero-sub');
   
   const btnRestartEngine = document.getElementById('btn-restart-engine');
-  const btnOpenWeb = document.getElementById('btn-open-web');
   const btnOpenLogs = document.getElementById('btn-open-logs');
   const btnCheckUpdate = document.getElementById('btn-check-update');
   
@@ -55,6 +65,7 @@
   const btnPerformUpdate = document.getElementById('btn-perform-update');
 
   // State
+  let currentView = 'launcher';
   let isRunning = false;
   let isRestarting = false;
   let autoScroll = true;
@@ -63,13 +74,51 @@
   let totalLogs = 0;
   let startTime = Date.now();
   let uptimeInterval = null;
+  let isServerOnline = false;
 
-  // 1. Initialize Window Controls
+  // 1. Navigation View Switcher Logic
+  function switchView(viewName) {
+    currentView = viewName;
+    if (viewName === 'launcher') {
+      tabNavLauncher.classList.add('active');
+      tabNavEditor.classList.remove('active');
+      viewLauncher.classList.add('active');
+      viewEditor.classList.remove('active');
+    } else if (viewName === 'editor') {
+      tabNavEditor.classList.add('active');
+      tabNavLauncher.classList.remove('active');
+      viewEditor.classList.add('active');
+      viewLauncher.classList.remove('active');
+
+      // Load or refresh iframe if not loaded
+      if (editorFrame && (editorFrame.src === 'about:blank' || !editorFrame.src)) {
+        editorFrame.src = 'http://localhost:3000/';
+      }
+    }
+  }
+
+  if (tabNavLauncher) tabNavLauncher.onclick = () => switchView('launcher');
+  if (tabNavEditor) tabNavEditor.onclick = () => switchView('editor');
+  if (btnSwitchToEditor) btnSwitchToEditor.onclick = () => switchView('editor');
+
+  if (btnReloadCanvas) {
+    btnReloadCanvas.onclick = () => {
+      if (editorFrame) {
+        editorFrame.src = 'http://localhost:3000/?t=' + Date.now();
+      }
+    };
+  }
+
+  if (btnOpenExternalBrowser) {
+    btnOpenExternalBrowser.onclick = () => api.openWebDashboard();
+  }
+
+  // 2. Initialize Window Controls
   if (btnWinMin) btnWinMin.onclick = () => api.minimizeWindow();
   if (btnWinMax) btnWinMax.onclick = () => api.maximizeWindow();
   if (btnWinClose) btnWinClose.onclick = () => api.closeWindow();
 
-  // 2. Button Action Handlers
+  // 3. Button Action Handlers
   if (btnToggleEngine) {
     btnToggleEngine.onclick = async () => {
       if (isRestarting) return;
@@ -91,15 +140,11 @@
     };
   }
 
-  if (btnOpenWeb) {
-    btnOpenWeb.onclick = () => api.openWebDashboard();
-  }
-
   if (btnOpenLogs) {
     btnOpenLogs.onclick = () => api.openLogFolder();
   }
 
-  // 3. UI State Setters
+  // 4. UI State Setters
   function setBtnLoading(msg) {
     btnToggleEngine.className = 'btn-hero-primary btn-restarting';
     heroIcon.textContent = '⏳';
@@ -159,7 +204,7 @@
     subEngineInfo.textContent = `Uptime: ${timeStr}`;
   }
 
-  // 4. Real-time Terminal Log Appender
+  // 5. Real-time Terminal Log Appender
   function appendLogEntry(data) {
     totalLogs++;
     logCounterBadge.textContent = `${totalLogs} Lines`;
@@ -195,7 +240,7 @@
 
     logEntries.appendChild(row);
 
-    // Limit maximum DOM nodes in terminal to preserve ultra-smooth performance
+    // Limit maximum DOM nodes in terminal
     if (logEntries.children.length > 800) {
       logEntries.removeChild(logEntries.firstElementChild);
     }
@@ -205,7 +250,7 @@
     }
   }
 
-  // 5. Terminal Filtering & Search
+  // 6. Terminal Filtering & Search
   function applyLogFilters() {
     const rows = logEntries.querySelectorAll('.log-row');
     rows.forEach(r => {
@@ -255,24 +300,25 @@
     };
   }
 
-  // Auto-detect manual scroll up to temporarily disengage auto-scroll
-  terminalBody.addEventListener('scroll', () => {
-    const isAtBottom = terminalBody.scrollHeight - terminalBody.scrollTop - terminalBody.clientHeight < 30;
-    if (!isAtBottom && autoScroll) {
-      // User scrolled up
-    }
-  });
-
-  // 6. Diagnostics Data Listener
+  // 7. Diagnostics Data Listener
   api.onDiagnosticsUpdate((diag) => {
+    isServerOnline = diag.serverOnline;
+
     if (diag.serverOnline) {
       dotServer.className = 'diag-indicator-dot online';
       valServerStatus.textContent = `Port ${diag.port || 3000}`;
       subServerInfo.textContent = '🟢 Server Online';
+      if (tabEditorDot) tabEditorDot.className = 'tab-live-dot online';
+
+      // If editor frame is still blank and user is in editor view, load it
+      if (editorFrame && (editorFrame.src === 'about:blank' || !editorFrame.src)) {
+        editorFrame.src = 'http://localhost:3000/';
+      }
     } else {
       dotServer.className = 'diag-indicator-dot offline';
       valServerStatus.textContent = `Offline`;
       subServerInfo.textContent = diag.error || 'Server not responding';
+      if (tabEditorDot) tabEditorDot.className = 'tab-live-dot';
     }
 
     if (diag.activeProfiles && diag.activeProfiles.length > 0) {
@@ -286,7 +332,7 @@
     }
   });
 
-  // 7. Update System Logic
+  // 8. Update System Logic
   if (btnCheckUpdate) {
     btnCheckUpdate.onclick = async () => {
       updateModal.style.display = 'flex';
@@ -364,7 +410,7 @@
   if (btnCloseUpdateModal) btnCloseUpdateModal.onclick = () => updateModal.style.display = 'none';
   if (btnCancelUpdate) btnCancelUpdate.onclick = () => updateModal.style.display = 'none';
 
-  // 8. Listeners from Electron Main Process
+  // 9. Listeners from Electron Main Process
   api.onLogMessage((data) => {
     appendLogEntry(data);
   });
@@ -373,7 +419,7 @@
     updateStatusUI(status);
   });
 
-  // 9. Initial Load
+  // 10. Initial Load
   api.getBotStatus().then(status => {
     updateStatusUI(status);
     if (status.logPath && footerLogPath) {

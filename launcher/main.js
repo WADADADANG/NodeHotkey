@@ -25,10 +25,10 @@ const updater = new SystemUpdater(PROJECT_DIR);
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1040,
-    height: 720,
-    minWidth: 880,
-    minHeight: 600,
+    width: 1280,
+    height: 800,
+    minWidth: 980,
+    minHeight: 650,
     frame: false, // Custom sleek titlebar
     titleBarStyle: 'hidden',
     backgroundColor: '#0a0d14',
