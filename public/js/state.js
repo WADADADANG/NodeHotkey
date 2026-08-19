@@ -650,6 +650,52 @@ export function loadGlobalSettingsToUI() {
     const el = document.getElementById(`client-alias-${i}`);
     if (el) el.value = aliases[String(i)] || '';
   }
+
+  bindGlobalSettingsAutoSave();
+}
+
+let isGlobalSettingsAutoSaveBound = false;
+export function bindGlobalSettingsAutoSave() {
+  if (isGlobalSettingsAutoSaveBound) return;
+  isGlobalSettingsAutoSaveBound = true;
+
+  const triggerAutoSave = () => {
+    syncGlobalSettingsFromDOM();
+    commitConfigToBackend().catch(() => {});
+  };
+
+  let debounceTimer = null;
+  const debouncedAutoSave = () => {
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      triggerAutoSave();
+    }, 400);
+  };
+
+  const overlayCb = document.getElementById('enable-overlay-checkbox');
+  if (overlayCb) overlayCb.addEventListener('change', triggerAutoSave);
+
+  const appModeCb = document.getElementById('enable-app-mode-checkbox');
+  if (appModeCb) appModeCb.addEventListener('change', triggerAutoSave);
+
+  const targetUrlInput = document.getElementById('target-url-keyword');
+  if (targetUrlInput) targetUrlInput.addEventListener('input', debouncedAutoSave);
+
+  const suspendInput = document.getElementById('suspend-hotkey-input');
+  if (suspendInput) suspendInput.addEventListener('input', debouncedAutoSave);
+
+  const gmEnabled = document.getElementById('ghost-mouse-enabled');
+  if (gmEnabled) gmEnabled.addEventListener('change', triggerAutoSave);
+
+  ['ghost-mouse-interval-min', 'ghost-mouse-interval-max', 'ghost-mouse-max-offset'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', debouncedAutoSave);
+  });
+
+  for (let i = 1; i <= 8; i++) {
+    const el = document.getElementById(`client-alias-${i}`);
+    if (el) el.addEventListener('input', debouncedAutoSave);
+  }
 }
 
 export function loadProfileToUI(p) {

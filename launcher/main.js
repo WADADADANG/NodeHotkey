@@ -292,13 +292,23 @@ function checkBotHealth() {
 
         // Overlay Sync
         const gs = json.globalSettings || {};
-        const shouldShowOverlay = gs.enableOverlay && !isOverlayExplicitlyClosed && (json.activeClients && json.activeClients.length > 0);
+        const isEnabledInSettings = !!gs.enableOverlay;
+
+        // If user changed the checkbox in Web UI, sync our explicit flag
+        if (isEnabledInSettings && isOverlayExplicitlyClosed) {
+          isOverlayExplicitlyClosed = false;
+        } else if (!isEnabledInSettings) {
+          isOverlayExplicitlyClosed = true;
+        }
+
+        const shouldShowOverlay = isEnabledInSettings && !isOverlayExplicitlyClosed;
 
         if (shouldShowOverlay) {
           if (!overlayWindow || overlayWindow.isDestroyed()) {
             createOverlayWindow();
           }
           if (overlayWindow && !overlayWindow.isDestroyed()) {
+            if (!overlayWindow.isVisible()) overlayWindow.show();
             overlayWindow.webContents.send('overlay:update', {
               activeClients: json.activeClients || [],
               clientStatuses: json.clientStatuses || {},
@@ -307,8 +317,10 @@ function checkBotHealth() {
               disabledClients: json.disabledClients || []
             });
           }
-        } else if (!gs.enableOverlay && overlayWindow && !overlayWindow.isDestroyed()) {
-          overlayWindow.hide();
+        } else {
+          if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
+            overlayWindow.hide();
+          }
         }
       } catch (e) {
         if (mainWindow && !mainWindow.isDestroyed()) {
@@ -508,6 +520,42 @@ ipcMain.on('overlay:close', () => {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.hide();
   }
+
+  // Persist disable to backend config
+  try {
+    const postData = JSON.stringify({ action: 'disable-overlay' });
+    const req = http.request({
+      hostname: 'localhost',
+      port: 3000,
+      path: '/api/config',
+      method: 'GET'
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const cfg = JSON.parse(data);
+          if (!cfg.globalSettings) cfg.globalSettings = {};
+          cfg.globalSettings.enableOverlay = false;
+          if (cfg.profiles) {
+            Object.values(cfg.profiles).forEach(p => p.enableOverlay = false);
+          }
+
+          const saveReq = http.request({
+            hostname: 'localhost',
+            port: 3000,
+            path: '/api/config',
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          saveReq.write(JSON.stringify(cfg));
+          saveReq.end();
+        } catch (e) {}
+      });
+    });
+    req.on('error', () => {});
+    req.end();
+  } catch (e) {}
 });
 
 ipcMain.on('overlay:resize', (event, { width, height }) => {

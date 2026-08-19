@@ -4,8 +4,9 @@
   "description": "Node-based Visual Workflow & Background WebGL Multi-Client Automation Suite",
   "main": "bot.js",
   "scripts": {
-    "start": "node bot.js",
+    "start": "electron launcher/main.js",
     "launcher": "electron launcher/main.js",
+    "bot": "node bot.js",
     "server": "node test-server.js",
     "test": "node test/converter.test.js"
   },

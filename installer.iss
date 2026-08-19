@@ -36,6 +36,8 @@ WizardStyle=modern
 ; Visual Styling
 PrivilegesRequired=lowest
 DisableWelcomePage=no
+CloseApplications=force
+RestartApplications=no
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

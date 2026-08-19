@@ -1,5 +1,5 @@
 import { currentLang, TRANSLATIONS } from '../i18n.js';
-import { fullConfig, currentEditProfile, saveCurrentProfile } from '../state.js';
+import { fullConfig, currentEditProfile, saveCurrentProfile, commitConfigToBackend } from '../state.js';
 import { escapeHtml } from '../cooldown.js';
 
 const USER_AGENT_POOL = [
@@ -106,6 +106,7 @@ export function saveAntiDetectSettings() {
   }
 
   saveCurrentProfile();
+  commitConfigToBackend().catch(() => {});
   closeAntiDetectModal();
   if (typeof window.toast === 'function') {
     window.toast(TRANSLATIONS[currentLang].toastSavedAntiDetect || '✓ Saved Anti-Detect User-Agent settings!', 'success');
@@ -178,6 +179,7 @@ export function saveProxySettings() {
   }
 
   saveCurrentProfile();
+  commitConfigToBackend().catch(() => {});
   closeProxyModal();
   if (typeof window.toast === 'function') {
     window.toast(TRANSLATIONS[currentLang].toastSavedProxy || '✓ Saved IP / Proxy settings!', 'success');
@@ -269,6 +271,7 @@ export function saveClientSettingsModal() {
 
 
   saveCurrentProfile();
+  commitConfigToBackend().catch(() => {});
   closeClientSettingsModal();
 
   if (typeof window.toast === 'function') {
