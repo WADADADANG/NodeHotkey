@@ -1,0 +1,102 @@
+{
+  "version": "3.1.0",
+  "name": "[Ex] 06. Action Branch (If-Else)",
+  "canvas": {
+    "zoom": 1,
+    "pan": {
+      "x": 79,
+      "y": 299
+    }
+  },
+  "nodes": [
+    {
+      "id": "trig_act_1786225075175",
+      "type": "trigger",
+      "title": "Btn Start",
+      "position": {
+        "x": 100,
+        "y": 150
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "mouse",
+        "triggerValue": "4",
+        "actionId": "trig_act_1786225075175"
+      }
+    },
+    {
+      "id": "node_act_1786225075175",
+      "type": "branch",
+      "title": "Check Start",
+      "position": {
+        "x": 440,
+        "y": 120
+      },
+      "data": {
+        "enabled": true,
+        "conditionTargetId": "1786687513945",
+        "conditionRule": "is_running",
+        "actionId": "act_1786225075175"
+      }
+    },
+    {
+      "id": "node_act_1786225128697",
+      "type": "control",
+      "title": "AC Stop Hean Rain",
+      "position": {
+        "x": 770,
+        "y": 110
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "1786687513945"
+        ],
+        "actionId": "act_1786225128697"
+      }
+    },
+    {
+      "id": "node_1786687513945",
+      "type": "loop",
+      "title": "Loop Start Heal Rain",
+      "position": {
+        "x": 770,
+        "y": 240
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "1"
+        ],
+        "interval": 3000,
+        "executeImmediately": true,
+        "actionId": "1786687513945"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1",
+      "fromNodeId": "trig_act_1786225075175",
+      "fromPort": "exec_out",
+      "toNodeId": "node_act_1786225075175",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786687547597",
+      "fromNodeId": "node_act_1786225075175",
+      "fromPort": "on_true",
+      "toNodeId": "node_act_1786225128697",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786856779727",
+      "fromNodeId": "node_act_1786225075175",
+      "fromPort": "onFalse",
+      "toNodeId": "node_1786687513945",
+      "toPort": "exec_in"
+    }
+  ]
+}

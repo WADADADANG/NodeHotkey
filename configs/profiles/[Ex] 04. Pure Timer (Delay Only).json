@@ -1,0 +1,90 @@
+{
+  "version": "3.1.0",
+  "name": "[Ex] 04. Pure Timer (Delay Only)",
+  "canvas": {
+    "zoom": 1,
+    "pan": {
+      "x": 24,
+      "y": 262
+    }
+  },
+  "nodes": [
+    {
+      "id": "trig_act_1786225814509",
+      "type": "trigger",
+      "title": "Btn Start",
+      "position": {
+        "x": 100,
+        "y": 150
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "mouse",
+        "triggerValue": "4",
+        "actionId": "trig_act_1786225814509"
+      }
+    },
+    {
+      "id": "node_act_1786225814509",
+      "type": "single_press",
+      "title": "Heal",
+      "position": {
+        "x": 380,
+        "y": 160
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "act_1786225814509"
+      }
+    },
+    {
+      "id": "node_act_1786225961313",
+      "type": "delay_only",
+      "title": "Wait 3 Sec",
+      "position": {
+        "x": 680,
+        "y": 160
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "act_1786225961313"
+      }
+    },
+    {
+      "id": "node_act_1786226034323",
+      "type": "single_press",
+      "title": "Buff GT",
+      "position": {
+        "x": 970,
+        "y": 160
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "act_1786226034323"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1786794093301",
+      "fromNodeId": "trig_act_1786225814509",
+      "fromPort": "exec_out",
+      "toNodeId": "node_act_1786225814509",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786794097789",
+      "fromNodeId": "node_act_1786225814509",
+      "fromPort": "next",
+      "toNodeId": "node_act_1786225961313",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786794101645",
+      "fromNodeId": "node_act_1786225961313",
+      "fromPort": "next",
+      "toNodeId": "node_act_1786226034323",
+      "toPort": "exec_in"
+    }
+  ]
+}

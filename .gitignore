@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Built Distribution & Installers
+dist/
+*.exe
+innosetup*.exe
+
+# Logs & Debug Output
+logs/
+*.log
+
+# Backup Files
+*.bak
+
+# OS & Cache
+.DS_Store
+Thumbs.db
+__pycache__/
+
+# Playwright Persistent Browser Data (Cookies, Logins, Caches)
+/profiles/
+playwright-profiles/
+.playwright/
+
+# Allow Hotkey Configuration Profiles
+!configs/profiles/

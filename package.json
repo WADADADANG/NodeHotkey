@@ -1,0 +1,20 @@
+{
+  "name": "node-hotkey",
+  "version": "3.0.0",
+  "description": "Node-based Visual Workflow & Background WebGL Multi-Client Automation Suite",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "launcher": "electron launcher/main.js",
+    "server": "node test-server.js",
+    "test": "node test/converter.test.js"
+  },
+  "dependencies": {
+    "global-mouse-events": "^1.2.0",
+    "node-global-key-listener": "^0.1.1",
+    "playwright": "^1.45.0"
+  },
+  "devDependencies": {
+    "electron": "^43.4.1"
+  }
+}

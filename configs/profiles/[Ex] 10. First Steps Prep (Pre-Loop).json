@@ -1,0 +1,57 @@
+{
+  "version": "3.1.0",
+  "name": "[Ex] 10. First Steps Prep (Pre-Loop)",
+  "canvas": {
+    "zoom": 1,
+    "pan": {
+      "x": 734,
+      "y": 514
+    }
+  },
+  "nodes": [
+    {
+      "id": "trig_act_1786227388244",
+      "type": "trigger",
+      "title": "Btn Start",
+      "position": {
+        "x": 100,
+        "y": 150
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "mouse",
+        "triggerValue": "4",
+        "actionId": "trig_act_1786227388244"
+      }
+    },
+    {
+      "id": "node_act_1786227388244",
+      "type": "loop",
+      "title": "Heal & Buff GT (FirstSteps)",
+      "position": {
+        "x": 450,
+        "y": 100
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "1"
+        ],
+        "interval": 3000,
+        "jitter": 250,
+        "executeImmediately": true,
+        "actionId": "act_1786227388244"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1",
+      "fromNodeId": "trig_act_1786227388244",
+      "fromPort": "exec_out",
+      "toNodeId": "node_act_1786227388244",
+      "toPort": "exec_in"
+    }
+  ]
+}

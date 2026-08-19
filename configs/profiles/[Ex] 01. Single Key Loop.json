@@ -1,0 +1,57 @@
+{
+  "version": "3.1.0",
+  "name": "[Ex] 01. Single Key Loop",
+  "canvas": {
+    "zoom": 1.2100000000000002,
+    "pan": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "nodes": [
+    {
+      "id": "trig_act_1786224190413",
+      "type": "trigger",
+      "title": "Btn Start Heal",
+      "position": {
+        "x": 100,
+        "y": 150
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "mouse",
+        "triggerValue": "4",
+        "actionId": "trig_act_1786224190413"
+      }
+    },
+    {
+      "id": "node_act_1786224190413",
+      "type": "loop",
+      "title": "RM Heal",
+      "position": {
+        "x": 440,
+        "y": 100
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "1"
+        ],
+        "interval": 3000,
+        "jitter": 250,
+        "executeImmediately": true,
+        "actionId": "act_1786224190413"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1",
+      "fromNodeId": "trig_act_1786224190413",
+      "fromPort": "exec_out",
+      "toNodeId": "node_act_1786224190413",
+      "toPort": "exec_in"
+    }
+  ]
+}

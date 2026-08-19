@@ -1,0 +1,716 @@
+{
+  "version": "3.1.0",
+  "name": "[WD] Heal 1,2,4",
+  "canvas": {
+    "zoom": 0.9266052860849924,
+    "pan": {
+      "x": -921,
+      "y": -418
+    }
+  },
+  "nodes": [
+    {
+      "id": "node_1786680159444",
+      "type": "trigger",
+      "title": "Btn Heal 1",
+      "position": {
+        "x": 1170,
+        "y": 560
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "mouse",
+        "triggerValue": "4",
+        "actionId": "1786680159444"
+      }
+    },
+    {
+      "id": "node_1786680205039",
+      "type": "loop",
+      "title": "Heal 1",
+      "position": {
+        "x": 1490,
+        "y": 510
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "1"
+        ],
+        "interval": 1300,
+        "jitter": 100,
+        "executeImmediately": true,
+        "actionId": "1786680205039"
+      }
+    },
+    {
+      "id": "node_1786680432366",
+      "type": "loop",
+      "title": "Heal Rain 1",
+      "position": {
+        "x": 1180,
+        "y": 1510
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "2"
+        ],
+        "interval": 800,
+        "jitter": 100,
+        "executeImmediately": true,
+        "actionId": "1786680432366"
+      }
+    },
+    {
+      "id": "node_1786680465713_967",
+      "type": "loop",
+      "title": "Heal Rain 2",
+      "position": {
+        "x": 1800,
+        "y": 1500
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "2",
+        "keys": [
+          "2"
+        ],
+        "interval": 800,
+        "jitter": 100,
+        "executeImmediately": true,
+        "actionId": "1786680465713_967"
+      }
+    },
+    {
+      "id": "node_1786680473923_7676",
+      "type": "loop",
+      "title": "Heal Rain 4",
+      "position": {
+        "x": 2390,
+        "y": 1510
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "keys": [
+          "2"
+        ],
+        "interval": 1700,
+        "jitter": 100,
+        "executeImmediately": true,
+        "actionId": "1786680473923_7676"
+      }
+    },
+    {
+      "id": "node_1786680694425_6890",
+      "type": "trigger",
+      "title": "Btn Heal Rain All",
+      "position": {
+        "x": 1170,
+        "y": 1000
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "mouse",
+        "triggerValue": "5",
+        "actionId": "1786680694425_6890"
+      }
+    },
+    {
+      "id": "node_1786684306401",
+      "type": "branch",
+      "title": "Branch (If / Else)",
+      "position": {
+        "x": 1490,
+        "y": 970
+      },
+      "data": {
+        "enabled": true,
+        "conditionTargetId": "1786680432366",
+        "conditionRule": "is_running",
+        "actionId": "1786684306401"
+      }
+    },
+    {
+      "id": "node_1786684341021",
+      "type": "control",
+      "title": "AC Start Heal Rain All",
+      "position": {
+        "x": 1820,
+        "y": 1060
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "start",
+        "controlTargetIds": [
+          "1786680432366",
+          "1786680465713_967",
+          "1786680473923_7676"
+        ],
+        "actionId": "1786684341021"
+      }
+    },
+    {
+      "id": "node_1786684369941_3096",
+      "type": "control",
+      "title": "AC Stop Heal Rain All",
+      "position": {
+        "x": 2030,
+        "y": 900
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "1786680432366",
+          "1786680465713_967",
+          "1786680473923_7676"
+        ],
+        "actionId": "1786684369941_3096"
+      }
+    },
+    {
+      "id": "node_1786684521954",
+      "type": "loop",
+      "title": "Loop MP 1",
+      "position": {
+        "x": 1520,
+        "y": 1540
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "3"
+        ],
+        "interval": 11400,
+        "executeImmediately": false,
+        "actionId": "1786684521954"
+      }
+    },
+    {
+      "id": "node_1786684538557_1206",
+      "type": "loop",
+      "title": "Loop MP 2",
+      "position": {
+        "x": 2130,
+        "y": 1540
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "2",
+        "keys": [
+          "3"
+        ],
+        "interval": 12300,
+        "executeImmediately": false,
+        "actionId": "1786684538557_1206"
+      }
+    },
+    {
+      "id": "node_1786684545395_4783",
+      "type": "loop",
+      "title": "Loop MP 4",
+      "position": {
+        "x": 2710,
+        "y": 1550
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "keys": [
+          "3"
+        ],
+        "interval": 14100,
+        "executeImmediately": false,
+        "actionId": "1786684545395_4783"
+      }
+    },
+    {
+      "id": "node_1786684556909",
+      "type": "control",
+      "title": "AC Stop Loop MP 1",
+      "position": {
+        "x": 1520,
+        "y": 1750
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "1786684521954"
+        ],
+        "actionId": "1786684556909"
+      }
+    },
+    {
+      "id": "node_1786860028019",
+      "type": "control",
+      "title": "AC Stop Heal 1",
+      "position": {
+        "x": 1520,
+        "y": 1440
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "1786680205039",
+          "1786879715668_3660"
+        ],
+        "actionId": "1786860028019"
+      }
+    },
+    {
+      "id": "node_1786878166325",
+      "type": "key_press",
+      "title": "Buff GT 4",
+      "position": {
+        "x": 2710,
+        "y": 1450
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "keys": [
+          "6"
+        ],
+        "delayAfter": 300,
+        "actionId": "1786878166325"
+      }
+    },
+    {
+      "id": "node_1786878453563",
+      "type": "key_press",
+      "title": "Buff BOL",
+      "position": {
+        "x": 2130,
+        "y": 1430
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "2",
+        "keys": [
+          "8"
+        ],
+        "delayAfter": 300,
+        "actionId": "1786878453563"
+      }
+    },
+    {
+      "id": "node_1786878549617_2862",
+      "type": "control",
+      "title": "AC Stop Loop MP 2",
+      "position": {
+        "x": 2130,
+        "y": 1740
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "1786684538557_1206"
+        ],
+        "actionId": "1786878549617_2862"
+      }
+    },
+    {
+      "id": "node_1786878588577_6654",
+      "type": "control",
+      "title": "AC Stop Loop MP 4",
+      "position": {
+        "x": 2710,
+        "y": 1750
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "1786684545395_4783"
+        ],
+        "actionId": "1786878588577_6654"
+      }
+    },
+    {
+      "id": "node_1786878825885",
+      "type": "trigger",
+      "title": "Btn Start Restore HP",
+      "position": {
+        "x": 2500,
+        "y": 630
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "5",
+        "actionId": "1786878825885"
+      }
+    },
+    {
+      "id": "node_1786878859448",
+      "type": "key_press",
+      "title": "Restore HP 1,2,3,4",
+      "position": {
+        "x": 2810,
+        "y": 580
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1,2,3,4",
+        "keys": [
+          "4"
+        ],
+        "actionId": "1786878859448"
+      }
+    },
+    {
+      "id": "node_1786878936138_453",
+      "type": "key_press",
+      "title": "Restore HP 5",
+      "position": {
+        "x": 2810,
+        "y": 690
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "5",
+        "keys": [
+          "2"
+        ],
+        "actionId": "1786878936138_453"
+      }
+    },
+    {
+      "id": "node_1786878970687_1373",
+      "type": "key_press",
+      "title": "Restore FP 5",
+      "position": {
+        "x": 2810,
+        "y": 910
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "5",
+        "keys": [
+          "3"
+        ],
+        "actionId": "1786878970687_1373"
+      }
+    },
+    {
+      "id": "node_1786878970687_6631",
+      "type": "key_press",
+      "title": "Restore MP 1,2,3,4",
+      "position": {
+        "x": 2810,
+        "y": 800
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1,2,3,4",
+        "keys": [
+          "3"
+        ],
+        "actionId": "1786878970687_6631"
+      }
+    },
+    {
+      "id": "node_1786878970687_7534",
+      "type": "trigger",
+      "title": "Btn Start Restore MP&FP",
+      "position": {
+        "x": 2510,
+        "y": 850
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "6",
+        "actionId": "1786878970687_7534"
+      }
+    },
+    {
+      "id": "node_1786879304240",
+      "type": "trigger",
+      "title": "Btn Start Heal Rain Tab",
+      "position": {
+        "x": 1170,
+        "y": 1160
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "TAB",
+        "actionId": "1786879304240"
+      }
+    },
+    {
+      "id": "node_1786879318638",
+      "type": "forwarder",
+      "title": "Heal Rain Tab 4",
+      "position": {
+        "x": 1490,
+        "y": 1160
+      },
+      "data": {
+        "enabled": true,
+        "targetKey": "2",
+        "targetClient": "4",
+        "actionId": "1786879318638"
+      }
+    },
+    {
+      "id": "node_1786879464145",
+      "type": "control",
+      "title": "AC Stop Heal Rain 4",
+      "position": {
+        "x": 2140,
+        "y": 1170
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "1786680473923_7676"
+        ],
+        "actionId": "1786879464145"
+      }
+    },
+    {
+      "id": "node_1786879681523",
+      "type": "trigger",
+      "title": "Btn Start Heal 4",
+      "position": {
+        "x": 1170,
+        "y": 790
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "LEFT ALT",
+        "actionId": "1786879681523"
+      }
+    },
+    {
+      "id": "node_1786879715668_3660",
+      "type": "loop",
+      "title": "Heal 4",
+      "position": {
+        "x": 1490,
+        "y": 740
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "keys": [
+          "1"
+        ],
+        "interval": 1500,
+        "jitter": 100,
+        "executeImmediately": true,
+        "actionId": "1786879715668_3660"
+      }
+    },
+    {
+      "id": "node_1786883154781",
+      "type": "emit_event",
+      "title": "EmitEvent_4564E",
+      "position": {
+        "x": 1520,
+        "y": 1860
+      },
+      "data": {
+        "enabled": true,
+        "eventName": "onWDHealRainAllStoped",
+        "actionId": "1786883154781"
+      }
+    },
+    {
+      "id": "node_1786885674397",
+      "type": "emit_event",
+      "title": "EmitEvent_EW944DDA",
+      "position": {
+        "x": 1520,
+        "y": 1330
+      },
+      "data": {
+        "enabled": true,
+        "eventName": "onWEHealRainStarted",
+        "actionId": "1786885674397"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1786680355909",
+      "fromNodeId": "node_1786680159444",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786680205039",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786684330334",
+      "fromNodeId": "node_1786680694425_6890",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786684306401",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786860000707",
+      "fromNodeId": "node_1786684306401",
+      "fromPort": "onFalse",
+      "toNodeId": "node_1786684341021",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786860003048",
+      "fromNodeId": "node_1786684306401",
+      "fromPort": "onTrue",
+      "toNodeId": "node_1786684369941_3096",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786860065838",
+      "fromNodeId": "node_1786680432366",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_1786860028019",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786860070641",
+      "fromNodeId": "node_1786680432366",
+      "fromPort": "onAfterStart",
+      "toNodeId": "node_1786684521954",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786860073791",
+      "fromNodeId": "node_1786680465713_967",
+      "fromPort": "onAfterStart",
+      "toNodeId": "node_1786684538557_1206",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786860205605",
+      "fromNodeId": "node_1786680205039",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_1786684369941_3096",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786862958159",
+      "fromNodeId": "node_1786680473923_7676",
+      "fromPort": "onAfterStart",
+      "toNodeId": "node_1786684545395_4783",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786878233220",
+      "fromNodeId": "node_1786680473923_7676",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_1786878166325",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786878476063",
+      "fromNodeId": "node_1786680465713_967",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_1786878453563",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786878602846",
+      "fromNodeId": "node_1786680473923_7676",
+      "fromPort": "onStop",
+      "toNodeId": "node_1786878588577_6654",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786878608496",
+      "fromNodeId": "node_1786680465713_967",
+      "fromPort": "onStop",
+      "toNodeId": "node_1786878549617_2862",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786878612460",
+      "fromNodeId": "node_1786680432366",
+      "fromPort": "onStop",
+      "toNodeId": "node_1786684556909",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786878873584",
+      "fromNodeId": "node_1786878825885",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786878859448",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786878956770",
+      "fromNodeId": "node_1786878825885",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786878936138_453",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786878970687_9456",
+      "fromNodeId": "node_1786878970687_7534",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786878970687_6631",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786878970687_8971",
+      "fromNodeId": "node_1786878970687_7534",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786878970687_1373",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786879321460",
+      "fromNodeId": "node_1786879304240",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786879318638",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786879480840",
+      "fromNodeId": "node_1786879318638",
+      "fromPort": "next",
+      "toNodeId": "node_1786879464145",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786879738200",
+      "fromNodeId": "node_1786879681523",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786879715668_3660",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786879826690",
+      "fromNodeId": "node_1786879715668_3660",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_1786879464145",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786883300705",
+      "fromNodeId": "node_1786680432366",
+      "fromPort": "onStop",
+      "toNodeId": "node_1786883154781",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786885872956",
+      "fromNodeId": "node_1786680432366",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_1786885674397",
+      "toPort": "exec_in"
+    }
+  ]
+}

@@ -1,0 +1,243 @@
+{
+  "version": "3.1.0",
+  "name": "RM Heal 1 Slot",
+  "canvas": {
+    "zoom": 1,
+    "pan": {
+      "x": 847,
+      "y": 146
+    }
+  },
+  "nodes": [
+    {
+      "id": "trig_action_1",
+      "type": "trigger",
+      "title": "Btn Start Heal",
+      "position": {
+        "x": 100,
+        "y": 150
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "mouse",
+        "triggerValue": "4",
+        "actionId": "trig_action_1"
+      }
+    },
+    {
+      "id": "node_action_1",
+      "type": "loop",
+      "title": "Heal",
+      "position": {
+        "x": 450,
+        "y": 100
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "1"
+        ],
+        "interval": 3000,
+        "jitter": 250,
+        "executeImmediately": true,
+        "actionId": "action_1"
+      }
+    },
+    {
+      "id": "trig_action_2",
+      "type": "trigger",
+      "title": "Btn Start Heal Rain",
+      "position": {
+        "x": 100,
+        "y": 360
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "mouse",
+        "triggerValue": "5",
+        "actionId": "trig_action_2"
+      }
+    },
+    {
+      "id": "node_action_2",
+      "type": "loop",
+      "title": "Heal Rain",
+      "position": {
+        "x": 450,
+        "y": 310
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "2"
+        ],
+        "interval": 1500,
+        "jitter": 150,
+        "executeImmediately": true,
+        "actionId": "action_2"
+      }
+    },
+    {
+      "id": "trig_action_3",
+      "type": "trigger",
+      "title": "Btn Start Full Buff",
+      "position": {
+        "x": 100,
+        "y": 560
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "RIGHT CTRL",
+        "actionId": "trig_action_3"
+      }
+    },
+    {
+      "id": "node_action_3",
+      "type": "buff_sequence",
+      "title": "Full Buff",
+      "position": {
+        "x": 450,
+        "y": 520
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "F2",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "LEFT ALT + 1",
+          "LEFT ALT + 2",
+          "LEFT ALT + 3",
+          "LEFT ALT + 4",
+          "LEFT ALT + 5"
+        ],
+        "delayBuff": 800,
+        "actionId": "action_3"
+      }
+    },
+    {
+      "id": "node_action_4",
+      "type": "control",
+      "title": "AC Stop Heal",
+      "position": {
+        "x": 870,
+        "y": 170
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "action_1"
+        ],
+        "actionId": "action_4"
+      }
+    },
+    {
+      "id": "node_act_1786176084491",
+      "type": "control",
+      "title": "AC Stop Heal Rain",
+      "position": {
+        "x": 870,
+        "y": 370
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "action_2"
+        ],
+        "actionId": "act_1786176084491"
+      }
+    },
+    {
+      "id": "node_1786801121992",
+      "type": "control",
+      "title": "AC Stop Bull Buff",
+      "position": {
+        "x": 870,
+        "y": 580
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "action_3"
+        ],
+        "actionId": "1786801121992"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1",
+      "fromNodeId": "trig_action_1",
+      "fromPort": "exec_out",
+      "toNodeId": "node_action_1",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_2",
+      "fromNodeId": "trig_action_2",
+      "fromPort": "exec_out",
+      "toNodeId": "node_action_2",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_3",
+      "fromNodeId": "trig_action_3",
+      "fromPort": "exec_out",
+      "toNodeId": "node_action_3",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786801190886",
+      "fromNodeId": "node_action_1",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_act_1786176084491",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786801192822",
+      "fromNodeId": "node_action_1",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_1786801121992",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786801196389",
+      "fromNodeId": "node_action_3",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_act_1786176084491",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786801198598",
+      "fromNodeId": "node_action_3",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_action_4",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786801210894",
+      "fromNodeId": "node_action_2",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_1786801121992",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786801215588",
+      "fromNodeId": "node_action_2",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_action_4",
+      "toPort": "exec_in"
+    }
+  ]
+}

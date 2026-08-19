@@ -1,0 +1,53 @@
+{
+  "version": "3.1.0",
+  "name": "[Ex] 11. Sound",
+  "canvas": {
+    "zoom": 0.9750233588877436,
+    "pan": {
+      "x": -1540,
+      "y": -773
+    }
+  },
+  "nodes": [
+    {
+      "id": "node_1786688671471",
+      "type": "trigger",
+      "title": "Btn Play Sound",
+      "position": {
+        "x": 1730,
+        "y": 990
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "INSERT",
+        "actionId": "1786688671471"
+      }
+    },
+    {
+      "id": "node_1786790183641",
+      "type": "sound",
+      "title": "Sound Alert",
+      "position": {
+        "x": 2010,
+        "y": 990
+      },
+      "data": {
+        "enabled": true,
+        "soundSource": "preset",
+        "soundPreset": "success",
+        "volume": 39,
+        "actionId": "1786790183641"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1786790186813",
+      "fromNodeId": "node_1786688671471",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786790183641",
+      "toPort": "exec_in"
+    }
+  ]
+}

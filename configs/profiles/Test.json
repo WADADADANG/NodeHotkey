@@ -1,0 +1,103 @@
+{
+  "version": "3.1.0",
+  "name": "Test",
+  "canvas": {
+    "zoom": 1,
+    "pan": {
+      "x": 48,
+      "y": 13
+    }
+  },
+  "nodes": [
+    {
+      "id": "node_normal_trig",
+      "type": "trigger",
+      "title": "Btn Toggle",
+      "position": {
+        "x": 100,
+        "y": 90
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "INSERT",
+        "actionId": "normal_trig"
+      }
+    },
+    {
+      "id": "node_ac_master",
+      "type": "control",
+      "title": "AC Master",
+      "position": {
+        "x": 430,
+        "y": 90
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "toggle",
+        "controlTargetIds": [
+          "act_heal_loop_1"
+        ],
+        "actionId": "act_ac_master"
+      }
+    },
+    {
+      "id": "node_heal_loop_1",
+      "type": "loop",
+      "title": "Heal 1 ",
+      "position": {
+        "x": 850,
+        "y": 40
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "1"
+        ],
+        "interval": 2000,
+        "executeImmediately": true,
+        "actionId": "act_heal_loop_1"
+      }
+    },
+    {
+      "id": "node_1786796802647",
+      "type": "sound",
+      "title": "Sound Alert",
+      "position": {
+        "x": 1200,
+        "y": 150
+      },
+      "data": {
+        "enabled": true,
+        "soundSource": "preset",
+        "soundPreset": "success",
+        "volume": 100,
+        "actionId": "1786796802647"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1786796759224",
+      "fromNodeId": "node_normal_trig",
+      "fromPort": "exec_out",
+      "toNodeId": "node_ac_master",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786796762855",
+      "fromNodeId": "node_ac_master",
+      "fromPort": "next",
+      "toNodeId": "node_heal_loop_1",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786796807380",
+      "fromNodeId": "node_heal_loop_1",
+      "fromPort": "onEachCycle",
+      "toNodeId": "node_1786796802647",
+      "toPort": "exec_in"
+    }
+  ]
+}

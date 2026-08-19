@@ -1,0 +1,74 @@
+{
+  "version": "3.1.0",
+  "name": "[Ex] 05. Action Control (Stop_Start)",
+  "canvas": {
+    "zoom": 1.1,
+    "pan": {
+      "x": 847,
+      "y": 391
+    }
+  },
+  "nodes": [
+    {
+      "id": "trig_act_1786224760592",
+      "type": "trigger",
+      "title": "Btn Start",
+      "position": {
+        "x": 100,
+        "y": 150
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "mouse",
+        "triggerValue": "4",
+        "actionId": "trig_act_1786224760592"
+      }
+    },
+    {
+      "id": "node_act_1786224760592",
+      "type": "control",
+      "title": "AC Start (Toggle)",
+      "position": {
+        "x": 450,
+        "y": 150
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "toggle",
+        "controlTargetIds": [
+          "act_1786224687474"
+        ],
+        "actionId": "act_1786224760592"
+      }
+    },
+    {
+      "id": "node_act_1786224687474",
+      "type": "loop",
+      "title": "Heal Rain",
+      "position": {
+        "x": 100,
+        "y": 330
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "1"
+        ],
+        "interval": 1000,
+        "jitter": 250,
+        "executeImmediately": true,
+        "actionId": "act_1786224687474"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1",
+      "fromNodeId": "trig_act_1786224760592",
+      "fromPort": "exec_out",
+      "toNodeId": "node_act_1786224760592",
+      "toPort": "exec_in"
+    }
+  ]
+}

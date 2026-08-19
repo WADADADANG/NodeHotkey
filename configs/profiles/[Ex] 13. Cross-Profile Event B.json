@@ -1,0 +1,53 @@
+{
+  "version": "3.1.0",
+  "name": "[Ex] 13. Cross-Profile Event B",
+  "canvas": {
+    "zoom": 0.9,
+    "pan": {
+      "x": 104,
+      "y": -152
+    }
+  },
+  "nodes": [
+    {
+      "id": "trig_receiver_1",
+      "type": "trigger",
+      "title": "👂 Listen: party_heal",
+      "position": {
+        "x": 100,
+        "y": 380
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "event",
+        "triggerValue": "party_heal",
+        "actionId": "trig_receiver_1"
+      }
+    },
+    {
+      "id": "node_receiver_1",
+      "type": "sound",
+      "title": "🔊 Play Alert on Event",
+      "position": {
+        "x": 420,
+        "y": 380
+      },
+      "data": {
+        "enabled": true,
+        "soundSource": "preset",
+        "soundPreset": "success",
+        "volume": 80,
+        "actionId": "act_receiver_1"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_receiver",
+      "fromNodeId": "trig_receiver_1",
+      "fromPort": "exec_out",
+      "toNodeId": "node_receiver_1",
+      "toPort": "exec_in"
+    }
+  ]
+}

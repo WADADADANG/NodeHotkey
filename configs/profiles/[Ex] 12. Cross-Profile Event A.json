@@ -1,0 +1,51 @@
+{
+  "version": "3.1.0",
+  "name": "[Ex] 12. Cross-Profile Event A",
+  "canvas": {
+    "zoom": 1,
+    "pan": {
+      "x": 256,
+      "y": 44
+    }
+  },
+  "nodes": [
+    {
+      "id": "trig_sender_1",
+      "type": "trigger",
+      "title": "Press F6 to Send Event",
+      "position": {
+        "x": 90,
+        "y": 150
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "F6",
+        "actionId": "trig_sender_1"
+      }
+    },
+    {
+      "id": "node_sender_1",
+      "type": "emit_event",
+      "title": "📡 Broadcast party_heal",
+      "position": {
+        "x": 420,
+        "y": 150
+      },
+      "data": {
+        "enabled": true,
+        "eventName": "party_heal",
+        "actionId": "act_sender_1"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_sender",
+      "fromNodeId": "trig_sender_1",
+      "fromPort": "exec_out",
+      "toNodeId": "node_sender_1",
+      "toPort": "exec_in"
+    }
+  ]
+}

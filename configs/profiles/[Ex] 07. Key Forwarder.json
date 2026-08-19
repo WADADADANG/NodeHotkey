@@ -1,0 +1,50 @@
+{
+  "version": "3.1.0",
+  "name": "[Ex] 07. Key Forwarder",
+  "canvas": {
+    "zoom": 0.9,
+    "pan": {
+      "x": 288,
+      "y": 116
+    }
+  },
+  "nodes": [
+    {
+      "id": "trig_act_1786227690905",
+      "type": "trigger",
+      "title": "Btn Start",
+      "position": {
+        "x": 100,
+        "y": 150
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "1",
+        "actionId": "trig_act_1786227690905"
+      }
+    },
+    {
+      "id": "node_act_1786227690905",
+      "type": "forward",
+      "title": "Forward Heal Rain (Client 1 & 2)",
+      "position": {
+        "x": 430,
+        "y": 160
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "act_1786227690905"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1",
+      "fromNodeId": "trig_act_1786227690905",
+      "fromPort": "exec_out",
+      "toNodeId": "node_act_1786227690905",
+      "toPort": "exec_in"
+    }
+  ]
+}

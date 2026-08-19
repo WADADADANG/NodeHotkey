@@ -1,0 +1,180 @@
+{
+  "version": "3.1.0",
+  "name": "[WD] Full Buff",
+  "canvas": {
+    "zoom": 1,
+    "pan": {
+      "x": -1088,
+      "y": -311
+    }
+  },
+  "nodes": [
+    {
+      "id": "node_1786881084148",
+      "type": "trigger",
+      "title": "Btn Full Buff",
+      "position": {
+        "x": 1010,
+        "y": 650
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "NUMPAD DIVIDE",
+        "actionId": "1786881084148"
+      }
+    },
+    {
+      "id": "node_1786881097832",
+      "type": "buff_sequence",
+      "title": "Full Buff",
+      "position": {
+        "x": 1620,
+        "y": 740
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "keys": [
+          "F2",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "LEFT ALT + 1",
+          "LEFT ALT + 2",
+          "LEFT ALT + 3",
+          "LEFT ALT + 4",
+          "LEFT ALT + 5",
+          "F1"
+        ],
+        "delayBuff": 1100,
+        "actionId": "1786881097832"
+      }
+    },
+    {
+      "id": "node_1786881149621",
+      "type": "trigger",
+      "title": "Btn First Buff",
+      "position": {
+        "x": 1010,
+        "y": 420
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "HOME",
+        "actionId": "1786881149621"
+      }
+    },
+    {
+      "id": "node_1786881201834",
+      "type": "buff_sequence",
+      "title": "Buff Skill Queue",
+      "position": {
+        "x": 1640,
+        "y": 380
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "keys": [
+          "ESC",
+          "F2",
+          "8",
+          "1",
+          "LEFT ALT + 2",
+          "F1"
+        ],
+        "delayBuff": 1100,
+        "actionId": "1786881201834"
+      }
+    },
+    {
+      "id": "node_1786881269128",
+      "type": "emergency_stop",
+      "title": "Emergency Stop All",
+      "position": {
+        "x": 1310,
+        "y": 420
+      },
+      "data": {
+        "enabled": true,
+        "stopScope": "profile",
+        "showOverlayNotice": true,
+        "actionId": "1786881269128"
+      }
+    },
+    {
+      "id": "node_1786963028463",
+      "type": "control",
+      "title": "AC Stop Full Buff",
+      "position": {
+        "x": 1620,
+        "y": 630
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "1786881097832"
+        ],
+        "actionId": "1786963028463"
+      }
+    },
+    {
+      "id": "node_1786963046815",
+      "type": "branch",
+      "title": "Check Full Buff",
+      "position": {
+        "x": 1310,
+        "y": 620
+      },
+      "data": {
+        "enabled": true,
+        "conditionTargetId": "1786881097832",
+        "conditionRule": "is_running",
+        "actionId": "1786963046815"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1786881272087",
+      "fromNodeId": "node_1786881149621",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786881269128",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786881281024",
+      "fromNodeId": "node_1786881269128",
+      "fromPort": "next",
+      "toNodeId": "node_1786881201834",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786963089298",
+      "fromNodeId": "node_1786881084148",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786963046815",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786963102810",
+      "fromNodeId": "node_1786963046815",
+      "fromPort": "onTrue",
+      "toNodeId": "node_1786963028463",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786963106250",
+      "fromNodeId": "node_1786963046815",
+      "fromPort": "onFalse",
+      "toNodeId": "node_1786881097832",
+      "toPort": "exec_in"
+    }
+  ]
+}

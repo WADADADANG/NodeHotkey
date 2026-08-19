@@ -1,0 +1,351 @@
+{
+  "version": "3.1.0",
+  "name": "[WD] Add-ons",
+  "canvas": {
+    "zoom": 0.7902319738034572,
+    "pan": {
+      "x": 20,
+      "y": -424
+    }
+  },
+  "nodes": [
+    {
+      "id": "node_1786880020907",
+      "type": "trigger",
+      "title": "Btn Fly All",
+      "position": {
+        "x": 280,
+        "y": 310
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "0",
+        "actionId": "1786880020907"
+      }
+    },
+    {
+      "id": "node_1786880041877",
+      "type": "key_press",
+      "title": "Fly All",
+      "position": {
+        "x": 570,
+        "y": 310
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "all",
+        "keys": [
+          "0"
+        ],
+        "actionId": "1786880041877"
+      }
+    },
+    {
+      "id": "node_1786880085539",
+      "type": "trigger",
+      "title": "Btn Follow All",
+      "position": {
+        "x": 280,
+        "y": 480
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "INSERT",
+        "actionId": "1786880085539"
+      }
+    },
+    {
+      "id": "node_1786880124294",
+      "type": "key_press",
+      "title": "Single Key Press",
+      "position": {
+        "x": 580,
+        "y": 480
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "all",
+        "keys": [
+          "LEFT ALT + 0"
+        ],
+        "actionId": "1786880124294"
+      }
+    },
+    {
+      "id": "node_1786880252871",
+      "type": "trigger",
+      "title": "Btn Start Psy Knight AOE",
+      "position": {
+        "x": 280,
+        "y": 750
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "NUMPAD MINUS",
+        "actionId": "1786880252871"
+      }
+    },
+    {
+      "id": "node_1786880617990",
+      "type": "loop",
+      "title": "Knight Loop FP 5",
+      "position": {
+        "x": 1170,
+        "y": 600
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "5",
+        "keys": [
+          "3"
+        ],
+        "interval": 8600,
+        "executeImmediately": true,
+        "actionId": "1786880617990"
+      }
+    },
+    {
+      "id": "node_1786880708791",
+      "type": "control",
+      "title": "AC Stop Knight Loop FP 5",
+      "position": {
+        "x": 1170,
+        "y": 810
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "1786880617990"
+        ],
+        "actionId": "1786880708791"
+      }
+    },
+    {
+      "id": "node_1786882811325",
+      "type": "key_hold",
+      "title": "Psy MaximumCrisis",
+      "position": {
+        "x": 700,
+        "y": 680
+      },
+      "data": {
+        "enabled": true,
+        "targetKey": "6",
+        "targetClient": "3",
+        "actionId": "1786882811325"
+      }
+    },
+    {
+      "id": "node_1786882832042",
+      "type": "key_hold",
+      "title": "Knight  PowerStomp 5",
+      "position": {
+        "x": 700,
+        "y": 840
+      },
+      "data": {
+        "enabled": true,
+        "targetKey": "1",
+        "targetClient": "5",
+        "actionId": "1786882832042"
+      }
+    },
+    {
+      "id": "node_1786883312235",
+      "type": "trigger",
+      "title": "Global Trigger",
+      "position": {
+        "x": 270,
+        "y": 1400
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "event",
+        "triggerValue": "onWDHealRainAllStoped",
+        "actionId": "1786883312235"
+      }
+    },
+    {
+      "id": "node_1786885729841",
+      "type": "trigger",
+      "title": "Global Trigger",
+      "position": {
+        "x": 270,
+        "y": 1570
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "event",
+        "triggerValue": "onWEHealRainStarted",
+        "actionId": "1786885729841"
+      }
+    },
+    {
+      "id": "node_1786885743555",
+      "type": "key_press",
+      "title": "Knight Buff HOS",
+      "position": {
+        "x": 590,
+        "y": 1560
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "5",
+        "keys": [
+          "8"
+        ],
+        "cooldownPresetId": "skill_knight_heart-of-sacrifice",
+        "actionId": "1786885743555"
+      }
+    },
+    {
+      "id": "node_1786887562506_9436",
+      "type": "key_hold",
+      "title": "Knight  PowerStomp 6",
+      "position": {
+        "x": 700,
+        "y": 1000
+      },
+      "data": {
+        "enabled": true,
+        "targetKey": "1",
+        "targetClient": "6",
+        "actionId": "1786887562506_9436"
+      }
+    },
+    {
+      "id": "node_1786887573634_8323",
+      "type": "loop",
+      "title": "Knight Loop FP 6",
+      "position": {
+        "x": 1160,
+        "y": 970
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "6",
+        "keys": [
+          "3"
+        ],
+        "interval": 8600,
+        "executeImmediately": true,
+        "actionId": "1786887573634_8323"
+      }
+    },
+    {
+      "id": "node_1786887640249",
+      "type": "control",
+      "title": "AC Stop Knight Loop FP 6",
+      "position": {
+        "x": 1160,
+        "y": 1180
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "1786887573634_8323"
+        ],
+        "actionId": "1786887640249"
+      }
+    },
+    {
+      "id": "node_1786926322640",
+      "type": "emergency_stop",
+      "title": "STOP ALL",
+      "position": {
+        "x": 590,
+        "y": 1400
+      },
+      "data": {
+        "enabled": true,
+        "stopScope": "profile",
+        "showOverlayNotice": true,
+        "actionId": "1786926322640"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1786880048571",
+      "fromNodeId": "node_1786880020907",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786880041877",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786880127819",
+      "fromNodeId": "node_1786880085539",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786880124294",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786882816309",
+      "fromNodeId": "node_1786880252871",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786882811325",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786882871042",
+      "fromNodeId": "node_1786880252871",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786882832042",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786882882892",
+      "fromNodeId": "node_1786882832042",
+      "fromPort": "onEnable",
+      "toNodeId": "node_1786880617990",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786882888169",
+      "fromNodeId": "node_1786882832042",
+      "fromPort": "onDisable",
+      "toNodeId": "node_1786880708791",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786886013210",
+      "fromNodeId": "node_1786885729841",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786885743555",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786887670370",
+      "fromNodeId": "node_1786887562506_9436",
+      "fromPort": "onEnable",
+      "toNodeId": "node_1786887573634_8323",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786887672401",
+      "fromNodeId": "node_1786887562506_9436",
+      "fromPort": "onDisable",
+      "toNodeId": "node_1786887640249",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786887680747",
+      "fromNodeId": "node_1786880252871",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786887562506_9436",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786926325427",
+      "fromNodeId": "node_1786883312235",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786926322640",
+      "toPort": "exec_in"
+    }
+  ]
+}

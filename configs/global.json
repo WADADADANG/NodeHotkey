@@ -1,0 +1,98 @@
+{
+  "activeProfile": "[WD] Add-ons",
+  "activeProfiles": [
+    "[WD] Add-ons",
+    "[WD] Full Buff",
+    "[WD] Heal 1,2,4"
+  ],
+  "disabledClients": [],
+  "globalSettings": {
+    "targetUrlKeyword": "universe.flyff.com/play",
+    "enableOverlay": true,
+    "suspendHotkey": "END",
+    "ghostMouseJitter": {
+      "enabled": false,
+      "intervalMin": 8000,
+      "intervalMax": 25000,
+      "maxOffset": 12
+    },
+    "clientAliases": {
+      "1": "1",
+      "2": "2",
+      "3": "3",
+      "4": "4",
+      "5": "5",
+      "6": "6",
+      "7": "7",
+      "8": "8"
+    },
+    "clientUserAgents": {
+      "1": "",
+      "2": "",
+      "3": "",
+      "4": "",
+      "5": "",
+      "6": "",
+      "7": "",
+      "8": ""
+    },
+    "clientProxies": {
+      "1": "",
+      "2": "",
+      "3": "",
+      "4": "",
+      "5": "",
+      "6": "",
+      "7": "",
+      "8": ""
+    },
+    "clientBrowsers": {
+      "1": "1-app",
+      "2": "1-app",
+      "3": "1-app",
+      "4": "1-app",
+      "5": "1-app",
+      "6": "1-app",
+      "7": "1-app",
+      "8": "1-app"
+    },
+    "clientWindowBounds": {
+      "1": {
+        "x": -1927,
+        "y": 147,
+        "w": 974,
+        "h": 532
+      },
+      "2": {
+        "x": -1927,
+        "y": 672,
+        "w": 974,
+        "h": 532
+      },
+      "3": {
+        "x": -967,
+        "y": 672,
+        "w": 974,
+        "h": 532
+      },
+      "4": {
+        "x": -967,
+        "y": 147,
+        "w": 974,
+        "h": 532
+      },
+      "5": {
+        "x": -7,
+        "y": 705,
+        "w": 922,
+        "h": 712
+      },
+      "6": {
+        "x": -7,
+        "y": 0,
+        "w": 919,
+        "h": 712
+      }
+    }
+  }
+}

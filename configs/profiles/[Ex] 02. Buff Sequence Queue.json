@@ -1,0 +1,69 @@
+{
+  "version": "3.1.0",
+  "name": "[Ex] 02. Buff Sequence Queue",
+  "canvas": {
+    "zoom": 1,
+    "pan": {
+      "x": 112,
+      "y": 19
+    }
+  },
+  "nodes": [
+    {
+      "id": "trig_act_1786224247892",
+      "type": "trigger",
+      "title": "Btn Start Full Buff",
+      "position": {
+        "x": 100,
+        "y": 150
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "INSERT",
+        "actionId": "trig_act_1786224247892"
+      }
+    },
+    {
+      "id": "node_act_1786224247892",
+      "type": "buff_sequence",
+      "title": "RM Full Buff",
+      "position": {
+        "x": 450,
+        "y": 110
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "F2",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "0",
+          "F3",
+          "1",
+          "2",
+          "F1"
+        ],
+        "delayBuff": 800,
+        "actionId": "act_1786224247892"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1",
+      "fromNodeId": "trig_act_1786224247892",
+      "fromPort": "exec_out",
+      "toNodeId": "node_act_1786224247892",
+      "toPort": "exec_in"
+    }
+  ]
+}

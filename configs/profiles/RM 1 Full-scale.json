@@ -1,0 +1,435 @@
+{
+  "version": "3.1.0",
+  "name": "RM 1 Full-scale",
+  "canvas": {
+    "zoom": 0.5815571143329532,
+    "pan": {
+      "x": 281,
+      "y": -77
+    }
+  },
+  "nodes": [
+    {
+      "id": "trig_action_1",
+      "type": "trigger",
+      "title": "Btn Heal Rain",
+      "position": {
+        "x": 780,
+        "y": 830
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "mouse",
+        "triggerValue": "4",
+        "actionId": "trig_action_1"
+      }
+    },
+    {
+      "id": "node_action_1",
+      "type": "loop",
+      "title": "Heal Rain",
+      "position": {
+        "x": 1370,
+        "y": 930
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "2"
+        ],
+        "interval": 3000,
+        "jitter": 250,
+        "executeImmediately": true,
+        "actionId": "action_1"
+      }
+    },
+    {
+      "id": "node_action_2",
+      "type": "loop",
+      "title": "Loop Merkabar",
+      "position": {
+        "x": 2520,
+        "y": 510
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "4"
+        ],
+        "interval": 5000,
+        "jitter": 500,
+        "executeImmediately": true,
+        "actionId": "action_2"
+      }
+    },
+    {
+      "id": "node_action_3",
+      "type": "buff_sequence",
+      "title": "Full Buff",
+      "position": {
+        "x": 1540,
+        "y": 1770
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "F2",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "0",
+          "F3",
+          "1",
+          "2"
+        ],
+        "delayBuff": 800,
+        "actionId": "action_3"
+      }
+    },
+    {
+      "id": "node_act_1786178765713",
+      "type": "loop",
+      "title": "Loop Restore MP",
+      "position": {
+        "x": 2520,
+        "y": 730
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "5"
+        ],
+        "interval": 3600,
+        "jitter": 250,
+        "executeImmediately": false,
+        "actionId": "act_1786178765713"
+      }
+    },
+    {
+      "id": "node_act_1786178809367",
+      "type": "control",
+      "title": "AC Stop Loop Restore MP",
+      "position": {
+        "x": 2540,
+        "y": 1280
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "act_1786178765713"
+        ],
+        "actionId": "act_1786178809367"
+      }
+    },
+    {
+      "id": "node_act_1786188841667",
+      "type": "control",
+      "title": "AC Stop Loop Merkabar",
+      "position": {
+        "x": 2540,
+        "y": 1480
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "action_2"
+        ],
+        "actionId": "act_1786188841667"
+      }
+    },
+    {
+      "id": "node_act_1786190153364",
+      "type": "loop",
+      "title": "Loop Buff GT",
+      "position": {
+        "x": 1930,
+        "y": 820
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [],
+        "interval": 27000,
+        "jitter": 250,
+        "executeImmediately": false,
+        "actionId": "act_1786190153364"
+      }
+    },
+    {
+      "id": "node_act_1786190287416",
+      "type": "control",
+      "title": "AC Stop Loop Buff GT",
+      "position": {
+        "x": 2540,
+        "y": 1380
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "act_1786190153364"
+        ],
+        "actionId": "act_1786190287416"
+      }
+    },
+    {
+      "id": "node_act_1786191360757",
+      "type": "control",
+      "title": "AC Stop Full Buff",
+      "position": {
+        "x": 1420,
+        "y": 1620
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "action_3"
+        ],
+        "actionId": "act_1786191360757"
+      }
+    },
+    {
+      "id": "node_act_1786193741045",
+      "type": "control",
+      "title": "AC Stop Loop Heal Rain",
+      "position": {
+        "x": 2540,
+        "y": 1580
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "action_1"
+        ],
+        "actionId": "act_1786193741045"
+      }
+    },
+    {
+      "id": "trig_act_1786193844974",
+      "type": "trigger",
+      "title": "Btn Full Buff",
+      "position": {
+        "x": 710,
+        "y": 1640
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "INSERT",
+        "actionId": "trig_act_1786193844974"
+      }
+    },
+    {
+      "id": "node_act_1786193844974",
+      "type": "branch",
+      "title": "Check Full Buff",
+      "position": {
+        "x": 1040,
+        "y": 1610
+      },
+      "data": {
+        "enabled": true,
+        "conditionTargetId": "action_3",
+        "conditionRule": "is_running",
+        "actionId": "act_1786193844974"
+      }
+    },
+    {
+      "id": "node_1786798012804",
+      "type": "key_press",
+      "title": "Buff GT",
+      "position": {
+        "x": 2270,
+        "y": 980
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "3"
+        ],
+        "delayAfter": 500,
+        "actionId": "1786798012804"
+      }
+    },
+    {
+      "id": "node_1786798916937",
+      "type": "emit_event",
+      "title": "Emit Event",
+      "position": {
+        "x": 1660,
+        "y": 630
+      },
+      "data": {
+        "enabled": true,
+        "eventName": "RM44DA668W",
+        "actionId": "1786798916937"
+      }
+    },
+    {
+      "id": "node_1786798989128",
+      "type": "branch",
+      "title": "Check Heal Rain",
+      "position": {
+        "x": 1100,
+        "y": 800
+      },
+      "data": {
+        "enabled": true,
+        "conditionTargetId": "action_1",
+        "conditionRule": "is_running",
+        "actionId": "1786798989128"
+      }
+    },
+    {
+      "id": "node_1786799184392",
+      "type": "trigger",
+      "title": "CustomEvent",
+      "position": {
+        "x": 2180,
+        "y": 1480
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "event",
+        "triggerValue": "RM44DA668W",
+        "actionId": "1786799184392"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1786797756710",
+      "fromNodeId": "trig_act_1786193844974",
+      "fromPort": "exec_out",
+      "toNodeId": "node_act_1786193844974",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786797780034",
+      "fromNodeId": "node_act_1786193844974",
+      "fromPort": "onFalse",
+      "toNodeId": "node_action_3",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786798875993",
+      "fromNodeId": "node_act_1786190153364",
+      "fromPort": "onEachCycle",
+      "toNodeId": "node_1786798012804",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786799004892",
+      "fromNodeId": "trig_action_1",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786798989128",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786799009767",
+      "fromNodeId": "node_1786798989128",
+      "fromPort": "onFalse",
+      "toNodeId": "node_action_1",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786799135080",
+      "fromNodeId": "node_1786798989128",
+      "fromPort": "onTrue",
+      "toNodeId": "node_1786798916937",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786799265712",
+      "fromNodeId": "node_1786799184392",
+      "fromPort": "exec_out",
+      "toNodeId": "node_act_1786178809367",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786799268387",
+      "fromNodeId": "node_1786799184392",
+      "fromPort": "exec_out",
+      "toNodeId": "node_act_1786190287416",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786799270677",
+      "fromNodeId": "node_1786799184392",
+      "fromPort": "exec_out",
+      "toNodeId": "node_act_1786188841667",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786799323653",
+      "fromNodeId": "node_action_1",
+      "fromPort": "onStop",
+      "toNodeId": "node_1786798916937",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786799478530",
+      "fromNodeId": "node_1786799184392",
+      "fromPort": "exec_out",
+      "toNodeId": "node_act_1786193741045",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786799697552",
+      "fromNodeId": "node_action_3",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_1786798916937",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786799884318",
+      "fromNodeId": "node_action_1",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_1786798012804",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786799886384",
+      "fromNodeId": "node_action_1",
+      "fromPort": "onAfterStart",
+      "toNodeId": "node_act_1786190153364",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786800219682",
+      "fromNodeId": "node_act_1786190153364",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_action_2",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786800223864",
+      "fromNodeId": "node_act_1786190153364",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_act_1786178765713",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786806338368",
+      "fromNodeId": "node_act_1786193844974",
+      "fromPort": "onTrue",
+      "toNodeId": "node_act_1786191360757",
+      "toPort": "exec_in"
+    }
+  ]
+}

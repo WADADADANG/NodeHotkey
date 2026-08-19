@@ -1,0 +1,176 @@
+{
+  "version": "3.1.0",
+  "name": "RM Heal 2 Slots",
+  "canvas": {
+    "zoom": 0.9,
+    "pan": {
+      "x": 412,
+      "y": 420
+    }
+  },
+  "nodes": [
+    {
+      "id": "trig_action_1",
+      "type": "trigger",
+      "title": "Btn Start Heal 1",
+      "position": {
+        "x": 100,
+        "y": 150
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "mouse",
+        "triggerValue": "4",
+        "actionId": "trig_action_1"
+      }
+    },
+    {
+      "id": "node_action_1",
+      "type": "loop",
+      "title": "Heal 1",
+      "position": {
+        "x": 460,
+        "y": 100
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "1"
+        ],
+        "interval": 1500,
+        "jitter": 250,
+        "executeImmediately": true,
+        "actionId": "action_1"
+      }
+    },
+    {
+      "id": "trig_act_1786177357433",
+      "type": "trigger",
+      "title": "Btn Start Heal Rain Both",
+      "position": {
+        "x": 100,
+        "y": 510
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "mouse",
+        "triggerValue": "5",
+        "actionId": "trig_act_1786177357433"
+      }
+    },
+    {
+      "id": "node_act_1786177357433",
+      "type": "branch",
+      "title": "B Heal Rain Control",
+      "position": {
+        "x": 460,
+        "y": 480
+      },
+      "data": {
+        "enabled": true,
+        "conditionTargetId": "act_1786177420733",
+        "conditionRule": "is_running",
+        "actionId": "act_1786177357433"
+      }
+    },
+    {
+      "id": "node_act_1786177420733",
+      "type": "loop",
+      "title": "Heal Rain Both",
+      "position": {
+        "x": 810,
+        "y": 610
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1,2",
+        "keys": [
+          "2"
+        ],
+        "interval": 1200,
+        "jitter": 250,
+        "executeImmediately": true,
+        "actionId": "act_1786177420733"
+      }
+    },
+    {
+      "id": "node_act_1786177395657",
+      "type": "control",
+      "title": "AC Stop Heal Rain Both",
+      "position": {
+        "x": 810,
+        "y": 500
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "act_1786177420733"
+        ],
+        "actionId": "act_1786177395657"
+      }
+    },
+    {
+      "id": "node_action_4",
+      "type": "control",
+      "title": "AC Stop Heal 1",
+      "position": {
+        "x": 1130,
+        "y": 670
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "action_1"
+        ],
+        "actionId": "action_4"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1",
+      "fromNodeId": "trig_action_1",
+      "fromPort": "exec_out",
+      "toNodeId": "node_action_1",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_2",
+      "fromNodeId": "trig_act_1786177357433",
+      "fromPort": "exec_out",
+      "toNodeId": "node_act_1786177357433",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786801425596",
+      "fromNodeId": "node_act_1786177357433",
+      "fromPort": "onTrue",
+      "toNodeId": "node_act_1786177395657",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786801476076",
+      "fromNodeId": "node_action_1",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_act_1786177395657",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786857831769",
+      "fromNodeId": "node_act_1786177357433",
+      "fromPort": "onFalse",
+      "toNodeId": "node_act_1786177420733",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1786857841698",
+      "fromNodeId": "node_act_1786177420733",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_action_4",
+      "toPort": "exec_in"
+    }
+  ]
+}

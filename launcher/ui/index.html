@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NodeHotkey Control Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="launcher.css">
+</head>
+<body>
+  <!-- Custom Frameless Titlebar -->
+  <header class="launcher-titlebar" id="titlebar">
+    <div class="titlebar-drag-region">
+      <div class="app-brand">
+        <span class="app-icon">⚡</span>
+        <span class="app-name">NodeHotkey</span>
+        <span class="app-badge">Launcher v3.0.0</span>
+      </div>
+    </div>
+    <div class="window-controls">
+      <button class="win-btn" id="btn-win-min" title="ย่อหน้าต่าง (Minimize)">─</button>
+      <button class="win-btn" id="btn-win-max" title="ขยายเต็มจอ (Maximize)">🗖</button>
+      <button class="win-btn close" id="btn-win-close" title="ซ่อนไปยัง System Tray (Close)">✕</button>
+    </div>
+  </header>
+
+  <div class="launcher-container">
+    <!-- Top Action Control Bar -->
+    <section class="control-panel-card">
+      <div class="main-actions-group">
+        <!-- Main Toggle Engine Button -->
+        <button id="btn-toggle-engine" class="btn-hero-primary btn-start">
+          <span class="btn-icon" id="hero-icon">▶</span>
+          <div class="btn-text-group">
+            <span class="btn-title" id="hero-title">เริ่มการทำงาน</span>
+            <span class="btn-sub" id="hero-sub">Start Bot Engine</span>
+          </div>
+        </button>
+
+        <button id="btn-restart-engine" class="btn-secondary" title="รีสตาร์ทบอททันที (Restart Engine)">
+          <span class="btn-icon">🔄</span>
+          <span>รีสตาร์ท</span>
+        </button>
+
+        <button id="btn-open-web" class="btn-accent" title="เปิดหน้าเว็บ Canvas Node Editor">
+          <span class="btn-icon">🌐</span>
+          <span>Web Dashboard</span>
+        </button>
+      </div>
+
+      <div class="utility-actions-group">
+        <button id="btn-open-logs" class="btn-ghost" title="เปิดโฟลเดอร์เก็บ Logs รายวันใน Windows Explorer">
+          <span class="btn-icon">📂</span>
+          <span>เปิดโฟลเดอร์ Logs</span>
+        </button>
+
+        <button id="btn-check-update" class="btn-ghost" title="ตรวจสอบการอัปเดตระบบจาก Git">
+          <span class="btn-icon">✨</span>
+          <span>อัปเดตระบบ</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Diagnostics / Health Status Cards Grid -->
+    <section class="diagnostics-grid">
+      <!-- Card 1: Engine Process -->
+      <div class="diag-card" id="card-engine-status">
+        <div class="diag-card-header">
+          <span class="diag-title">สถานะโปรแกรม</span>
+          <span class="diag-indicator-dot" id="dot-engine"></span>
+        </div>
+        <div class="diag-value" id="val-engine-status">กำลังเริ่ม...</div>
+        <div class="diag-sub" id="sub-engine-info">PID: - | Uptime: 0s</div>
+      </div>
+
+      <!-- Card 2: Server & Port -->
+      <div class="diag-card" id="card-server-status">
+        <div class="diag-card-header">
+          <span class="diag-title">Web Server</span>
+          <span class="diag-indicator-dot" id="dot-server"></span>
+        </div>
+        <div class="diag-value" id="val-server-status">Port 3000</div>
+        <div class="diag-sub" id="sub-server-info">http://localhost:3000</div>
+      </div>
+
+      <!-- Card 3: Active Profile -->
+      <div class="diag-card" id="card-profile-status">
+        <div class="diag-card-header">
+          <span class="diag-title">โปรไฟล์ที่เปิดใช้งาน</span>
+          <span class="diag-icon">📑</span>
+        </div>
+        <div class="diag-value" id="val-profile-name">Default</div>
+        <div class="diag-sub" id="sub-profile-count">1 Active Profile</div>
+      </div>
+
+      <!-- Card 4: Game Clients (CDP) -->
+      <div class="diag-card" id="card-clients-status">
+        <div class="diag-card-header">
+          <span class="diag-title">จอเกมที่ตรวจพบ</span>
+          <span class="diag-icon">🎮</span>
+        </div>
+        <div class="diag-value" id="val-clients-count">0 จอ</div>
+        <div class="diag-sub" id="sub-clients-info">CDP WebGL Integration</div>
+      </div>
+    </section>
+
+    <!-- Live Colorized Terminal Section -->
+    <section class="terminal-card">
+      <div class="terminal-header">
+        <div class="terminal-title-group">
+          <span class="term-icon">📟</span>
+          <span class="term-title">Console Output & Real-time Logs</span>
+          <span class="term-status-badge" id="term-live-badge">● LIVE</span>
+        </div>
+
+        <div class="terminal-filters">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="log-search-input" placeholder="ค้นหา Logs..." />
+          </div>
+
+          <div class="filter-pills">
+            <button class="filter-pill active" data-filter="all">ทั้งหมด</button>
+            <button class="filter-pill" data-filter="error">🔴 Error</button>
+            <button class="filter-pill" data-filter="warn">🟡 Warning</button>
+            <button class="filter-pill" data-filter="action">🟣 Action</button>
+          </div>
+
+          <div class="terminal-actions">
+            <button id="btn-toggle-autoscroll" class="term-btn active" title="เลื่อนหน้าจออัตโนมัติ (Auto-scroll)">⬇️ Auto-scroll</button>
+            <button id="btn-clear-terminal" class="term-btn" title="ล้างหน้าจอ Terminal">🗑️ ล้าง</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Terminal Output Viewer (Read-only, Selectable) -->
+      <div class="terminal-body" id="terminal-body">
+        <div class="log-welcome-banner">
+          <div class="banner-title">⚡ NodeHotkey Control Center Ready</div>
+          <div class="banner-sub">Logs are streamed in real-time and automatically rotated into daily folders. Text is read-only and freely selectable for copy.</div>
+        </div>
+        <div class="log-entries" id="log-entries"></div>
+      </div>
+
+      <!-- Terminal Footer Bar -->
+      <div class="terminal-footer">
+        <div class="footer-left">
+          <span>📁 วันนี้: </span>
+          <span class="footer-path" id="footer-log-path">logs/YYYY-MM-DD/</span>
+        </div>
+        <div class="footer-right">
+          <span id="log-counter-badge">0 Lines</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Update Notification Modal -->
+  <div class="modal-overlay" id="update-modal" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="modal-icon">✨</span>
+        <span class="modal-title">ตรวจสอบการอัปเดตระบบ</span>
+        <button class="modal-close-btn" id="btn-close-update-modal">✕</button>
+      </div>
+      <div class="modal-body" id="update-modal-body">
+        <div class="update-checking-state">
+          <div class="spinner"></div>
+          <span>กำลังตรวจสอบสถานะ Git Remote...</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btn-cancel-update">ปิด</button>
+        <button class="btn-hero-primary" id="btn-perform-update" style="display:none;">📥 ดาวน์โหลดและอัปเดตทันที</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="launcher.js"></script>
+</body>
+</html>

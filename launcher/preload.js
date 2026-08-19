@@ -1,0 +1,40 @@
+const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('launcherAPI', {
+  // Process Control
+  startBot: () => ipcRenderer.invoke('bot:start'),
+  stopBot: () => ipcRenderer.invoke('bot:stop'),
+  restartBot: () => ipcRenderer.invoke('bot:restart'),
+  getBotStatus: () => ipcRenderer.invoke('bot:get-status'),
+
+  // Logs & Storage
+  openLogFolder: () => ipcRenderer.invoke('logs:open-folder'),
+  getLogPath: () => ipcRenderer.invoke('logs:get-path'),
+
+  // Updater
+  checkUpdate: () => ipcRenderer.invoke('update:check'),
+  applyUpdate: () => ipcRenderer.invoke('update:apply'),
+
+  // External & UI
+  openWebDashboard: () => ipcRenderer.invoke('app:open-web'),
+  minimizeWindow: () => ipcRenderer.send('window:minimize'),
+  maximizeWindow: () => ipcRenderer.send('window:maximize'),
+  closeWindow: () => ipcRenderer.send('window:close'),
+
+  // Event Listeners from Main Process
+  onLogMessage: (callback) => {
+    const subscription = (event, data) => callback(data);
+    ipcRenderer.on('bot:log', subscription);
+    return () => ipcRenderer.removeListener('bot:log', subscription);
+  },
+  onStatusChange: (callback) => {
+    const subscription = (event, status) => callback(status);
+    ipcRenderer.on('bot:status-change', subscription);
+    return () => ipcRenderer.removeListener('bot:status-change', subscription);
+  },
+  onDiagnosticsUpdate: (callback) => {
+    const subscription = (event, data) => callback(data);
+    ipcRenderer.on('bot:diagnostics', subscription);
+    return () => ipcRenderer.removeListener('bot:diagnostics', subscription);
+  }
+});

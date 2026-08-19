@@ -1,0 +1,57 @@
+{
+  "version": "3.1.0",
+  "name": "[Ex] 08. Cooldown Guard (Skill Guard)",
+  "canvas": {
+    "zoom": 1,
+    "pan": {
+      "x": 639,
+      "y": 326
+    }
+  },
+  "nodes": [
+    {
+      "id": "trig_act_1786226671237",
+      "type": "trigger",
+      "title": "Btn Start",
+      "position": {
+        "x": 100,
+        "y": 150
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "mouse",
+        "triggerValue": "4",
+        "actionId": "trig_act_1786226671237"
+      }
+    },
+    {
+      "id": "node_act_1786226671237",
+      "type": "loop",
+      "title": "Barrier Of Life (Loop Buff)",
+      "position": {
+        "x": 450,
+        "y": 90
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "8"
+        ],
+        "interval": 1000,
+        "jitter": 250,
+        "executeImmediately": true,
+        "actionId": "act_1786226671237"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1",
+      "fromNodeId": "trig_act_1786226671237",
+      "fromPort": "exec_out",
+      "toNodeId": "node_act_1786226671237",
+      "toPort": "exec_in"
+    }
+  ]
+}

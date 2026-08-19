@@ -1,0 +1,471 @@
+const { app, BrowserWindow, ipcMain, shell, Tray, Menu, nativeImage } = require('electron');
+const path = require('path');
+const { spawn } = require('child_process');
+const http = require('http');
+const LogManager = require('./log-manager');
+const SystemUpdater = require('./updater');
+
+// Single-Instance Lock
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+  process.exit(0);
+}
+
+let mainWindow = null;
+let tray = null;
+let botProcess = null;
+let isBotRunning = false;
+let isRestarting = false;
+let healthCheckInterval = null;
+
+const PROJECT_DIR = path.join(__dirname, '..');
+const logManager = new LogManager(path.join(PROJECT_DIR, 'logs'));
+const updater = new SystemUpdater(PROJECT_DIR);
+
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 1040,
+    height: 720,
+    minWidth: 880,
+    minHeight: 600,
+    frame: false, // Custom sleek titlebar
+    titleBarStyle: 'hidden',
+    backgroundColor: '#0a0d14',
+    icon: path.join(PROJECT_DIR, 'icon.ico'),
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
+      spellcheck: false
+    }
+  });
+
+  mainWindow.loadFile(path.join(__dirname, 'ui', 'index.html'));
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    broadcastStatus();
+    checkBotHealth();
+  });
+}
+
+function createTray() {
+  if (tray) return;
+  const iconPath = path.join(PROJECT_DIR, 'icon.ico');
+  const trayIcon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
+  tray = new Tray(trayIcon);
+  tray.setToolTip('NodeHotkey Control Center');
+
+  const updateTrayMenu = () => {
+    const statusText = isBotRunning ? '🟢 Running' : '🔴 Stopped';
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: `⚡ NodeHotkey Launcher (${statusText})`,
+        enabled: false
+      },
+      { type: 'separator' },
+      {
+        label: isBotRunning ? '🛑 Stop Bot Engine' : '▶️ Start Bot Engine',
+        click: () => {
+          if (isBotRunning) stopBotProcess();
+          else startBotProcess();
+        }
+      },
+      {
+        label: '🔄 Restart Bot Engine',
+        enabled: isBotRunning,
+        click: () => restartBotProcess()
+      },
+      {
+        label: '🌐 Open Web Dashboard',
+        click: () => openWebDashboard()
+      },
+      {
+        label: '📂 Open Logs Folder',
+        click: () => openLogFolder()
+      },
+      { type: 'separator' },
+      {
+        label: '🗗 Show Launcher Window',
+        click: () => {
+          if (mainWindow) {
+            mainWindow.show();
+            mainWindow.focus();
+          } else {
+            createWindow();
+          }
+        }
+      },
+      {
+        label: '❌ Exit All',
+        click: () => {
+          app.isQuitting = true;
+          stopBotProcess();
+          app.quit();
+        }
+      }
+    ]);
+    tray.setContextMenu(contextMenu);
+  };
+
+  updateTrayMenu();
+  tray.on('double-click', () => {
+    if (mainWindow) {
+      if (mainWindow.isVisible()) mainWindow.focus();
+      else mainWindow.show();
+    } else {
+      createWindow();
+    }
+  });
+
+  // Keep tray menu updated on status change
+  tray.updateMenu = updateTrayMenu;
+}
+
+// Broadcast Status & Diagnostics to UI
+function broadcastStatus() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  mainWindow.webContents.send('bot:status-change', {
+    running: isBotRunning,
+    restarting: isRestarting
+  });
+  if (tray && typeof tray.updateMenu === 'function') {
+    tray.updateMenu();
+  }
+}
+
+function classifyLogLevel(line, isStderr = false) {
+  const lower = line.toLowerCase();
+  
+  // 1. Critical Errors (ข้อผิดพลาดร้ายแรงจริงๆ)
+  if (
+    line.includes('❌') ||
+    lower.includes('uncaught exception') ||
+    lower.includes('unhandledpromiserejection') ||
+    lower.includes('syntaxerror') ||
+    lower.includes('referenceerror') ||
+    lower.includes('typeerror') ||
+    lower.includes('rangeerror') ||
+    lower.includes('eaddrinuse') ||
+    lower.includes('econnrefused') ||
+    lower.includes('fatal error') ||
+    lower.includes('[critical]') ||
+    line.startsWith('Error:') ||
+    lower.includes('spawn error') ||
+    lower.includes('failed to start') ||
+    lower.includes('crashed')
+  ) {
+    return 'error';
+  }
+
+  // 2. Lifecycle / Closing / Detaching / Warning (การปิดจอ / ปิดแท็บ / พักการทำงาน)
+  if (
+    line.includes('⚠️') ||
+    lower.includes('warn') ||
+    lower.includes('game tab closed') ||
+    lower.includes('browser closed') ||
+    lower.includes('closed/detached') ||
+    lower.includes('detached') ||
+    lower.includes('pausing actions') ||
+    lower.includes('stopping') ||
+    lower.includes('stopped') ||
+    lower.includes('disconnect') ||
+    lower.includes('deprecationwarning') ||
+    lower.includes('experimentalwarning')
+  ) {
+    return 'warn';
+  }
+
+  // 3. Actions / Hotkeys / Triggers / CDP (การกดปุ่ม / รัน workflow)
+  if (
+    line.includes('🔵') ||
+    line.includes('🎯') ||
+    line.includes('🎮') ||
+    lower.includes('[action') ||
+    lower.includes('hotkey') ||
+    lower.includes('triggered') ||
+    lower.includes('forwarder')
+  ) {
+    return 'action';
+  }
+
+  // 4. Success / Ready / Listening (ความสำเร็จ / พร้อมใช้งาน)
+  if (
+    line.includes('✅') ||
+    line.includes('🎉') ||
+    lower.includes('success') ||
+    lower.includes('initialized successfully') ||
+    lower.includes('ready!') ||
+    lower.includes('connected') ||
+    lower.includes('listening on')
+  ) {
+    return 'success';
+  }
+
+  // Default: Stderr that isn't a critical error is treated as warning or info
+  if (isStderr) {
+    return 'warn';
+  }
+
+  return 'info';
+}
+
+function broadcastLog(text, level = null) {
+  const actualLevel = level || classifyLogLevel(text);
+  logManager.writeLine(text);
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  mainWindow.webContents.send('bot:log', {
+    text,
+    level: actualLevel,
+    time: new Date().toLocaleTimeString()
+  });
+}
+
+function checkBotHealth() {
+  const req = http.get('http://localhost:3000/api/config', { timeout: 1500 }, (res) => {
+    let data = '';
+    res.on('data', chunk => data += chunk);
+    res.on('end', () => {
+      try {
+        const json = JSON.parse(data);
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('bot:diagnostics', {
+            serverOnline: true,
+            port: 3000,
+            activeProfiles: json.activeProfiles || [json.activeProfile || 'Default'],
+            activeClientsCount: json.activeClients ? json.activeClients.length : 0
+          });
+        }
+      } catch (e) {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('bot:diagnostics', { serverOnline: true, port: 3000 });
+        }
+      }
+    });
+  });
+
+  req.on('error', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('bot:diagnostics', {
+        serverOnline: false,
+        port: 3000,
+        error: isBotRunning ? 'Server is starting or port unreachable' : 'Stopped'
+      });
+    }
+  });
+
+  req.on('timeout', () => req.destroy());
+}
+
+// Bot Process Management
+function startBotProcess() {
+  if (isBotRunning || botProcess) return { success: true, alreadyRunning: true };
+
+  broadcastLog('🚀 Starting NodeHotkey Core Engine (node bot.js)...', 'info');
+  const botJs = path.join(PROJECT_DIR, 'bot.js');
+
+  try {
+    botProcess = spawn('node', [botJs], {
+      cwd: PROJECT_DIR,
+      env: { ...process.env, FORCE_COLOR: '1' },
+      windowsHide: true
+    });
+
+    isBotRunning = true;
+    broadcastStatus();
+
+    botProcess.stdout.on('data', (data) => {
+      const lines = data.toString().split(/\r?\n/);
+      lines.forEach(line => {
+        if (line.trim()) {
+          broadcastLog(line, classifyLogLevel(line, false));
+        }
+      });
+    });
+
+    botProcess.stderr.on('data', (data) => {
+      const lines = data.toString().split(/\r?\n/);
+      lines.forEach(line => {
+        if (line.trim()) {
+          broadcastLog(line, classifyLogLevel(line, true));
+        }
+      });
+    });
+
+    botProcess.on('close', (code) => {
+      if (isStoppingByUser) {
+        broadcastLog(`🛑 NodeHotkey Engine stopped cleanly.`, 'info');
+        isStoppingByUser = false;
+      } else if (code === 0) {
+        broadcastLog(`🛑 NodeHotkey Engine exited normally.`, 'info');
+      } else {
+        broadcastLog(`❌ NodeHotkey Engine exited unexpectedly with code ${code}`, 'error');
+      }
+      botProcess = null;
+      isBotRunning = false;
+      broadcastStatus();
+      checkBotHealth();
+    });
+
+    botProcess.on('error', (err) => {
+      broadcastLog(`❌ Failed to start NodeHotkey: ${err.message}`, 'error');
+      botProcess = null;
+      isBotRunning = false;
+      broadcastStatus();
+    });
+
+    // Start periodic health checking
+    if (healthCheckInterval) clearInterval(healthCheckInterval);
+    healthCheckInterval = setInterval(checkBotHealth, 3000);
+
+    return { success: true };
+  } catch (err) {
+    broadcastLog(`❌ Spawn Error: ${err.message}`, 'error');
+    isBotRunning = false;
+    broadcastStatus();
+    return { success: false, error: err.message };
+  }
+}
+
+let isStoppingByUser = false;
+
+function stopBotProcess() {
+  if (!isBotRunning && !botProcess) return { success: true };
+
+  isStoppingByUser = true;
+  broadcastLog('🛑 Stopping NodeHotkey Core Engine...', 'warn');
+  if (botProcess) {
+    try {
+      // Windows tree-kill
+      if (process.platform === 'win32') {
+        spawn('taskkill', ['/pid', botProcess.pid, '/f', '/t']);
+      } else {
+        botProcess.kill('SIGTERM');
+      }
+    } catch (e) {
+      try { botProcess.kill('SIGKILL'); } catch (err) {}
+    }
+  }
+
+  botProcess = null;
+  isBotRunning = false;
+  broadcastStatus();
+  checkBotHealth();
+  return { success: true };
+}
+
+async function restartBotProcess() {
+  isRestarting = true;
+  broadcastStatus();
+  broadcastLog('🔄 Restarting NodeHotkey Engine...', 'warn');
+  stopBotProcess();
+  await new Promise(r => setTimeout(r, 1200));
+  startBotProcess();
+  isRestarting = false;
+  broadcastStatus();
+  return { success: true };
+}
+
+function openWebDashboard() {
+  shell.openExternal('http://localhost:3000/');
+}
+
+function openLogFolder() {
+  const dir = logManager.getLogDirectory();
+  shell.openPath(dir);
+  return { success: true, path: dir };
+}
+
+// IPC Handlers
+ipcMain.handle('bot:start', () => startBotProcess());
+ipcMain.handle('bot:stop', () => stopBotProcess());
+ipcMain.handle('bot:restart', () => restartBotProcess());
+ipcMain.handle('bot:get-status', () => ({
+  running: isBotRunning,
+  restarting: isRestarting,
+  logPath: logManager.getLogFilePath()
+}));
+
+ipcMain.handle('logs:open-folder', () => openLogFolder());
+ipcMain.handle('logs:get-path', () => logManager.getLogFilePath());
+
+ipcMain.handle('update:check', async () => {
+  return await updater.checkForUpdates();
+});
+
+ipcMain.handle('update:apply', async () => {
+  try {
+    const wasRunning = isBotRunning;
+    if (wasRunning) stopBotProcess();
+    broadcastLog('🔄 Applying Git updates...', 'info');
+    const result = await updater.performUpdate((msg) => broadcastLog(msg, 'info'));
+    broadcastLog('✅ Update completed successfully!', 'success');
+    if (wasRunning) startBotProcess();
+    return result;
+  } catch (err) {
+    broadcastLog(`❌ Update Failed: ${err.message}`, 'error');
+    throw err;
+  }
+});
+
+ipcMain.handle('app:open-web', () => openWebDashboard());
+
+ipcMain.on('window:minimize', () => {
+  if (mainWindow) mainWindow.minimize();
+});
+
+ipcMain.on('window:maximize', () => {
+  if (mainWindow) {
+    if (mainWindow.isMaximized()) mainWindow.unmaximize();
+    else mainWindow.maximize();
+  }
+});
+
+ipcMain.on('window:close', () => {
+  if (mainWindow) {
+    // Hide to tray instead of quitting if user closes window
+    mainWindow.hide();
+  }
+});
+
+// App Lifecycle
+app.on('second-instance', () => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+  }
+});
+
+app.whenReady().then(() => {
+  createWindow();
+  createTray();
+
+  // Auto-start bot on launcher open
+  setTimeout(() => {
+    startBotProcess();
+  }, 600);
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
+
+app.on('before-quit', () => {
+  app.isQuitting = true;
+  if (healthCheckInterval) clearInterval(healthCheckInterval);
+  stopBotProcess();
+});
+
+app.on('window-all-closed', () => {
+  // Keep alive in tray on Windows
+  if (process.platform !== 'darwin' && !app.isQuitting) {
+    // Hidden in tray
+  } else {
+    app.quit();
+  }
+});
