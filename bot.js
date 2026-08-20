@@ -2,6 +2,7 @@ const { chromium, firefox } = require('playwright');
 const readline = require('readline');
 const path = require('path');
 const fs = require('fs');
+const { spawn } = require('child_process');
 
 // Start the control panel server
 require('./test-server.js');
