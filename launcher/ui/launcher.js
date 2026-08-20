@@ -337,6 +337,10 @@
     btnCheckUpdate.onclick = async () => {
       updateModal.style.display = 'flex';
       btnPerformUpdate.style.display = 'none';
+      btnPerformUpdate.disabled = false;
+      btnCancelUpdate.disabled = false;
+      btnCancelUpdate.textContent = 'ยกเลิก';
+
       updateModalBody.innerHTML = `
         <div style="display:flex; align-items:center; gap:10px;">
           <div class="spinner"></div>
@@ -361,6 +365,7 @@
             <div style="font-size:11px; color:#94a3b8;">กดปุ่มด้านล่างเพื่อดาวน์โหลดและอัปเดตระบบอัตโนมัติ</div>
           `;
           btnPerformUpdate.style.display = 'block';
+          btnPerformUpdate.disabled = false;
         } else {
           updateModalBody.innerHTML = `
             <div style="color:#10b981; font-weight:700; font-size:13px; margin-bottom:4px;">✅ ระบบเป็นเวอร์ชันล่าสุดแล้ว!</div>
