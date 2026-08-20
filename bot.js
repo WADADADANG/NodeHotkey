@@ -147,7 +147,6 @@ function sendRealtimeOverlayState() {
     }, 15);
 }
 global.sendRealtimeOverlayState = sendRealtimeOverlayState;
-const { spawn } = require('child_process');
 
 // Ghost Mouse Jitter state
 let ghostMouseJitterConfig = { enabled: false, intervalMin: 8000, intervalMax: 25000, maxOffset: 12 };
@@ -877,8 +876,6 @@ async function launchBrowser(activeClientsList, choice) {
         const browserCtx = await browserType.launchPersistentContext(profilePath, launchArgs);
         clientContexts[clientIndex] = browserCtx;
 
-
-
         browserCtx.on('close', () => {
             handleClientContextClosed(clientIndex);
         });
@@ -1198,8 +1195,6 @@ async function launchSingleClient(clientIndexInput, choiceParam) {
     const browserCtx = await browserType.launchPersistentContext(profilePath, launchArgs);
     clientContexts[clientIndex] = browserCtx;
 
-
-
     browserCtx.on('close', () => {
         handleClientContextClosed(clientIndex);
     });
@@ -1222,49 +1217,6 @@ async function launchSingleClient(clientIndexInput, choiceParam) {
     await browserCtx.addInitScript(({ index, initialPrefix }) => {
         Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
         window.__clientPrefix = initialPrefix;
-
-        // Anti-Stuck Physical Key Watchdog on Window Blur
-        try {
-            const heldPhysicalKeys = new Map();
-
-            window.addEventListener('keydown', (e) => {
-                // Ignore synthetic untrusted events from bot CDP if needed
-                heldPhysicalKeys.set(e.code || e.key, {
-                    key: e.key,
-                    code: e.code,
-                    keyCode: e.keyCode,
-                    which: e.which
-                });
-            }, true);
-
-            window.addEventListener('keyup', (e) => {
-                heldPhysicalKeys.delete(e.code || e.key);
-            }, true);
-
-            const releaseAllStuckKeys = () => {
-                if (heldPhysicalKeys.size === 0) return;
-                heldPhysicalKeys.forEach((info) => {
-                    const evt = new KeyboardEvent('keyup', {
-                        key: info.key,
-                        code: info.code,
-                        keyCode: info.keyCode,
-                        which: info.which,
-                        bubbles: true,
-                        cancelable: true,
-                        view: window
-                    });
-                    window.dispatchEvent(evt);
-                    document.dispatchEvent(evt);
-                    if (document.body) document.body.dispatchEvent(evt);
-                });
-                heldPhysicalKeys.clear();
-            };
-
-            window.addEventListener('blur', releaseAllStuckKeys, true);
-            document.addEventListener('visibilitychange', () => {
-                if (document.hidden) releaseAllStuckKeys();
-            }, true);
-        } catch (err) {}
     }, { index: clientIndex, initialPrefix: clientAliases[String(clientIndex)] ? `[${clientAliases[String(clientIndex)]}] ` : `[Client ${clientIndex}] ` });
 
     if (!activeClients.includes(clientIndex)) {
@@ -2642,6 +2594,27 @@ function startGlobalListeners() {
                             sendOverlayUpdate();
                         }
                     }
+                }
+            }
+        }
+
+        // 3. Global Anti-Stuck Key Watchdog:
+        // When any physical key is released anywhere in Windows, ensure all game tabs release it immediately
+        if (isUp && e.name) {
+            const rawKey = e.name.trim();
+            const pwKey = formatKeyForPlaywright(rawKey);
+            for (let clientIndex of activeClients) {
+                const page = clientPages[clientIndex];
+                if (!page) continue;
+
+                // Check if this key is intentionally held down by a "Key Hold" node action
+                const isHeldByAction = Object.keys(activeHoldStates).some(actId => {
+                    const holdAct = activeActions.find(a => a.id === actId);
+                    return holdAct && holdAct.targetKey && holdAct.targetKey.toUpperCase() === rawKey.toUpperCase();
+                });
+
+                if (!isHeldByAction) {
+                    page.keyboard.up(pwKey).catch(() => {});
                 }
             }
         }
