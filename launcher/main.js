@@ -363,9 +363,22 @@ function startBotProcess() {
     botProcess.stdout.on('data', (data) => {
       const lines = data.toString().split(/\r?\n/);
       lines.forEach(line => {
-        if (line.trim()) {
-          broadcastLog(line, classifyLogLevel(line, false));
+        const trimmed = line.trim();
+        if (!trimmed) return;
+
+        // Zero-Latency High-Speed Overlay Stream from Bot Engine
+        if (trimmed.startsWith('__OVERLAY_DATA__')) {
+          try {
+            const rawJson = trimmed.slice('__OVERLAY_DATA__'.length);
+            const overlayData = JSON.parse(rawJson);
+            if (overlayWindow && !overlayWindow.isDestroyed()) {
+              overlayWindow.webContents.send('overlay:update', overlayData);
+            }
+          } catch (e) {}
+          return;
         }
+
+        broadcastLog(trimmed, classifyLogLevel(trimmed, false));
       });
     });
 
@@ -483,10 +496,27 @@ ipcMain.handle('update:apply', async () => {
   try {
     const wasRunning = isBotRunning;
     if (wasRunning) stopBotProcess();
-    broadcastLog('🔄 Applying Git updates...', 'info');
+    broadcastLog('🔄 Applying updates from GitHub...', 'info');
     const result = await updater.performUpdate((msg) => broadcastLog(msg, 'info'));
-    broadcastLog('✅ Update completed successfully!', 'success');
-    if (wasRunning) startBotProcess();
+    broadcastLog('✅ Update downloaded and installed successfully!', 'success');
+
+    if (result.needsRelaunch) {
+      broadcastLog('🔄 Critical files updated (main.js/preload.js). Relaunching application in 2 seconds...', 'warn');
+      setTimeout(() => {
+        app.relaunch();
+        app.exit(0);
+      }, 2000);
+    } else {
+      broadcastLog('✨ Performing Seamless Hot-Reload (No app restart needed)...', 'info');
+      // Hot reload iframe & components
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('app:hot-reload');
+      }
+      if (wasRunning) {
+        await startBotProcess();
+      }
+    }
+
     return result;
   } catch (err) {
     broadcastLog(`❌ Update Failed: ${err.message}`, 'error');
@@ -596,6 +626,9 @@ app.whenReady().then(() => {
   setTimeout(() => {
     startBotProcess();
   }, 600);
+
+  // Background health check & diagnostics heartbeat
+  healthCheckInterval = setInterval(checkBotHealth, 1000);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

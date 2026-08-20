@@ -46,5 +46,10 @@ contextBridge.exposeInMainWorld('launcherAPI', {
     const subscription = (event, data) => callback(data);
     ipcRenderer.on('bot:diagnostics', subscription);
     return () => ipcRenderer.removeListener('bot:diagnostics', subscription);
+  },
+  onHotReload: (callback) => {
+    const subscription = (event, data) => callback(data);
+    ipcRenderer.on('app:hot-reload', subscription);
+    return () => ipcRenderer.removeListener('app:hot-reload', subscription);
   }
 });

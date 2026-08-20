@@ -388,14 +388,35 @@
       `;
 
       try {
-        await api.applyUpdate();
-        updateModalBody.innerHTML = `
-          <div style="color:#10b981; font-weight:700; font-size:14px; margin-bottom:6px;">🎉 อัปเดตระบบเสร็จสมบูรณ์เรียบร้อยแล้ว!</div>
-          <div style="font-size:11px; opacity:0.8;">ระบบพร้อมใช้งานเวอร์ชันใหม่ทันที</div>
-        `;
-        btnPerformUpdate.style.display = 'none';
-        btnCancelUpdate.disabled = false;
-        btnCancelUpdate.textContent = 'เสร็จสิ้น';
+        const res = await api.applyUpdate();
+        if (res && res.needsRelaunch) {
+          updateModalBody.innerHTML = `
+            <div style="color:#10b981; font-weight:700; font-size:14px; margin-bottom:6px;">🎉 อัปเดตระบบหลักเสร็จสมบูรณ์!</div>
+            <div style="font-size:11px; color:#60a5fa; margin-top:4px;">🔄 ตรวจพบการแก้ไข Core System (main.js) — กำลังรีสตาร์ทโปรแกรมอัตโนมัติใน 2 วินาที...</div>
+          `;
+          btnPerformUpdate.style.display = 'none';
+          btnCancelUpdate.style.display = 'none';
+        } else {
+          updateModalBody.innerHTML = `
+            <div style="color:#10b981; font-weight:700; font-size:14px; margin-bottom:6px;">✨ Hot-Reload เสร็จสมบูรณ์!</div>
+            <div style="font-size:11px; color:#94a3b8;">ระบบอัปเดตและพร้อมใช้งานเวอร์ชันใหม่ทันทีโดยไม่ต้องปิดโปรแกรม</div>
+          `;
+          btnPerformUpdate.style.display = 'none';
+          btnCancelUpdate.disabled = false;
+          btnCancelUpdate.textContent = 'เสร็จสิ้น';
+
+          // Refresh canvas iframe immediately with cache buster
+          if (editorFrame) {
+            editorFrame.src = 'http://localhost:3000/?t=' + Date.now();
+          }
+
+          // Auto-close modal after 2 seconds
+          setTimeout(() => {
+            if (updateModal.style.display === 'flex') {
+              updateModal.style.display = 'none';
+            }
+          }, 2000);
+        }
       } catch (err) {
         updateModalBody.innerHTML = `
           <div style="color:#ef4444; font-weight:700;">❌ การอัปเดตล้มเหลว:</div>
@@ -411,6 +432,14 @@
   if (btnCancelUpdate) btnCancelUpdate.onclick = () => updateModal.style.display = 'none';
 
   // 9. Listeners from Electron Main Process
+  if (api.onHotReload) {
+    api.onHotReload(() => {
+      if (editorFrame) {
+        editorFrame.src = 'http://localhost:3000/?t=' + Date.now();
+      }
+    });
+  }
+
   api.onLogMessage((data) => {
     appendLogEntry(data);
   });

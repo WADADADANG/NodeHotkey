@@ -159,15 +159,22 @@ class SystemUpdater {
     });
   }
 
+  isCriticalFile(relPath) {
+    const p = relPath.replace(/\\/g, '/').toLowerCase();
+    return p.includes('launcher/main.js') || p.includes('launcher/preload.js') || p === 'package.json';
+  }
+
   async performUpdate(onProgressCallback) {
     if (this.isUpdating) throw new Error('Update is already in progress');
     this.isUpdating = true;
     this.hasGitRepo = fs.existsSync(path.join(this.projectDir, '.git'));
+    let needsRelaunch = false;
 
     try {
       // 1. If Git is present, use git pull
       if (this.hasGitRepo) {
         if (typeof onProgressCallback === 'function') onProgressCallback('📥 Pulling latest updates from Git...');
+        const oldHash = await this.runCommand('git rev-parse HEAD');
         const pullResult = await this.runCommand('git pull');
 
         if (typeof onProgressCallback === 'function') onProgressCallback('📦 Checking dependencies...');
@@ -176,8 +183,17 @@ class SystemUpdater {
         const newHash = await this.runCommand('git rev-parse HEAD');
         this.saveLocalVersion(newHash);
 
+        // Detect changed files via git diff
+        try {
+          const diffOutput = await this.runCommand(`git diff --name-only ${oldHash} ${newHash}`);
+          const changedFiles = diffOutput.split('\n').map(s => s.trim()).filter(Boolean);
+          needsRelaunch = changedFiles.some(f => this.isCriticalFile(f));
+        } catch (e) {
+          needsRelaunch = false;
+        }
+
         this.isUpdating = false;
-        return { success: true, details: pullResult };
+        return { success: true, needsRelaunch, details: pullResult };
       }
 
       // 2. Standalone ZIP Updater (No Git Required)
@@ -197,12 +213,13 @@ class SystemUpdater {
         if (typeof onProgressCallback === 'function') onProgressCallback('🔄 Updating application files...');
         
         // Copy files excluding user configs and local settings
-        const copyRecursive = (src, dest) => {
+        const copyRecursive = (src, dest, relBase = '') => {
           if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
           const items = fs.readdirSync(src, { withFileTypes: true });
           for (const item of items) {
             const srcPath = path.join(src, item.name);
             const destPath = path.join(dest, item.name);
+            const relPath = path.join(relBase, item.name);
 
             // Preserve user configs and runtime
             if (item.name === 'configs' || item.name === 'profiles' || item.name === 'logs' || item.name === 'runtime' || item.name === 'node_modules') {
@@ -210,8 +227,18 @@ class SystemUpdater {
             }
 
             if (item.isDirectory()) {
-              copyRecursive(srcPath, destPath);
+              copyRecursive(srcPath, destPath, relPath);
             } else {
+              // Compare file content to see if critical file changed
+              if (this.isCriticalFile(relPath)) {
+                try {
+                  const oldBuf = fs.existsSync(destPath) ? fs.readFileSync(destPath) : null;
+                  const newBuf = fs.readFileSync(srcPath);
+                  if (!oldBuf || !oldBuf.equals(newBuf)) {
+                    needsRelaunch = true;
+                  }
+                } catch (err) {}
+              }
               fs.copyFileSync(srcPath, destPath);
             }
           }
@@ -232,7 +259,7 @@ class SystemUpdater {
 
       if (typeof onProgressCallback === 'function') onProgressCallback('✅ All files updated successfully!');
       this.isUpdating = false;
-      return { success: true };
+      return { success: true, needsRelaunch };
     } catch (err) {
       this.isUpdating = false;
       throw err;

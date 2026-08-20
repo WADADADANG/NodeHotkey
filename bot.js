@@ -31,6 +31,9 @@ function emitSignal(actionId, eventName, targetId = null) {
     if (global.executionSignals.length > 80) {
         global.executionSignals.splice(0, global.executionSignals.length - 80);
     }
+    if (typeof sendRealtimeOverlayState === 'function') {
+        sendRealtimeOverlayState();
+    }
 }
 global.emitSignal = emitSignal;
 
@@ -103,6 +106,47 @@ let isSystemInitialized = false;
 let overlayProcess = null;
 let lastEnableOverlaySetting = true;
 let overlayAutoRestartTimer = null;
+
+function getClientStatuses() {
+    const activeList = activeClients || [];
+    const clientStatuses = {};
+    activeList.forEach(clientIdx => {
+        const clientStr = String(clientIdx);
+        const actions = activeActions || [];
+        if (isBuffSequenceRunning && isBuffSequenceRunning[clientStr]) {
+            const buffAct = actions.find(a => a.mode === 'buff_sequence' && (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all'));
+            clientStatuses[clientStr] = { status: buffAct ? buffAct.name : "Buffing", type: "buff" };
+        } else if (actions.find(a => a.mode === 'loop' && a.enabled && activeLoopStates[a.id] && activeLoopStates[a.id].running && (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all'))) {
+            const activeLoop = actions.find(a => a.mode === 'loop' && a.enabled && activeLoopStates[a.id] && activeLoopStates[a.id].running && (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all'));
+            clientStatuses[clientStr] = { status: activeLoop.name, type: "loop" };
+        } else if (actions.find(a => a.mode === 'key_hold' && a.enabled && activeHoldStates[a.id] && (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all'))) {
+            const activeHold = actions.find(a => a.mode === 'key_hold' && a.enabled && activeHoldStates[a.id] && (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all'));
+            clientStatuses[clientStr] = { status: activeHold.name || `Hold: ${activeHold.targetKey}`, type: "hold" };
+        } else if (actions.find(a => a.mode === 'forward' && a.enabled && pressedRemapKeys[`${a.id}-${clientStr}`] && (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all'))) {
+            const activeForward = actions.find(a => a.mode === 'forward' && a.enabled && pressedRemapKeys[`${a.id}-${clientStr}`] && (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all'));
+            clientStatuses[clientStr] = { status: activeForward.name || `${activeForward.trigger.value} ➜ ${activeForward.targetKey}`, type: "forward" };
+        } else {
+            clientStatuses[clientStr] = { status: "Standby", type: "standby" };
+        }
+    });
+    return clientStatuses;
+}
+
+let overlayDebounceTimer = null;
+function sendRealtimeOverlayState() {
+    if (overlayDebounceTimer) clearTimeout(overlayDebounceTimer);
+    overlayDebounceTimer = setTimeout(() => {
+        const payload = {
+            activeClients: activeClients || [],
+            clientStatuses: getClientStatuses(),
+            clientAliases: clientAliases || {},
+            isSuspended: !!global.isSuspended,
+            disabledClients: global.disabledClients || []
+        };
+        console.log('__OVERLAY_DATA__' + JSON.stringify(payload));
+    }, 15);
+}
+global.sendRealtimeOverlayState = sendRealtimeOverlayState;
 const { spawn } = require('child_process');
 
 // Ghost Mouse Jitter state
