@@ -43,50 +43,48 @@
     <!-- ════════ LEFT PANEL ════════ -->
     <div class="left-panel">
 
-      <!-- Profile Bar -->
-      <div class="profile-bar">
-        <div style="display:flex; width:100%; align-items:center; gap:10px; flex-wrap:wrap;">
-          <label data-i18n="profile">PROFILE</label>
-          <select id="profile-select" class="profile-select" onchange="onProfileSelectChange()"></select>
-
-          <button class="btn btn-ghost" onclick="openNewProfileModal()" data-i18n="newProfileBtn">+ New</button>
-          <button class="btn btn-ghost" onclick="openRenameProfileModal()" data-i18n="renameProfileBtn" style="border-color:#3b82f6; color:#3b82f6; background:rgba(59,130,246,0.08);">✏️ Rename</button>
-          <button class="btn btn-ghost" onclick="exportCurrentProfile()" data-i18n="exportProfileBtn" style="border-color:#10b981; color:#34d399; background:rgba(16,185,129,0.08);" title="Export profile as .json file">📤 Export</button>
-          <button class="btn btn-ghost" onclick="triggerImportProfile()" data-i18n="importProfileBtn" style="border-color:#06b6d4; color:#22d3ee; background:rgba(6,182,212,0.08);" title="Import profile from .json file">📥 Import</button>
-          <input type="file" id="import-profile-file-input" accept=".json" style="display:none;" onchange="handleImportProfileFile(event)" />
-          <button class="btn btn-ghost" onclick="openValidatorModal()" data-i18n="validateProfileBtn" style="border-color:#a855f7; color:#a855f7; background:rgba(168,85,247,0.08);">🔍 Validate Profile</button>
-          <button class="btn btn-danger" onclick="deleteProfile()" data-i18n="deleteProfileBtn">✕ Delete</button>
+      <!-- Unified Profile Manager -->
+      <div class="unified-profile-bar" style="display:flex; flex-direction:column; gap:8px; width:100%;">
+        <div style="display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:6px;">
+          <label style="font-size:11px; letter-spacing:0.5px; font-weight:700; color:var(--text); margin:0;" data-i18n="profileManagerTitle">
+            PROFILE MANAGER
+          </label>
+          <div style="display:flex; gap:5px; flex-wrap:wrap;">
+            <button class="btn btn-ghost" onclick="openNewProfileModal()" data-i18n="newProfileBtn" style="padding:2px 8px; font-size:10px;">+ New</button>
+            <button class="btn btn-ghost" onclick="openRenameProfileModal()" data-i18n="renameProfileBtn" style="padding:2px 8px; font-size:10px; border-color:#3b82f6; color:#3b82f6; background:rgba(59,130,246,0.08);">Rename</button>
+            <button class="btn btn-ghost" onclick="exportCurrentProfile()" data-i18n="exportProfileBtn" style="padding:2px 8px; font-size:10px; border-color:#10b981; color:#34d399; background:rgba(16,185,129,0.08);" title="Export profile as .json file">Export</button>
+            <button class="btn btn-ghost" onclick="triggerImportProfile()" data-i18n="importProfileBtn" style="padding:2px 8px; font-size:10px; border-color:#06b6d4; color:#22d3ee; background:rgba(6,182,212,0.08);" title="Import profile from .json file">Import</button>
+            <input type="file" id="import-profile-file-input" accept=".json" style="display:none;" onchange="handleImportProfileFile(event)" />
+            <button class="btn btn-ghost" onclick="openValidatorModal()" data-i18n="validateProfileBtn" style="padding:2px 8px; font-size:10px; border-color:#a855f7; color:#a855f7; background:rgba(168,85,247,0.08);">Validate</button>
+            <button class="btn btn-danger" onclick="deleteProfile()" data-i18n="deleteProfileBtn" style="padding:2px 8px; font-size:10px;">Delete</button>
+          </div>
         </div>
 
-        <!-- Multi-Active Profiles Multi-Select Dropdown -->
-        <div id="active-profiles-bar" style="display:flex; flex-direction:column; align-items:flex-start; width:100%; gap:6px; margin-top:10px; border-top:1px dashed rgba(255,255,255,0.08); padding-top:10px;">
-          <label data-i18n="activeProfilesLabel" style="font-size:11px; letter-spacing:0.5px; font-weight:700; color:var(--text); margin:0;">
-            ⚡ ACTIVE PROFILES (เลือกโปรไฟล์ที่เปิดทำงาน):
-          </label>
-          <div class="custom-multi-dropdown" id="active-profiles-dropdown-wrap" style="position:relative; width:100%; max-width:550px;">
-            <button type="button" id="active-profiles-dropdown-btn" onclick="window.toggleActiveProfilesDropdown(event)" style="width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:6px 12px; color:var(--text); font-family:'Outfit'; font-size:13px; outline:none; height:36px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; text-align:left; transition:all 0.2s;">
-              <span id="active-profiles-summary" style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:600;">
-                <!-- Summary of active profiles -->
-              </span>
-              <span id="active-profiles-count-badge" style="background:rgba(255,255,255,0.08); color:var(--muted); padding:2px 8px; border-radius:12px; font-size:11px; font-weight:700; margin-left:8px; white-space:nowrap;">0 Active ▾</span>
-            </button>
+        <!-- Unified Dropdown Bar -->
+        <div class="custom-multi-dropdown" id="active-profiles-dropdown-wrap" style="position:relative; width:100%;">
+          <button type="button" id="active-profiles-dropdown-btn" onclick="window.toggleActiveProfilesDropdown(event)" style="width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:6px 12px; color:var(--text); font-family:'Outfit'; font-size:13px; outline:none; min-height:38px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; text-align:left; transition:all 0.2s;">
+            <div id="active-profiles-summary" style="display:flex; align-items:center; gap:8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:600; flex:1;">
+              <!-- Summary of Editing + Active profiles -->
+            </div>
+            <span id="active-profiles-count-badge" style="background:rgba(255,255,255,0.08); color:var(--muted); padding:2px 8px; border-radius:12px; font-size:11px; font-weight:700; margin-left:8px; white-space:nowrap;">0 Active ▾</span>
+          </button>
 
-            <!-- Dropdown Menu Popover -->
-            <div id="active-profiles-menu" style="display:none; position:absolute; top:calc(100% + 6px); left:0; width:100%; min-width:340px; background:#0f172a; border:1px solid rgba(255,255,255,0.16); border-radius:10px; box-shadow:0 16px 40px rgba(0,0,0,0.85); z-index:10000; padding:10px; flex-direction:column; gap:8px;">
-              <div style="display:flex; align-items:center; justify-content:space-between; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.08);">
-                <span data-i18n="activeProfilesHint" style="font-size:11px; font-weight:700; color:var(--muted);">เลือกโปรไฟล์ที่ต้องการรัน (เลือกได้มากกว่า 1)</span>
-                <div style="display:flex; gap:6px;">
-                  <button type="button" class="btn btn-ghost" data-i18n="activeProfilesSelectCurrent" onclick="window.selectCurrentProfileActive()" style="padding:2px 8px; font-size:10px; border-color:rgba(56,189,248,0.4); color:#38bdf8; background:rgba(56,189,248,0.08);">🎯 Current</button>
-                  <button type="button" class="btn btn-ghost" data-i18n="activeProfilesSelectAll" onclick="window.setAllProfilesActive(true)" style="padding:2px 8px; font-size:10px; border-color:rgba(16,185,129,0.3); color:#34d399;">✓ Select All</button>
-                  <button type="button" class="btn btn-ghost" data-i18n="activeProfilesClearAll" onclick="window.setAllProfilesActive(false)" style="padding:2px 8px; font-size:10px; border-color:rgba(239,68,68,0.3); color:#ef4444;">✕ Clear All</button>
-                </div>
+          <!-- Dropdown Menu Popover -->
+          <div id="active-profiles-menu" style="display:none; position:absolute; top:calc(100% + 6px); left:0; width:100%; min-width:360px; background:#0f172a; border:1px solid rgba(255,255,255,0.16); border-radius:10px; box-shadow:0 16px 40px rgba(0,0,0,0.85); z-index:10000; padding:10px; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.08);">
+              <span data-i18n="activeProfilesHint" style="font-size:11px; font-weight:700; color:var(--muted);">เลือกโปรไฟล์ทำงาน (Checkbox) หรือคลิกเพื่อแก้ไข (Canvas)</span>
+              <div style="display:flex; gap:5px;">
+                <button type="button" class="btn btn-ghost" data-i18n="activeProfilesSelectCurrent" onclick="window.selectCurrentProfileActive()" style="padding:2px 7px; font-size:9.5px; border-color:rgba(56,189,248,0.4); color:#38bdf8; background:rgba(56,189,248,0.08);">Current</button>
+                <button type="button" class="btn btn-ghost" data-i18n="activeProfilesSelectAll" onclick="window.setAllProfilesActive(true)" style="padding:2px 7px; font-size:9.5px; border-color:rgba(16,185,129,0.3); color:#34d399;">Select All</button>
+                <button type="button" class="btn btn-ghost" data-i18n="activeProfilesClearAll" onclick="window.setAllProfilesActive(false)" style="padding:2px 7px; font-size:9.5px; border-color:rgba(239,68,68,0.3); color:#ef4444;">Clear All</button>
               </div>
-              <div id="active-profiles-list" style="display:flex; flex-direction:column; gap:4px; max-height:260px; overflow-y:auto; padding-right:2px;">
-                <!-- Checkbox Items -->
-              </div>
+            </div>
+            <div id="active-profiles-list" style="display:flex; flex-direction:column; gap:4px; max-height:280px; overflow-y:auto; padding-right:2px;">
+              <!-- Grouped Items -->
             </div>
           </div>
         </div>
+      </div>
 
         <!-- Client Control Center Grid (Clients 1 - 8) -->
         <div id="client-toggles-wrapper" style="display:flex; flex-direction:column; gap:8px; width:100%; margin-top:10px; border-top:1px dashed rgba(255,255,255,0.08); padding-top:10px;">

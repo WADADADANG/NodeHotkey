@@ -395,6 +395,24 @@ export function groupProfileNames(names) {
 let activeProfilesFilterTag = 'ALL';
 window.activeProfilesFilterTag = activeProfilesFilterTag;
 
+export function switchToEditProfile(name) {
+  if (!fullConfig.profiles || !fullConfig.profiles[name]) return;
+  syncGlobalSettingsFromDOM();
+  currentEditProfile = name;
+  try {
+    localStorage.setItem('nodehotkey_last_viewed_profile', currentEditProfile);
+  } catch (e) {}
+  populateProfileDropdowns();
+  loadProfileToUI(fullConfig.profiles[currentEditProfile]);
+  const menu = document.getElementById('active-profiles-menu');
+  if (menu) menu.style.display = 'none';
+  if (typeof window.toast === 'function') {
+    const msg = currentLang === 'en' ? `Switched to Canvas: "${name}"` : `สลับมาแก้ไขโปรไฟล์ "${name}" บน Canvas แล้ว`;
+    window.toast(msg, 'info');
+  }
+}
+window.switchToEditProfile = switchToEditProfile;
+
 export function renderActiveProfilesPills() {
   const summaryEl = document.getElementById('active-profiles-summary');
   const countBadgeEl = document.getElementById('active-profiles-count-badge');
@@ -410,29 +428,32 @@ export function renderActiveProfilesPills() {
   const activeList = Array.isArray(fullConfig.activeProfiles) ? fullConfig.activeProfiles : [];
   const activeSet = new Set(activeList);
 
-  // 1. Update Dropdown Summary Bar
-  const tNone = TRANSLATIONS[currentLang]?.activeProfilesNone || (currentLang === 'en' ? 'No profiles active (0 Active - Inactive)' : 'ไม่ได้เลือกโปรไฟล์ทำงาน (0 Active - ปิดทั้งหมด)');
+  // 1. Update Dropdown Summary Bar (Unified Editing + Active Status)
+  const tNone = TRANSLATIONS[currentLang]?.activeProfilesNone || (currentLang === 'en' ? '0 Active (Paused)' : '0 Active (ปิดทั้งหมด)');
   const tEditing = TRANSLATIONS[currentLang]?.activeProfilesEditingBadge || (currentLang === 'en' ? 'Editing' : 'กำลังแก้ไข');
   const tActiveSuffix = currentLang === 'en' ? 'Active' : 'เปิดทำงาน';
+  const curEditName = currentEditProfile || names[0] || 'Default';
 
-  if (activeList.length === 0) {
-    summaryEl.innerHTML = `<span style="color:var(--muted); font-weight:500;">${tNone}</span>`;
-    if (countBadgeEl) {
-      countBadgeEl.textContent = `0 ${tActiveSuffix} ▾`;
-      countBadgeEl.style.background = 'rgba(255,255,255,0.06)';
-      countBadgeEl.style.color = 'var(--muted)';
-      countBadgeEl.style.borderColor = 'transparent';
-    }
-  } else {
-    const displayNames = activeList.slice(0, 3).join(', ');
-    const moreText = activeList.length > 3 ? ` +${activeList.length - 3} more` : '';
-    summaryEl.innerHTML = `<span style="color:#34d399; font-weight:700;">🟢 ${displayNames}${moreText}</span>`;
-    if (countBadgeEl) {
-      countBadgeEl.textContent = `${activeList.length} ${tActiveSuffix} ▾`;
-      countBadgeEl.style.background = 'rgba(16,185,129,0.18)';
-      countBadgeEl.style.color = '#34d399';
-      countBadgeEl.style.border = '1px solid rgba(16,185,129,0.4)';
-    }
+  const displayNames = activeList.slice(0, 2).join(', ');
+  const moreText = activeList.length > 2 ? ` +${activeList.length - 2}` : '';
+  const activeStatusHtml = activeList.length > 0 
+    ? `<span style="color:#34d399; font-weight:700;">🟢 ${displayNames}${moreText}</span>` 
+    : `<span style="color:var(--muted); font-weight:500;">${tNone}</span>`;
+
+  summaryEl.innerHTML = `
+    <div style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+      <span style="font-size:11px; color:var(--muted);">Edit:</span>
+      <span style="color:#60a5fa; font-weight:700; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${curEditName}</span>
+      <span style="color:rgba(255,255,255,0.2);">|</span>
+      ${activeStatusHtml}
+    </div>
+  `;
+
+  if (countBadgeEl) {
+    countBadgeEl.textContent = `${activeList.length} ${tActiveSuffix} ▾`;
+    countBadgeEl.style.background = activeList.length > 0 ? 'rgba(16,185,129,0.18)' : 'rgba(255,255,255,0.06)';
+    countBadgeEl.style.color = activeList.length > 0 ? '#34d399' : 'var(--muted)';
+    countBadgeEl.style.border = activeList.length > 0 ? '1px solid rgba(16,185,129,0.4)' : '1px solid rgba(255,255,255,0.08)';
   }
 
   // 2. Group Profiles
@@ -561,18 +582,20 @@ export function renderActiveProfilesPills() {
         row.style.background = isActive ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.02)';
       };
 
+      // Clicking row toggles Active
       row.onclick = (e) => {
         e.stopPropagation();
         toggleProfileActive(name);
       };
 
+      // Left: Checkbox + Name
       const leftGroup = document.createElement('div');
-      leftGroup.style.cssText = 'display:flex; align-items:center; gap:8px; overflow:hidden;';
+      leftGroup.style.cssText = 'display:flex; align-items:center; gap:8px; overflow:hidden; flex:1;';
 
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.checked = isActive;
-      checkbox.style.cssText = 'accent-color:#10b981; cursor:pointer; width:14px; height:14px;';
+      checkbox.style.cssText = 'accent-color:#10b981; cursor:pointer; width:14px; height:14px; flex-shrink:0;';
       checkbox.onclick = (e) => e.stopPropagation();
       checkbox.onchange = () => toggleProfileActive(name, checkbox.checked);
       leftGroup.appendChild(checkbox);
@@ -584,13 +607,48 @@ export function renderActiveProfilesPills() {
 
       row.appendChild(leftGroup);
 
+      // Right: Edit Canvas Button / Editing Badge on the far right
+      const rightGroup = document.createElement('div');
+      rightGroup.style.cssText = 'display:flex; align-items:center; gap:6px; flex-shrink:0;';
+
       if (isEditing) {
         const editBadge = document.createElement('span');
-        editBadge.style.cssText = 'font-size:9.5px; font-weight:700; color:#60a5fa; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); padding:1px 5px; border-radius:10px; white-space:nowrap;';
+        editBadge.style.cssText = 'font-size:9.5px; font-weight:700; color:#60a5fa; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); padding:2px 7px; border-radius:10px; white-space:nowrap;';
         editBadge.textContent = tEditing;
-        row.appendChild(editBadge);
+        rightGroup.appendChild(editBadge);
+      } else {
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'btn btn-ghost';
+        editBtn.style.cssText = `
+          padding: 2px 7px;
+          font-size: 9.5px;
+          font-weight: 600;
+          border-radius: 4px;
+          color: #93c5fd;
+          background: rgba(59,130,246,0.1);
+          border: 1px solid rgba(59,130,246,0.25);
+          cursor: pointer;
+          transition: all 0.15s;
+          white-space: nowrap;
+        `;
+        editBtn.textContent = currentLang === 'en' ? 'Edit Canvas' : 'Edit Canvas';
+        editBtn.onmouseenter = () => {
+          editBtn.style.background = 'rgba(59,130,246,0.25)';
+          editBtn.style.color = '#fff';
+        };
+        editBtn.onmouseleave = () => {
+          editBtn.style.background = 'rgba(59,130,246,0.1)';
+          editBtn.style.color = '#93c5fd';
+        };
+        editBtn.onclick = (e) => {
+          e.stopPropagation();
+          switchToEditProfile(name);
+        };
+        rightGroup.appendChild(editBtn);
       }
 
+      row.appendChild(rightGroup);
       groupWrapper.appendChild(row);
     });
 
