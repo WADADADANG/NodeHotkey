@@ -9,6 +9,8 @@ class SystemUpdater {
   constructor(projectDir) {
     this.projectDir = projectDir || path.join(__dirname, '..');
     this.isUpdating = false;
+    this.isDownloaded = false;
+    this.cachedExtractInfo = null;
     this.hasGitRepo = fs.existsSync(path.join(this.projectDir, '.git'));
   }
 
@@ -43,10 +45,12 @@ class SystemUpdater {
           try {
             if (res.statusCode >= 200 && res.statusCode < 300) {
               const json = JSON.parse(data);
+              const changedFiles = Array.isArray(json.files) ? json.files.map(f => f.filename) : [];
               resolve({
                 sha: json.sha,
                 shortSha: json.sha.slice(0, 7),
-                message: json.commit && json.commit.message ? json.commit.message.trim() : 'Latest release update'
+                message: json.commit && json.commit.message ? json.commit.message.trim() : 'Latest release update',
+                changedFiles: changedFiles
               });
             } else {
               reject(new Error(`GitHub API HTTP ${res.statusCode}: ${data}`));
@@ -91,6 +95,73 @@ class SystemUpdater {
     } catch (e) {}
   }
 
+  analyzeImpact(changedFiles = []) {
+    const normalized = changedFiles.map(f => f.replace(/\\/g, '/').toLowerCase());
+    
+    // Level 3: Core App (Requires full Electron App Relaunch)
+    const isLevel3 = normalized.some(f => 
+      f.includes('launcher/main.js') || 
+      f.includes('launcher/preload.js') || 
+      f.includes('launcher/updater.js') || 
+      f === 'package.json'
+    );
+    if (isLevel3) {
+      return {
+        level: 3,
+        levelName: 'core_app',
+        badge: '🔴 Core App Update',
+        badgeClass: 'level-core',
+        color: '#ef4444',
+        title: 'อัปเดตระบบหลัก (Core System)',
+        description: 'มีการแก้ไขไฟล์ระบบหลักของ Launcher จำเป็นต้องปิดและเปิดโปรแกรมใหม่',
+        actionLabel: 'ปิดและเปิดโปรแกรมใหม่',
+        needsRelaunch: true,
+        needsEngineRestart: true,
+        isUiOnly: false
+      };
+    }
+
+    // Level 2: Bot Engine (Requires Bot Process Restart, Game windows can be kept)
+    const isLevel2 = normalized.some(f => 
+      f === 'bot.js' || 
+      f.includes('execution-engine.js') || 
+      f.includes('cooldown-manager.js') || 
+      f.includes('test-server.js') || 
+      f.startsWith('routes/') || 
+      f.includes('audio-worker')
+    );
+    if (isLevel2) {
+      return {
+        level: 2,
+        levelName: 'engine',
+        badge: '🟡 Bot Engine Update',
+        badgeClass: 'level-engine',
+        color: '#f59e0b',
+        title: 'อัปเดตระบบบอท (Bot Logic)',
+        description: 'มีการแก้ไขโค้ดการทำงานของบอท แนะนำให้รีสตาร์ท Engine เพื่อโหลดตรรกะใหม่',
+        actionLabel: 'รีสตาร์ท Engine เดี๋ยวนี้',
+        needsRelaunch: false,
+        needsEngineRestart: true,
+        isUiOnly: false
+      };
+    }
+
+    // Level 1: UI Only (Seamless Hot-Reload, ZERO game disruption)
+    return {
+      level: 1,
+      levelName: 'ui_only',
+      badge: '🟢 UI / Web Hot-Reload',
+      badgeClass: 'level-ui',
+      color: '#10b981',
+      title: 'อัปเดตหน้าตา UI & Web Dashboard',
+      description: 'แก้ไขเฉพาะหน้าตาเว็บและข้อความ ไม่กระทบต่อการทำงานของบอทและหน้าจอเกม',
+      actionLabel: 'Hot-Reload UI ทันที',
+      needsRelaunch: false,
+      needsEngineRestart: false,
+      isUiOnly: true
+    };
+  }
+
   async checkForUpdates() {
     this.hasGitRepo = fs.existsSync(path.join(this.projectDir, '.git'));
 
@@ -103,15 +174,22 @@ class SystemUpdater {
         const hasUpdate = localHash !== remoteHash;
         
         let commitMessage = '';
+        let changedFiles = [];
         if (hasUpdate) {
           commitMessage = await this.runCommand('git log -1 --pretty=%B @{u}');
+          const diffOutput = await this.runCommand(`git diff --name-only ${localHash} ${remoteHash}`);
+          changedFiles = diffOutput.split('\n').map(s => s.trim()).filter(Boolean);
         }
+
+        const impact = this.analyzeImpact(changedFiles);
 
         return {
           hasUpdate,
           localHash: localHash.slice(0, 7),
           remoteHash: remoteHash.slice(0, 7),
-          commitMessage: commitMessage.trim()
+          commitMessage: commitMessage.trim(),
+          changedFiles,
+          impact
         };
       } catch (gitErr) {
         // Fallback to GitHub API below if git command fails
@@ -124,11 +202,15 @@ class SystemUpdater {
       const localInfo = this.getLocalVersion();
       const hasUpdate = localInfo.commit.toLowerCase() !== remoteInfo.shortSha.toLowerCase() && localInfo.commit.toLowerCase() !== remoteInfo.sha.toLowerCase();
 
+      const impact = this.analyzeImpact(remoteInfo.changedFiles);
+
       return {
         hasUpdate,
         localHash: localInfo.commit,
         remoteHash: remoteInfo.shortSha,
-        commitMessage: remoteInfo.message
+        commitMessage: remoteInfo.message,
+        changedFiles: remoteInfo.changedFiles,
+        impact
       };
     } catch (apiErr) {
       return {
@@ -154,76 +236,103 @@ class SystemUpdater {
     });
   }
 
-  isCriticalFile(relPath) {
-    const p = relPath.replace(/\\/g, '/').toLowerCase();
-    return p.includes('launcher/main.js') || p.includes('launcher/preload.js') || p === 'package.json';
-  }
-
-  async performUpdate(onProgressCallback) {
+  // =========================================================================
+  // STEP 1: DOWNLOAD PACKAGE (Download & Extract to staging area)
+  // =========================================================================
+  async downloadPackage(onProgressCallback) {
     if (this.isUpdating) throw new Error('Update is already in progress');
     this.isUpdating = true;
     this.hasGitRepo = fs.existsSync(path.join(this.projectDir, '.git'));
-    let needsRelaunch = false;
 
     try {
-      // 1. If Git is present, use git pull
       if (this.hasGitRepo) {
-        if (typeof onProgressCallback === 'function') onProgressCallback('📥 Pulling latest updates from Git...');
-        const oldHash = await this.runCommand('git rev-parse HEAD');
-        const pullResult = await this.runCommand('git pull');
+        if (typeof onProgressCallback === 'function') onProgressCallback('📥 Fetching latest commits from Git...');
+        await this.runCommand('git fetch origin');
+        const localHash = await this.runCommand('git rev-parse HEAD');
+        const remoteHash = await this.runCommand('git rev-parse @{u}');
+        const diffOutput = await this.runCommand(`git diff --name-only ${localHash} ${remoteHash}`);
+        const changedFiles = diffOutput.split('\n').map(s => s.trim()).filter(Boolean);
+        const impact = this.analyzeImpact(changedFiles);
 
-        if (typeof onProgressCallback === 'function') onProgressCallback('📦 Checking dependencies...');
-        try { await this.runCommand('npm install --ignore-scripts'); } catch (e) {}
-
-        const newHash = await this.runCommand('git rev-parse HEAD');
-        this.saveLocalVersion(newHash);
-
-        // Detect changed files via git diff
-        try {
-          const diffOutput = await this.runCommand(`git diff --name-only ${oldHash} ${newHash}`);
-          const changedFiles = diffOutput.split('\n').map(s => s.trim()).filter(Boolean);
-          needsRelaunch = changedFiles.some(f => this.isCriticalFile(f));
-        } catch (e) {
-          needsRelaunch = false;
-        }
-
+        this.cachedExtractInfo = { hasGit: true, remoteHash, changedFiles, impact };
+        this.isDownloaded = true;
         this.isUpdating = false;
-        return { success: true, needsRelaunch, details: pullResult };
+        return { success: true, impact, changedFiles, remoteHash: remoteHash.slice(0, 7) };
       }
 
-      // 2. Standalone ZIP Updater (No Git Required)
+      // Standalone ZIP Download
       if (typeof onProgressCallback === 'function') onProgressCallback('📥 Downloading latest update package from GitHub...');
       const zipUrl = `https://github.com/${GITHUB_REPO}/archive/refs/heads/main.zip`;
       const tempZipPath = path.join(this.projectDir, 'temp_update.zip');
       const tempExtractDir = path.join(this.projectDir, 'temp_update_extracted');
 
-      // Clear any previous failed attempts
       try { if (fs.existsSync(tempZipPath)) fs.unlinkSync(tempZipPath); } catch (e) {}
       try { if (fs.existsSync(tempExtractDir)) fs.rmSync(tempExtractDir, { recursive: true, force: true }); } catch (e) {}
 
-      // Download completely to buffer in memory and write synchronously (100% immune to file-locks)
       const zipBuffer = await this.downloadBuffer(zipUrl);
       fs.writeFileSync(tempZipPath, zipBuffer);
 
       if (typeof onProgressCallback === 'function') onProgressCallback('📦 Extracting update package...');
-      
-      // Use Windows .NET ZipFile API (ultra-fast and zero file lock issues)
       await this.runCommand(`powershell -Command "Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('${tempZipPath}', '${tempExtractDir}')"`);
 
       const extractedItems = fs.existsSync(tempExtractDir) ? fs.readdirSync(tempExtractDir) : [];
-      if (extractedItems.length === 0) {
-        throw new Error('Failed to extract update files (empty archive)');
-      }
+      if (extractedItems.length === 0) throw new Error('Failed to extract update files (empty archive)');
 
       const extractedRoot = path.join(tempExtractDir, extractedItems[0]);
       if (!fs.existsSync(extractedRoot) || !fs.statSync(extractedRoot).isDirectory()) {
         throw new Error('Invalid update package structure');
       }
 
-      if (typeof onProgressCallback === 'function') onProgressCallback('🔄 Overwriting application files with latest version...');
-      let copiedFilesCount = 0;
+      // Fetch remote commit info for changed files diff
+      const remoteInfo = await this.fetchGitHubCommit();
+      const impact = this.analyzeImpact(remoteInfo.changedFiles);
 
-      // Copy files recursively excluding user configs, profiles, logs, and node_modules
+      this.cachedExtractInfo = {
+        hasGit: false,
+        extractedRoot,
+        tempZipPath,
+        tempExtractDir,
+        remoteInfo,
+        impact
+      };
+
+      this.isDownloaded = true;
+      this.isUpdating = false;
+      return { success: true, impact, changedFiles: remoteInfo.changedFiles, remoteHash: remoteInfo.shortSha };
+    } catch (err) {
+      this.isUpdating = false;
+      this.isDownloaded = false;
+      throw err;
+    }
+  }
+
+  // =========================================================================
+  // STEP 2: APPLY PACKAGE (Overwrite files to live project)
+  // =========================================================================
+  async applyPackage(onProgressCallback) {
+    if (!this.cachedExtractInfo && !this.hasGitRepo) {
+      throw new Error('No downloaded package found. Please download first.');
+    }
+
+    try {
+      if (this.hasGitRepo) {
+        if (typeof onProgressCallback === 'function') onProgressCallback('🔄 Applying Git pull...');
+        const pullResult = await this.runCommand('git pull');
+        try { await this.runCommand('npm install --ignore-scripts'); } catch (e) {}
+
+        const newHash = await this.runCommand('git rev-parse HEAD');
+        this.saveLocalVersion(newHash);
+
+        const impact = this.cachedExtractInfo ? this.cachedExtractInfo.impact : this.analyzeImpact([]);
+        this.isDownloaded = false;
+        this.cachedExtractInfo = null;
+        return { success: true, impact, details: pullResult };
+      }
+
+      const { extractedRoot, tempZipPath, tempExtractDir, remoteInfo, impact } = this.cachedExtractInfo;
+      if (typeof onProgressCallback === 'function') onProgressCallback('🔄 Overwriting application files with latest version...');
+
+      let copiedFilesCount = 0;
       const copyRecursive = (src, dest, relBase = '') => {
         if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
         const items = fs.readdirSync(src, { withFileTypes: true });
@@ -232,7 +341,7 @@ class SystemUpdater {
           const destPath = path.join(dest, item.name);
           const relPath = path.join(relBase, item.name);
 
-          // Strictly preserve user configs, profiles, logs, and dependencies
+          // Strictly preserve user configs, profiles, logs, and node_modules
           if (item.name === 'configs' || item.name === 'profiles' || item.name === 'logs' || item.name === 'runtime' || item.name === 'node_modules') {
             continue;
           }
@@ -240,16 +349,6 @@ class SystemUpdater {
           if (item.isDirectory()) {
             copyRecursive(srcPath, destPath, relPath);
           } else {
-            // Check if critical file changed
-            if (this.isCriticalFile(relPath)) {
-              try {
-                const oldBuf = fs.existsSync(destPath) ? fs.readFileSync(destPath) : null;
-                const newBuf = fs.readFileSync(srcPath);
-                if (!oldBuf || !oldBuf.equals(newBuf)) {
-                  needsRelaunch = true;
-                }
-              } catch (err) {}
-            }
             fs.copyFileSync(srcPath, destPath);
             copiedFilesCount++;
           }
@@ -262,30 +361,29 @@ class SystemUpdater {
         throw new Error('No files were updated during installation.');
       }
 
-      // Cleanup
+      // Cleanup staging
       try {
-        fs.unlinkSync(tempZipPath);
-        fs.rmSync(tempExtractDir, { recursive: true, force: true });
+        if (fs.existsSync(tempZipPath)) fs.unlinkSync(tempZipPath);
+        if (fs.existsSync(tempExtractDir)) fs.rmSync(tempExtractDir, { recursive: true, force: true });
       } catch (e) {}
 
-      // Update version.json to remote commit
-      const remoteInfo = await this.fetchGitHubCommit();
+      // Save version
       this.saveLocalVersion(remoteInfo.sha);
 
       if (typeof onProgressCallback === 'function') onProgressCallback(`✅ ${copiedFilesCount} files updated successfully!`);
-      this.isUpdating = false;
-      return { success: true, needsRelaunch, filesUpdated: copiedFilesCount };
+
+      this.isDownloaded = false;
+      this.cachedExtractInfo = null;
+      return { success: true, impact, filesUpdated: copiedFilesCount };
     } catch (err) {
-      this.isUpdating = false;
-      // Cleanup on failure
-      try {
-        const tempZip = path.join(this.projectDir, 'temp_update.zip');
-        const tempDir = path.join(this.projectDir, 'temp_update_extracted');
-        if (fs.existsSync(tempZip)) fs.unlinkSync(tempZip);
-        if (fs.existsSync(tempDir)) fs.rmSync(tempDir, { recursive: true, force: true });
-      } catch (e) {}
       throw err;
     }
+  }
+
+  // All-in-one fallback
+  async performUpdate(onProgressCallback) {
+    await this.downloadPackage(onProgressCallback);
+    return await this.applyPackage(onProgressCallback);
   }
 }
 

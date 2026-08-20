@@ -332,7 +332,48 @@
     }
   });
 
-  // 8. Update System Logic
+  // 8. Smart 3-Step Update Wizard Logic
+  let currentUpdateCheck = null;
+  let currentDownloadResult = null;
+
+  function renderWizardSteps(activeStep) {
+    return `
+      <div class="wizard-header-steps">
+        <div class="wizard-step-item ${activeStep === 1 ? 'active' : activeStep > 1 ? 'completed' : ''}">
+          <span class="wizard-step-num">${activeStep > 1 ? '✓' : '1'}</span>
+          <span>1. ตรวจสอบ</span>
+        </div>
+        <div class="wizard-step-divider"></div>
+        <div class="wizard-step-item ${activeStep === 2 ? 'active' : activeStep > 2 ? 'completed' : ''}">
+          <span class="wizard-step-num">${activeStep > 2 ? '✓' : '2'}</span>
+          <span>2. ติดตั้ง</span>
+        </div>
+        <div class="wizard-step-divider"></div>
+        <div class="wizard-step-item ${activeStep === 3 ? 'active' : ''}">
+          <span class="wizard-step-num">3</span>
+          <span>3. ใช้งาน</span>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderFileList(files = []) {
+    if (!files || files.length === 0) return '';
+    const fileItems = files.slice(0, 15).map(f => `
+      <div class="changed-file-item">
+        <span class="changed-file-icon">📄</span>
+        <span>${f}</span>
+      </div>
+    `).join('');
+    const extraCount = files.length > 15 ? `<div style="font-size:10px; opacity:0.6; padding-top:2px;">... และอีก ${files.length - 15} ไฟล์</div>` : '';
+    return `
+      <div class="changed-files-box">
+        ${fileItems}
+        ${extraCount}
+      </div>
+    `;
+  }
+
   if (btnCheckUpdate) {
     btnCheckUpdate.onclick = async () => {
       updateModal.style.display = 'flex';
@@ -342,38 +383,53 @@
       btnCancelUpdate.textContent = 'ยกเลิก';
 
       updateModalBody.innerHTML = `
-        <div style="display:flex; align-items:center; gap:10px;">
+        ${renderWizardSteps(1)}
+        <div style="display:flex; align-items:center; gap:10px; padding:12px 0;">
           <div class="spinner"></div>
-          <span>กำลังตรวจสอบสถานะ Git Remote...</span>
+          <span>กำลังตรวจสอบสถานะและวิเคราะห์ผลกระทบจาก GitHub...</span>
         </div>
       `;
 
       try {
         const result = await api.checkUpdate();
+        currentUpdateCheck = result;
+
         if (result.error) {
           updateModalBody.innerHTML = `
+            ${renderWizardSteps(1)}
             <div style="color:#ef4444; font-weight:700; margin-bottom:6px;">⚠️ ไม่สามารถตรวจสอบอัปเดตได้</div>
             <div style="font-size:11px; opacity:0.8;">${result.error}</div>
           `;
         } else if (result.hasUpdate) {
+          const impact = result.impact || { badge: 'Update Available', badgeClass: 'level-ui', description: 'New updates available' };
           updateModalBody.innerHTML = `
-            <div style="color:#10b981; font-weight:700; font-size:13px; margin-bottom:6px;">🎉 มีอัปเดตเวอร์ชันใหม่พร้อมใช้งาน!</div>
-            <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:8px 10px; margin:8px 0; font-family:'JetBrains Mono'; font-size:11px;">
-              <div>Local: <strong>${result.localHash}</strong> ➔ Remote: <strong>${result.remoteHash}</strong></div>
-              <div style="color:#60a5fa; margin-top:4px;">"${result.commitMessage || 'New features & bug fixes'}"</div>
+            ${renderWizardSteps(1)}
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+              <div style="color:#10b981; font-weight:700; font-size:13px;">🎉 มีอัปเดตใหม่พร้อมใช้งาน!</div>
+              <span class="impact-badge ${impact.badgeClass}">${impact.badge}</span>
             </div>
-            <div style="font-size:11px; color:#94a3b8;">กดปุ่มด้านล่างเพื่อดาวน์โหลดและอัปเดตระบบอัตโนมัติ</div>
+            <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:8px 10px; margin:6px 0; font-family:'JetBrains Mono'; font-size:11px;">
+              <div>Local: <strong>${result.localHash}</strong> ➔ Remote: <strong>${result.remoteHash}</strong></div>
+              <div style="color:#60a5fa; margin-top:4px;">"${result.commitMessage || 'New features & improvements'}"</div>
+            </div>
+            <div style="font-size:11px; color:#cbd5e1; margin-top:6px;">💡 <strong>ผลกระทบ:</strong> ${impact.description}</div>
+            ${renderFileList(result.changedFiles)}
           `;
           btnPerformUpdate.style.display = 'block';
           btnPerformUpdate.disabled = false;
+          btnPerformUpdate.textContent = '📥 Step 1: ดาวน์โหลดแพ็คเกจ';
+          btnPerformUpdate.onclick = () => handleStep1Download();
         } else {
           updateModalBody.innerHTML = `
+            ${renderWizardSteps(1)}
             <div style="color:#10b981; font-weight:700; font-size:13px; margin-bottom:4px;">✅ ระบบเป็นเวอร์ชันล่าสุดแล้ว!</div>
             <div style="font-size:11px; opacity:0.8;">Current Commit: <code>${result.localHash}</code> (Up to date)</div>
           `;
+          btnCancelUpdate.textContent = 'ปิด';
         }
       } catch (err) {
         updateModalBody.innerHTML = `
+          ${renderWizardSteps(1)}
           <div style="color:#ef4444; font-weight:700;">❌ เกิดข้อผิดพลาดในการตรวจสอบ:</div>
           <div style="font-size:11px; opacity:0.8; margin-top:4px;">${err.message}</div>
         `;
@@ -381,56 +437,135 @@
     };
   }
 
-  if (btnPerformUpdate) {
-    btnPerformUpdate.onclick = async () => {
-      btnPerformUpdate.disabled = true;
-      btnCancelUpdate.disabled = true;
+  // Step 1 Handler: Download Package
+  async function handleStep1Download() {
+    btnPerformUpdate.disabled = true;
+    btnCancelUpdate.disabled = true;
+    updateModalBody.innerHTML = `
+      ${renderWizardSteps(1)}
+      <div style="display:flex; align-items:center; gap:10px; padding:12px 0;">
+        <div class="spinner"></div>
+        <span>กำลังดาวน์โหลดแพ็คเกจและจัดเตรียมความพร้อม...</span>
+      </div>
+    `;
+
+    try {
+      const res = await api.downloadUpdate();
+      currentDownloadResult = res;
+      const impact = res.impact || (currentUpdateCheck && currentUpdateCheck.impact) || {};
+
       updateModalBody.innerHTML = `
-        <div style="display:flex; align-items:center; gap:10px;">
-          <div class="spinner"></div>
-          <span>กำลังดาวน์โหลดและติดตั้งอัปเดต... (กรุณารอสักครู่)</span>
+        ${renderWizardSteps(2)}
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <div style="color:#10b981; font-weight:700; font-size:13px;">✅ ดาวน์โหลดแพ็คเกจเสร็จสิ้น!</div>
+          <span class="impact-badge ${impact.badgeClass}">${impact.badge}</span>
+        </div>
+        <div style="font-size:11.5px; color:#cbd5e1; line-height:1.5;">
+          แพ็คเกจถูกเตรียมพร้อมสำหรับการติดตั้งแล้ว คุณสามารถกดปุ่มด้านล่างเพื่อเริ่มการติดตั้งทับไฟล์ live ในระบบได้ทันที
+        </div>
+        <div style="margin-top:10px; font-size:11px; color:#94a3b8;">
+          ⚙️ <strong>ระดับการอัปเดต:</strong> ${impact.title || 'Live Application Update'}
         </div>
       `;
 
-      try {
-        const res = await api.applyUpdate();
-        if (res && res.needsRelaunch) {
-          updateModalBody.innerHTML = `
-            <div style="color:#10b981; font-weight:700; font-size:14px; margin-bottom:6px;">🎉 อัปเดตระบบหลักเสร็จสมบูรณ์!</div>
-            <div style="font-size:11px; color:#60a5fa; margin-top:4px;">🔄 ตรวจพบการแก้ไข Core System (main.js) — กำลังรีสตาร์ทโปรแกรมอัตโนมัติใน 2 วินาที...</div>
-          `;
-          btnPerformUpdate.style.display = 'none';
-          btnCancelUpdate.style.display = 'none';
-        } else {
-          updateModalBody.innerHTML = `
-            <div style="color:#10b981; font-weight:700; font-size:14px; margin-bottom:6px;">✨ Hot-Reload เสร็จสมบูรณ์!</div>
-            <div style="font-size:11px; color:#94a3b8;">ระบบอัปเดตและพร้อมใช้งานเวอร์ชันใหม่ทันทีโดยไม่ต้องปิดโปรแกรม</div>
-          `;
-          btnPerformUpdate.style.display = 'none';
-          btnCancelUpdate.disabled = false;
-          btnCancelUpdate.textContent = 'เสร็จสิ้น';
+      btnPerformUpdate.style.display = 'block';
+      btnPerformUpdate.disabled = false;
+      btnPerformUpdate.textContent = '⚡ Step 2: เริ่มการติดตั้งไฟล์';
+      btnCancelUpdate.disabled = false;
+      btnCancelUpdate.textContent = 'ยกเลิก';
+      btnPerformUpdate.onclick = () => handleStep2Apply();
+    } catch (err) {
+      updateModalBody.innerHTML = `
+        ${renderWizardSteps(1)}
+        <div style="color:#ef4444; font-weight:700;">❌ การดาวน์โหลดล้มเหลว:</div>
+        <div style="font-size:11px; opacity:0.8; margin-top:4px;">${err.message}</div>
+      `;
+      btnPerformUpdate.style.display = 'none';
+      btnCancelUpdate.disabled = false;
+    }
+  }
 
-          // Refresh canvas iframe immediately with cache buster
-          if (editorFrame) {
-            editorFrame.src = 'http://localhost:3000/?t=' + Date.now();
-          }
+  // Step 2 Handler: Apply Package
+  async function handleStep2Apply() {
+    btnPerformUpdate.disabled = true;
+    btnCancelUpdate.disabled = true;
+    updateModalBody.innerHTML = `
+      ${renderWizardSteps(2)}
+      <div style="display:flex; align-items:center; gap:10px; padding:12px 0;">
+        <div class="spinner"></div>
+        <span>กำลังแตกไฟล์และเขียนทับข้อมูลเวอร์ชันใหม่...</span>
+      </div>
+    `;
 
-          // Auto-close modal after 2 seconds
-          setTimeout(() => {
-            if (updateModal.style.display === 'flex') {
-              updateModal.style.display = 'none';
-            }
-          }, 2000);
-        }
-      } catch (err) {
+    try {
+      const res = await api.applyUpdate();
+      const impact = res.impact || (currentDownloadResult && currentDownloadResult.impact) || { level: 1 };
+
+      // Render Step 3 according to impact level
+      if (impact.level === 3) {
+        // Level 3: Core App Relaunch Required
         updateModalBody.innerHTML = `
-          <div style="color:#ef4444; font-weight:700;">❌ การอัปเดตล้มเหลว:</div>
-          <div style="font-size:11px; opacity:0.8; margin-top:4px;">${err.message}</div>
+          ${renderWizardSteps(3)}
+          <div style="color:#f87171; font-weight:700; font-size:13px; margin-bottom:6px;">🚀 ติดตั้งระบบหลักเสร็จสมบูรณ์!</div>
+          <div style="font-size:11.5px; color:#cbd5e1; line-height:1.5;">
+            มีการเปลี่ยนแปลงในไฟล์ระบบหลัก (Core Launcher) จำเป็นต้องรีสตาร์ทตัวโปรแกรมเพื่อให้การตั้งค่าใหม่มีผล
+          </div>
+        `;
+        btnPerformUpdate.style.display = 'block';
+        btnPerformUpdate.disabled = false;
+        btnPerformUpdate.className = 'btn-hero-primary';
+        btnPerformUpdate.textContent = '🚀 รีสตาร์ทโปรแกรมทันที';
+        btnPerformUpdate.onclick = () => api.relaunchApp();
+
+        btnCancelUpdate.disabled = false;
+        btnCancelUpdate.textContent = 'เลื่อนไปก่อน';
+      } else if (impact.level === 2) {
+        // Level 2: Bot Engine Update (Ask user to restart engine or keep running)
+        updateModalBody.innerHTML = `
+          ${renderWizardSteps(3)}
+          <div style="color:#fbbf24; font-weight:700; font-size:13px; margin-bottom:6px;">🟡 อัปเดต Bot Engine เรียบร้อย!</div>
+          <div style="font-size:11.5px; color:#cbd5e1; line-height:1.5;">
+            ไฟล์คำสั่งและตรรกะของบอทได้รับการอัปเดตแล้ว คุณต้องการรีสตาร์ท Bot Engine ตอนนี้เลยหรือไม่? (หน้าจอเกมจะคงอยู่)
+          </div>
+        `;
+        btnPerformUpdate.style.display = 'block';
+        btnPerformUpdate.disabled = false;
+        btnPerformUpdate.className = 'btn-hero-primary';
+        btnPerformUpdate.textContent = '🔄 รีสตาร์ท Engine เดี๋ยวนี้';
+        btnPerformUpdate.onclick = async () => {
+          btnPerformUpdate.disabled = true;
+          await api.restartEngine();
+          if (editorFrame) editorFrame.src = 'http://localhost:3000/?t=' + Date.now();
+          updateModal.style.display = 'none';
+        };
+
+        btnCancelUpdate.disabled = false;
+        btnCancelUpdate.textContent = '⏳ รีสตาร์ทเองภายหลัง';
+      } else {
+        // Level 1: UI Only Hot-Reload (ZERO bot & game disruption)
+        await api.hotReloadUi();
+        if (editorFrame) editorFrame.src = 'http://localhost:3000/?t=' + Date.now();
+
+        updateModalBody.innerHTML = `
+          ${renderWizardSteps(3)}
+          <div style="color:#34d399; font-weight:700; font-size:13px; margin-bottom:6px;">✨ Hot-Reload สำเร็จสมบูรณ์!</div>
+          <div style="font-size:11.5px; color:#cbd5e1; line-height:1.5;">
+            หน้าจอ UI และ Web Dashboard ได้รับการรีเฟรชเป็นเวอร์ชันใหม่เรียบร้อยแล้ว — <strong>บอทและหน้าจอเกมทุกจอทำงานต่อเนื่อง 100% ไม่มีการปิดจอ</strong>
+          </div>
         `;
         btnPerformUpdate.style.display = 'none';
         btnCancelUpdate.disabled = false;
+        btnCancelUpdate.textContent = 'เสร็จสิ้น';
       }
-    };
+    } catch (err) {
+      updateModalBody.innerHTML = `
+        ${renderWizardSteps(2)}
+        <div style="color:#ef4444; font-weight:700;">❌ การติดตั้งล้มเหลว:</div>
+        <div style="font-size:11px; opacity:0.8; margin-top:4px;">${err.message}</div>
+      `;
+      btnPerformUpdate.style.display = 'none';
+      btnCancelUpdate.disabled = false;
+    }
   }
 
   if (btnCloseUpdateModal) btnCloseUpdateModal.onclick = () => updateModal.style.display = 'none';

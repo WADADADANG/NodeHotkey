@@ -488,40 +488,59 @@ ipcMain.handle('bot:get-status', () => ({
 ipcMain.handle('logs:open-folder', () => openLogFolder());
 ipcMain.handle('logs:get-path', () => logManager.getLogFilePath());
 
+// IPC Handlers for Step-by-Step Update Wizard
 ipcMain.handle('update:check', async () => {
   return await updater.checkForUpdates();
 });
 
-ipcMain.handle('update:apply', async () => {
+ipcMain.handle('update:download', async () => {
   try {
-    const wasRunning = isBotRunning;
-    if (wasRunning) stopBotProcess();
-    broadcastLog('🔄 Applying updates from GitHub...', 'info');
-    const result = await updater.performUpdate((msg) => broadcastLog(msg, 'info'));
-    broadcastLog('✅ Update downloaded and installed successfully!', 'success');
-
-    if (result.needsRelaunch) {
-      broadcastLog('🔄 Critical files updated (main.js/preload.js). Relaunching application in 2 seconds...', 'warn');
-      setTimeout(() => {
-        app.relaunch();
-        app.exit(0);
-      }, 2000);
-    } else {
-      broadcastLog('✨ Performing Seamless Hot-Reload (No app restart needed)...', 'info');
-      // Hot reload iframe & components
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('app:hot-reload');
-      }
-      if (wasRunning) {
-        await startBotProcess();
-      }
-    }
-
+    broadcastLog('📥 [Step 1] Downloading update package from GitHub...', 'info');
+    const result = await updater.downloadPackage((msg) => broadcastLog(msg, 'info'));
+    broadcastLog(`✅ [Step 1] Update package downloaded (${result.impact.badge})! Ready to install.`, 'success');
     return result;
   } catch (err) {
-    broadcastLog(`❌ Update Failed: ${err.message}`, 'error');
+    broadcastLog(`❌ Download Failed: ${err.message}`, 'error');
     throw err;
   }
+});
+
+ipcMain.handle('update:apply', async () => {
+  try {
+    broadcastLog('📦 [Step 2] Installing update package files...', 'info');
+    const result = await updater.applyPackage((msg) => broadcastLog(msg, 'info'));
+    broadcastLog(`✅ [Step 2] Package applied successfully (${result.filesUpdated || 0} files overwritten).`, 'success');
+    return result;
+  } catch (err) {
+    broadcastLog(`❌ Install Failed: ${err.message}`, 'error');
+    throw err;
+  }
+});
+
+ipcMain.handle('update:hot-reload-ui', async () => {
+  broadcastLog('✨ [Level 1] Applying Seamless UI Hot-Reload (ZERO bot disruption)...', 'info');
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('app:hot-reload');
+  }
+  return { success: true };
+});
+
+ipcMain.handle('update:restart-engine', async () => {
+  broadcastLog('🔄 [Level 2] Restarting Bot Engine to load updated logic...', 'warn');
+  await restartBotProcess();
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('app:hot-reload');
+  }
+  return { success: true };
+});
+
+ipcMain.handle('update:relaunch-app', () => {
+  broadcastLog('🚀 [Level 3] Relaunching NodeHotkey Launcher Application...', 'warn');
+  setTimeout(() => {
+    app.relaunch();
+    app.exit(0);
+  }, 1000);
+  return { success: true };
 });
 
 ipcMain.handle('app:open-web', () => openWebDashboard());

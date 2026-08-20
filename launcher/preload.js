@@ -11,9 +11,13 @@ contextBridge.exposeInMainWorld('launcherAPI', {
   openLogFolder: () => ipcRenderer.invoke('logs:open-folder'),
   getLogPath: () => ipcRenderer.invoke('logs:get-path'),
 
-  // Updater
+  // Updater (Step-by-Step Wizard & Multi-Tier Control)
   checkUpdate: () => ipcRenderer.invoke('update:check'),
+  downloadUpdate: () => ipcRenderer.invoke('update:download'),
   applyUpdate: () => ipcRenderer.invoke('update:apply'),
+  hotReloadUi: () => ipcRenderer.invoke('update:hot-reload-ui'),
+  restartEngine: () => ipcRenderer.invoke('update:restart-engine'),
+  relaunchApp: () => ipcRenderer.invoke('update:relaunch-app'),
 
   // External & UI
   openWebDashboard: () => ipcRenderer.invoke('app:open-web'),
