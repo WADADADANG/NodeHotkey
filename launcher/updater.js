@@ -137,25 +137,20 @@ class SystemUpdater {
     }
   }
 
-  downloadFile(url, dest) {
+  downloadBuffer(url) {
     return new Promise((resolve, reject) => {
-      const file = fs.createWriteStream(dest);
       const req = https.get(url, { headers: { 'User-Agent': 'NodeHotkey-Launcher-Updater' } }, (res) => {
         if (res.statusCode === 302 || res.statusCode === 301) {
-          return this.downloadFile(res.headers.location, dest).then(resolve).catch(reject);
+          return this.downloadBuffer(res.headers.location).then(resolve).catch(reject);
         }
         if (res.statusCode !== 200) {
           return reject(new Error(`Download failed with HTTP ${res.statusCode}`));
         }
-        res.pipe(file);
-        file.on('finish', () => {
-          file.close(() => resolve());
-        });
+        const chunks = [];
+        res.on('data', chunk => chunks.push(chunk));
+        res.on('end', () => resolve(Buffer.concat(chunks)));
       });
-      req.on('error', (err) => {
-        try { fs.unlinkSync(dest); } catch (e) {}
-        reject(err);
-      });
+      req.on('error', (err) => reject(err));
     });
   }
 
@@ -202,49 +197,69 @@ class SystemUpdater {
       const tempZipPath = path.join(this.projectDir, 'temp_update.zip');
       const tempExtractDir = path.join(this.projectDir, 'temp_update_extracted');
 
-      await this.downloadFile(zipUrl, tempZipPath);
+      // Clear any previous failed attempts
+      try { if (fs.existsSync(tempZipPath)) fs.unlinkSync(tempZipPath); } catch (e) {}
+      try { if (fs.existsSync(tempExtractDir)) fs.rmSync(tempExtractDir, { recursive: true, force: true }); } catch (e) {}
 
-      if (typeof onProgressCallback === 'function') onProgressCallback('📦 Extracting update files...');
-      // Use Windows PowerShell Expand-Archive built-in
-      await this.runCommand(`powershell -Command "Expand-Archive -Path '${tempZipPath}' -DestinationPath '${tempExtractDir}' -Force"`);
+      // Download completely to buffer in memory and write synchronously (100% immune to file-locks)
+      const zipBuffer = await this.downloadBuffer(zipUrl);
+      fs.writeFileSync(tempZipPath, zipBuffer);
 
-      const extractedRoot = path.join(tempExtractDir, 'NodeHotkey-main');
-      if (fs.existsSync(extractedRoot)) {
-        if (typeof onProgressCallback === 'function') onProgressCallback('🔄 Updating application files...');
-        
-        // Copy files excluding user configs and local settings
-        const copyRecursive = (src, dest, relBase = '') => {
-          if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
-          const items = fs.readdirSync(src, { withFileTypes: true });
-          for (const item of items) {
-            const srcPath = path.join(src, item.name);
-            const destPath = path.join(dest, item.name);
-            const relPath = path.join(relBase, item.name);
+      if (typeof onProgressCallback === 'function') onProgressCallback('📦 Extracting update package...');
+      
+      // Use Windows .NET ZipFile API (ultra-fast and zero file lock issues)
+      await this.runCommand(`powershell -Command "Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('${tempZipPath}', '${tempExtractDir}')"`);
 
-            // Preserve user configs and runtime
-            if (item.name === 'configs' || item.name === 'profiles' || item.name === 'logs' || item.name === 'runtime' || item.name === 'node_modules') {
-              continue;
-            }
+      const extractedItems = fs.existsSync(tempExtractDir) ? fs.readdirSync(tempExtractDir) : [];
+      if (extractedItems.length === 0) {
+        throw new Error('Failed to extract update files (empty archive)');
+      }
 
-            if (item.isDirectory()) {
-              copyRecursive(srcPath, destPath, relPath);
-            } else {
-              // Compare file content to see if critical file changed
-              if (this.isCriticalFile(relPath)) {
-                try {
-                  const oldBuf = fs.existsSync(destPath) ? fs.readFileSync(destPath) : null;
-                  const newBuf = fs.readFileSync(srcPath);
-                  if (!oldBuf || !oldBuf.equals(newBuf)) {
-                    needsRelaunch = true;
-                  }
-                } catch (err) {}
-              }
-              fs.copyFileSync(srcPath, destPath);
-            }
+      const extractedRoot = path.join(tempExtractDir, extractedItems[0]);
+      if (!fs.existsSync(extractedRoot) || !fs.statSync(extractedRoot).isDirectory()) {
+        throw new Error('Invalid update package structure');
+      }
+
+      if (typeof onProgressCallback === 'function') onProgressCallback('🔄 Overwriting application files with latest version...');
+      let copiedFilesCount = 0;
+
+      // Copy files recursively excluding user configs, profiles, logs, and node_modules
+      const copyRecursive = (src, dest, relBase = '') => {
+        if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
+        const items = fs.readdirSync(src, { withFileTypes: true });
+        for (const item of items) {
+          const srcPath = path.join(src, item.name);
+          const destPath = path.join(dest, item.name);
+          const relPath = path.join(relBase, item.name);
+
+          // Strictly preserve user configs, profiles, logs, and dependencies
+          if (item.name === 'configs' || item.name === 'profiles' || item.name === 'logs' || item.name === 'runtime' || item.name === 'node_modules') {
+            continue;
           }
-        };
 
-        copyRecursive(extractedRoot, this.projectDir);
+          if (item.isDirectory()) {
+            copyRecursive(srcPath, destPath, relPath);
+          } else {
+            // Check if critical file changed
+            if (this.isCriticalFile(relPath)) {
+              try {
+                const oldBuf = fs.existsSync(destPath) ? fs.readFileSync(destPath) : null;
+                const newBuf = fs.readFileSync(srcPath);
+                if (!oldBuf || !oldBuf.equals(newBuf)) {
+                  needsRelaunch = true;
+                }
+              } catch (err) {}
+            }
+            fs.copyFileSync(srcPath, destPath);
+            copiedFilesCount++;
+          }
+        }
+      };
+
+      copyRecursive(extractedRoot, this.projectDir);
+
+      if (copiedFilesCount === 0) {
+        throw new Error('No files were updated during installation.');
       }
 
       // Cleanup
@@ -257,11 +272,18 @@ class SystemUpdater {
       const remoteInfo = await this.fetchGitHubCommit();
       this.saveLocalVersion(remoteInfo.sha);
 
-      if (typeof onProgressCallback === 'function') onProgressCallback('✅ All files updated successfully!');
+      if (typeof onProgressCallback === 'function') onProgressCallback(`✅ ${copiedFilesCount} files updated successfully!`);
       this.isUpdating = false;
-      return { success: true, needsRelaunch };
+      return { success: true, needsRelaunch, filesUpdated: copiedFilesCount };
     } catch (err) {
       this.isUpdating = false;
+      // Cleanup on failure
+      try {
+        const tempZip = path.join(this.projectDir, 'temp_update.zip');
+        const tempDir = path.join(this.projectDir, 'temp_update_extracted');
+        if (fs.existsSync(tempZip)) fs.unlinkSync(tempZip);
+        if (fs.existsSync(tempDir)) fs.rmSync(tempDir, { recursive: true, force: true });
+      } catch (e) {}
       throw err;
     }
   }
