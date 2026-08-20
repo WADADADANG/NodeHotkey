@@ -1222,6 +1222,49 @@ async function launchSingleClient(clientIndexInput, choiceParam) {
     await browserCtx.addInitScript(({ index, initialPrefix }) => {
         Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
         window.__clientPrefix = initialPrefix;
+
+        // Anti-Stuck Physical Key Watchdog on Window Blur
+        try {
+            const heldPhysicalKeys = new Map();
+
+            window.addEventListener('keydown', (e) => {
+                // Ignore synthetic untrusted events from bot CDP if needed
+                heldPhysicalKeys.set(e.code || e.key, {
+                    key: e.key,
+                    code: e.code,
+                    keyCode: e.keyCode,
+                    which: e.which
+                });
+            }, true);
+
+            window.addEventListener('keyup', (e) => {
+                heldPhysicalKeys.delete(e.code || e.key);
+            }, true);
+
+            const releaseAllStuckKeys = () => {
+                if (heldPhysicalKeys.size === 0) return;
+                heldPhysicalKeys.forEach((info) => {
+                    const evt = new KeyboardEvent('keyup', {
+                        key: info.key,
+                        code: info.code,
+                        keyCode: info.keyCode,
+                        which: info.which,
+                        bubbles: true,
+                        cancelable: true,
+                        view: window
+                    });
+                    window.dispatchEvent(evt);
+                    document.dispatchEvent(evt);
+                    if (document.body) document.body.dispatchEvent(evt);
+                });
+                heldPhysicalKeys.clear();
+            };
+
+            window.addEventListener('blur', releaseAllStuckKeys, true);
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) releaseAllStuckKeys();
+            }, true);
+        } catch (err) {}
     }, { index: clientIndex, initialPrefix: clientAliases[String(clientIndex)] ? `[${clientAliases[String(clientIndex)]}] ` : `[Client ${clientIndex}] ` });
 
     if (!activeClients.includes(clientIndex)) {
