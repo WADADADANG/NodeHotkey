@@ -58,3 +58,16 @@
 - ✅ **CDP Native Key Events:** ส่งคำสั่งกดค้าง/ปล่อยผ่าน Playwright CDP ระดับเบราว์เซอร์ เหมือนคนกดจริง
 - ✅ **Human-Like Jitter:** สุ่มเวลา Delay และ Hold Time อัตโนมัติ ป้องกัน Pattern การกดที่สม่ำเสมอเกินไป
 - ✅ **Per-Client Proxy & UA Fingerprint:** สุ่ม User-Agent และแยก IP Address อิสระในแต่ละจอ
+
+---
+
+## 🔧 ปัญหาที่พบและวิธีแก้ไขเชิงเทคนิค (Known Issues & Architectural Solutions)
+
+### 1. 🕹️ ปัญหาปุ่มกดจริงค้างเวลาสลับหน้าต่าง (Physical Key Stuck on Window Blur)
+- **สาเหตุ:** ตัวเบราว์เซอร์ Chromium / Chrome / Edge เมื่อทำงานร่วมกับระบบ Automation CDP จะปิดระบบตัดปุ่มค้างของ Windows (`WM_KILLFOCUS`) โดยอัตโนมัติ ทำให้เมื่อผู้ใช้ใช้มือกดปุ่มเดินจริงในหน้าจอเกมแล้วคลิกสลับหน้าต่าง สัญญาณปล่อยปุ่ม (`UP`) จะถูกส่งไปให้หน้าต่างใหม่แทน หน้าจอเกมจึงไม่รับรู้ว่าปล่อยนิ้วแล้วและเดินค้าง
+- **วิธีแก้ไข:** สร้างระบบ **Global Anti-Stuck Key Watchdog** ใน [bot.js](bot.js) โดยใช้ตัวดักจับสัญญาณคีย์บอร์ดระดับ OS ดักจับจังหวะยกนิ้วขึ้น (`isUp`) แล้วส่งคำสั่ง `page.keyboard.up()` ตรงเข้าทุกจอเกมทันทีใน 0 ms (พร้อมระบบป้องกันไม่ให้ไปรบกวนโหมด `⚓ Key Hold` ที่ผู้ใช้สั่งบอทกดค้างไว้)
+
+### 2. 📦 ปัญหาระบบอัปเดตแจ้งว่าสำเร็จแต่ไฟล์ในเครื่องไม่อัปเดต (Updater File Lock Conflict)
+- **สาเหตุ:** ในระบบปฏิบัติการ Windows การดาวน์โหลดไฟล์แพ็กเกจ `.zip` ผ่าน Stream เดิม ยังไม่ทันคลาย File Handle ปิดสนิท ทำให้คำสั่งแตกไฟล์ของ PowerShell ติด Error *"The process cannot access the file because it is being used by another process"* ส่งผลให้แตกไฟล์ไม่สำเร็จ และโค้ดเดิมมีข้อผิดพลาดที่ข้ามการก๊อปปี้ไฟล์ไปเงียบๆ แล้วบันทึกว่าอัปเดตสำเร็จ
+- **วิธีแก้ไข:** ปรับปรุง [launcher/updater.js](launcher/updater.js) ให้ดาวน์โหลดไฟล์เข้า In-Memory Buffer เต็มก้อนแล้วเขียนลงดิสก์แบบ Synchronous (ไร้ปัญหา File Lock 100%) พร้อมเปลี่ยนมาใช้ **Windows .NET `ZipFile::ExtractToDirectory` Engine** แตกไฟล์ความเร็วสูง และเพิ่มระบบ **Error Guard & File Counter** ตรวจนับไฟล์ที่อัปเดตจริงก่อนบันทึกเวอร์ชัน พร้อมแสดง Log ทุกขั้นตอนอย่างโปร่งใส
+

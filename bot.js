@@ -774,19 +774,21 @@ async function launchBrowser(activeClientsList, choice) {
         const profilePath = path.join(profilesDir, profileName);
         const launchArgs = {
             ...launchOptions,
-            args: [...launchOptions.args]
+            args: baseChoice === '3' ? [] : [...launchOptions.args]
         };
         if (channelVal) launchArgs.channel = channelVal;
-        if (isApp) {
+        if (isApp && baseChoice !== '3') {
             launchArgs.args.push(`--app=${startUrl}`);
         }
 
-        // Apply saved window bounds (position & size) if available
+        // Apply saved window bounds (position & size) if available (Chromium only)
         const bounds = clientWindowBounds[String(clientIndex)];
         if (bounds && typeof bounds.x === 'number' && typeof bounds.y === 'number' && bounds.w > 200 && bounds.h > 200) {
             console.log(`[System] [Client ${clientIndex}] Restoring window bounds: Position (${bounds.x}, ${bounds.y}), Size (${bounds.w}x${bounds.h})`);
-            launchArgs.args.push(`--window-position=${bounds.x},${bounds.y}`);
-            launchArgs.args.push(`--window-size=${bounds.w},${bounds.h}`);
+            if (baseChoice !== '3') {
+                launchArgs.args.push(`--window-position=${bounds.x},${bounds.y}`);
+                launchArgs.args.push(`--window-size=${bounds.w},${bounds.h}`);
+            }
         }
 
         // Apply custom User-Agent if defined in clientUserAgents configuration
@@ -795,8 +797,6 @@ async function launchBrowser(activeClientsList, choice) {
             console.log(`[System] [Client ${clientIndex}] Setting custom User-Agent: "${customUa}"`);
             launchArgs.userAgent = customUa.trim();
         }
-
-
 
         // Apply custom Proxy if defined in clientProxies configuration
         const customProxyStr = clientProxies[String(clientIndex)];
@@ -809,7 +809,7 @@ async function launchBrowser(activeClientsList, choice) {
         }
 
         // Firefox specific args & user prefs
-        if (choice === '3') {
+        if (baseChoice === '3') {
             // Firefox performance prefs (equivalent to about:config tweaks)
             launchArgs.firefoxUserPrefs = {
                 'dom.ipc.processCount': 1,                     // Limit content processes per Firefox instance (Drastically reduces RAM/CPU usage for 5+ clients)
@@ -1149,19 +1149,21 @@ async function launchSingleClient(clientIndexInput, choiceParam) {
 
     const launchArgs = {
         ...launchOptions,
-        args: [...launchOptions.args]
+        args: baseChoice === '3' ? [] : [...launchOptions.args]
     };
     if (channelVal) launchArgs.channel = channelVal;
-    if (isApp) {
+    if (isApp && baseChoice !== '3') {
         launchArgs.args.push(`--app=${startUrl}`);
     }
 
-    // Apply saved window bounds (position & size) if available
+    // Apply saved window bounds (position & size) if available (Chromium only)
     const bounds = clientWindowBounds[String(clientIndex)];
     if (bounds && typeof bounds.x === 'number' && typeof bounds.y === 'number' && bounds.w > 200 && bounds.h > 200) {
         console.log(`[System] [Client ${clientIndex}] Restoring window bounds: Position (${bounds.x}, ${bounds.y}), Size (${bounds.w}x${bounds.h})`);
-        launchArgs.args.push(`--window-position=${bounds.x},${bounds.y}`);
-        launchArgs.args.push(`--window-size=${bounds.w},${bounds.h}`);
+        if (baseChoice !== '3') {
+            launchArgs.args.push(`--window-position=${bounds.x},${bounds.y}`);
+            launchArgs.args.push(`--window-size=${bounds.w},${bounds.h}`);
+        }
     }
 
     const customUa = clientUserAgents[String(clientIndex)];
