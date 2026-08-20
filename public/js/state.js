@@ -372,6 +372,29 @@ export function updateActiveToggleBtn() {
   }
 }
 
+// Profile Grouping Helpers (without emojis)
+export function getProfileGroup(name) {
+  if (!name || typeof name !== 'string') return 'General';
+  const match = name.match(/^\[([^\]]+)\]/);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  return 'General';
+}
+
+export function groupProfileNames(names) {
+  const groups = {};
+  names.forEach(name => {
+    const grp = getProfileGroup(name);
+    if (!groups[grp]) groups[grp] = [];
+    groups[grp].push(name);
+  });
+  return groups;
+}
+
+let activeProfilesFilterTag = 'ALL';
+window.activeProfilesFilterTag = activeProfilesFilterTag;
+
 export function renderActiveProfilesPills() {
   const summaryEl = document.getElementById('active-profiles-summary');
   const countBadgeEl = document.getElementById('active-profiles-count-badge');
@@ -388,7 +411,7 @@ export function renderActiveProfilesPills() {
   const activeSet = new Set(activeList);
 
   // 1. Update Dropdown Summary Bar
-  const tNone = TRANSLATIONS[currentLang]?.activeProfilesNone || (currentLang === 'en' ? '⚪ No profiles active (0 Active - Inactive)' : '⚪ ไม่ได้เลือกโปรไฟล์ทำงาน (0 Active - ปิดทั้งหมด)');
+  const tNone = TRANSLATIONS[currentLang]?.activeProfilesNone || (currentLang === 'en' ? 'No profiles active (0 Active - Inactive)' : 'ไม่ได้เลือกโปรไฟล์ทำงาน (0 Active - ปิดทั้งหมด)');
   const tEditing = TRANSLATIONS[currentLang]?.activeProfilesEditingBadge || (currentLang === 'en' ? 'Editing' : 'กำลังแก้ไข');
   const tActiveSuffix = currentLang === 'en' ? 'Active' : 'เปิดทำงาน';
 
@@ -412,67 +435,210 @@ export function renderActiveProfilesPills() {
     }
   }
 
-  // 2. Render Checkbox Items in Dropdown List
-  listEl.innerHTML = '';
-  names.forEach(name => {
-    const isActive = activeSet.has(name);
-    const isEditing = currentEditProfile === name;
+  // 2. Group Profiles
+  const groups = groupProfileNames(names);
+  const sortedGroupKeys = Object.keys(groups).sort((a, b) => {
+    if (a === 'General') return 1;
+    if (b === 'General') return -1;
+    return a.localeCompare(b);
+  });
 
-    const row = document.createElement('div');
-    row.style.cssText = `
+  // 3. Render Filter Tag Bar
+  let filterBarEl = document.getElementById('active-profiles-filter-bar');
+  if (!filterBarEl) {
+    filterBarEl = document.createElement('div');
+    filterBarEl.id = 'active-profiles-filter-bar';
+    filterBarEl.style.cssText = 'display:flex; align-items:center; gap:4px; flex-wrap:wrap; padding-bottom:6px; margin-bottom:6px; border-bottom:1px solid rgba(255,255,255,0.06);';
+    listEl.parentNode.insertBefore(filterBarEl, listEl);
+  }
+
+  const tagList = ['ALL', ...sortedGroupKeys];
+  filterBarEl.innerHTML = '';
+  tagList.forEach(tag => {
+    const isSelected = activeProfilesFilterTag === tag;
+    const tagBtn = document.createElement('button');
+    tagBtn.type = 'button';
+    tagBtn.className = 'btn btn-ghost';
+    tagBtn.style.cssText = `
+      padding: 2px 7px;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: ${isSelected ? 'rgba(59,130,246,0.25)' : 'rgba(255,255,255,0.04)'};
+      color: ${isSelected ? '#60a5fa' : 'var(--muted)'};
+      border: 1px solid ${isSelected ? 'rgba(59,130,246,0.5)' : 'rgba(255,255,255,0.08)'};
+    `;
+    tagBtn.textContent = tag === 'ALL' ? (currentLang === 'en' ? 'All' : 'ทั้งหมด') : tag;
+    tagBtn.onclick = (e) => {
+      e.stopPropagation();
+      activeProfilesFilterTag = tag;
+      renderActiveProfilesPills();
+    };
+    filterBarEl.appendChild(tagBtn);
+  });
+
+  // 4. Render Grouped Sections
+  listEl.innerHTML = '';
+  sortedGroupKeys.forEach(grp => {
+    if (activeProfilesFilterTag !== 'ALL' && activeProfilesFilterTag !== grp) {
+      return;
+    }
+
+    const grpNames = groups[grp];
+    const groupWrapper = document.createElement('div');
+    groupWrapper.style.cssText = 'display:flex; flex-direction:column; gap:4px; margin-bottom:8px;';
+
+    // Group Section Header (Clean, No Emojis)
+    const grpHeader = document.createElement('div');
+    grpHeader.style.cssText = `
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
-      padding: 6px 10px;
+      padding: 4px 6px;
+      background: rgba(255,255,255,0.03);
       border-radius: 6px;
-      cursor: pointer;
-      user-select: none;
-      transition: all 0.15s;
-      background: ${isActive ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.03)'};
-      border: 1px solid ${isActive ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.06)'};
+      border: 1px solid rgba(255,255,255,0.05);
     `;
-    row.onmouseenter = () => {
-      row.style.background = isActive ? 'rgba(16,185,129,0.22)' : 'rgba(255,255,255,0.08)';
-    };
-    row.onmouseleave = () => {
-      row.style.background = isActive ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.03)';
-    };
 
-    // Toggle on row click
-    row.onclick = (e) => {
+    const titleSpan = document.createElement('span');
+    titleSpan.style.cssText = 'font-size:11px; font-weight:700; color:#94a3b8; letter-spacing:0.3px;';
+    titleSpan.textContent = `${grp} (${grpNames.length})`;
+    grpHeader.appendChild(titleSpan);
+
+    const btnGroup = document.createElement('div');
+    btnGroup.style.cssText = 'display:flex; gap:4px;';
+
+    const btnEnableAll = document.createElement('button');
+    btnEnableAll.type = 'button';
+    btnEnableAll.className = 'btn btn-ghost';
+    btnEnableAll.style.cssText = 'padding:1px 6px; font-size:9.5px; border-color:rgba(16,185,129,0.3); color:#34d399; background:rgba(16,185,129,0.06); cursor:pointer;';
+    btnEnableAll.textContent = currentLang === 'en' ? 'Enable Group' : 'เปิดทั้งกลุ่ม';
+    btnEnableAll.onclick = (e) => {
       e.stopPropagation();
-      toggleProfileActive(name);
+      setGroupProfilesActive(grp, true);
     };
 
-    const leftGroup = document.createElement('div');
-    leftGroup.style.cssText = 'display:flex; align-items:center; gap:8px; overflow:hidden;';
+    const btnDisableAll = document.createElement('button');
+    btnDisableAll.type = 'button';
+    btnDisableAll.className = 'btn btn-ghost';
+    btnDisableAll.style.cssText = 'padding:1px 6px; font-size:9.5px; border-color:rgba(239,68,68,0.3); color:#ef4444; background:rgba(239,68,68,0.06); cursor:pointer;';
+    btnDisableAll.textContent = currentLang === 'en' ? 'Disable Group' : 'ปิดทั้งกลุ่ม';
+    btnDisableAll.onclick = (e) => {
+      e.stopPropagation();
+      setGroupProfilesActive(grp, false);
+    };
 
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.checked = isActive;
-    checkbox.style.cssText = 'accent-color:#10b981; cursor:pointer; width:15px; height:15px;';
-    checkbox.onclick = (e) => e.stopPropagation();
-    checkbox.onchange = () => toggleProfileActive(name, checkbox.checked);
-    leftGroup.appendChild(checkbox);
+    btnGroup.appendChild(btnEnableAll);
+    btnGroup.appendChild(btnDisableAll);
+    grpHeader.appendChild(btnGroup);
+    groupWrapper.appendChild(grpHeader);
 
-    const nameLabel = document.createElement('span');
-    nameLabel.style.cssText = `font-size: 12px; font-weight: ${isActive ? '700' : '500'}; color: ${isActive ? '#34d399' : 'var(--text)'}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;`;
-    nameLabel.textContent = name;
-    leftGroup.appendChild(nameLabel);
+    // Profile Rows in Group
+    grpNames.forEach(name => {
+      const isActive = activeSet.has(name);
+      const isEditing = currentEditProfile === name;
 
-    row.appendChild(leftGroup);
+      const row = document.createElement('div');
+      row.style.cssText = `
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 5px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.15s;
+        background: ${isActive ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.02)'};
+        border: 1px solid ${isActive ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.05)'};
+      `;
+      row.onmouseenter = () => {
+        row.style.background = isActive ? 'rgba(16,185,129,0.22)' : 'rgba(255,255,255,0.08)';
+      };
+      row.onmouseleave = () => {
+        row.style.background = isActive ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.02)';
+      };
 
-    if (isEditing) {
-      const editBadge = document.createElement('span');
-      editBadge.style.cssText = 'font-size:10px; font-weight:700; color:#60a5fa; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); padding:1px 6px; border-radius:10px; white-space:nowrap;';
-      editBadge.textContent = tEditing;
-      row.appendChild(editBadge);
-    }
+      row.onclick = (e) => {
+        e.stopPropagation();
+        toggleProfileActive(name);
+      };
 
-    listEl.appendChild(row);
+      const leftGroup = document.createElement('div');
+      leftGroup.style.cssText = 'display:flex; align-items:center; gap:8px; overflow:hidden;';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = isActive;
+      checkbox.style.cssText = 'accent-color:#10b981; cursor:pointer; width:14px; height:14px;';
+      checkbox.onclick = (e) => e.stopPropagation();
+      checkbox.onchange = () => toggleProfileActive(name, checkbox.checked);
+      leftGroup.appendChild(checkbox);
+
+      const nameLabel = document.createElement('span');
+      nameLabel.style.cssText = `font-size: 11.5px; font-weight: ${isActive ? '700' : '500'}; color: ${isActive ? '#34d399' : 'var(--text)'}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;`;
+      nameLabel.textContent = name;
+      leftGroup.appendChild(nameLabel);
+
+      row.appendChild(leftGroup);
+
+      if (isEditing) {
+        const editBadge = document.createElement('span');
+        editBadge.style.cssText = 'font-size:9.5px; font-weight:700; color:#60a5fa; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); padding:1px 5px; border-radius:10px; white-space:nowrap;';
+        editBadge.textContent = tEditing;
+        row.appendChild(editBadge);
+      }
+
+      groupWrapper.appendChild(row);
+    });
+
+    listEl.appendChild(groupWrapper);
   });
 }
+
+export function setGroupProfilesActive(groupName, makeActive) {
+  const names = Object.keys(fullConfig.profiles || {});
+  const grpNames = names.filter(n => getProfileGroup(n) === groupName);
+  if (grpNames.length === 0) return;
+
+  const currentActiveList = Array.isArray(fullConfig.activeProfiles) ? [...fullConfig.activeProfiles] : [];
+  let updatedList = [];
+
+  if (makeActive) {
+    const set = new Set([...currentActiveList, ...grpNames]);
+    updatedList = Array.from(set);
+  } else {
+    updatedList = currentActiveList.filter(n => !grpNames.includes(n));
+  }
+
+  fetch('/api/profile/set-active-list', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ activeProfiles: updatedList })
+  })
+    .then(r => r.json())
+    .then(res => {
+      if (res && res.success) {
+        fullConfig.activeProfiles = res.activeProfiles;
+        fullConfig.activeProfile = res.activeProfile || fullConfig.activeProfiles[0] || '';
+        populateProfileDropdowns();
+        const msg = makeActive
+          ? (currentLang === 'en' ? `Activated group "${groupName}" (${grpNames.length} profiles)` : `เปิดใช้งานกลุ่ม "${groupName}" (${grpNames.length} โปรไฟล์) แล้ว!`)
+          : (currentLang === 'en' ? `Deactivated group "${groupName}"` : `ปิดการทำงานกลุ่ม "${groupName}" เรียบร้อยแล้ว`);
+        if (typeof window.toast === 'function') window.toast(msg, makeActive ? 'success' : 'info');
+      } else {
+        fullConfig.activeProfiles = updatedList;
+        populateProfileDropdowns();
+      }
+    })
+    .catch(() => {
+      fullConfig.activeProfiles = updatedList;
+      populateProfileDropdowns();
+    });
+}
+window.setGroupProfilesActive = setGroupProfilesActive;
 
 export function toggleActiveProfilesDropdown(e) {
   if (e) e.stopPropagation();
@@ -498,8 +664,8 @@ export function setAllProfilesActive(makeActive) {
         fullConfig.activeProfile = res.activeProfile || fullConfig.activeProfiles[0] || '';
         populateProfileDropdowns();
         const msg = makeActive
-          ? (currentLang === 'en' ? `🟢 All ${names.length} profiles are now ACTIVE!` : `🟢 เปิดใช้งานโปรไฟล์ทั้งหมด (${names.length} โปรไฟล์) แล้ว!`)
-          : (currentLang === 'en' ? `⚪ All profiles are now INACTIVE.` : `⚪ ปิดการทำงานของโปรไฟล์ทั้งหมดเรียบร้อยแล้ว`);
+          ? (currentLang === 'en' ? `All ${names.length} profiles are now ACTIVE!` : `เปิดใช้งานโปรไฟล์ทั้งหมด (${names.length} โปรไฟล์) แล้ว!`)
+          : (currentLang === 'en' ? `All profiles are now INACTIVE.` : `ปิดการทำงานของโปรไฟล์ทั้งหมดเรียบร้อยแล้ว`);
         if (typeof window.toast === 'function') window.toast(msg, makeActive ? 'success' : 'info');
       } else {
         fullConfig.activeProfiles = targetProfiles;
@@ -534,7 +700,7 @@ export function selectCurrentProfileActive() {
         fullConfig.activeProfiles = res.activeProfiles;
         fullConfig.activeProfile = current;
         populateProfileDropdowns();
-        const msg = currentLang === 'en' ? `🎯 Activated current profile: "${current}"` : `🎯 เปิดใช้งานโปรไฟล์ปัจจุบัน: "${current}" แล้ว!`;
+        const msg = currentLang === 'en' ? `Activated current profile: "${current}"` : `เปิดใช้งานโปรไฟล์ปัจจุบัน: "${current}" แล้ว!`;
         if (typeof window.toast === 'function') window.toast(msg, 'success');
       } else {
         fullConfig.activeProfiles = currentActiveList;
@@ -566,15 +732,27 @@ export function populateProfileDropdowns() {
     return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
   });
 
+  const groups = groupProfileNames(names);
+  const sortedGroupKeys = Object.keys(groups).sort((a, b) => {
+    if (a === 'General') return 1;
+    if (b === 'General') return -1;
+    return a.localeCompare(b);
+  });
+
   const selectEl = document.getElementById('profile-select');
   if (selectEl) {
     selectEl.innerHTML = '';
-    names.forEach(n => {
-      const o = document.createElement('option');
-      o.value = n;
-      const isAct = isProfileActive(n);
-      o.textContent = (isAct ? '⚡ ' : '') + n;
-      selectEl.appendChild(o);
+    sortedGroupKeys.forEach(grp => {
+      const optGroup = document.createElement('optgroup');
+      optGroup.label = grp;
+      groups[grp].forEach(n => {
+        const o = document.createElement('option');
+        o.value = n;
+        const isAct = isProfileActive(n);
+        o.textContent = (isAct ? '⚡ ' : '') + n;
+        optGroup.appendChild(o);
+      });
+      selectEl.appendChild(optGroup);
     });
     if (names.includes(currentEditProfile)) selectEl.value = currentEditProfile;
     else if (names.length > 0) selectEl.value = names[0];
@@ -590,10 +768,16 @@ export function populateProfileDropdowns() {
     optNone.textContent = TRANSLATIONS[currentLang] ? TRANSLATIONS[currentLang].emptyProfile : 'None (Empty Profile)';
     copyEl.appendChild(optNone);
 
-    names.forEach(n => {
-      const o = document.createElement('option');
-      o.value = n; o.textContent = n;
-      copyEl.appendChild(o);
+    sortedGroupKeys.forEach(grp => {
+      const optGroup = document.createElement('optgroup');
+      optGroup.label = grp;
+      groups[grp].forEach(n => {
+        const o = document.createElement('option');
+        o.value = n;
+        o.textContent = n;
+        optGroup.appendChild(o);
+      });
+      copyEl.appendChild(optGroup);
     });
     if (prevCopy !== undefined) copyEl.value = prevCopy;
   }
