@@ -111,20 +111,42 @@ let overlayAutoRestartTimer = null;
 function getClientStatuses() {
     const activeList = activeClients || [];
     const clientStatuses = {};
+    const actions = activeActions || [];
+
     activeList.forEach(clientIdx => {
         const clientStr = String(clientIdx);
-        const actions = activeActions || [];
-        if (isBuffSequenceRunning && isBuffSequenceRunning[clientStr]) {
-            const buffAct = actions.find(a => a.mode === 'buff_sequence' && (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all'));
+
+        // Priority 0: Explicit pinned action via showOnOverlay
+        const pinnedAction = actions.find(a => {
+            if (!a.showOnOverlay || !a.enabled || !isTargetMatched(a.targetClient, clientStr)) return false;
+            if (a.mode === 'buff_sequence') return !!(isBuffSequenceRunning && isBuffSequenceRunning[clientStr]);
+            if (a.mode === 'loop') return !!(activeLoopStates[a.id] && activeLoopStates[a.id].running);
+            if (a.mode === 'key_hold') return !!activeHoldStates[a.id];
+            if (a.mode === 'forward') return !!pressedRemapKeys[`${a.id}-${clientStr}`];
+            return false;
+        });
+
+        if (pinnedAction) {
+            let statusType = "loop";
+            if (pinnedAction.mode === 'buff_sequence') statusType = "buff";
+            else if (pinnedAction.mode === 'key_hold') statusType = "hold";
+            else if (pinnedAction.mode === 'forward') statusType = "forward";
+
+            clientStatuses[clientStr] = {
+                status: pinnedAction.name || "Active",
+                type: statusType
+            };
+        } else if (isBuffSequenceRunning && isBuffSequenceRunning[clientStr]) {
+            const buffAct = actions.find(a => a.mode === 'buff_sequence' && isTargetMatched(a.targetClient, clientStr));
             clientStatuses[clientStr] = { status: buffAct ? buffAct.name : "Buffing", type: "buff" };
-        } else if (actions.find(a => a.mode === 'loop' && a.enabled && activeLoopStates[a.id] && activeLoopStates[a.id].running && (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all'))) {
-            const activeLoop = actions.find(a => a.mode === 'loop' && a.enabled && activeLoopStates[a.id] && activeLoopStates[a.id].running && (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all'));
+        } else if (actions.find(a => a.mode === 'loop' && a.enabled && activeLoopStates[a.id] && activeLoopStates[a.id].running && isTargetMatched(a.targetClient, clientStr))) {
+            const activeLoop = actions.find(a => a.mode === 'loop' && a.enabled && activeLoopStates[a.id] && activeLoopStates[a.id].running && isTargetMatched(a.targetClient, clientStr));
             clientStatuses[clientStr] = { status: activeLoop.name, type: "loop" };
-        } else if (actions.find(a => a.mode === 'key_hold' && a.enabled && activeHoldStates[a.id] && (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all'))) {
-            const activeHold = actions.find(a => a.mode === 'key_hold' && a.enabled && activeHoldStates[a.id] && (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all'));
+        } else if (actions.find(a => a.mode === 'key_hold' && a.enabled && activeHoldStates[a.id] && isTargetMatched(a.targetClient, clientStr))) {
+            const activeHold = actions.find(a => a.mode === 'key_hold' && a.enabled && activeHoldStates[a.id] && isTargetMatched(a.targetClient, clientStr));
             clientStatuses[clientStr] = { status: activeHold.name || `Hold: ${activeHold.targetKey}`, type: "hold" };
-        } else if (actions.find(a => a.mode === 'forward' && a.enabled && pressedRemapKeys[`${a.id}-${clientStr}`] && (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all'))) {
-            const activeForward = actions.find(a => a.mode === 'forward' && a.enabled && pressedRemapKeys[`${a.id}-${clientStr}`] && (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all'));
+        } else if (actions.find(a => a.mode === 'forward' && a.enabled && pressedRemapKeys[`${a.id}-${clientStr}`] && isTargetMatched(a.targetClient, clientStr))) {
+            const activeForward = actions.find(a => a.mode === 'forward' && a.enabled && pressedRemapKeys[`${a.id}-${clientStr}`] && isTargetMatched(a.targetClient, clientStr));
             clientStatuses[clientStr] = { status: activeForward.name || `${activeForward.trigger.value} ➜ ${activeForward.targetKey}`, type: "forward" };
         } else {
             clientStatuses[clientStr] = { status: "Standby", type: "standby" };
@@ -133,21 +155,20 @@ function getClientStatuses() {
     return clientStatuses;
 }
 
-let overlayDebounceTimer = null;
 function sendRealtimeOverlayState() {
-    if (overlayDebounceTimer) clearTimeout(overlayDebounceTimer);
-    overlayDebounceTimer = setTimeout(() => {
-        const payload = {
-            activeClients: activeClients || [],
-            clientStatuses: getClientStatuses(),
-            clientAliases: clientAliases || {},
-            isSuspended: !!global.isSuspended,
-            disabledClients: global.disabledClients || []
-        };
+    const payload = {
+        activeClients: activeClients || [],
+        clientStatuses: getClientStatuses(),
+        clientAliases: clientAliases || {},
+        isSuspended: !!global.isSuspended,
+        disabledClients: global.disabledClients || []
+    };
+    try {
         console.log('__OVERLAY_DATA__' + JSON.stringify(payload));
-    }, 15);
+    } catch (e) {}
 }
 global.sendRealtimeOverlayState = sendRealtimeOverlayState;
+global.sendOverlayUpdate = sendRealtimeOverlayState;
 
 // Ghost Mouse Jitter state
 let ghostMouseJitterConfig = { enabled: false, intervalMin: 8000, intervalMax: 25000, maxOffset: 12 };
@@ -320,84 +341,7 @@ watchConfigChanges();
 // (Variables hoisted to the top to avoid ReferenceError)
 
 function sendOverlayUpdate() {
-    const activeList = activeClients || [];
-    const clientStatuses = {};
-    activeList.forEach(clientIdx => {
-        const clientStr = String(clientIdx);
-
-        // Priority 0: Explicit user choice via showOnOverlay
-        const pinnedAction = (activeActions || []).find(a => {
-            if (!a.showOnOverlay || !a.enabled || !isTargetMatched(a.targetClient, clientStr)) return false;
-            if (a.mode === 'buff_sequence') return !!isBuffSequenceRunning[clientStr];
-            if (a.mode === 'loop') return activeLoopStates[a.id] && activeLoopStates[a.id].running;
-            if (a.mode === 'key_hold') return !!activeHoldStates[a.id];
-            if (a.mode === 'forward') return !!pressedRemapKeys[`${a.id}-${clientStr}`];
-            return false;
-        });
-
-        if (pinnedAction) {
-            let statusType = "loop";
-            if (pinnedAction.mode === 'buff_sequence') statusType = "buff";
-            else if (pinnedAction.mode === 'key_hold') statusType = "hold";
-            else if (pinnedAction.mode === 'forward') statusType = "forward";
-
-            clientStatuses[clientStr] = {
-                status: pinnedAction.name || "Active",
-                type: statusType
-            };
-        } else if (isBuffSequenceRunning[clientStr]) {
-            const buffAct = activeActions.find(a => a.mode === 'buff_sequence' && isTargetMatched(a.targetClient, clientStr));
-            clientStatuses[clientStr] = {
-                status: buffAct ? buffAct.name : "Buffing",
-                type: "buff"
-            };
-        } else {
-            const activeLoop = activeActions.find(a =>
-                a.mode === 'loop' &&
-                a.enabled &&
-                activeLoopStates[a.id] &&
-                activeLoopStates[a.id].running &&
-                isTargetMatched(a.targetClient, clientStr)
-            );
-            if (activeLoop) {
-                clientStatuses[clientStr] = {
-                    status: activeLoop.name,
-                    type: "loop"
-                };
-            } else {
-                const activeHold = activeActions.find(a =>
-                    a.mode === 'key_hold' &&
-                    a.enabled &&
-                    activeHoldStates[a.id] &&
-                    isTargetMatched(a.targetClient, clientStr)
-                );
-                if (activeHold) {
-                    clientStatuses[clientStr] = {
-                        status: activeHold.name || `Hold: ${activeHold.targetKey}`,
-                        type: "hold"
-                    };
-                } else {
-                    const activeForward = activeActions.find(a =>
-                        a.mode === 'forward' &&
-                        a.enabled &&
-                        pressedRemapKeys[`${a.id}-${clientStr}`] &&
-                        isTargetMatched(a.targetClient, clientStr)
-                    );
-                    if (activeForward) {
-                        clientStatuses[clientStr] = {
-                            status: activeForward.name || `${activeForward.trigger.value} ➜ ${activeForward.targetKey}`,
-                            type: "forward"
-                        };
-                    } else {
-                        clientStatuses[clientStr] = {
-                            status: "Standby",
-                            type: "standby"
-                        };
-                    }
-                }
-            }
-        }
-    });
+    sendRealtimeOverlayState();
 }
 global.sendOverlayUpdate = sendOverlayUpdate;
 
