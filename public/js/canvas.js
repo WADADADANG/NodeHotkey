@@ -2701,7 +2701,8 @@ class NodeCanvasEditor {
   renderControlTargetsSelector(node) {
     const rawTargets = node.data?.controlTargetIds || (node.data?.controlTargetId ? [node.data?.controlTargetId] : []);
     const canonicalTargets = rawTargets.map(id => id.startsWith('node_') ? id.replace('node_', '') : id);
-    const availableNodes = this.nodes.filter(n => n.id !== node.id && n.type !== 'trigger');
+    const nonControllableTypes = ['trigger', 'branch', 'control', 'emergency_stop'];
+    const availableNodes = this.nodes.filter(n => n.id !== node.id && !nonControllableTypes.includes(n.type));
 
     if (availableNodes.length === 0) {
       return `<div style="font-size:11px; color:var(--muted); padding:4px 0;">(ไม่มี Action อื่นบน Canvas)</div>`;
@@ -3268,7 +3269,8 @@ class NodeCanvasEditor {
     const rawTargetId = node.data?.conditionTargetId || '';
     const canonicalTargetId = rawTargetId.startsWith('node_') ? rawTargetId.replace('node_', '') : rawTargetId;
     const rule = node.data?.conditionRule || 'is_running';
-    const checkableNodes = this.nodes.filter(n => n.id !== node.id && n.type !== 'trigger');
+    const nonCheckableTypes = ['trigger', 'branch', 'control', 'emergency_stop'];
+    const checkableNodes = this.nodes.filter(n => n.id !== node.id && !nonCheckableTypes.includes(n.type));
 
     return `
       <div class="inspector-field-group">
