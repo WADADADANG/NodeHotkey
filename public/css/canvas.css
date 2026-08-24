@@ -435,6 +435,18 @@
   animation: blenderMenuPop 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Invisible Hover Bridge (Prevents submenu from closing when moving mouse diagonally) */
+.blender-submenu::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  bottom: -12px;
+  left: -20px;
+  width: 24px;
+  background: transparent;
+  pointer-events: auto;
+}
+
 .blender-menu-item:hover > .blender-submenu {
   display: flex;
 }
@@ -442,6 +454,11 @@
 .blender-submenu.open-left {
   left: auto;
   right: calc(100% + 4px);
+}
+
+.blender-submenu.open-left::before {
+  left: auto;
+  right: -20px;
 }
 
 /* Blender Sub Items & Search Items */
