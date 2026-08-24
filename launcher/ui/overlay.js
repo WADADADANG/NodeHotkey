@@ -85,11 +85,19 @@
   function recalculateHeight() {
     requestAnimationFrame(() => {
       if (!overlayRoot) return;
-      // Measured scrollHeight plus 2px for border-box
-      const measuredHeight = Math.ceil(overlayRoot.scrollHeight) + 2;
+      const rect = overlayRoot.getBoundingClientRect();
+      const measuredHeight = Math.ceil(rect.height || overlayRoot.offsetHeight);
       const finalHeight = Math.max(50, Math.min(measuredHeight, 700));
       applyResize(finalHeight);
     });
+  }
+
+  // Real-time ResizeObserver to guarantee instant window bound updates
+  if (window.ResizeObserver && overlayRoot) {
+    const ro = new ResizeObserver(() => {
+      recalculateHeight();
+    });
+    ro.observe(overlayRoot);
   }
 
   function renderClients(data) {

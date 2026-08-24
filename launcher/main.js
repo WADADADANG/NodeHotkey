@@ -257,8 +257,9 @@ function createOverlayWindow() {
     transparent: true,
     alwaysOnTop: true,
     skipTaskbar: true, // 100% hidden from Taskbar!
-    resizable: false,
+    resizable: true, // Required on Windows for setBounds / setSize
     hasShadow: false,
+    useContentSize: true,
     icon: path.join(PROJECT_DIR, 'icon.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -618,7 +619,15 @@ ipcMain.on('overlay:close', () => {
 
 ipcMain.on('overlay:resize', (event, { width, height }) => {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
-    overlayWindow.setSize(width, height);
+    const targetW = Math.round(width) || 210;
+    const targetH = Math.round(height) || 60;
+    const bounds = overlayWindow.getBounds();
+    overlayWindow.setBounds({
+      x: bounds.x,
+      y: bounds.y,
+      width: targetW,
+      height: targetH
+    });
   }
 });
 
