@@ -98,11 +98,15 @@ let activeHoldStates = {};
 let forwardHoldTimers = {};
 let activeLoopStates = {};
 let activeSequencerLoops = {};
+let activeOnceSequencers = {};
+let activeOnceBuffSequences = {};
 let isBuffSequenceRunning = {};
 let isSequencerRunning = {};
 let buffSequenceTokens = {};  // Per-action cancellation tokens: { actionId: tokenNumber }
 global.activeLoopStates = activeLoopStates;
 global.activeSequencerLoops = activeSequencerLoops;
+global.activeOnceSequencers = activeOnceSequencers;
+global.activeOnceBuffSequences = activeOnceBuffSequences;
 global.isBuffSequenceRunning = isBuffSequenceRunning;
 global.isSequencerRunning = isSequencerRunning;
 global.pressedRemapKeys = pressedRemapKeys;
@@ -140,7 +144,7 @@ function getClientStatuses() {
                     icon: '🟢',
                     detail: `${a.interval || 1000}ms`
                 });
-            } else if ((a.mode === 'sequencer' || a.mode === 'cast_sequence') && ((activeSequencerLoops[a.id]?.running) || isSequencerRunning[clientStr])) {
+            } else if ((a.mode === 'sequencer' || a.mode === 'cast_sequence') && ((activeSequencerLoops[a.id]?.running) || activeOnceSequencers[a.id])) {
                 runningActions.push({
                     id: a.id,
                     name: a.name || 'Sequencer',
@@ -148,7 +152,7 @@ function getClientStatuses() {
                     icon: '⚔️',
                     detail: a.modeType === 'once' ? 'Once' : 'Loop'
                 });
-            } else if (a.mode === 'buff_sequence' && isBuffSequenceRunning[clientStr]) {
+            } else if (a.mode === 'buff_sequence' && activeOnceBuffSequences[a.id]) {
                 runningActions.push({
                     id: a.id,
                     name: a.name || 'Buff Queue',
@@ -1827,6 +1831,7 @@ async function runBuffSequenceAction(action, callStack) {
     // Generate a unique cancellation token for this invocation
     const myToken = (buffSequenceTokens[action.id] || 0) + 1;
     buffSequenceTokens[action.id] = myToken;
+    activeOnceBuffSequences[action.id] = true;
 
     for (let t of targets) {
         isBuffSequenceRunning[String(t)] = true;
@@ -1840,39 +1845,45 @@ async function runBuffSequenceAction(action, callStack) {
     const delay = action.delayBuff || 800;
     let wasInterrupted = false;
 
-    if (action.keys && action.keys.length > 0) {
-        for (let key of action.keys) {
-            // Check cancellation: token changed means we were cancelled by Emergency Stop or Action Control
-            if (buffSequenceTokens[action.id] !== myToken) {
-                console.log(`🔴 [Action] Buff Sequence Cancelled (token invalidated): "${action.name}"`);
-                wasInterrupted = true;
-                break;
+    try {
+        if (action.keys && action.keys.length > 0) {
+            for (let key of action.keys) {
+                // Check cancellation: token changed means we were cancelled by Emergency Stop or Action Control
+                if (buffSequenceTokens[action.id] !== myToken) {
+                    console.log(`🔴 [Action] Buff Sequence Cancelled (token invalidated): "${action.name}"`);
+                    wasInterrupted = true;
+                    break;
+                }
+                // Also check the per-client flag for backward compatibility
+                let isRunningAny = targets.some(t => isBuffSequenceRunning[String(t)]);
+                if (!isRunningAny) {
+                    console.log(`🔴 [Action] Buff Sequence Interrupted/Stopped: "${action.name}"`);
+                    wasInterrupted = true;
+                    break;
+                }
+                await sendKey(action, key);
+                await new Promise(res => setTimeout(res, delay));
             }
-            // Also check the per-client flag for backward compatibility
-            let isRunningAny = targets.some(t => isBuffSequenceRunning[String(t)]);
-            if (!isRunningAny) {
-                console.log(`🔴 [Action] Buff Sequence Interrupted/Stopped: "${action.name}"`);
-                wasInterrupted = true;
-                break;
-            }
-            await sendKey(action, key);
-            await new Promise(res => setTimeout(res, delay));
         }
-    }
 
-    for (let t of targets) {
-        // Only clear the running flag if we still own the token (no new sequence started)
-        if (buffSequenceTokens[action.id] === myToken) {
-            isBuffSequenceRunning[String(t)] = false;
+        for (let t of targets) {
+            // Only clear the running flag if we still own the token (no new sequence started)
+            if (buffSequenceTokens[action.id] === myToken) {
+                isBuffSequenceRunning[String(t)] = false;
+            }
+            if (!wasInterrupted) {
+                console.log(`⚪ [Action] Finished Buff Sequence: "${action.name}" on Client ${t}`);
+            }
         }
         if (!wasInterrupted) {
-            console.log(`⚪ [Action] Finished Buff Sequence: "${action.name}" on Client ${t}`);
+            await fireChain(action, 'onComplete', callStack);
         }
+    } finally {
+        if (buffSequenceTokens[action.id] === myToken) {
+            delete activeOnceBuffSequences[action.id];
+        }
+        sendOverlayUpdate();
     }
-    if (!wasInterrupted) {
-        await fireChain(action, 'onComplete', callStack);
-    }
-    sendOverlayUpdate();
 }
 
 // Run single press
@@ -1977,6 +1988,7 @@ async function startCastSequencerLoop(action, callStack) {
 // Stop a Sequencer Action (Loop or Once)
 function stopCastSequencerAction(actionId, actionName) {
     sequencerTokens[actionId] = (sequencerTokens[actionId] || 0) + 1;
+    delete activeOnceSequencers[actionId];
 
     const act = activeActions.find(a => a.id === actionId);
     if (act) {
@@ -2052,6 +2064,7 @@ async function runCastSequencerOnce(action, callStack) {
 
     const myToken = (sequencerTokens[action.id] || 0) + 1;
     sequencerTokens[action.id] = myToken;
+    activeOnceSequencers[action.id] = true;
 
     for (let t of targets) {
         isSequencerRunning[String(t)] = true;
@@ -2108,6 +2121,7 @@ async function runCastSequencerOnce(action, callStack) {
         }
     } finally {
         if (sequencerTokens[action.id] === myToken) {
+            delete activeOnceSequencers[action.id];
             for (let t of targets) {
                 delete isSequencerRunning[String(t)];
             }
@@ -2348,6 +2362,10 @@ async function runEmergencyStopAction(action, callStack) {
         });
 
         // 2. Stop all buff sequences + sequencer actions + loop schedulers + invalidate tokens
+        activeOnceSequencers = {};
+        activeOnceBuffSequences = {};
+        global.activeOnceSequencers = activeOnceSequencers;
+        global.activeOnceBuffSequences = activeOnceBuffSequences;
         Object.keys(isBuffSequenceRunning).forEach(cIdx => {
             isBuffSequenceRunning[cIdx] = false;
         });
@@ -2840,14 +2858,10 @@ function isActionRunning(actionId) {
     } else if (act.mode === 'key_hold') {
         return !!activeHoldStates[act.id];
     } else if (act.mode === 'buff_sequence') {
-        const target = act.targetClient || '1';
-        let targets = getActionTargets(target).map(x => parseInt(x, 10));
-        return targets.some(t => isBuffSequenceRunning[String(t)]);
+        return !!activeOnceBuffSequences[act.id];
     } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence') {
         if (act.modeType === 'once') {
-            const target = act.targetClient || '1';
-            let targets = getActionTargets(target).map(x => parseInt(x, 10));
-            return targets.some(t => isSequencerRunning[String(t)]);
+            return !!activeOnceSequencers[act.id];
         } else {
             return !!(activeSequencerLoops[act.id] && activeSequencerLoops[act.id].running);
         }
