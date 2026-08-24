@@ -375,9 +375,17 @@ async function initApp() {
             } else {
               node.data.keys = value ? [value] : ['1'];
             }
+          } else if (type && (type.startsWith('sequencer_step_') || type.startsWith('macro_step_'))) {
+            const stepIdx = parseInt(type.replace('sequencer_step_', '').replace('macro_step_', ''), 10);
+            if (Array.isArray(node.data.steps) && node.data.steps[stepIdx]) {
+              node.data.steps[stepIdx].key = value;
+            }
           }
           window.nodeCanvas.renderNodes();
           window.nodeCanvas.renderOutliner();
+          if (window.nodeCanvas.inspectorPanel && window.nodeCanvas.inspectorPanel.classList.contains('open')) {
+            window.nodeCanvas.openInspector(node.id);
+          }
           window.nodeCanvas.onProfileChanged();
         }
       }

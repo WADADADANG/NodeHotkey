@@ -1,0 +1,528 @@
+{
+  "version": "3.1.0",
+  "name": "[CW] RM 1 2 4",
+  "canvas": {
+    "zoom": 0.6188197920260405,
+    "pan": {
+      "x": 5,
+      "y": -1621
+    }
+  },
+  "nodes": [
+    {
+      "id": "node_1787497176902",
+      "type": "trigger",
+      "title": "Btn Start",
+      "position": {
+        "x": 920,
+        "y": 3200
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "NUMPAD 7",
+        "actionId": "1787497176902"
+      }
+    },
+    {
+      "id": "node_1787581118283",
+      "type": "loop_scheduler",
+      "title": "RM 1",
+      "position": {
+        "x": 1510,
+        "y": 2610
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "collisionGuardMs": 800,
+        "items": [
+          {
+            "id": "item_0",
+            "name": "Heal Rain 1",
+            "interval": 3000,
+            "jitter": 1000,
+            "executeImmediately": true,
+            "enabled": true
+          },
+          {
+            "id": "item_1",
+            "name": "MoonBeam 1",
+            "interval": 2000,
+            "jitter": 500,
+            "executeImmediately": true,
+            "enabled": true
+          },
+          {
+            "id": "item_2",
+            "name": "Merkaba 1",
+            "interval": 2000,
+            "jitter": 1000,
+            "executeImmediately": true,
+            "enabled": true
+          },
+          {
+            "id": "item_3",
+            "name": "Restore Mp 1",
+            "interval": 15000,
+            "jitter": 200,
+            "executeImmediately": false,
+            "enabled": true
+          }
+        ],
+        "actionId": "1787581118283"
+      }
+    },
+    {
+      "id": "node_1787581180868",
+      "type": "key_press",
+      "title": "Heal Rain 1",
+      "position": {
+        "x": 1920,
+        "y": 2570
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "2"
+        ],
+        "cooldownPresetId": "skill_ringmaster_heal-rain",
+        "actionId": "1787581180868"
+      }
+    },
+    {
+      "id": "node_1787581198443",
+      "type": "key_press",
+      "title": "MoomBeam 1",
+      "position": {
+        "x": 1920,
+        "y": 2690
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "LEFT ALT + 8"
+        ],
+        "cooldownPresetId": "skill_assist_moon-beam",
+        "actionId": "1787581198443"
+      }
+    },
+    {
+      "id": "node_1787581220198",
+      "type": "key_press",
+      "title": "Merkaba 1",
+      "position": {
+        "x": 1920,
+        "y": 2810
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "5"
+        ],
+        "cooldownPresetId": "skill_ringmaster_merkaba-hanzelrusha",
+        "actionId": "1787581220198"
+      }
+    },
+    {
+      "id": "node_1787583385460",
+      "type": "key_press",
+      "title": "Restore Mp 1",
+      "position": {
+        "x": 1920,
+        "y": 2930
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "3"
+        ],
+        "actionId": "1787583385460"
+      }
+    },
+    {
+      "id": "node_1787585306026_9735",
+      "type": "key_press",
+      "title": "Restore Mp 2",
+      "position": {
+        "x": 1920,
+        "y": 3520
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "2",
+        "keys": [
+          "3"
+        ],
+        "actionId": "1787585306026_9735"
+      }
+    },
+    {
+      "id": "node_1787585306026_5962",
+      "type": "key_press",
+      "title": "Merkaba 2",
+      "position": {
+        "x": 1920,
+        "y": 3400
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "2",
+        "keys": [
+          "5"
+        ],
+        "cooldownPresetId": "skill_ringmaster_merkaba-hanzelrusha",
+        "actionId": "1787585306026_5962"
+      }
+    },
+    {
+      "id": "node_1787585306026_578",
+      "type": "key_press",
+      "title": "MoomBeam 2",
+      "position": {
+        "x": 1920,
+        "y": 3280
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "2",
+        "keys": [
+          "LEFT ALT + 8"
+        ],
+        "cooldownPresetId": "skill_assist_moon-beam",
+        "actionId": "1787585306026_578"
+      }
+    },
+    {
+      "id": "node_1787585306026_110",
+      "type": "key_press",
+      "title": "Heal Rain 2",
+      "position": {
+        "x": 1920,
+        "y": 3160
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "2",
+        "keys": [
+          "2"
+        ],
+        "cooldownPresetId": "skill_ringmaster_heal-rain",
+        "actionId": "1787585306026_110"
+      }
+    },
+    {
+      "id": "node_1787585306026_9396",
+      "type": "loop_scheduler",
+      "title": "RM 2",
+      "position": {
+        "x": 1510,
+        "y": 3200
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "2",
+        "collisionGuardMs": 800,
+        "items": [
+          {
+            "id": "item_0",
+            "name": "Heal Rain 2",
+            "interval": 3000,
+            "jitter": 1000,
+            "executeImmediately": true,
+            "enabled": true
+          },
+          {
+            "id": "item_1",
+            "name": "MoonBeam 2",
+            "interval": 2000,
+            "jitter": 500,
+            "executeImmediately": true,
+            "enabled": true
+          },
+          {
+            "id": "item_2",
+            "name": "Merkaba 2",
+            "interval": 2000,
+            "jitter": 1000,
+            "executeImmediately": true,
+            "enabled": true
+          },
+          {
+            "id": "item_3",
+            "name": "Restore Mp 2",
+            "interval": 15000,
+            "jitter": 200,
+            "executeImmediately": false,
+            "enabled": true
+          }
+        ],
+        "actionId": "1787585306026_9396"
+      }
+    },
+    {
+      "id": "node_1787585346514_6502",
+      "type": "key_press",
+      "title": "Restore Mp 4",
+      "position": {
+        "x": 1930,
+        "y": 4140
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "keys": [
+          "3"
+        ],
+        "actionId": "1787585346514_6502"
+      }
+    },
+    {
+      "id": "node_1787585346514_5361",
+      "type": "key_press",
+      "title": "Merkaba 4",
+      "position": {
+        "x": 1930,
+        "y": 4020
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "keys": [
+          "5"
+        ],
+        "cooldownPresetId": "skill_ringmaster_merkaba-hanzelrusha",
+        "actionId": "1787585346514_5361"
+      }
+    },
+    {
+      "id": "node_1787585346514_5378",
+      "type": "key_press",
+      "title": "MoomBeam 4",
+      "position": {
+        "x": 1930,
+        "y": 3900
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "keys": [
+          "LEFT ALT + 8"
+        ],
+        "cooldownPresetId": "skill_assist_moon-beam",
+        "actionId": "1787585346514_5378"
+      }
+    },
+    {
+      "id": "node_1787585346514_2481",
+      "type": "key_press",
+      "title": "Heal Rain 4",
+      "position": {
+        "x": 1930,
+        "y": 3780
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "keys": [
+          "2"
+        ],
+        "cooldownPresetId": "skill_ringmaster_heal-rain",
+        "actionId": "1787585346514_2481"
+      }
+    },
+    {
+      "id": "node_1787585346514_4421",
+      "type": "loop_scheduler",
+      "title": "RM 4",
+      "position": {
+        "x": 1520,
+        "y": 3820
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "collisionGuardMs": 800,
+        "items": [
+          {
+            "id": "item_0",
+            "name": "Heal Rain 4",
+            "interval": 3000,
+            "jitter": 1000,
+            "executeImmediately": true,
+            "enabled": true
+          },
+          {
+            "id": "item_1",
+            "name": "MoonBeam 4",
+            "interval": 2000,
+            "jitter": 500,
+            "executeImmediately": true,
+            "enabled": true
+          },
+          {
+            "id": "item_2",
+            "name": "Merkaba 4",
+            "interval": 2000,
+            "jitter": 1000,
+            "executeImmediately": true,
+            "enabled": true
+          },
+          {
+            "id": "item_3",
+            "name": "Restore Mp 4",
+            "interval": 15000,
+            "jitter": 200,
+            "executeImmediately": false,
+            "enabled": true
+          },
+          {
+            "id": "item_4",
+            "name": "Buff GT 4",
+            "interval": 10000,
+            "jitter": 2000,
+            "executeImmediately": true,
+            "enabled": true
+          }
+        ],
+        "actionId": "1787585346514_4421"
+      }
+    },
+    {
+      "id": "node_1787585392867",
+      "type": "key_press",
+      "title": "Buff GT",
+      "position": {
+        "x": 1930,
+        "y": 4240
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "keys": [
+          "6"
+        ],
+        "cooldownPresetId": "skill_ringmaster_gvur-tialla",
+        "actionId": "1787585392867"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1787581123808",
+      "fromNodeId": "node_1787497176902",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1787581118283",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787581183493",
+      "fromNodeId": "node_1787581118283",
+      "fromPort": "item_0",
+      "toNodeId": "node_1787581180868",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787581216911",
+      "fromNodeId": "node_1787581118283",
+      "fromPort": "item_1",
+      "toNodeId": "node_1787581198443",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787581265698",
+      "fromNodeId": "node_1787581118283",
+      "fromPort": "item_2",
+      "toNodeId": "node_1787581220198",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787583390382",
+      "fromNodeId": "node_1787581118283",
+      "fromPort": "item_3",
+      "toNodeId": "node_1787583385460",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787585306026_1717",
+      "fromNodeId": "node_1787585306026_9396",
+      "fromPort": "item_0",
+      "toNodeId": "node_1787585306026_110",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787585306026_2113",
+      "fromNodeId": "node_1787585306026_9396",
+      "fromPort": "item_1",
+      "toNodeId": "node_1787585306026_578",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787585306026_8651",
+      "fromNodeId": "node_1787585306026_9396",
+      "fromPort": "item_2",
+      "toNodeId": "node_1787585306026_5962",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787585306026_336",
+      "fromNodeId": "node_1787585306026_9396",
+      "fromPort": "item_3",
+      "toNodeId": "node_1787585306026_9735",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787585340850",
+      "fromNodeId": "node_1787497176902",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1787585306026_9396",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787585346514_5188",
+      "fromNodeId": "node_1787585346514_4421",
+      "fromPort": "item_0",
+      "toNodeId": "node_1787585346514_2481",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787585346514_758",
+      "fromNodeId": "node_1787585346514_4421",
+      "fromPort": "item_1",
+      "toNodeId": "node_1787585346514_5378",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787585346514_2415",
+      "fromNodeId": "node_1787585346514_4421",
+      "fromPort": "item_2",
+      "toNodeId": "node_1787585346514_5361",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787585346514_1436",
+      "fromNodeId": "node_1787585346514_4421",
+      "fromPort": "item_3",
+      "toNodeId": "node_1787585346514_6502",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787585397600",
+      "fromNodeId": "node_1787585346514_4421",
+      "fromPort": "item_4",
+      "toNodeId": "node_1787585392867",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787585407051",
+      "fromNodeId": "node_1787497176902",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1787585346514_4421",
+      "toPort": "exec_in"
+    }
+  ]
+}

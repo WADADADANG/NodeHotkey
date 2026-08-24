@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Heal 1,2,4",
   "canvas": {
-    "zoom": 0.9266052860849924,
+    "zoom": 0.7639750518840006,
     "pan": {
-      "x": -921,
-      "y": -418
+      "x": -165,
+      "y": -349
     }
   },
   "nodes": [
@@ -49,7 +49,7 @@
       "type": "loop",
       "title": "Heal Rain 1",
       "position": {
-        "x": 1180,
+        "x": 1200,
         "y": 1510
       },
       "data": {
@@ -58,7 +58,7 @@
         "keys": [
           "2"
         ],
-        "interval": 800,
+        "interval": 1000,
         "jitter": 100,
         "executeImmediately": true,
         "actionId": "1786680432366"
@@ -69,8 +69,8 @@
       "type": "loop",
       "title": "Heal Rain 2",
       "position": {
-        "x": 1800,
-        "y": 1500
+        "x": 1830,
+        "y": 1510
       },
       "data": {
         "enabled": true,
@@ -78,7 +78,7 @@
         "keys": [
           "2"
         ],
-        "interval": 800,
+        "interval": 1000,
         "jitter": 100,
         "executeImmediately": true,
         "actionId": "1786680465713_967"
@@ -89,8 +89,8 @@
       "type": "loop",
       "title": "Heal Rain 4",
       "position": {
-        "x": 2390,
-        "y": 1510
+        "x": 2400,
+        "y": 1520
       },
       "data": {
         "enabled": true,
@@ -98,7 +98,7 @@
         "keys": [
           "2"
         ],
-        "interval": 1700,
+        "interval": 1000,
         "jitter": 100,
         "executeImmediately": true,
         "actionId": "1786680473923_7676"
@@ -186,7 +186,7 @@
         "keys": [
           "3"
         ],
-        "interval": 11400,
+        "interval": 12700,
         "executeImmediately": false,
         "actionId": "1786684521954"
       }
@@ -197,7 +197,7 @@
       "title": "Loop MP 2",
       "position": {
         "x": 2130,
-        "y": 1540
+        "y": 1550
       },
       "data": {
         "enabled": true,
@@ -205,7 +205,7 @@
         "keys": [
           "3"
         ],
-        "interval": 12300,
+        "interval": 14000,
         "executeImmediately": false,
         "actionId": "1786684538557_1206"
       }
@@ -224,7 +224,7 @@
         "keys": [
           "3"
         ],
-        "interval": 14100,
+        "interval": 12300,
         "executeImmediately": false,
         "actionId": "1786684545395_4783"
       }
@@ -297,6 +297,7 @@
           "8"
         ],
         "delayAfter": 300,
+        "cooldownPresetId": "skill_ringmaster_barrier-of-life",
         "actionId": "1786878453563"
       }
     },
@@ -306,7 +307,7 @@
       "title": "AC Stop Loop MP 2",
       "position": {
         "x": 2130,
-        "y": 1740
+        "y": 1750
       },
       "data": {
         "enabled": true,

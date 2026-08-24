@@ -65,7 +65,7 @@ rootEntries.forEach(entry => {
   if (name === 'build-installer.js' || name.endsWith('.bak') || name.endsWith('.log') || name.endsWith('.exe')) return;
 
   const ext = path.extname(name).toLowerCase();
-  if (['.js', '.json', '.ico', '.png', '.md'].includes(ext)) {
+  if (['.js', '.json', '.ico', '.png'].includes(ext)) {
     const src = path.join(rootDir, name);
     fs.copyFileSync(src, path.join(appDistDir, name));
     console.log(`      ✓ Copied ${name}`);
@@ -73,23 +73,35 @@ rootEntries.forEach(entry => {
 });
 
 console.log('      ⏳ Copying public/ directory...');
-copyFolderSync(path.join(rootDir, 'public'), path.join(appDistDir, 'public'));
+copyFolderSync(
+  path.join(rootDir, 'public'),
+  path.join(appDistDir, 'public'),
+  (fullPath, name) => name.toLowerCase().endsWith('.md')
+);
 
 console.log('      ⏳ Copying launcher/ directory (Desktop Launcher GUI)...');
 if (fs.existsSync(path.join(rootDir, 'launcher'))) {
-  copyFolderSync(path.join(rootDir, 'launcher'), path.join(appDistDir, 'launcher'));
+  copyFolderSync(
+    path.join(rootDir, 'launcher'),
+    path.join(appDistDir, 'launcher'),
+    (fullPath, name) => name.toLowerCase().endsWith('.md')
+  );
 }
 
 console.log('      ⏳ Copying configs/ directory (profiles & global settings)...');
-copyFolderSync(path.join(rootDir, 'configs'), path.join(appDistDir, 'configs'));
+copyFolderSync(
+  path.join(rootDir, 'configs'),
+  path.join(appDistDir, 'configs'),
+  (fullPath, name) => name.toLowerCase().endsWith('.md')
+);
 
 console.log('      ⏳ Copying node_modules/ (Production Dependencies)...');
 copyFolderSync(
   path.join(rootDir, 'node_modules'),
   path.join(appDistDir, 'node_modules'),
   (fullPath, name) => {
-    // Exclude cache or dev artifacts
-    return name === '.cache' || name === '.bin';
+    // Exclude cache, dev artifacts, and markdown docs
+    return name === '.cache' || name === '.bin' || name.toLowerCase().endsWith('.md');
   }
 );
 

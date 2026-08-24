@@ -301,7 +301,9 @@ export const TRANSLATIONS = {
     node_desc_forwarder: "Forwards key to multiple game clients",
     node_desc_emergency_stop: "Immediately stops active actions",
     node_desc_sound: "Plays customizable audio alert",
-    node_desc_emit_event: "Broadcasts custom event to active profiles"
+    node_desc_emit_event: "Broadcasts custom event to active profiles",
+    node_desc_sequencer: "Executes skills & instant items in sequence with animation delays",
+    canvas_sequencer: "Cast Sequencer"
   },
   th: {
     appTitle: "ศูนย์ควบคุมบอทอัตโนมัติ",
@@ -608,7 +610,9 @@ export const TRANSLATIONS = {
     node_desc_forwarder: "ส่งต่อปุ่มไปยังหลายๆ จอพร้อมกัน",
     node_desc_emergency_stop: "หยุดการทำงานของ Action ทั้งหมดทันที",
     node_desc_sound: "ส่งเสียงเตือนด้วยไฟล์เสียงหรือพรีเซ็ต",
-    node_desc_emit_event: "กระจาย Event ข้ามไปยังโปรไฟล์อื่น"
+    node_desc_emit_event: "กระจาย Event ข้ามไปยังโปรไฟล์อื่น",
+    node_desc_sequencer: "รันลำดับสกิลและไอเทมพร้อมคุมเวลาแอนิเมชันร่าย",
+    canvas_sequencer: "จัดคิวสกิล (Sequencer)"
   }
 };
 

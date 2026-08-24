@@ -1,0 +1,399 @@
+{
+  "version": "3.1.0",
+  "name": "[Dg] Rm 2 Slots",
+  "canvas": {
+    "zoom": 1,
+    "pan": {
+      "x": -447,
+      "y": -85
+    }
+  },
+  "nodes": [
+    {
+      "id": "node_1787293353845",
+      "type": "trigger",
+      "title": "Btn Start Heal 1",
+      "position": {
+        "x": 750,
+        "y": 290
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "mouse",
+        "triggerValue": "4",
+        "actionId": "1787293353845"
+      }
+    },
+    {
+      "id": "node_1787293396523",
+      "type": "loop",
+      "title": "Heal 1",
+      "position": {
+        "x": 1130,
+        "y": 240
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "1"
+        ],
+        "interval": 1100,
+        "executeImmediately": true,
+        "actionId": "1787293396523"
+      }
+    },
+    {
+      "id": "node_1787293423549",
+      "type": "trigger",
+      "title": "Btn Start Heal Rain Both",
+      "position": {
+        "x": 750,
+        "y": 720
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "mouse",
+        "triggerValue": "5",
+        "actionId": "1787293423549"
+      }
+    },
+    {
+      "id": "node_1787293446004",
+      "type": "loop",
+      "title": "Heal Rain 1",
+      "position": {
+        "x": 2040,
+        "y": 840
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "2"
+        ],
+        "interval": 1000,
+        "executeImmediately": true,
+        "actionId": "1787293446004"
+      }
+    },
+    {
+      "id": "node_1787293461532_774",
+      "type": "loop",
+      "title": "Heal Rain 2",
+      "position": {
+        "x": 2040,
+        "y": 1070
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "2",
+        "keys": [
+          "2"
+        ],
+        "interval": 1000,
+        "executeImmediately": true,
+        "actionId": "1787293461532_774"
+      }
+    },
+    {
+      "id": "node_1787293472456",
+      "type": "branch",
+      "title": "Check Heal Rain 1",
+      "position": {
+        "x": 1110,
+        "y": 690
+      },
+      "data": {
+        "enabled": true,
+        "conditionTargetId": "1787293446004",
+        "conditionRule": "is_running",
+        "actionId": "1787293472456"
+      }
+    },
+    {
+      "id": "node_1787293504585",
+      "type": "delay",
+      "title": "Delay Timer",
+      "position": {
+        "x": 1730,
+        "y": 890
+      },
+      "data": {
+        "enabled": true,
+        "delayMs": 800,
+        "actionId": "1787293504585"
+      }
+    },
+    {
+      "id": "node_1787293516138",
+      "type": "key_press",
+      "title": "Buff GT",
+      "position": {
+        "x": 1430,
+        "y": 890
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "6"
+        ],
+        "actionId": "1787293516138"
+      }
+    },
+    {
+      "id": "node_1787293583114",
+      "type": "loop",
+      "title": "Restroe Mp 2",
+      "position": {
+        "x": 2400,
+        "y": 1110
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "2",
+        "keys": [
+          "3"
+        ],
+        "interval": 15550,
+        "executeImmediately": false,
+        "actionId": "1787293583114"
+      }
+    },
+    {
+      "id": "node_1787293609787_6681",
+      "type": "loop",
+      "title": "Restroe Mp 1",
+      "position": {
+        "x": 2400,
+        "y": 880
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "3"
+        ],
+        "interval": 15550,
+        "executeImmediately": false,
+        "actionId": "1787293609787_6681"
+      }
+    },
+    {
+      "id": "node_1787293635634",
+      "type": "control",
+      "title": "AC Stop Restore Mp Both",
+      "position": {
+        "x": 2400,
+        "y": 1350
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "1787293583114",
+          "1787293609787_6681"
+        ],
+        "actionId": "1787293635634"
+      }
+    },
+    {
+      "id": "node_1787293708690",
+      "type": "control",
+      "title": "AC Stop Heal Rain Both",
+      "position": {
+        "x": 1800,
+        "y": 160
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "1787293446004",
+          "1787293461532_774"
+        ],
+        "actionId": "1787293708690"
+      }
+    },
+    {
+      "id": "node_1787293727047_6062",
+      "type": "branch",
+      "title": "Check Heal Rain 1 - 2",
+      "position": {
+        "x": 1520,
+        "y": 90
+      },
+      "data": {
+        "enabled": true,
+        "conditionTargetId": "1787293446004",
+        "conditionRule": "is_running",
+        "actionId": "1787293727047_6062"
+      }
+    },
+    {
+      "id": "node_1787293795567",
+      "type": "control",
+      "title": "AC Stop Heal 1",
+      "position": {
+        "x": 1800,
+        "y": 430
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "1787293396523"
+        ],
+        "actionId": "1787293795567"
+      }
+    },
+    {
+      "id": "node_1787294093214",
+      "type": "branch",
+      "title": "Check Heal 1",
+      "position": {
+        "x": 1480,
+        "y": 360
+      },
+      "data": {
+        "enabled": true,
+        "conditionTargetId": "1787293396523",
+        "conditionRule": "is_running",
+        "actionId": "1787294093214"
+      }
+    },
+    {
+      "id": "node_1787294161660",
+      "type": "control",
+      "title": "AC Stop Heal Both",
+      "position": {
+        "x": 1520,
+        "y": 750
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "1787293446004",
+          "1787293461532_774"
+        ],
+        "actionId": "1787294161660"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1787293416030",
+      "fromNodeId": "node_1787293353845",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1787293396523",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787293486733",
+      "fromNodeId": "node_1787293423549",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1787293472456",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787293534371",
+      "fromNodeId": "node_1787293472456",
+      "fromPort": "onFalse",
+      "toNodeId": "node_1787293516138",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787293536335",
+      "fromNodeId": "node_1787293516138",
+      "fromPort": "next",
+      "toNodeId": "node_1787293504585",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787293540867",
+      "fromNodeId": "node_1787293504585",
+      "fromPort": "next",
+      "toNodeId": "node_1787293446004",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787293542227",
+      "fromNodeId": "node_1787293504585",
+      "fromPort": "next",
+      "toNodeId": "node_1787293461532_774",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787293587458",
+      "fromNodeId": "node_1787293461532_774",
+      "fromPort": "onAfterStart",
+      "toNodeId": "node_1787293583114",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787293616676",
+      "fromNodeId": "node_1787293446004",
+      "fromPort": "onAfterStart",
+      "toNodeId": "node_1787293609787_6681",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787293675135",
+      "fromNodeId": "node_1787293461532_774",
+      "fromPort": "onStop",
+      "toNodeId": "node_1787293635634",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787293677220",
+      "fromNodeId": "node_1787293446004",
+      "fromPort": "onStop",
+      "toNodeId": "node_1787293635634",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787293747359",
+      "fromNodeId": "node_1787293396523",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_1787293727047_6062",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787293750232",
+      "fromNodeId": "node_1787293727047_6062",
+      "fromPort": "onTrue",
+      "toNodeId": "node_1787293708690",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787293843713",
+      "fromNodeId": "node_1787293472456",
+      "fromPort": "onFalse",
+      "toNodeId": "node_1787293795567",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787294096443",
+      "fromNodeId": "node_1787293472456",
+      "fromPort": "onTrue",
+      "toNodeId": "node_1787294093214",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787294122088",
+      "fromNodeId": "node_1787294093214",
+      "fromPort": "onTrue",
+      "toNodeId": "node_1787293795567",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787294173310",
+      "fromNodeId": "node_1787293472456",
+      "fromPort": "onTrue",
+      "toNodeId": "node_1787294161660",
+      "toPort": "exec_in"
+    }
+  ]
+}

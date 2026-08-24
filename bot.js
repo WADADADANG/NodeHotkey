@@ -97,10 +97,14 @@ let pressedRemapKeys = {};
 let activeHoldStates = {};
 let forwardHoldTimers = {};
 let activeLoopStates = {};
+let activeSequencerLoops = {};
 let isBuffSequenceRunning = {};
+let isSequencerRunning = {};
 let buffSequenceTokens = {};  // Per-action cancellation tokens: { actionId: tokenNumber }
 global.activeLoopStates = activeLoopStates;
+global.activeSequencerLoops = activeSequencerLoops;
 global.isBuffSequenceRunning = isBuffSequenceRunning;
+global.isSequencerRunning = isSequencerRunning;
 global.pressedRemapKeys = pressedRemapKeys;
 global.activeHoldStates = activeHoldStates;
 let isSystemInitialized = false;
@@ -115,41 +119,83 @@ function getClientStatuses() {
 
     activeList.forEach(clientIdx => {
         const clientStr = String(clientIdx);
+        const runningActions = [];
 
-        // Priority 0: Explicit pinned action via showOnOverlay
-        const pinnedAction = actions.find(a => {
-            if (!a.showOnOverlay || !a.enabled || !isTargetMatched(a.targetClient, clientStr)) return false;
-            if (a.mode === 'buff_sequence') return !!(isBuffSequenceRunning && isBuffSequenceRunning[clientStr]);
-            if (a.mode === 'loop') return !!(activeLoopStates[a.id] && activeLoopStates[a.id].running);
-            if (a.mode === 'key_hold') return !!activeHoldStates[a.id];
-            if (a.mode === 'forward') return !!pressedRemapKeys[`${a.id}-${clientStr}`];
-            return false;
+        actions.forEach(a => {
+            if (!a.enabled || !isTargetMatched(a.targetClient, clientStr)) return;
+
+            if (a.mode === 'loop_scheduler' && activeSchedulerStates[a.id]?.running) {
+                runningActions.push({
+                    id: a.id,
+                    name: a.name || 'Loop Scheduler',
+                    type: 'scheduler',
+                    icon: '⏱️',
+                    detail: `${a.items?.length || 0} timers`
+                });
+            } else if (a.mode === 'loop' && activeLoopStates[a.id]?.running) {
+                runningActions.push({
+                    id: a.id,
+                    name: a.name || 'Key Loop',
+                    type: 'loop',
+                    icon: '🟢',
+                    detail: `${a.interval || 1000}ms`
+                });
+            } else if ((a.mode === 'sequencer' || a.mode === 'cast_sequence') && ((activeSequencerLoops[a.id]?.running) || isSequencerRunning[clientStr])) {
+                runningActions.push({
+                    id: a.id,
+                    name: a.name || 'Sequencer',
+                    type: 'sequencer',
+                    icon: '⚔️',
+                    detail: a.modeType === 'once' ? 'Once' : 'Loop'
+                });
+            } else if (a.mode === 'buff_sequence' && isBuffSequenceRunning[clientStr]) {
+                runningActions.push({
+                    id: a.id,
+                    name: a.name || 'Buff Queue',
+                    type: 'buff',
+                    icon: '🔵',
+                    detail: `${(a.keys || []).length} keys`
+                });
+            } else if (a.mode === 'key_hold' && activeHoldStates[a.id]) {
+                runningActions.push({
+                    id: a.id,
+                    name: a.name || `Hold: ${a.targetKey || '1'}`,
+                    type: 'hold',
+                    icon: '⚓',
+                    detail: `Key ${a.targetKey || '1'}`
+                });
+            } else if (a.mode === 'forward' && pressedRemapKeys[`${a.id}-${clientStr}`]) {
+                runningActions.push({
+                    id: a.id,
+                    name: a.name || 'Key Forward',
+                    type: 'forward',
+                    icon: '⚡',
+                    detail: `${a.trigger?.value || 'Key'} ➜ ${a.targetKey || '1'}`
+                });
+            }
         });
 
-        if (pinnedAction) {
-            let statusType = "loop";
-            if (pinnedAction.mode === 'buff_sequence') statusType = "buff";
-            else if (pinnedAction.mode === 'key_hold') statusType = "hold";
-            else if (pinnedAction.mode === 'forward') statusType = "forward";
+        if (runningActions.length > 0) {
+            // Check pinned action priority
+            const pinnedAction = runningActions.find(ra => {
+                const orig = actions.find(a => a.id === ra.id);
+                return orig && orig.showOnOverlay;
+            });
+            const primary = pinnedAction || runningActions[0];
 
             clientStatuses[clientStr] = {
-                status: pinnedAction.name || "Active",
-                type: statusType
+                status: primary.name,
+                type: primary.type === 'scheduler' ? 'sequencer' : primary.type,
+                activeCount: runningActions.length,
+                activeActions: runningActions
             };
-        } else if (isBuffSequenceRunning && isBuffSequenceRunning[clientStr]) {
-            const buffAct = actions.find(a => a.mode === 'buff_sequence' && isTargetMatched(a.targetClient, clientStr));
-            clientStatuses[clientStr] = { status: buffAct ? buffAct.name : "Buffing", type: "buff" };
-        } else if (actions.find(a => a.mode === 'loop' && a.enabled && activeLoopStates[a.id] && activeLoopStates[a.id].running && isTargetMatched(a.targetClient, clientStr))) {
-            const activeLoop = actions.find(a => a.mode === 'loop' && a.enabled && activeLoopStates[a.id] && activeLoopStates[a.id].running && isTargetMatched(a.targetClient, clientStr));
-            clientStatuses[clientStr] = { status: activeLoop.name, type: "loop" };
-        } else if (actions.find(a => a.mode === 'key_hold' && a.enabled && activeHoldStates[a.id] && isTargetMatched(a.targetClient, clientStr))) {
-            const activeHold = actions.find(a => a.mode === 'key_hold' && a.enabled && activeHoldStates[a.id] && isTargetMatched(a.targetClient, clientStr));
-            clientStatuses[clientStr] = { status: activeHold.name || `Hold: ${activeHold.targetKey}`, type: "hold" };
-        } else if (actions.find(a => a.mode === 'forward' && a.enabled && pressedRemapKeys[`${a.id}-${clientStr}`] && isTargetMatched(a.targetClient, clientStr))) {
-            const activeForward = actions.find(a => a.mode === 'forward' && a.enabled && pressedRemapKeys[`${a.id}-${clientStr}`] && isTargetMatched(a.targetClient, clientStr));
-            clientStatuses[clientStr] = { status: activeForward.name || `${activeForward.trigger.value} ➜ ${activeForward.targetKey}`, type: "forward" };
         } else {
-            clientStatuses[clientStr] = { status: "Standby", type: "standby" };
+            clientStatuses[clientStr] = {
+                status: "Standby",
+                type: "standby",
+                activeCount: 0,
+                activeActions: []
+            };
         }
     });
     return clientStatuses;
@@ -169,6 +215,7 @@ function sendRealtimeOverlayState() {
 }
 global.sendRealtimeOverlayState = sendRealtimeOverlayState;
 global.sendOverlayUpdate = sendRealtimeOverlayState;
+global.getClientStatuses = getClientStatuses;
 
 // Ghost Mouse Jitter state
 let ghostMouseJitterConfig = { enabled: false, intervalMin: 8000, intervalMax: 25000, maxOffset: 12 };
@@ -919,6 +966,8 @@ async function launchBrowser(activeClientsList, choice) {
     }
 
     console.log(`[System] ${browserName} launcher completed successfully!`);
+    global.activeClients = activeClients;
+    sendOverlayUpdate();
 }
 
 function handleClientContextClosed(clientIndexInput) {
@@ -1222,6 +1271,12 @@ async function findAndAttachTabForClient(clientIndex, browserCtx) {
                 console.log(`-------------------------------------------------`);
                 console.log(`[Client ${clientIndex}] Global Hotkeys initialized!`);
                 console.log(`-------------------------------------------------\n`);
+                if (!activeClients.includes(clientIndex)) {
+                    activeClients.push(clientIndex);
+                    activeClients.sort((a, b) => a - b);
+                }
+                global.activeClients = activeClients;
+                sendOverlayUpdate();
                 updateBrowserTitles();
                 startGhostMouseJitter(clientIndex);
                 break;
@@ -1629,6 +1684,22 @@ function syncRunningLoops() {
             }
         }
     }
+    for (let actionId in activeSequencerLoops) {
+        if (activeSequencerLoops[actionId].running) {
+            const matchingAct = activeActions.find(a => a.id === actionId && a.enabled);
+            if (!matchingAct || (matchingAct.mode !== 'sequencer' && matchingAct.mode !== 'cast_sequence') || matchingAct.modeType === 'once') {
+                stopCastSequencerAction(actionId, matchingAct ? matchingAct.name : actionId);
+            }
+        }
+    }
+    for (let actionId in activeSchedulerStates) {
+        if (activeSchedulerStates[actionId].running) {
+            const matchingAct = activeActions.find(a => a.id === actionId && a.enabled);
+            if (!matchingAct || matchingAct.mode !== 'loop_scheduler') {
+                stopLoopSchedulerAction(actionId, matchingAct ? matchingAct.name : actionId);
+            }
+        }
+    }
 }
 
 // Start a loop action
@@ -1701,6 +1772,8 @@ function stopAllLoops() {
     for (let act of activeActions) {
         if (act.mode === 'loop') {
             stopLoopAction(act.id, act.name);
+        } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence') {
+            stopCastSequencerAction(act.id, act.name);
         }
     }
 }
@@ -1708,10 +1781,12 @@ function stopAllLoops() {
 // Stop active loops for a specific client
 function stopLoopsForClient(clientIndex) {
     for (let act of activeActions) {
-        if (act.mode === 'loop') {
-            const targets = getActionTargets(act.targetClient).map(x => parseInt(x, 10));
-            if (targets.includes(clientIndex)) {
+        const targets = getActionTargets(act.targetClient).map(x => parseInt(x, 10));
+        if (targets.includes(clientIndex)) {
+            if (act.mode === 'loop') {
                 stopLoopAction(act.id, act.name);
+            } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence') {
+                stopCastSequencerAction(act.id, act.name);
             }
         }
     }
@@ -1877,6 +1952,271 @@ async function toggleKeyHoldAction(action, callStack) {
     sendOverlayUpdate();
 }
 
+let sequencerTokens = {};
+
+// Start a Sequencer Loop Action (Continuous execution with step delays and interval rest)
+async function startCastSequencerLoop(action, callStack) {
+    if (global.isSuspended) return;
+    const target = action.targetClient || '1';
+    console.log(`⚔️ [Action] Starting Sequencer Loop: "${action.name}" on Client ${target}`);
+
+    const myToken = (sequencerTokens[action.id] || 0) + 1;
+    sequencerTokens[action.id] = myToken;
+
+    if (!activeSequencerLoops[action.id]) {
+        activeSequencerLoops[action.id] = { running: true, timeout: null, token: myToken };
+    } else {
+        activeSequencerLoops[action.id].running = true;
+        activeSequencerLoops[action.id].token = myToken;
+    }
+
+    sendOverlayUpdate();
+    runSequencerLoopStep(action, callStack, myToken);
+}
+
+// Stop a Sequencer Action (Loop or Once)
+function stopCastSequencerAction(actionId, actionName) {
+    sequencerTokens[actionId] = (sequencerTokens[actionId] || 0) + 1;
+
+    const act = activeActions.find(a => a.id === actionId);
+    if (act) {
+        const target = act.targetClient || '1';
+        let targets = getActionTargets(target).map(x => parseInt(x, 10));
+        for (let t of targets) {
+            delete isSequencerRunning[String(t)];
+        }
+    }
+
+    if (activeSequencerLoops[actionId]) {
+        console.log(`🔴 [Action] Stopped Sequencer Loop: "${actionName || actionId}"`);
+        activeSequencerLoops[actionId].running = false;
+        if (activeSequencerLoops[actionId].timeout) {
+            clearTimeout(activeSequencerLoops[actionId].timeout);
+            activeSequencerLoops[actionId].timeout = null;
+        }
+        if (act) fireChain(act, 'onStop');
+    }
+    sendOverlayUpdate();
+}
+
+// Inner cycle runner for Sequencer Loop
+async function runSequencerLoopStep(action, callStack, myToken) {
+    const state = activeSequencerLoops[action.id];
+    if (!state || !state.running || global.isSuspended || sequencerTokens[action.id] !== myToken) return;
+
+    const target = action.targetClient || '1';
+    let targets = getActionTargets(target).map(x => parseInt(x, 10));
+    const steps = Array.isArray(action.steps) ? action.steps : [];
+
+    for (let sIdx = 0; sIdx < steps.length; sIdx++) {
+        if (!state || !state.running || global.isSuspended || sequencerTokens[action.id] !== myToken) return;
+        const step = steps[sIdx];
+        const rawKey = (step.key || '').trim();
+        if (!rawKey) continue;
+
+        const delayMs = step.delay !== undefined ? parseInt(step.delay, 10) : (step.castTimeMs !== undefined ? parseInt(step.castTimeMs, 10) : 800);
+
+        for (let t of targets) {
+            const page = clientPages[t];
+            if (!page) continue;
+            await sendKey(action, rawKey, t);
+        }
+
+        await fireChain(action, 'onStep', callStack);
+
+        if (delayMs > 0) {
+            await new Promise(res => setTimeout(res, delayMs));
+        }
+    }
+
+    if (!state || !state.running || global.isSuspended || sequencerTokens[action.id] !== myToken) return;
+
+    await fireChain(action, 'onEachCycle', callStack);
+
+    const baseInterval = action.interval !== undefined ? parseInt(action.interval, 10) : 1000;
+    state.timeout = setTimeout(() => runSequencerLoopStep(action, new Set(), myToken), Math.max(50, baseInterval));
+}
+
+// Run Smart Cast Sequencer Action Once / Burst
+async function runCastSequencerOnce(action, callStack) {
+    if (global.isSuspended) return;
+    const target = action.targetClient || '1';
+    let targets = getActionTargets(target).map(x => parseInt(x, 10));
+    const steps = Array.isArray(action.steps) ? action.steps : [];
+    const repeatCount = Math.max(1, parseInt(action.repeatCount, 10) || 1);
+
+    if (steps.length === 0) {
+        console.warn(`[Sequencer Warning] Skipped "${action.name}" - No steps defined.`);
+        return;
+    }
+
+    const myToken = (sequencerTokens[action.id] || 0) + 1;
+    sequencerTokens[action.id] = myToken;
+
+    for (let t of targets) {
+        isSequencerRunning[String(t)] = true;
+    }
+    sendOverlayUpdate();
+
+    console.log(`⚔️ [Action] Cast Sequencer (Once): "${action.name}" (${steps.length} steps, ${repeatCount}x) on Client ${target}... (token: ${myToken})`);
+
+    let wasInterrupted = false;
+
+    try {
+        for (let r = 0; r < repeatCount; r++) {
+            if (global.isSuspended || sequencerTokens[action.id] !== myToken) {
+                wasInterrupted = true;
+                break;
+            }
+
+            for (let sIdx = 0; sIdx < steps.length; sIdx++) {
+                if (global.isSuspended || sequencerTokens[action.id] !== myToken) {
+                    wasInterrupted = true;
+                    break;
+                }
+                const step = steps[sIdx];
+                const rawKey = (step.key || '').trim();
+                if (!rawKey) continue;
+
+                const delayMs = step.delay !== undefined ? parseInt(step.delay, 10) : (step.castTimeMs !== undefined ? parseInt(step.castTimeMs, 10) : 800);
+
+                for (let t of targets) {
+                    const page = clientPages[t];
+                    if (!page) continue;
+                    await sendKey(action, rawKey, t);
+                }
+
+                await fireChain(action, 'onStep', callStack);
+
+                if (delayMs > 0) {
+                    await new Promise(res => setTimeout(res, delayMs));
+                }
+            }
+        }
+
+        if (!wasInterrupted) {
+            const delayAfter = action.delayAfter !== undefined ? parseInt(action.delayAfter, 10) : 0;
+            if (delayAfter > 0) {
+                await new Promise(res => setTimeout(res, delayAfter));
+            }
+
+            console.log(`⚔️ [Action] Cast Sequencer Finished: "${action.name}" on Client ${target}`);
+            await fireChain(action, 'onComplete', callStack);
+        } else {
+            console.log(`🔴 [Action] Cast Sequencer Cancelled / Interrupted: "${action.name}"`);
+            await fireChain(action, 'onStop', callStack);
+        }
+    } finally {
+        if (sequencerTokens[action.id] === myToken) {
+            for (let t of targets) {
+                delete isSequencerRunning[String(t)];
+            }
+        }
+        sendOverlayUpdate();
+    }
+}
+
+let activeSchedulerStates = {};
+let schedulerTokens = {};
+
+// Start a Loop Scheduler Action (Multi-Timer Dispatcher with Anti-Collision Guard Queue)
+async function startLoopSchedulerAction(action, callStack) {
+    if (global.isSuspended) return;
+    const target = action.targetClient || '1';
+    console.log(`⏱️ [Action] Starting Loop Scheduler: "${action.name}" on Client ${target}...`);
+
+    const myToken = (schedulerTokens[action.id] || 0) + 1;
+    schedulerTokens[action.id] = myToken;
+
+    const items = Array.isArray(action.items) ? action.items : [];
+    const state = {
+        running: true,
+        timeouts: [],
+        queue: [],
+        isProcessing: false,
+        token: myToken
+    };
+    activeSchedulerStates[action.id] = state;
+    sendOverlayUpdate();
+
+    // Schedule each independent loop timer
+    items.forEach((it, idx) => {
+        if (it.enabled === false) return;
+        const baseInterval = Math.max(50, parseInt(it.interval, 10) || 3000);
+        const jitter = Math.max(0, parseInt(it.jitter, 10) || 0);
+        const execImmediately = it.executeImmediately !== false;
+
+        const getNextInterval = () => {
+            if (jitter <= 0) return baseInterval;
+            const randomOffset = Math.floor(Math.random() * (jitter * 2 + 1)) - jitter;
+            return Math.max(50, baseInterval + randomOffset);
+        };
+
+        const scheduleCycle = (delayMs) => {
+            if (!state.running || schedulerTokens[action.id] !== myToken || global.isSuspended) return;
+            const timer = setTimeout(async () => {
+                if (!state.running || schedulerTokens[action.id] !== myToken || global.isSuspended) return;
+                // Push to FIFO Queue
+                state.queue.push({ item: it, index: idx });
+                processSchedulerQueue(action, state, myToken);
+                // Schedule next recurring cycle with jitter
+                scheduleCycle(getNextInterval());
+            }, delayMs);
+            state.timeouts.push(timer);
+        };
+
+        if (execImmediately) {
+            scheduleCycle(0);
+        } else {
+            scheduleCycle(getNextInterval());
+        }
+    });
+}
+
+// Process Scheduler FIFO Queue with Collision Guard Delay
+async function processSchedulerQueue(action, state, myToken) {
+    if (!state || !state.running || state.isProcessing || schedulerTokens[action.id] !== myToken || global.isSuspended) return;
+    state.isProcessing = true;
+
+    const guardMs = Math.max(0, parseInt(action.collisionGuardMs, 10) || 800);
+
+    try {
+        while (state.queue.length > 0 && state.running && schedulerTokens[action.id] === myToken && !global.isSuspended) {
+            const task = state.queue.shift();
+            if (!task || !task.item) continue;
+
+            console.log(`⏱️ [Scheduler] "${action.name}" ➔ Dispatching [item_${task.index}] ("${task.item.name}")...`);
+            emitSignal(action.id, `item_${task.index}`);
+            await fireChain(action, `item_${task.index}`, new Set());
+
+            // Apply Anti-Collision Guard wait before processing next item in queue
+            if (guardMs > 0 && state.queue.length > 0) {
+                await new Promise(r => setTimeout(r, guardMs));
+            }
+        }
+    } finally {
+        if (state) state.isProcessing = false;
+    }
+}
+
+// Stop a Loop Scheduler Action
+function stopLoopSchedulerAction(actionId, actionName) {
+    schedulerTokens[actionId] = (schedulerTokens[actionId] || 0) + 1;
+    const state = activeSchedulerStates[actionId];
+    if (state) {
+        console.log(`🔴 [Action] Stopped Loop Scheduler: "${actionName || actionId}"`);
+        state.running = false;
+        if (Array.isArray(state.timeouts)) {
+            state.timeouts.forEach(t => clearTimeout(t));
+            state.timeouts = [];
+        }
+        state.queue = [];
+        const act = activeActions.find(a => a.id === actionId);
+        if (act) fireChain(act, 'onStop');
+    }
+    sendOverlayUpdate();
+}
+
 let nativeAudioWorker = null;
 
 function initNativeAudioWorker() {
@@ -2007,14 +2347,27 @@ async function runEmergencyStopAction(action, callStack) {
             }
         });
 
-        // 2. Stop all buff sequences + invalidate tokens
+        // 2. Stop all buff sequences + sequencer actions + loop schedulers + invalidate tokens
         Object.keys(isBuffSequenceRunning).forEach(cIdx => {
             isBuffSequenceRunning[cIdx] = false;
         });
-        // Invalidate all buff sequence tokens so running sequences abort
+        Object.keys(isSequencerRunning).forEach(cIdx => {
+            delete isSequencerRunning[cIdx];
+        });
+        Object.keys(activeSequencerLoops).forEach(seqId => {
+            stopCastSequencerAction(seqId, 'Emergency Stop');
+        });
+        Object.keys(activeSchedulerStates).forEach(schId => {
+            stopLoopSchedulerAction(schId, 'Emergency Stop');
+        });
+        // Invalidate all tokens so running sequences abort immediately
         activeActions.forEach(act => {
             if (act.mode === 'buff_sequence') {
                 buffSequenceTokens[act.id] = (buffSequenceTokens[act.id] || 0) + 1;
+            } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence') {
+                sequencerTokens[act.id] = (sequencerTokens[act.id] || 0) + 1;
+            } else if (act.mode === 'loop_scheduler') {
+                schedulerTokens[act.id] = (schedulerTokens[act.id] || 0) + 1;
             }
         });
 
@@ -2023,7 +2376,7 @@ async function runEmergencyStopAction(action, callStack) {
             activeHoldStates[actId] = false;
         });
 
-        console.log(`🛑 [Emergency Stop] All loops, buff sequences, and held keys stopped across all clients 100%!`);
+        console.log(`🛑 [Emergency Stop] All loops, buff sequences, sequencers, schedulers, and held keys stopped across all clients 100%!`);
     } else if (scope === 'profile') {
         const profileName = action._profileName;
         // Stop all actions belonging to the same profile
@@ -2036,12 +2389,21 @@ async function runEmergencyStopAction(action, callStack) {
             } else if (act.mode === 'key_hold') {
                 releaseHeldKeyForAction(act);
             } else if (act.mode === 'buff_sequence') {
-                // Invalidate the token so the running sequence detects cancellation
                 buffSequenceTokens[act.id] = (buffSequenceTokens[act.id] || 0) + 1;
                 const targets = getActionTargets(act.targetClient);
                 targets.forEach(t => {
                     isBuffSequenceRunning[String(t)] = false;
                 });
+            } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence') {
+                stopCastSequencerAction(act.id, act.name);
+                sequencerTokens[act.id] = (sequencerTokens[act.id] || 0) + 1;
+                const targets = getActionTargets(act.targetClient);
+                targets.forEach(t => {
+                    delete isSequencerRunning[String(t)];
+                });
+            } else if (act.mode === 'loop_scheduler') {
+                stopLoopSchedulerAction(act.id, act.name);
+                schedulerTokens[act.id] = (schedulerTokens[act.id] || 0) + 1;
             }
         });
         console.log(`🛑 [Emergency Stop] Stopped all actions in profile "${profileName || 'Current'}"!`);
@@ -2049,6 +2411,7 @@ async function runEmergencyStopAction(action, callStack) {
         const targets = getActionTargets(action.targetClient || '1');
         targets.forEach(t => {
             isBuffSequenceRunning[String(t)] = false;
+            delete isSequencerRunning[String(t)];
         });
         activeActions.forEach(act => {
             const actTargets = getActionTargets(act.targetClient);
@@ -2059,6 +2422,12 @@ async function runEmergencyStopAction(action, callStack) {
                     releaseHeldKeyForAction(act);
                 } else if (act.mode === 'buff_sequence') {
                     buffSequenceTokens[act.id] = (buffSequenceTokens[act.id] || 0) + 1;
+                } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence') {
+                    stopCastSequencerAction(act.id, act.name);
+                    sequencerTokens[act.id] = (sequencerTokens[act.id] || 0) + 1;
+                } else if (act.mode === 'loop_scheduler') {
+                    stopLoopSchedulerAction(act.id, act.name);
+                    schedulerTokens[act.id] = (schedulerTokens[act.id] || 0) + 1;
                 }
             }
         });
@@ -2153,6 +2522,24 @@ function handleActionTrigger(act) {
         runEmergencyStopAction(act).catch(err => console.error(`Error in runEmergencyStopAction:`, err));
     } else if (act.mode === 'emit_event' || act.mode === 'send_event') {
         runEmitEventAction(act).catch(err => console.error(`Error in runEmitEventAction:`, err));
+    } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence') {
+        if (act.modeType === 'once') {
+            runCastSequencerOnce(act).catch(err => console.error(`Error in runCastSequencerOnce:`, err));
+        } else {
+            const state = activeSequencerLoops[act.id];
+            if (state && state.running) {
+                stopCastSequencerAction(act.id, act.name);
+            } else {
+                startCastSequencerLoop(act).catch(err => console.error(`Error in startCastSequencerLoop:`, err));
+            }
+        }
+    } else if (act.mode === 'loop_scheduler') {
+        const state = activeSchedulerStates[act.id];
+        if (state && state.running) {
+            stopLoopSchedulerAction(act.id, act.name);
+        } else {
+            startLoopSchedulerAction(act).catch(err => console.error(`Error in startLoopSchedulerAction:`, err));
+        }
     }
 }
 
@@ -2244,6 +2631,24 @@ async function runChainedAction(action, callStack) {
         await runEmergencyStopAction(action, callStack).catch(err => console.error(`[Chain Error] runEmergencyStopAction:`, err));
     } else if (action.mode === 'emit_event' || action.mode === 'send_event') {
         await runEmitEventAction(action, callStack).catch(err => console.error(`[Chain Error] runEmitEventAction:`, err));
+    } else if (action.mode === 'sequencer' || action.mode === 'cast_sequence') {
+        if (action.modeType === 'once') {
+            await runCastSequencerOnce(action, callStack).catch(err => console.error(`[Chain Error] runCastSequencerOnce:`, err));
+        } else {
+            const state = activeSequencerLoops[action.id];
+            if (state && state.running) {
+                stopCastSequencerAction(action.id, action.name);
+            } else {
+                await startCastSequencerLoop(action, callStack).catch(err => console.error(`[Chain Error] startCastSequencerLoop:`, err));
+            }
+        }
+    } else if (action.mode === 'loop_scheduler') {
+        const state = activeSchedulerStates[action.id];
+        if (state && state.running) {
+            stopLoopSchedulerAction(action.id, action.name);
+        } else {
+            await startLoopSchedulerAction(action, callStack).catch(err => console.error(`[Chain Error] startLoopSchedulerAction:`, err));
+        }
     }
 }
 
@@ -2262,7 +2667,7 @@ async function runActionControl(act, callStack) {
     resolvedStack.add(stackKey);
 
     for (const targetId of targetIds) {
-        const targetAction = activeActions.find(a => a.id === targetId);
+        const targetAction = activeActions.find(a => a.id === targetId || a.id === `node_${targetId}` || (a.nodeId && a.nodeId === targetId));
         if (!targetAction || !targetAction.enabled) {
             console.log(`[Action Control] Target action "${targetId}" is missing or disabled — skipping.`);
             continue;
@@ -2341,6 +2746,76 @@ async function runActionControl(act, callStack) {
                     await runBuffSequenceAction(targetAction, resolvedStack).catch(err => console.error(err));
                 }
             }
+        } else if (targetAction.mode === 'sequencer' || targetAction.mode === 'cast_sequence') {
+            const isOnce = targetAction.modeType === 'once';
+            const target = targetAction.targetClient || '1';
+            let targets = getActionTargets(target).map(x => parseInt(x, 10));
+            const isRunning = isOnce 
+                ? targets.some(t => isSequencerRunning[String(t)])
+                : !!(activeSequencerLoops[targetAction.id] && activeSequencerLoops[targetAction.id].running);
+
+            if (op === 'start') {
+                if (!isRunning) {
+                    emitSignal(act.id, 'control_start', targetAction.id);
+                    if (isOnce) {
+                        runCastSequencerOnce(targetAction, resolvedStack).catch(err => console.error(err));
+                    } else {
+                        await startCastSequencerLoop(targetAction, resolvedStack).catch(err => console.error(err));
+                    }
+                }
+            } else if (op === 'stop') {
+                if (isRunning) {
+                    emitSignal(act.id, 'control_stop', targetAction.id);
+                    stopCastSequencerAction(targetAction.id, targetAction.name);
+                    for (let t of targets) {
+                        delete isSequencerRunning[String(t)];
+                    }
+                    console.log(`🔴 [Action Control] Stopped Sequencer: "${targetAction.name}"`);
+                    sendOverlayUpdate();
+                }
+            } else { // toggle
+                if (isRunning) {
+                    emitSignal(act.id, 'control_stop', targetAction.id);
+                    stopCastSequencerAction(targetAction.id, targetAction.name);
+                    for (let t of targets) {
+                        delete isSequencerRunning[String(t)];
+                    }
+                    console.log(`🔴 [Action Control] Toggled (Stopped) Sequencer: "${targetAction.name}"`);
+                    sendOverlayUpdate();
+                } else {
+                    emitSignal(act.id, 'control_start', targetAction.id);
+                    if (isOnce) {
+                        runCastSequencerOnce(targetAction, resolvedStack).catch(err => console.error(err));
+                    } else {
+                        await startCastSequencerLoop(targetAction, resolvedStack).catch(err => console.error(err));
+                    }
+                }
+            }
+        } else if (targetAction.mode === 'loop_scheduler') {
+            const isRunning = !!(activeSchedulerStates[targetAction.id] && activeSchedulerStates[targetAction.id].running);
+            if (op === 'start') {
+                if (!isRunning) {
+                    emitSignal(act.id, 'control_start', targetAction.id);
+                    await startLoopSchedulerAction(targetAction, resolvedStack).catch(err => console.error(err));
+                }
+            } else if (op === 'stop') {
+                if (isRunning) {
+                    emitSignal(act.id, 'control_stop', targetAction.id);
+                    stopLoopSchedulerAction(targetAction.id, targetAction.name);
+                    console.log(`🔴 [Action Control] Stopped Scheduler: "${targetAction.name}"`);
+                    sendOverlayUpdate();
+                }
+            } else { // toggle
+                if (isRunning) {
+                    emitSignal(act.id, 'control_stop', targetAction.id);
+                    stopLoopSchedulerAction(targetAction.id, targetAction.name);
+                    console.log(`🔴 [Action Control] Toggled (Stopped) Scheduler: "${targetAction.name}"`);
+                    sendOverlayUpdate();
+                } else {
+                    emitSignal(act.id, 'control_start', targetAction.id);
+                    await startLoopSchedulerAction(targetAction, resolvedStack).catch(err => console.error(err));
+                }
+            }
         } else if (targetAction.mode === 'single_press') {
             if (op === 'start' || op === 'toggle') {
                 await runSinglePressAction(targetAction, resolvedStack).catch(err => console.error(err));
@@ -2357,7 +2832,7 @@ async function runActionControl(act, callStack) {
 }
 
 function isActionRunning(actionId) {
-    const act = activeActions.find(a => a.id === actionId);
+    const act = activeActions.find(a => a.id === actionId || a.id === `node_${actionId}` || (a.nodeId && a.nodeId === actionId));
     if (!act) return false;
 
     if (act.mode === 'loop') {
@@ -2368,6 +2843,16 @@ function isActionRunning(actionId) {
         const target = act.targetClient || '1';
         let targets = getActionTargets(target).map(x => parseInt(x, 10));
         return targets.some(t => isBuffSequenceRunning[String(t)]);
+    } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence') {
+        if (act.modeType === 'once') {
+            const target = act.targetClient || '1';
+            let targets = getActionTargets(target).map(x => parseInt(x, 10));
+            return targets.some(t => isSequencerRunning[String(t)]);
+        } else {
+            return !!(activeSequencerLoops[act.id] && activeSequencerLoops[act.id].running);
+        }
+    } else if (act.mode === 'loop_scheduler') {
+        return !!(activeSchedulerStates[act.id] && activeSchedulerStates[act.id].running);
     }
     return false;
 }

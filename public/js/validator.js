@@ -136,6 +136,19 @@ export function validateProfile(actions) {
           messageTh: `โหมดกระจายสัญญาณ (Emit Event) ยังไม่ได้ระบุชื่อเหตุการณ์`
         });
       }
+    } else if (normMode === 'sequencer' || normMode === 'cast_sequence') {
+      const steps = Array.isArray(act.steps) ? act.steps : [];
+      if (steps.length === 0) {
+        issues.push({
+          type: 'unset_target',
+          severity: 'warning',
+          actionId: act.id,
+          actionName: act.name,
+          autoFixable: false,
+          messageEn: `Cast Sequencer has no sequence steps defined.`,
+          messageTh: `โหมดจัดคิวสกิล (Cast Sequencer) ยังไม่มี Step คำสั่ง`
+        });
+      }
     }
 
     if (act.trigger && act.trigger.type === 'event' && (!act.trigger.value || !act.trigger.value.trim())) {

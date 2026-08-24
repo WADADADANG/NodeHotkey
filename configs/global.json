@@ -1,9 +1,7 @@
 {
-  "activeProfile": "[WD] Add-ons",
+  "activeProfile": "[CW] RM 1 2 4",
   "activeProfiles": [
-    "[WD] Add-ons",
-    "[WD] Full Buff",
-    "[WD] Heal 1,2,4"
+    "[CW] RM 1 2 4"
   ],
   "disabledClients": [],
   "globalSettings": {
@@ -50,7 +48,7 @@
       "1": "1-app",
       "2": "1-app",
       "3": "1-app",
-      "4": "3",
+      "4": "1-app",
       "5": "1-app",
       "6": "1-app",
       "7": "1-app",

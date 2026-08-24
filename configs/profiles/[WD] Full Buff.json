@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Full Buff",
   "canvas": {
-    "zoom": 1,
+    "zoom": 0.7938810000000003,
     "pan": {
-      "x": -1088,
-      "y": -311
+      "x": -270,
+      "y": -952
     }
   },
   "nodes": [
@@ -14,44 +14,14 @@
       "type": "trigger",
       "title": "Btn Full Buff",
       "position": {
-        "x": 1010,
-        "y": 650
+        "x": 1050,
+        "y": 840
       },
       "data": {
         "enabled": true,
         "triggerType": "keyboard",
-        "triggerValue": "NUMPAD DIVIDE",
+        "triggerValue": "NUMPAD 7",
         "actionId": "1786881084148"
-      }
-    },
-    {
-      "id": "node_1786881097832",
-      "type": "buff_sequence",
-      "title": "Full Buff",
-      "position": {
-        "x": 1620,
-        "y": 740
-      },
-      "data": {
-        "enabled": true,
-        "targetClient": "4",
-        "keys": [
-          "F2",
-          "1",
-          "2",
-          "3",
-          "4",
-          "5",
-          "6",
-          "LEFT ALT + 1",
-          "LEFT ALT + 2",
-          "LEFT ALT + 3",
-          "LEFT ALT + 4",
-          "LEFT ALT + 5",
-          "F1"
-        ],
-        "delayBuff": 1100,
-        "actionId": "1786881097832"
       }
     },
     {
@@ -59,37 +29,14 @@
       "type": "trigger",
       "title": "Btn First Buff",
       "position": {
-        "x": 1010,
+        "x": 1020,
         "y": 420
       },
       "data": {
         "enabled": true,
         "triggerType": "keyboard",
-        "triggerValue": "HOME",
+        "triggerValue": "NUMPAD DIVIDE",
         "actionId": "1786881149621"
-      }
-    },
-    {
-      "id": "node_1786881201834",
-      "type": "buff_sequence",
-      "title": "Buff Skill Queue",
-      "position": {
-        "x": 1640,
-        "y": 380
-      },
-      "data": {
-        "enabled": true,
-        "targetClient": "4",
-        "keys": [
-          "ESC",
-          "F2",
-          "8",
-          "1",
-          "LEFT ALT + 2",
-          "F1"
-        ],
-        "delayBuff": 1100,
-        "actionId": "1786881201834"
       }
     },
     {
@@ -97,7 +44,7 @@
       "type": "emergency_stop",
       "title": "Emergency Stop All",
       "position": {
-        "x": 1310,
+        "x": 1330,
         "y": 420
       },
       "data": {
@@ -112,31 +59,263 @@
       "type": "control",
       "title": "AC Stop Full Buff",
       "position": {
-        "x": 1620,
-        "y": 630
+        "x": 1690,
+        "y": 800
       },
       "data": {
         "enabled": true,
         "controlOperation": "stop",
         "controlTargetIds": [
-          "1786881097832"
+          "1787566459897"
         ],
         "actionId": "1786963028463"
       }
     },
     {
-      "id": "node_1786963046815",
-      "type": "branch",
-      "title": "Check Full Buff",
+      "id": "node_1787311612588",
+      "type": "trigger",
+      "title": "Btn Follow Buff",
       "position": {
-        "x": 1310,
-        "y": 620
+        "x": 1050,
+        "y": 1450
       },
       "data": {
         "enabled": true,
-        "conditionTargetId": "1786881097832",
+        "triggerType": "keyboard",
+        "triggerValue": "NUMPAD 8",
+        "actionId": "1787311612588"
+      }
+    },
+    {
+      "id": "node_1787311674499",
+      "type": "branch",
+      "title": "Check Follow Buff",
+      "position": {
+        "x": 1370,
+        "y": 1450
+      },
+      "data": {
+        "enabled": true,
+        "conditionTargetId": "1787311689412",
         "conditionRule": "is_running",
-        "actionId": "1786963046815"
+        "actionId": "1787311674499"
+      }
+    },
+    {
+      "id": "node_1787311764391",
+      "type": "control",
+      "title": "AC Stop Follow Buff",
+      "position": {
+        "x": 1680,
+        "y": 1440
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "1787572441502"
+        ],
+        "actionId": "1787311764391"
+      }
+    },
+    {
+      "id": "node_1787566459897",
+      "type": "sequencer",
+      "title": "Full Buff",
+      "position": {
+        "x": 1690,
+        "y": 910
+      },
+      "data": {
+        "enabled": true,
+        "modeType": "once",
+        "targetClient": "4",
+        "interval": 1000,
+        "repeatCount": 1,
+        "delayAfter": 0,
+        "steps": [
+          {
+            "key": "F2",
+            "delay": 200,
+            "castTimeMs": 200
+          },
+          {
+            "key": "1",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "2",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "3",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "4",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "5",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "6",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "LEFT ALT + 1",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "LEFT ALT + 2",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "LEFT ALT + 3",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "LEFT ALT + 4",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "LEFT ALT + 5",
+            "delay": 1000,
+            "castTimeMs": 1000
+          }
+        ],
+        "actionId": "1787566459897"
+      }
+    },
+    {
+      "id": "node_1787569445478",
+      "type": "branch",
+      "title": "Check Full Buff",
+      "position": {
+        "x": 1340,
+        "y": 810
+      },
+      "data": {
+        "enabled": true,
+        "conditionTargetId": "1787566459897",
+        "conditionRule": "is_running",
+        "actionId": "1787569445478"
+      }
+    },
+    {
+      "id": "node_1787572441502",
+      "type": "sequencer",
+      "title": "Follow Buff",
+      "position": {
+        "x": 1680,
+        "y": 1550
+      },
+      "data": {
+        "enabled": true,
+        "modeType": "once",
+        "targetClient": "4",
+        "interval": 1000,
+        "repeatCount": 1,
+        "delayAfter": 0,
+        "steps": [
+          {
+            "key": "F2",
+            "delay": 1150,
+            "castTimeMs": 1150
+          },
+          {
+            "key": "1",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "2",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "3",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "4",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "LEFT ALT + 1",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "LEFT ALT + 2",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "LEFT ALT + 4",
+            "delay": 1000,
+            "castTimeMs": 1000
+          }
+        ],
+        "actionId": "1787572441502"
+      }
+    },
+    {
+      "id": "node_1787572584915",
+      "type": "sequencer",
+      "title": "First Buff",
+      "position": {
+        "x": 1700,
+        "y": 420
+      },
+      "data": {
+        "enabled": true,
+        "modeType": "once",
+        "targetClient": "4",
+        "interval": 1000,
+        "repeatCount": 1,
+        "delayAfter": 0,
+        "steps": [
+          {
+            "key": "ESC",
+            "delay": 100,
+            "castTimeMs": 100
+          },
+          {
+            "key": "F2",
+            "delay": 100,
+            "castTimeMs": 100
+          },
+          {
+            "key": "8",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "1",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "LEFT ALT + 2",
+            "delay": 1000,
+            "castTimeMs": 1000
+          }
+        ],
+        "actionId": "1787572584915"
       }
     }
   ],
@@ -149,31 +328,52 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1786881281024",
-      "fromNodeId": "node_1786881269128",
-      "fromPort": "next",
-      "toNodeId": "node_1786881201834",
+      "id": "conn_1787311684751",
+      "fromNodeId": "node_1787311612588",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1787311674499",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1786963089298",
+      "id": "conn_1787311777063",
+      "fromNodeId": "node_1787311674499",
+      "fromPort": "onTrue",
+      "toNodeId": "node_1787311764391",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787569570485",
       "fromNodeId": "node_1786881084148",
       "fromPort": "exec_out",
-      "toNodeId": "node_1786963046815",
+      "toNodeId": "node_1787569445478",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1786963102810",
-      "fromNodeId": "node_1786963046815",
+      "id": "conn_1787569592719",
+      "fromNodeId": "node_1787569445478",
       "fromPort": "onTrue",
       "toNodeId": "node_1786963028463",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1786963106250",
-      "fromNodeId": "node_1786963046815",
+      "id": "conn_1787569594552",
+      "fromNodeId": "node_1787569445478",
       "fromPort": "onFalse",
-      "toNodeId": "node_1786881097832",
+      "toNodeId": "node_1787566459897",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787572549128",
+      "fromNodeId": "node_1787311674499",
+      "fromPort": "onFalse",
+      "toNodeId": "node_1787572441502",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787572675017",
+      "fromNodeId": "node_1786881269128",
+      "fromPort": "next",
+      "toNodeId": "node_1787572584915",
       "toPort": "exec_in"
     }
   ]

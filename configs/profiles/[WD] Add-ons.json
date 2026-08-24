@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Add-ons",
   "canvas": {
-    "zoom": 0.7902319738034572,
+    "zoom": 0.5132864860323239,
     "pan": {
-      "x": 20,
-      "y": -424
+      "x": 222,
+      "y": -720
     }
   },
   "nodes": [
@@ -267,6 +267,39 @@
         "showOverlayNotice": true,
         "actionId": "1786926322640"
       }
+    },
+    {
+      "id": "node_1787489789387",
+      "type": "trigger",
+      "title": "Btn Merk All ",
+      "position": {
+        "x": 258,
+        "y": 1914
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "DELETE",
+        "actionId": "1787489789387"
+      }
+    },
+    {
+      "id": "node_1787489813291",
+      "type": "key_press",
+      "title": "Single Key Press",
+      "position": {
+        "x": 630,
+        "y": 1920
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1,2,4",
+        "keys": [
+          "5"
+        ],
+        "cooldownPresetId": "skill_ringmaster_merkaba-hanzelrusha",
+        "actionId": "1787489813291"
+      }
     }
   ],
   "connections": [
@@ -345,6 +378,13 @@
       "fromNodeId": "node_1786883312235",
       "fromPort": "exec_out",
       "toNodeId": "node_1786926322640",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787489821355",
+      "fromNodeId": "node_1787489789387",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1787489813291",
       "toPort": "exec_in"
     }
   ]

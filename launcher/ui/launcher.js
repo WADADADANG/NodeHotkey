@@ -23,7 +23,6 @@
   const heroTitle = document.getElementById('hero-title');
   const heroSub = document.getElementById('hero-sub');
   
-  const btnRestartEngine = document.getElementById('btn-restart-engine');
   const btnOpenLogs = document.getElementById('btn-open-logs');
   const btnCheckUpdate = document.getElementById('btn-check-update');
   
@@ -129,14 +128,6 @@
         setBtnLoading('Starting...');
         await api.startBot();
       }
-    };
-  }
-
-  if (btnRestartEngine) {
-    btnRestartEngine.onclick = async () => {
-      if (isRestarting) return;
-      setBtnLoading('Restarting...');
-      await api.restartBot();
     };
   }
 

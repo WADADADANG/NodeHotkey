@@ -89,7 +89,9 @@ class NodeCanvasEditor {
       delay: canvasT('canvas_delay', isEn ? 'Delay Timer' : 'หน่วงเวลา (Delay)'),
       emergency_stop: canvasT('canvas_emergency_stop', isEn ? 'Emergency Stop' : 'หยุดฉุกเฉิน (Stop All)'),
       sound: canvasT('canvas_sound', isEn ? 'Sound Alert' : 'เสียงแจ้งเตือน (Sound)'),
-      key_hold: canvasT('canvas_key_hold', isEn ? 'Key Hold' : 'กดค้าง (Hold)')
+      key_hold: canvasT('canvas_key_hold', isEn ? 'Key Hold' : 'กดค้าง (Hold)'),
+      sequencer: canvasT('canvas_sequencer', isEn ? 'Cast Sequencer' : 'จัดคิวสกิล (Sequencer)'),
+      loop_scheduler: canvasT('canvas_loop_scheduler', isEn ? 'Loop Scheduler' : 'ตารางลูปกันชน (Scheduler)')
     };
     return map[type] || canvasT(`canvas_${type}`, (type || '').toUpperCase());
   }
@@ -542,6 +544,7 @@ class NodeCanvasEditor {
       nodeEl.style.left = `${node.position.x}px`;
       nodeEl.style.top = `${node.position.y}px`;
       nodeEl.dataset.id = node.id;
+      nodeEl.dataset.type = node.type;
 
       const iconMap = {
         trigger: '⚡',
@@ -556,7 +559,9 @@ class NodeCanvasEditor {
         macro_group: '🔀',
         emergency_stop: '🛑',
         sound: '🔊',
-        emit_event: '📡'
+        emit_event: '📡',
+        sequencer: '⚔️',
+        loop_scheduler: '⏱️'
       };
 
       const icon = iconMap[node.type] || '📦';
@@ -579,6 +584,20 @@ class NodeCanvasEditor {
           </div>
           <div class="node-info-row">
             <span>Scope:</span> <span class="node-info-value">Active Profiles</span>
+          </div>
+        `;
+      } else if (node.type === 'loop_scheduler') {
+        const items = Array.isArray(node.data?.items) ? node.data.items : [];
+        const guard = node.data?.collisionGuardMs !== undefined ? node.data.collisionGuardMs : 800;
+        bodyHTML = `
+          <div class="node-info-row">
+            <span>Target:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Guard:</span> <span class="node-info-value" style="color:#10b981; font-weight:700;">${guard}ms</span>
+          </div>
+          <div class="node-info-row">
+            <span>Timers:</span> <span class="node-info-value" style="color:#38bdf8; font-weight:700;">${items.length} items</span>
           </div>
         `;
       } else if (node.type === 'loop') {
@@ -794,6 +813,34 @@ class NodeCanvasEditor {
             <span>Volume:</span> <span class="node-info-value">${node.data?.volume !== undefined ? node.data.volume : 100}%</span>
           </div>
         `;
+      } else if (node.type === 'sequencer') {
+        const steps = node.data?.steps || [];
+        const isLoop = (node.data?.modeType || 'loop') === 'loop';
+        const intervalVal = node.data?.interval !== undefined ? node.data.interval : 1000;
+        const stepItemsHTML = steps.map((s, idx) => {
+          const delayMs = s.delay !== undefined ? s.delay : (s.castTimeMs !== undefined ? s.castTimeMs : 800);
+          const tag = delayMs > 0 ? `${delayMs}ms` : 'Instant';
+          const tagColor = delayMs > 0 ? '#f59e0b' : '#10b981';
+          return `<div style="font-size:10.5px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; margin-top:3px; padding:1px 0; border-bottom:1px solid rgba(255,255,255,0.03);">
+            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:115px;">${idx + 1}. <strong style="color:var(--text); font-family:'JetBrains Mono';">${s.key || '-'}</strong></span>
+            <span style="color:${tagColor}; font-weight:700; font-size:10px; font-family:'JetBrains Mono'; flex-shrink:0;">${tag}</span>
+          </div>`;
+        }).join('');
+
+        bodyHTML = `
+          <div class="node-info-row">
+            <span>Target:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Mode:</span> <span class="node-info-value" style="color:${isLoop ? '#3b82f6' : '#a855f7'}; font-weight:700;">${isLoop ? `🔄 Loop (~${intervalVal}ms)` : '⚡ Once'}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Steps:</span> <span class="node-info-value" style="color:#f59e0b; font-weight:700;">${steps.length} actions</span>
+          </div>
+          <div style="background:rgba(0,0,0,0.25); border-radius:6px; padding:4px 8px; margin-top:6px; border:1px solid rgba(255,255,255,0.06); max-height:260px; overflow-y:auto;">
+            ${stepItemsHTML || '<div style="font-size:10px; color:var(--muted); text-align:center;">No steps added</div>'}
+          </div>
+        `;
       } else {
         bodyHTML = `
           <div class="node-info-row">
@@ -844,6 +891,46 @@ class NodeCanvasEditor {
             <div class="node-pin-row">
               <span class="node-pin-label onComplete">${canvasT('port_onComplete', 'onComplete')} ▶</span>
               <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="onComplete" title="${canvasT('port_onComplete', 'onComplete')}"></div>
+            </div>
+          </div>
+        `;
+      } else if (node.type === 'sequencer') {
+        pinsHTML = `
+          <div class="node-pins-section">
+            <div class="node-pin-row">
+              <span class="node-pin-label onStep">${canvasT('port_onStep', 'onStep')} ▶</span>
+              <div class="node-port port-out port-onStep" data-node="${node.id}" data-port="onStep" title="${canvasT('port_onStep', 'onStep')}"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label onEachCycle">${canvasT('port_onEachCycle', 'onEachCycle')} ▶</span>
+              <div class="node-port port-out port-onEachCycle" data-node="${node.id}" data-port="onEachCycle" title="${canvasT('port_onEachCycle', 'onEachCycle')}"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label onStop">${canvasT('port_onStop', 'onStop / onComplete')} ▶</span>
+              <div class="node-port port-out port-onStop" data-node="${node.id}" data-port="onStop" title="${canvasT('port_onStop', 'onStop')}"></div>
+            </div>
+          </div>
+        `;
+      } else if (node.type === 'loop_scheduler') {
+        const items = Array.isArray(node.data?.items) ? node.data.items : [];
+        let itemPinsHTML = '';
+        items.forEach((it, idx) => {
+          const itName = it.name || `Item ${idx + 1}`;
+          const itInterval = it.interval || 3000;
+          const isEnabled = it.enabled !== false;
+          itemPinsHTML += `
+            <div class="node-pin-row">
+              <span class="node-pin-label" style="color:${isEnabled ? '#60a5fa' : 'var(--muted)'}; opacity:${isEnabled ? '1' : '0.6'}; font-size:10px; font-weight:700;" title="${itName} (${itInterval}ms)">${itName} (${(itInterval / 1000).toFixed(itInterval % 1000 === 0 ? 0 : 1)}s) ▶</span>
+              <div class="node-port port-out" style="border-color:#3b82f6; background:#1e3a8a;" data-node="${node.id}" data-port="item_${idx}" title="${itName} ▶"></div>
+            </div>
+          `;
+        });
+        pinsHTML = `
+          <div class="node-pins-section">
+            ${itemPinsHTML}
+            <div class="node-pin-row">
+              <span class="node-pin-label onStop">${canvasT('port_onStop', 'onStop')} ▶</span>
+              <div class="node-port port-out port-onStop" data-node="${node.id}" data-port="onStop" title="${canvasT('port_onStop', 'onStop')}"></div>
             </div>
           </div>
         `;
@@ -1022,6 +1109,11 @@ class NodeCanvasEditor {
 
       this.nodesLayer.appendChild(nodeEl);
     });
+
+    // Auto-update wires on next animation frame after DOM nodes finish layout & reflow
+    requestAnimationFrame(() => {
+      this.renderWires();
+    });
   }
 
   getPortCenter(nodeId, portName) {
@@ -1050,7 +1142,7 @@ class NodeCanvasEditor {
 
     const isOutput = portName !== 'exec_in';
     const x = isOutput ? node.position.x + 221 : node.position.x - 1;
-    let y = node.position.y + 60;
+    let y = node.position.y + 38;
     if (portName === 'onBeforeStart') y = node.position.y + 75;
     else if (portName === 'onAfterStart') y = node.position.y + 100;
     else if (portName === 'onEachCycle' || portName === 'on_interval') y = node.position.y + 125;
@@ -1648,7 +1740,9 @@ class NodeCanvasEditor {
       emergency_stop: 'Emergency Stop All',
       sound: 'Sound Alert',
       emit_event: 'Emit Event',
-      key_hold: 'Key Hold Toggle'
+      key_hold: 'Key Hold Toggle',
+      sequencer: 'Cast Sequencer',
+      loop_scheduler: 'Loop Scheduler'
     };
 
     let initialData = { enabled: true };
@@ -1656,8 +1750,30 @@ class NodeCanvasEditor {
       initialData = { triggerType: 'keyboard', triggerValue: '1', enabled: true };
     } else if (type === 'emit_event') {
       initialData = { eventName: 'party_heal', enabled: true };
+    } else if (type === 'loop_scheduler') {
+      initialData = {
+        targetClient: '1',
+        collisionGuardMs: 800,
+        items: [
+          { id: 'item_0', name: 'Skill 1', interval: 3000, executeImmediately: true, enabled: true },
+          { id: 'item_1', name: 'Skill 2', interval: 5000, executeImmediately: true, enabled: true }
+        ],
+        enabled: true
+      };
     } else if (type === 'loop') {
       initialData = { targetClient: '1', keys: ['1'], interval: 1000, jitter: 0, executeImmediately: true, enabled: true };
+    } else if (type === 'sequencer') {
+      initialData = {
+        modeType: 'loop', // 'loop' | 'once'
+        targetClient: '1',
+        interval: 1000,
+        repeatCount: 1,
+        delayAfter: 0,
+        steps: [
+          { key: '1', delay: 800 }
+        ],
+        enabled: true
+      };
     } else if (type === 'buff_sequence') {
       initialData = { targetClient: '1', keys: ['1', '2'], delayBuff: 800, delayAfter: 0, enabled: true };
     } else if (type === 'key_press') {
@@ -2056,7 +2172,7 @@ class NodeCanvasEditor {
 
     const formBody = this.container.querySelector('#inspector-form-body');
     const titleEl = this.container.querySelector('#inspector-node-title');
-    titleEl.innerHTML = `⚙️ ${canvasT('inspector_title', 'Configure')} (${this.getNodeTypeLabel(node.type)})`;
+    titleEl.innerHTML = `⚙️ ${this.getNodeTypeLabel(node.type)}`;
 
     let fieldsHTML = `
       <div class="inspector-field-group">
@@ -2173,6 +2289,10 @@ class NodeCanvasEditor {
         </div>
         ${this.renderSkillCooldownHelper(node)}
       `;
+    } else if (node.type === 'sequencer') {
+      fieldsHTML += this.renderSequencerHelper(node);
+    } else if (node.type === 'loop_scheduler') {
+      fieldsHTML += this.renderLoopSchedulerHelper(node);
     } else if (node.type === 'delay') {
       fieldsHTML += this.renderDelayHelper(node);
     } else if (node.type === 'branch' || node.type === 'condition') {
@@ -2237,40 +2357,7 @@ class NodeCanvasEditor {
         ${this.renderSkillCooldownHelper(node)}
       `;
     } else if (node.type === 'macro_group') {
-      const steps = node.data?.steps || [];
-      let stepsHTML = '';
-      steps.forEach((step, idx) => {
-        stepsHTML += `
-          <div style="display:flex; align-items:center; gap:6px; background:rgba(15,23,42,0.6); padding:6px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); margin-bottom:6px;">
-            <span style="font-size:11px; font-weight:700; color:var(--muted); min-width:20px;">#${idx + 1}</span>
-            <input type="text" value="${step.key || '1'}" placeholder="Key" style="width:45px; background:var(--bg-input); border:1px solid var(--border); border-radius:6px; color:#fff; font-family:'JetBrains Mono'; font-size:12px; padding:3px 6px; text-align:center;" onchange="window.nodeCanvas.updateMacroStep('${node.id}', ${idx}, 'key', this.value)" />
-            <span style="font-size:10px; color:var(--muted);">Delay:</span>
-            <input type="number" value="${step.delay !== undefined ? step.delay : 300}" min="0" step="50" style="width:60px; background:var(--bg-input); border:1px solid var(--border); border-radius:6px; color:#60a5fa; font-family:'JetBrains Mono'; font-size:11px; padding:3px 6px;" onchange="window.nodeCanvas.updateMacroStep('${node.id}', ${idx}, 'delay', parseInt(this.value,10))" />
-            <span style="font-size:10px; color:var(--muted);">ms</span>
-            <button onclick="window.nodeCanvas.deleteMacroStep('${node.id}', ${idx})" style="background:transparent; border:none; color:#ef4444; font-size:13px; cursor:pointer; margin-left:auto;">✕</button>
-          </div>
-        `;
-      });
-
-      fieldsHTML += `
-        <div class="inspector-field-group">
-          <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screens')}</label>
-          ${this.renderClientButtonSelector(node)}
-        </div>
-        <div class="inspector-field-group">
-          <label class="inspector-label">${canvasT('inspector_repeat_count', 'Repeat Count')}</label>
-          <input type="number" class="inspector-input" value="${node.data?.repeatCount || 1}" min="1" max="100" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'repeatCount', parseInt(this.value, 10))" />
-        </div>
-        <div class="inspector-field-group" style="margin-top:8px;">
-          <div style="display:flex; align-items:center; justify-content:space-between;">
-            <label class="inspector-label">${canvasT('inspector_macro_steps', 'Macro Steps Queue')}</label>
-            <button class="btn btn-ghost" onclick="window.nodeCanvas.addMacroStep('${node.id}')" style="padding:2px 8px; font-size:11px; border-color:#3b82f6; color:#60a5fa;">+ Add Step</button>
-          </div>
-          <div style="margin-top:6px; max-height:220px; overflow-y:auto;">
-            ${stepsHTML || `<div style="font-size:11px; color:var(--muted); text-align:center; padding:10px 0;">${canvasT('inspector_no_macro_steps', 'No steps in macro. Click + Add Step')}</div>`}
-          </div>
-        </div>
-      `;
+      fieldsHTML += this.renderMacroGroupHelper(node);
     } else {
       fieldsHTML += `
         <div class="inspector-field-group">
@@ -2750,6 +2837,430 @@ class NodeCanvasEditor {
 
     this.renderNodes();
     this.addHistory('🎯', `${selectAll ? 'เลือกเป้าหมายทั้งหมด' : 'ยกเลิกเป้าหมายทั้งหมด'} ของ "${node.title || node.type}"`);
+    this.onProfileChanged();
+  }
+
+  renderSequencerHelper(node) {
+    const steps = Array.isArray(node.data?.steps) ? node.data.steps : [];
+    const isLoop = (node.data?.modeType || 'loop') === 'loop';
+    const intervalVal = node.data?.interval !== undefined ? node.data.interval : 1000;
+    const repeatCount = Math.max(1, parseInt(node.data?.repeatCount, 10) || 1);
+    const delayAfter = parseInt(node.data?.delayAfter, 10) || 0;
+
+    let stepsHTML = '';
+    if (steps.length === 0) {
+      stepsHTML = `
+        <div style="font-size:12px; color:var(--muted); text-align:center; padding:16px 8px; background:rgba(0,0,0,0.2); border-radius:8px; border:1px dashed rgba(255,255,255,0.1);">
+          ${window.currentLang === 'en' ? 'No steps in sequencer. Click + Add Step below.' : 'ยังไม่มีขั้นตอนคำสั่ง คลิกปุ่ม + เพิ่ม Step ด้านล่าง'}
+        </div>
+      `;
+    } else {
+      stepsHTML = steps.map((s, idx) => {
+        const isFirst = idx === 0;
+        const isLast = idx === steps.length - 1;
+        const delayMs = s.delay !== undefined ? s.delay : (s.castTimeMs !== undefined ? s.castTimeMs : 800);
+
+        return `
+          <div class="sequencer-step-item" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px; margin-bottom:8px; display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-size:12px; font-weight:700; color:#f59e0b; background:rgba(255,255,255,0.06); width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center;">${idx + 1}</span>
+                <span style="font-size:12px; font-weight:600; color:var(--text);">${window.currentLang === 'en' ? 'Step Action' : 'ขั้นตอนคำสั่ง'}</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:4px;">
+                <button type="button" class="btn btn-ghost" style="padding:2px 6px; height:24px; font-size:11px;" onclick="window.nodeCanvas.moveSequencerStep('${node.id}', ${idx}, -1)" ${isFirst ? 'disabled' : ''} title="Move Up">▲</button>
+                <button type="button" class="btn btn-ghost" style="padding:2px 6px; height:24px; font-size:11px;" onclick="window.nodeCanvas.moveSequencerStep('${node.id}', ${idx}, 1)" ${isLast ? 'disabled' : ''} title="Move Down">▼</button>
+                <button type="button" class="btn btn-ghost" style="padding:2px 6px; height:24px; font-size:11px; color:#ef4444;" onclick="window.nodeCanvas.removeSequencerStep('${node.id}', ${idx})" title="Delete Step">🗑️</button>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:8px; align-items:flex-end; width:100%;">
+              <div style="flex:1; min-width:0;">
+                <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${window.currentLang === 'en' ? 'Key to Send' : 'ปุ่มที่กด'}</label>
+                <div style="display:flex; align-items:center; gap:4px;">
+                  <input type="text" class="inspector-input" value="${s.key || ''}" placeholder="${window.currentLang === 'en' ? 'Record key...' : 'กดบันทึก...'}" readonly onfocus="if(window.startRecordingKey) window.startRecordingKey(this, '${node.id}', 'sequencer_step_${idx}')" onblur="if(window.stopRecordingKey) window.stopRecordingKey(this)" style="flex:1; min-width:0; height:30px; font-size:12px; cursor:pointer; text-align:center; font-family:'JetBrains Mono'; font-weight:700; color:#60a5fa; box-sizing:border-box;" />
+                  <button type="button" class="btn btn-ghost" onclick="if(window.openVirtualKeyboard) window.openVirtualKeyboard(this.previousElementSibling, '${node.id}', 'sequencer_step_${idx}')" style="height:30px; width:30px; padding:0; flex-shrink:0; border-color:#3b82f6; color:#60a5fa; border-radius:6px; display:flex; align-items:center; justify-content:center;" title="Virtual Keyboard">⌨️</button>
+                </div>
+              </div>
+
+              <div style="width:95px; flex-shrink:0;">
+                <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${window.currentLang === 'en' ? 'Delay (ms)' : 'ดีเลย์ (ms)'}</label>
+                <input type="number" class="inspector-input" value="${delayMs}" min="0" step="50" onchange="window.nodeCanvas.updateSequencerStep('${node.id}', ${idx}, 'delay', parseInt(this.value, 10))" style="width:100%; height:30px; font-size:12px; text-align:center; padding:0 6px; box-sizing:border-box;" />
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    return `
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screens')}</label>
+        ${this.renderClientButtonSelector(node)}
+      </div>
+
+      <div class="inspector-field-group">
+        <label class="inspector-label">${window.currentLang === 'en' ? 'Execution Mode' : 'โหมดการทำงาน'}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'modeType', this.value); window.nodeCanvas.openInspector('${node.id}');">
+          <option value="loop" ${isLoop ? 'selected' : ''}>🔄 ${window.currentLang === 'en' ? 'Continuous Loop (Start / Stop)' : 'วนลูปต่อเนื่อง (กดเริ่ม / กดหยุด)'}</option>
+          <option value="once" ${!isLoop ? 'selected' : ''}>⚡ ${window.currentLang === 'en' ? 'Once / Burst (Single Trigger)' : 'รันทีเดียวจบ (Once / Burst)'}</option>
+        </select>
+      </div>
+
+      ${isLoop ? `
+        <div class="inspector-field-group">
+          <label class="inspector-label">${window.currentLang === 'en' ? 'Loop Rest Interval (ms)' : 'หน่วงเวลาพักหลังจบรอบลูป (ms)'}</label>
+          <input type="number" class="inspector-input" value="${intervalVal}" min="0" step="50" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'interval', parseInt(this.value, 10))" />
+        </div>
+      ` : `
+        <div style="display:flex; gap:8px; margin-top:4px;">
+          <div class="inspector-field-group" style="flex:1;">
+            <label class="inspector-label">${window.currentLang === 'en' ? 'Repeat Count' : 'วนรอบซ้ำ (รอบ)'}</label>
+            <input type="number" class="inspector-input" value="${repeatCount}" min="1" max="100" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'repeatCount', parseInt(this.value, 10))" />
+          </div>
+          <div class="inspector-field-group" style="flex:1;">
+            <label class="inspector-label">${window.currentLang === 'en' ? 'Delay After (ms)' : 'พักหลังจบรอบ (ms)'}</label>
+            <input type="number" class="inspector-input" value="${delayAfter}" min="0" step="50" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'delayAfter', parseInt(this.value, 10))" />
+          </div>
+        </div>
+      `}
+
+      <div class="inspector-field-group" style="margin-top:8px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+          <label class="inspector-label" style="margin:0;">📋 ${window.currentLang === 'en' ? 'Sequence Steps' : 'ลำดับขั้นตอน (Sequence Steps)'} (${steps.length})</label>
+        </div>
+        ${stepsHTML}
+
+        <button type="button" class="btn btn-primary" style="width:100%; height:34px; font-size:12px; margin-top:8px; background:#f59e0b; border-color:#d97706; color:#000; font-weight:700; display:flex; align-items:center; justify-content:center; gap:6px;" onclick="window.nodeCanvas.addSequencerStep('${node.id}')">
+          ➕ ${window.currentLang === 'en' ? 'Add Step' : 'เพิ่มขั้นตอน (+ Add Step)'}
+        </button>
+      </div>
+    `;
+  }
+
+  renderLoopSchedulerHelper(node) {
+    const items = Array.isArray(node.data?.items) ? node.data.items : [];
+    const guardMs = node.data?.collisionGuardMs !== undefined ? node.data.collisionGuardMs : 800;
+
+    let itemsHTML = '';
+    if (items.length === 0) {
+      itemsHTML = `
+        <div style="font-size:12px; color:var(--muted); text-align:center; padding:16px 8px; background:rgba(0,0,0,0.2); border-radius:8px; border:1px dashed rgba(255,255,255,0.1);">
+          ${window.currentLang === 'en' ? 'No loop timers yet. Click button below to add.' : 'ยังไม่มีรายการลูป คลิกปุ่มด้านล่างเพื่อเพิ่ม Loop Item'}
+        </div>
+      `;
+    } else {
+      itemsHTML = items.map((it, idx) => {
+        const isEnabled = it.enabled !== false;
+        const isExecImmed = it.executeImmediately !== false;
+        const itInterval = it.interval !== undefined ? it.interval : 3000;
+        const itJitter = it.jitter !== undefined ? it.jitter : 0;
+
+        return `
+          <div class="scheduler-item-card" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px; margin-bottom:8px; display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-size:12px; font-weight:700; color:#38bdf8; background:rgba(56,189,248,0.1); width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;">${idx + 1}</span>
+                <span style="font-size:11px; font-weight:700; color:#60a5fa; font-family:'JetBrains Mono';">[Pin: item_${idx}]</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:${isEnabled ? '#34d399' : 'var(--muted)'}; cursor:pointer; margin:0;">
+                  <input type="checkbox" ${isEnabled ? 'checked' : ''} onchange="window.nodeCanvas.updateSchedulerItem('${node.id}', ${idx}, 'enabled', this.checked)" style="accent-color:#10b981; cursor:pointer;" />
+                  <span>${isEnabled ? 'Active' : 'Muted'}</span>
+                </label>
+                <button type="button" class="btn btn-ghost" style="padding:2px 6px; height:24px; font-size:11px; color:#ef4444;" onclick="window.nodeCanvas.removeSchedulerItem('${node.id}', ${idx})" title="Delete Item">🗑️</button>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:6px; align-items:flex-end; width:100%;">
+              <div style="flex:1; min-width:0;">
+                <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${window.currentLang === 'en' ? 'Item Label' : 'ชื่อรายการ'}</label>
+                <input type="text" class="inspector-input" value="${it.name || `Skill ${idx + 1}`}" placeholder="e.g. Heal 1" onchange="window.nodeCanvas.updateSchedulerItem('${node.id}', ${idx}, 'name', this.value.trim())" style="width:100%; height:30px; font-size:12px; font-weight:600; box-sizing:border-box; padding:0 8px;" />
+              </div>
+              <div style="width:75px; flex-shrink:0;">
+                <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${window.currentLang === 'en' ? 'Interval (ms)' : 'เวลา (ms)'}</label>
+                <input type="number" class="inspector-input" value="${itInterval}" min="50" step="100" onchange="window.nodeCanvas.updateSchedulerItem('${node.id}', ${idx}, 'interval', parseInt(this.value, 10))" style="width:100%; height:30px; font-size:12px; text-align:center; padding:0 4px; box-sizing:border-box; font-family:'JetBrains Mono'; font-weight:700; color:#38bdf8;" />
+              </div>
+              <div style="width:65px; flex-shrink:0;">
+                <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${window.currentLang === 'en' ? '± Jitter (ms)' : '± สุ่ม (ms)'}</label>
+                <input type="number" class="inspector-input" value="${itJitter}" min="0" max="10000" step="50" onchange="window.nodeCanvas.updateSchedulerItem('${node.id}', ${idx}, 'jitter', parseInt(this.value, 10))" style="width:100%; height:30px; font-size:12px; text-align:center; padding:0 4px; box-sizing:border-box; font-family:'JetBrains Mono'; font-weight:700; color:#a855f7;" title="สุ่มเพิ่ม/ลดเวลา ±ms" />
+              </div>
+            </div>
+
+            <label style="display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text); cursor:pointer; margin-top:2px;">
+              <input type="checkbox" ${isExecImmed ? 'checked' : ''} onchange="window.nodeCanvas.updateSchedulerItem('${node.id}', ${idx}, 'executeImmediately', this.checked)" style="accent-color:#3b82f6; cursor:pointer;" />
+              <span>${window.currentLang === 'en' ? 'Execute immediately on start' : 'เริ่มยิงทันทีเมื่อกด Start'}</span>
+            </label>
+          </div>
+        `;
+      }).join('');
+    }
+
+    return `
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screens')}</label>
+        ${this.renderClientButtonSelector(node)}
+      </div>
+
+      <div class="inspector-field-group">
+        <label class="inspector-label" style="display:flex; align-items:center; justify-content:space-between;">
+          <span>🛡️ ${window.currentLang === 'en' ? 'Anti-Collision Guard Delay (ms)' : 'เวลาป้องกันการชนกัน (Guard Delay ms)'}</span>
+          <span style="font-size:10px; color:#10b981; font-family:'JetBrains Mono'; font-weight:700;">${guardMs}ms</span>
+        </label>
+        <input type="number" class="inspector-input" value="${guardMs}" min="50" max="5000" step="50" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'collisionGuardMs', parseInt(this.value, 10))" style="font-family:'JetBrains Mono'; color:#10b981; font-weight:700;" />
+        <span style="font-size:10px; color:var(--muted); margin-top:4px; display:block;">
+          ${window.currentLang === 'en' ? 'Minimum wait time between overlapping actions to prevent in-game animation lock.' : 'ระยะเวลารอขั้นต่ำระหว่างแต่ละสกิลเมื่อถึงเวลาพร้อมกัน เพื่อป้องกันคีย์ชนและติด Animation Lock ในเกม'}
+        </span>
+      </div>
+
+      <div class="inspector-field-group" style="margin-top:8px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+          <label class="inspector-label" style="margin:0;">⏱️ ${window.currentLang === 'en' ? 'Independent Loop Timers' : 'รายการลูปเวลาอิสระ (Loop Timers)'} (${items.length})</label>
+        </div>
+        ${itemsHTML}
+
+        <button type="button" class="btn btn-primary" style="width:100%; height:34px; font-size:12px; margin-top:8px; background:#0284c7; border-color:#0369a1; color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center; gap:6px;" onclick="window.nodeCanvas.addSchedulerItem('${node.id}')">
+          ➕ ${window.currentLang === 'en' ? 'Add Loop Timer' : 'เพิ่มรายการลูป (+ Add Loop Item)'}
+        </button>
+      </div>
+    `;
+  }
+
+  addSchedulerItem(nodeId) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node) return;
+    if (!node.data) node.data = {};
+    if (!Array.isArray(node.data.items)) node.data.items = [];
+    const nextIdx = node.data.items.length;
+    node.data.items.push({
+      id: `item_${nextIdx}`,
+      name: `Skill ${nextIdx + 1}`,
+      interval: 3000,
+      jitter: 0,
+      executeImmediately: true,
+      enabled: true
+    });
+    this.render();
+    this.openInspector(nodeId);
+    this.addHistory('➕', `เพิ่ม Loop Item ใน "${node.title || node.type}"`);
+    this.onProfileChanged();
+  }
+
+  removeSchedulerItem(nodeId, index) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node || !node.data || !Array.isArray(node.data.items)) return;
+    node.data.items.splice(index, 1);
+    this.render();
+    this.openInspector(nodeId);
+    this.addHistory('🗑️', `ลบ Loop Item #${index + 1}`);
+    this.onProfileChanged();
+  }
+
+  updateSchedulerItem(nodeId, index, field, value) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node || !node.data || !Array.isArray(node.data.items)) return;
+    if (node.data.items[index]) {
+      node.data.items[index][field] = value;
+      this.render();
+      this.onProfileChanged();
+    }
+  }
+
+  addSequencerStep(nodeId) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node) return;
+    if (!node.data) node.data = {};
+    if (!Array.isArray(node.data.steps)) node.data.steps = [];
+
+    node.data.steps.push({
+      key: '1',
+      delay: 800
+    });
+
+    this.render();
+    this.openInspector(nodeId);
+    this.addHistory('➕', `เพิ่มขั้นตอนใน "${node.title || node.type}"`);
+    this.onProfileChanged();
+  }
+
+  removeSequencerStep(nodeId, index) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node || !node.data || !Array.isArray(node.data.steps)) return;
+
+    node.data.steps.splice(index, 1);
+    this.render();
+    this.openInspector(nodeId);
+    this.addHistory('🗑️', `ลบขั้นตอนที่ ${index + 1} ใน "${node.title || node.type}"`);
+    this.onProfileChanged();
+  }
+
+  moveSequencerStep(nodeId, index, direction) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node || !node.data || !Array.isArray(node.data.steps)) return;
+    const targetIdx = index + direction;
+    if (targetIdx < 0 || targetIdx >= node.data.steps.length) return;
+
+    const temp = node.data.steps[index];
+    node.data.steps[index] = node.data.steps[targetIdx];
+    node.data.steps[targetIdx] = temp;
+
+    this.render();
+    this.openInspector(nodeId);
+    this.addHistory('↕️', `สลับลำดับขั้นตอนใน "${node.title || node.type}"`);
+    this.onProfileChanged();
+  }
+
+  updateSequencerStep(nodeId, index, field, value) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node || !node.data || !Array.isArray(node.data.steps)) return;
+    if (!node.data.steps[index]) return;
+
+    node.data.steps[index][field] = value;
+    if (field === 'delay') {
+      node.data.steps[index].castTimeMs = value;
+    }
+
+    this.render();
+    this.openInspector(nodeId);
+    this.onProfileChanged();
+  }
+
+  renderMacroGroupHelper(node) {
+    const steps = Array.isArray(node.data?.steps) ? node.data.steps : [];
+    const repeatCount = Math.max(1, parseInt(node.data?.repeatCount, 10) || 1);
+
+    let stepsHTML = '';
+    if (steps.length === 0) {
+      stepsHTML = `
+        <div style="font-size:12px; color:var(--muted); text-align:center; padding:16px 8px; background:rgba(0,0,0,0.2); border-radius:8px; border:1px dashed rgba(255,255,255,0.1);">
+          ${window.currentLang === 'en' ? 'No steps in macro. Click button below to add.' : 'ยังไม่มีขั้นตอนมาโคร คลิกปุ่มด้านล่างเพื่อเพิ่ม Step'}
+        </div>
+      `;
+    } else {
+      stepsHTML = steps.map((s, idx) => {
+        const isFirst = idx === 0;
+        const isLast = idx === steps.length - 1;
+        const delayVal = s.delay !== undefined ? s.delay : 300;
+        const holdVal = s.holdMs !== undefined ? s.holdMs : 0;
+
+        return `
+          <div class="macro-step-item" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px; margin-bottom:8px; display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-size:12px; font-weight:700; color:#60a5fa; background:rgba(255,255,255,0.06); width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center;">${idx + 1}</span>
+                <span style="font-size:12px; font-weight:600; color:var(--text);">${window.currentLang === 'en' ? 'Step Action' : 'ขั้นตอนคำสั่ง'}</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:4px;">
+                <button type="button" class="btn btn-ghost" style="padding:2px 6px; height:24px; font-size:11px;" onclick="window.nodeCanvas.moveMacroStep('${node.id}', ${idx}, -1)" ${isFirst ? 'disabled' : ''} title="Move Up">▲</button>
+                <button type="button" class="btn btn-ghost" style="padding:2px 6px; height:24px; font-size:11px;" onclick="window.nodeCanvas.moveMacroStep('${node.id}', ${idx}, 1)" ${isLast ? 'disabled' : ''} title="Move Down">▼</button>
+                <button type="button" class="btn btn-ghost" style="padding:2px 6px; height:24px; font-size:11px; color:#ef4444;" onclick="window.nodeCanvas.removeMacroStep('${node.id}', ${idx})" title="Delete Step">🗑️</button>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:8px; align-items:flex-end; width:100%;">
+              <div style="flex:1; min-width:0;">
+                <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${window.currentLang === 'en' ? 'Key to Send' : 'ปุ่มที่กด'}</label>
+                <div style="display:flex; align-items:center; gap:4px;">
+                  <input type="text" class="inspector-input" value="${s.key || ''}" placeholder="${window.currentLang === 'en' ? 'Record key...' : 'กดบันทึก...'}" readonly onfocus="if(window.startRecordingKey) window.startRecordingKey(this, '${node.id}', 'macro_step_${idx}')" onblur="if(window.stopRecordingKey) window.stopRecordingKey(this)" style="flex:1; min-width:0; height:30px; font-size:12px; cursor:pointer; text-align:center; font-family:'JetBrains Mono'; font-weight:700; color:#60a5fa; box-sizing:border-box;" />
+                  <button type="button" class="btn btn-ghost" onclick="if(window.openVirtualKeyboard) window.openVirtualKeyboard(this.previousElementSibling, '${node.id}', 'macro_step_${idx}')" style="height:30px; width:30px; padding:0; flex-shrink:0; border-color:#3b82f6; color:#60a5fa; border-radius:6px; display:flex; align-items:center; justify-content:center;" title="Virtual Keyboard">⌨️</button>
+                </div>
+              </div>
+
+              <div style="width:75px; flex-shrink:0;">
+                <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${window.currentLang === 'en' ? 'Delay (ms)' : 'ดีเลย์ (ms)'}</label>
+                <input type="number" class="inspector-input" value="${delayVal}" min="0" step="50" onchange="window.nodeCanvas.updateMacroStep('${node.id}', ${idx}, 'delay', parseInt(this.value, 10))" style="width:100%; height:30px; font-size:12px; text-align:center; padding:0 4px; box-sizing:border-box;" />
+              </div>
+
+              <div style="width:75px; flex-shrink:0;">
+                <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${window.currentLang === 'en' ? 'Hold (ms)' : 'กดค้าง (ms)'}</label>
+                <input type="number" class="inspector-input" value="${holdVal}" min="0" step="50" onchange="window.nodeCanvas.updateMacroStep('${node.id}', ${idx}, 'holdMs', parseInt(this.value, 10))" style="width:100%; height:30px; font-size:12px; text-align:center; padding:0 4px; box-sizing:border-box;" />
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    return `
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screens')}</label>
+        ${this.renderClientButtonSelector(node)}
+      </div>
+
+      <div class="inspector-field-group">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+          <label class="inspector-label" style="margin:0;">🔀 ${window.currentLang === 'en' ? 'Macro Steps Queue' : 'คิวลำดับคำสั่งมาโคร'} (${steps.length})</label>
+        </div>
+        ${stepsHTML}
+
+        <button type="button" class="btn btn-primary" style="width:100%; height:34px; font-size:12px; margin-top:8px; display:flex; align-items:center; justify-content:center; gap:6px;" onclick="window.nodeCanvas.addMacroStep('${node.id}')">
+          ➕ ${window.currentLang === 'en' ? 'Add Macro Step' : 'เพิ่มขั้นตอนมาโคร (+ Add Step)'}
+        </button>
+      </div>
+
+      <div class="inspector-field-group" style="margin-top:8px;">
+        <label class="inspector-label">${window.currentLang === 'en' ? 'Repeat Count' : 'วนรอบซ้ำ (รอบ)'}</label>
+        <input type="number" class="inspector-input" value="${repeatCount}" min="1" max="100" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'repeatCount', parseInt(this.value, 10))" />
+      </div>
+
+      ${this.renderSkillCooldownHelper(node)}
+    `;
+  }
+
+  addMacroStep(nodeId) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node) return;
+    if (!node.data) node.data = {};
+    if (!Array.isArray(node.data.steps)) node.data.steps = [];
+
+    node.data.steps.push({
+      key: '1',
+      delay: 300,
+      holdMs: 0
+    });
+
+    this.render();
+    this.openInspector(nodeId);
+    this.addHistory('➕', `เพิ่มขั้นตอนใน "${node.title || node.type}"`);
+    this.onProfileChanged();
+  }
+
+  removeMacroStep(nodeId, index) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node || !node.data || !Array.isArray(node.data.steps)) return;
+
+    node.data.steps.splice(index, 1);
+    this.render();
+    this.openInspector(nodeId);
+    this.addHistory('🗑️', `ลบขั้นตอนที่ ${index + 1} ใน "${node.title || node.type}"`);
+    this.onProfileChanged();
+  }
+
+  moveMacroStep(nodeId, index, direction) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node || !node.data || !Array.isArray(node.data.steps)) return;
+    const targetIdx = index + direction;
+    if (targetIdx < 0 || targetIdx >= node.data.steps.length) return;
+
+    const temp = node.data.steps[index];
+    node.data.steps[index] = node.data.steps[targetIdx];
+    node.data.steps[targetIdx] = temp;
+
+    this.render();
+    this.openInspector(nodeId);
+    this.addHistory('↕️', `สลับลำดับขั้นตอนใน "${node.title || node.type}"`);
+    this.onProfileChanged();
+  }
+
+  updateMacroStep(nodeId, index, field, value) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node || !node.data || !Array.isArray(node.data.steps)) return;
+    if (!node.data.steps[index]) return;
+
+    node.data.steps[index][field] = value;
+
+    this.render();
+    this.openInspector(nodeId);
     this.onProfileChanged();
   }
 
@@ -3290,6 +3801,33 @@ class NodeCanvasEditor {
         cleanData.targetClient = d.targetClient || '1';
         if (d.cooldownPresetId) cleanData.cooldownPresetId = d.cooldownPresetId;
         if (d.customCooldownMs) cleanData.customCooldownMs = parseInt(d.customCooldownMs, 10);
+      } else if (type === 'sequencer') {
+        cleanData.modeType = d.modeType || 'loop';
+        cleanData.targetClient = d.targetClient || '1';
+        cleanData.interval = d.interval !== undefined ? Math.max(0, parseInt(d.interval, 10)) : 1000;
+        cleanData.repeatCount = d.repeatCount !== undefined ? Math.max(1, parseInt(d.repeatCount, 10)) : 1;
+        cleanData.delayAfter = d.delayAfter !== undefined ? parseInt(d.delayAfter, 10) : 0;
+        cleanData.steps = Array.isArray(d.steps) ? d.steps.map(s => {
+          const delayVal = s.delay !== undefined ? parseInt(s.delay, 10) : (s.castTimeMs !== undefined ? parseInt(s.castTimeMs, 10) : 800);
+          return {
+            key: s.key || '1',
+            delay: delayVal,
+            castTimeMs: delayVal
+          };
+        }) : [];
+        if (d.cooldownPresetId) cleanData.cooldownPresetId = d.cooldownPresetId;
+        if (d.customCooldownMs) cleanData.customCooldownMs = parseInt(d.customCooldownMs, 10);
+      } else if (type === 'loop_scheduler') {
+        cleanData.targetClient = d.targetClient || '1';
+        cleanData.collisionGuardMs = d.collisionGuardMs !== undefined ? parseInt(d.collisionGuardMs, 10) : 800;
+        cleanData.items = Array.isArray(d.items) ? d.items.map((it, idx) => ({
+          id: it.id || `item_${idx}`,
+          name: it.name || `Skill ${idx + 1}`,
+          interval: Math.max(50, parseInt(it.interval, 10) || 3000),
+          jitter: Math.max(0, parseInt(it.jitter, 10) || 0),
+          executeImmediately: it.executeImmediately !== false,
+          enabled: it.enabled !== false
+        })) : [];
       }
 
       let actionId = d.actionId || (node.id.startsWith('node_') ? node.id.replace('node_', '') : node.id);
@@ -3539,6 +4077,8 @@ class NodeCanvasEditor {
         name: canvasT('cat_actions', '🎮 Actions & Macros'),
         items: [
           { type: 'loop', icon: '🔄', name: this.getNodeTypeLabel('loop'), desc: canvasT('node_desc_loop', 'Continuously loops key sequence with timing') },
+          { type: 'loop_scheduler', icon: '⏱️', name: this.getNodeTypeLabel('loop_scheduler'), desc: canvasT('node_desc_loop_scheduler', 'Independent multi-timer dispatcher with anti-collision guard queue') },
+          { type: 'sequencer', icon: '⚔️', name: this.getNodeTypeLabel('sequencer'), desc: canvasT('node_desc_sequencer', 'Executes skills & instant items in sequence with animation delays') },
           { type: 'buff_sequence', icon: '🛡️', name: this.getNodeTypeLabel('buff_sequence'), desc: canvasT('node_desc_buff_sequence', 'Executes combo skill queue sequentially') },
           { type: 'key_press', icon: '⌨️', name: this.getNodeTypeLabel('key_press'), desc: canvasT('node_desc_key_press', 'Sends a single keypress with delay') },
           { type: 'forwarder', icon: '🔗', name: this.getNodeTypeLabel('forwarder'), desc: canvasT('node_desc_forwarder', 'Forwards key to multiple game clients') },

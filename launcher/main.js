@@ -404,6 +404,9 @@ function startBotProcess() {
       isBotRunning = false;
       broadcastStatus();
       checkBotHealth();
+      if (overlayWindow && !overlayWindow.isDestroyed()) {
+        overlayWindow.webContents.send('overlay:update', { activeClients: [], clientStatuses: {}, isSuspended: false });
+      }
     });
 
     botProcess.on('error', (err) => {
@@ -411,6 +414,9 @@ function startBotProcess() {
       botProcess = null;
       isBotRunning = false;
       broadcastStatus();
+      if (overlayWindow && !overlayWindow.isDestroyed()) {
+        overlayWindow.webContents.send('overlay:update', { activeClients: [], clientStatuses: {}, isSuspended: false });
+      }
     });
 
     // Start periodic health checking
@@ -450,6 +456,9 @@ function stopBotProcess() {
   isBotRunning = false;
   broadcastStatus();
   checkBotHealth();
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.webContents.send('overlay:update', { activeClients: [], clientStatuses: {}, isSuspended: false });
+  }
   return { success: true };
 }
 

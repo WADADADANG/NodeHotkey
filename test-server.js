@@ -82,6 +82,9 @@ const server = http.createServer((req, res) => {
   }
 
 function getClientStatusesPayload() {
+  if (typeof global.getClientStatuses === 'function') {
+    return global.getClientStatuses();
+  }
   const activeList = global.activeClients || [];
   const clientStatuses = {};
 

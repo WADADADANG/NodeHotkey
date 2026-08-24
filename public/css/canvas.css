@@ -684,7 +684,7 @@
 
 .node-port.port-in {
   left: -8px;
-  top: 50%;
+  top: 38px;
   transform: translateY(-50%);
   border-color: var(--port-in, #3b82f6);
   background: #0f172a;
@@ -697,7 +697,7 @@
 
 .node-port.port-out {
   right: -8px;
-  top: 50%;
+  top: 38px;
   transform: translateY(-50%);
   border-color: var(--port-out, #10b981);
   background: #064e3b;
@@ -981,6 +981,8 @@
 
 .inspector-input,
 .inspector-select {
+  box-sizing: border-box;
+  width: 100%;
   background: rgba(15, 23, 42, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;

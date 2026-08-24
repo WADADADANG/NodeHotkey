@@ -1,0 +1,301 @@
+{
+  "version": "3.1.0",
+  "name": "RM 1 & Psy SpiritBomb",
+  "canvas": {
+    "zoom": 1,
+    "pan": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "nodes": [
+    {
+      "id": "trig_act_1786182020888",
+      "type": "trigger",
+      "title": "Global Trigger (Mouse 4)",
+      "position": {
+        "x": 100,
+        "y": 150
+      },
+      "data": {
+        "triggerType": "mouse",
+        "triggerValue": "4",
+        "enabled": true
+      }
+    },
+    {
+      "id": "node_act_1786182020888",
+      "type": "loop",
+      "title": "Heal",
+      "position": {
+        "x": 450,
+        "y": 150
+      },
+      "data": {
+        "actionId": "act_1786182020888",
+        "name": "Heal",
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "1"
+        ],
+        "interval": 3000,
+        "jitter": 250,
+        "executeImmediately": true,
+        "firstSteps": [
+          {
+            "key": "F1",
+            "delay": 0
+          }
+        ],
+        "cooldownPresetId": "",
+        "customCooldownMs": 0,
+        "delayAfter": 0,
+        "targetKey": "1",
+        "holdDuration": 500,
+        "stopOtherLoops": false,
+        "startOtherLoops": false,
+        "targetLoopIds": [],
+        "chaining": {
+          "_enabled": true,
+          "onBeforeStart": [
+            "act_1786221161983"
+          ],
+          "onStop": [
+            "act_1786221206131"
+          ]
+        }
+      }
+    },
+    {
+      "id": "node_act_1786182183509",
+      "type": "single_press",
+      "title": "Buff GT",
+      "position": {
+        "x": 100,
+        "y": 330
+      },
+      "data": {
+        "actionId": "act_1786182183509",
+        "name": "Buff GT",
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "6"
+        ],
+        "interval": 60000,
+        "jitter": 250,
+        "executeImmediately": true,
+        "firstSteps": [],
+        "cooldownPresetId": "skill_ringmaster_geburah-tiphreth",
+        "customCooldownMs": 0,
+        "delayAfter": 0,
+        "targetKey": "6",
+        "holdDuration": 500,
+        "stopOtherLoops": false,
+        "startOtherLoops": false,
+        "targetLoopIds": [],
+        "chaining": {
+          "_enabled": false
+        }
+      }
+    },
+    {
+      "id": "node_act_1786182244484",
+      "type": "control",
+      "title": "AC Buff GT",
+      "position": {
+        "x": 100,
+        "y": 510
+      },
+      "data": {
+        "actionId": "act_1786182244484",
+        "name": "AC Buff GT",
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "1"
+        ],
+        "interval": 3000,
+        "jitter": 250,
+        "executeImmediately": true,
+        "firstSteps": [],
+        "cooldownPresetId": "",
+        "customCooldownMs": 0,
+        "delayAfter": 0,
+        "targetKey": "1",
+        "holdDuration": 500,
+        "stopOtherLoops": false,
+        "startOtherLoops": false,
+        "targetLoopIds": [],
+        "chaining": {
+          "_enabled": false
+        }
+      }
+    },
+    {
+      "id": "trig_act_1786182303857",
+      "type": "trigger",
+      "title": "Global Trigger (Mouse 5)",
+      "position": {
+        "x": 100,
+        "y": 690
+      },
+      "data": {
+        "triggerType": "mouse",
+        "triggerValue": "5",
+        "enabled": true
+      }
+    },
+    {
+      "id": "node_act_1786182303857",
+      "type": "key_hold",
+      "title": "Psy SpiritBomb Hold",
+      "position": {
+        "x": 450,
+        "y": 690
+      },
+      "data": {
+        "actionId": "act_1786182303857",
+        "name": "Psy SpiritBomb Hold",
+        "enabled": true,
+        "targetClient": "2",
+        "keys": [
+          "1"
+        ],
+        "interval": 3000,
+        "jitter": 250,
+        "executeImmediately": true,
+        "firstSteps": [],
+        "cooldownPresetId": "",
+        "customCooldownMs": 0,
+        "delayAfter": 0,
+        "targetKey": "1",
+        "holdDuration": 500,
+        "stopOtherLoops": false,
+        "startOtherLoops": false,
+        "targetLoopIds": [],
+        "chaining": {
+          "_enabled": false
+        }
+      }
+    },
+    {
+      "id": "node_act_1786182354857",
+      "type": "control",
+      "title": "AC Stop Psy SpiritBomb",
+      "position": {
+        "x": 100,
+        "y": 870
+      },
+      "data": {
+        "actionId": "act_1786182354857",
+        "name": "AC Stop Psy SpiritBomb",
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "1"
+        ],
+        "interval": 3000,
+        "jitter": 250,
+        "executeImmediately": true,
+        "firstSteps": [],
+        "cooldownPresetId": "",
+        "customCooldownMs": 0,
+        "delayAfter": 0,
+        "targetKey": "1",
+        "holdDuration": 500,
+        "stopOtherLoops": false,
+        "startOtherLoops": false,
+        "targetLoopIds": [],
+        "chaining": {
+          "_enabled": false
+        }
+      }
+    },
+    {
+      "id": "node_act_1786221161983",
+      "type": "loop",
+      "title": "Loop 10s",
+      "position": {
+        "x": 100,
+        "y": 1050
+      },
+      "data": {
+        "actionId": "act_1786221161983",
+        "name": "Loop 10s",
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [],
+        "interval": 10000,
+        "jitter": 250,
+        "executeImmediately": true,
+        "firstSteps": [],
+        "cooldownPresetId": "",
+        "customCooldownMs": 0,
+        "delayAfter": 0,
+        "targetKey": "1",
+        "holdDuration": 500,
+        "stopOtherLoops": false,
+        "startOtherLoops": false,
+        "targetLoopIds": [],
+        "chaining": {
+          "_enabled": true,
+          "onAfterStart": [],
+          "onEachCycle": [
+            "act_1786182183509"
+          ]
+        }
+      }
+    },
+    {
+      "id": "node_act_1786221206131",
+      "type": "control",
+      "title": "AC Stop Loop 10s",
+      "position": {
+        "x": 100,
+        "y": 1230
+      },
+      "data": {
+        "actionId": "act_1786221206131",
+        "name": "AC Stop Loop 10s",
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "1"
+        ],
+        "interval": 3000,
+        "jitter": 250,
+        "executeImmediately": true,
+        "firstSteps": [],
+        "cooldownPresetId": "",
+        "customCooldownMs": 0,
+        "delayAfter": 0,
+        "targetKey": "1",
+        "holdDuration": 500,
+        "stopOtherLoops": false,
+        "startOtherLoops": false,
+        "targetLoopIds": [],
+        "chaining": {
+          "_enabled": false
+        }
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1",
+      "fromNodeId": "trig_act_1786182020888",
+      "fromPort": "exec_out",
+      "toNodeId": "node_act_1786182020888",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_2",
+      "fromNodeId": "trig_act_1786182303857",
+      "fromPort": "exec_out",
+      "toNodeId": "node_act_1786182303857",
+      "toPort": "exec_in"
+    }
+  ]
+}

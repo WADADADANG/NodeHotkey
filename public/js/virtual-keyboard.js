@@ -184,6 +184,11 @@ export function applyVirtualKeyboard() {
             } else {
               node.data.keys = finalVal ? [finalVal] : ['1'];
             }
+          } else if (targetType && (targetType.startsWith('sequencer_step_') || targetType.startsWith('macro_step_'))) {
+            const stepIdx = parseInt(targetType.replace('sequencer_step_', '').replace('macro_step_', ''), 10);
+            if (Array.isArray(node.data.steps) && node.data.steps[stepIdx]) {
+              node.data.steps[stepIdx].key = finalVal;
+            }
           }
           window.nodeCanvas.renderNodes();
           window.nodeCanvas.renderOutliner();

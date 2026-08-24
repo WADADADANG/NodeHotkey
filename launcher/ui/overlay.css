@@ -1,12 +1,13 @@
 :root {
-  --bg-overlay: rgba(15, 23, 42, 0.92);
-  --border-overlay: rgba(99, 102, 241, 0.6);
-  --border-glow: rgba(99, 102, 241, 0.3);
+  --bg-overlay: rgba(15, 23, 42, 0.95);
+  --border-overlay: rgba(99, 102, 241, 0.5);
+  --border-glow: rgba(99, 102, 241, 0.25);
   
   --success: #10b981;
   --danger: #ef4444;
   --warning: #f59e0b;
   --info: #3b82f6;
+  --cyan: #06b6d4;
   --purple: #a855f7;
   --text: #f8fafc;
   --text-muted: #94a3b8;
@@ -24,7 +25,8 @@
 html, body {
   background: transparent;
   width: 100%;
-  height: 100%;
+  height: auto;
+  min-height: 100%;
   overflow: hidden;
   font-family: var(--font-main);
   user-select: none;
@@ -34,9 +36,11 @@ html, body {
   background: var(--bg-overlay);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-overlay);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 12px var(--border-glow);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 10px var(--border-glow);
   border-radius: 8px;
   width: 100%;
+  height: auto;
+  min-height: 50px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -52,6 +56,7 @@ html, body {
   align-items: center;
   justify-content: space-between;
   padding: 0 8px;
+  flex-shrink: 0;
 }
 
 .header-left {
@@ -60,12 +65,18 @@ html, body {
   gap: 5px;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .overlay-logo {
   font-size: 11px;
 }
 
 .overlay-title {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 800;
   background: linear-gradient(135deg, #818cf8, #38bdf8);
   -webkit-background-clip: text;
@@ -73,20 +84,27 @@ html, body {
   letter-spacing: 0.2px;
 }
 
+.overlay-toggle-btn,
 .overlay-close-btn {
   background: transparent;
   border: none;
-  color: var(--text-sub);
-  font-size: 10px;
+  color: var(--text-muted);
+  font-size: 9px;
   cursor: pointer;
-  width: 16px;
+  width: 18px;
   height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 3px;
   transition: all 0.15s;
+  outline: none;
   -webkit-app-region: no-drag; /* Clickable */
+}
+
+.overlay-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .overlay-close-btn:hover {
@@ -96,10 +114,11 @@ html, body {
 
 /* Rows Container */
 .overlay-rows {
-  padding: 6px 8px;
+  padding: 6px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
 }
 
 .overlay-empty {
@@ -114,6 +133,7 @@ html, body {
   font-style: italic;
 }
 
+/* Compact Client Row */
 .client-row {
   display: flex;
   align-items: center;
@@ -121,8 +141,13 @@ html, body {
   padding: 3px 6px;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   transition: background 0.15s;
+  -webkit-app-region: no-drag;
+}
+
+.client-row.compact-mode.is-active {
+  cursor: pointer;
 }
 
 .client-row:hover {
@@ -136,11 +161,17 @@ html, body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100px;
+  max-width: 90px;
+}
+
+.client-status-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .client-status {
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -148,28 +179,136 @@ html, body {
   white-space: nowrap;
 }
 
-/* Status Colors & Badges */
-.client-status.loop {
+.active-count-badge {
+  font-size: 9px;
+  font-weight: 800;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  padding: 1px 4px;
+  border-radius: 10px;
+  line-height: 1;
+}
+
+/* Expanded Tree View */
+.client-tree-group {
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.client-row.tree-header {
+  border-radius: 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+}
+
+.client-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.client-badge.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.client-sub-list {
+  display: flex;
+  flex-direction: column;
+  padding: 3px 6px;
+  gap: 2px;
+}
+
+.sub-action-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background 0.1s;
+}
+
+.sub-action-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sub-tree-branch {
+  color: rgba(255, 255, 255, 0.25);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+}
+
+.sub-action-icon {
+  font-size: 10px;
+}
+
+.sub-action-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #e2e8f0;
+}
+
+.sub-action-detail {
+  font-size: 8.5px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* Status Colors & Highlights */
+.client-status.loop,
+.sub-action-item.loop .sub-action-name {
   color: var(--success);
 }
 
-.client-status.buff {
+.client-status.scheduler,
+.sub-action-item.scheduler .sub-action-name {
+  color: #38bdf8;
+}
+
+.client-status.buff,
+.sub-action-item.buff .sub-action-name {
   color: #60a5fa;
 }
 
-.client-status.forward {
+.client-status.forward,
+.sub-action-item.forward .sub-action-name {
   color: var(--warning);
 }
 
-.client-status.hold {
+.client-status.sequencer,
+.sub-action-item.sequencer .sub-action-name {
+  color: #f59e0b;
+}
+
+.client-status.hold,
+.sub-action-item.hold .sub-action-name {
   color: #c084fc;
 }
 
 .client-status.suspended,
-.client-status.paused {
+.client-status.paused,
+.sub-action-item.paused .sub-action-name {
   color: var(--danger);
 }
 
-.client-status.standby {
+.client-status.standby,
+.sub-action-item.standby .sub-action-name {
   color: var(--text-sub);
 }

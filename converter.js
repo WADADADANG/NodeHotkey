@@ -85,7 +85,9 @@ function convertLegacyProfileToNodeWorkflow(legacyProfile) {
       action_control: 'control',
       action_condition: 'branch',
       stop_all: 'emergency_stop',
-      send_event: 'emit_event'
+      send_event: 'emit_event',
+      sequencer: 'sequencer',
+      cast_sequence: 'sequencer'
     };
     const nodeType = typeMap[act.mode] || act.mode || 'loop';
     const mainNodeX = hasTrigger ? 450 : 100;

@@ -118,7 +118,8 @@ class NodeExecutionEngine {
         (portName === 'onEnable' && conn.fromPort === 'on_enable') ||
         (portName === 'onDisable' && conn.fromPort === 'on_disable') ||
         (portName === 'onBeforeStart' && conn.fromPort === 'on_before_start') ||
-        (portName === 'onAfterStart' && conn.fromPort === 'on_after_start');
+        (portName === 'onAfterStart' && conn.fromPort === 'on_after_start') ||
+        (portName === 'onStep' && (conn.fromPort === 'onStep' || conn.fromPort === 'on_step'));
 
       if (matchesPort) {
         const targetNode = this.nodesMap.get(conn.toNodeId);
@@ -191,7 +192,9 @@ class NodeExecutionEngine {
       loop: 'loop',
       buff_sequence: 'buff_sequence',
       key_hold: 'key_hold',
-      macro_group: 'macro_group'
+      macro_group: 'macro_group',
+      sequencer: 'sequencer',
+      loop_scheduler: 'loop_scheduler'
     };
 
     const actions = [];
@@ -211,6 +214,7 @@ class NodeExecutionEngine {
         name: node.title || d.name || `Action ${idx + 1}`,
         enabled: d.enabled !== false,
         mode: modeMap[node.type] || node.type || 'loop',
+        modeType: d.modeType || 'loop',
         trigger: trig,
         eventName: d.eventName || '',
         targetClient: d.targetClient || '1',
@@ -218,6 +222,8 @@ class NodeExecutionEngine {
         interval: d.interval !== undefined ? d.interval : 1000,
         jitter: d.jitter !== undefined ? d.jitter : 0,
         executeImmediately: d.executeImmediately !== false,
+        collisionGuardMs: d.collisionGuardMs !== undefined ? parseInt(d.collisionGuardMs, 10) : 800,
+        items: Array.isArray(d.items) ? d.items : [],
         steps: Array.isArray(d.steps) ? d.steps : [],
         repeatCount: d.repeatCount || 1,
         delayAfter: d.delayAfter || 0,
