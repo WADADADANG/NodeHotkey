@@ -285,27 +285,26 @@
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 
-/* Spotlight Blueprint Node Search Popover (Blender Style) */
-.node-spotlight-catalog {
+/* Blender-Style Add Node Menu Popover */
+.node-spotlight-catalog.blender-add-menu {
   position: absolute;
-  width: 350px;
-  max-height: 480px;
+  width: 220px;
   background: rgba(15, 23, 42, 0.98);
   backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 16px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  z-index: 40;
+  border-radius: 10px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  z-index: 50;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  animation: spotlightFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: visible; /* Allow cascading submenus to fly out */
+  animation: blenderMenuPop 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes spotlightFadeIn {
+@keyframes blenderMenuPop {
   from {
     opacity: 0;
-    transform: translateY(6px) scale(0.97);
+    transform: translateY(4px) scale(0.98);
   }
   to {
     opacity: 1;
@@ -316,55 +315,14 @@
 .spotlight-search-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
+  gap: 6px;
+  padding: 8px 10px;
   background: rgba(255, 255, 255, 0.03);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-/* Category Filter Tabs Bar (Blender Style) */
-.spotlight-category-tabs {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  background: rgba(0, 0, 0, 0.25);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  overflow-x: auto;
-}
-
-.spotlight-category-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.spotlight-cat-tab {
-  padding: 3px 8px;
-  font-size: 10.5px;
-  font-weight: 600;
-  color: #94a3b8;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 6px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.spotlight-cat-tab:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
-.spotlight-cat-tab.active {
-  color: #60a5fa;
-  background: rgba(59, 130, 246, 0.18);
-  border-color: rgba(96, 165, 250, 0.4);
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .spotlight-search-icon {
-  font-size: 13px;
+  font-size: 12px;
   opacity: 0.7;
 }
 
@@ -374,7 +332,7 @@
   border: none;
   color: #fff;
   font-family: 'Outfit', sans-serif;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 500;
   outline: none;
 }
@@ -387,10 +345,10 @@
   background: transparent;
   border: none;
   color: #64748b;
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 6px;
+  padding: 2px 4px;
+  border-radius: 4px;
   transition: all 0.15s;
 }
 
@@ -400,112 +358,149 @@
 }
 
 .spotlight-catalog-body {
-  padding: 10px;
+  padding: 4px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  overflow-y: auto;
-  max-height: 380px;
+  overflow: visible;
 }
 
-.spotlight-catalog-body::-webkit-scrollbar {
-  width: 4px;
-}
-
-.spotlight-catalog-body::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.4);
-}
-
-.spotlight-catalog-body::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
-}
-
-.spotlight-section {
+/* Blender Cascading Menu List */
+.blender-menu-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  position: relative;
 }
 
-.spotlight-category-title {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
+.blender-menu-item {
+  position: relative;
+  border-radius: 6px;
+}
+
+.blender-item-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: #e2e8f0;
+  transition: all 0.12s;
+  user-select: none;
+}
+
+.blender-item-icon {
+  font-size: 13px;
+  margin-right: 8px;
+}
+
+.blender-item-label {
+  flex: 1;
+}
+
+.blender-item-arrow {
+  font-size: 9px;
   color: #64748b;
-  letter-spacing: 0.5px;
-  padding: 0 4px;
+  transition: transform 0.15s;
 }
 
-.spotlight-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 3px;
+.blender-menu-item:hover > .blender-item-main {
+  background: rgba(59, 130, 246, 0.22);
+  color: #fff;
 }
 
-.spotlight-node-card {
+.blender-menu-item:hover > .blender-item-main .blender-item-arrow {
+  color: #93c5fd;
+  transform: translateX(2px);
+}
+
+/* Blender Flyout Submenu */
+.blender-submenu {
+  position: absolute;
+  left: calc(100% + 4px);
+  top: 0;
+  width: 220px;
+  background: rgba(15, 23, 42, 0.98);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  padding: 4px;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 60;
+  animation: blenderMenuPop 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.blender-menu-item:hover > .blender-submenu {
+  display: flex;
+}
+
+.blender-submenu.open-left {
+  left: auto;
+  right: calc(100% + 4px);
+}
+
+/* Blender Sub Items & Search Items */
+.blender-sub-item {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #cbd5e1;
   cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.12s;
+  user-select: none;
 }
 
-.spotlight-node-card:hover {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(96, 165, 250, 0.4);
+.blender-sub-item:hover {
+  background: rgba(59, 130, 246, 0.25);
+  color: #fff;
   transform: translateX(2px);
 }
 
-.spotlight-node-icon {
-  font-size: 16px;
-  min-width: 22px;
+.blender-sub-icon {
+  font-size: 13px;
+  width: 18px;
   text-align: center;
 }
 
-.spotlight-node-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+.blender-sub-label {
   flex: 1;
   overflow: hidden;
-}
-
-.spotlight-node-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: #f1f5f9;
-  white-space: nowrap;
-  overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.spotlight-node-desc {
-  font-size: 10px;
-  color: #64748b;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.spotlight-node-card:hover .spotlight-node-desc {
-  color: #93c5fd;
+/* Search Mode List */
+.blender-search-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 320px;
+  overflow-y: auto;
 }
 
-.spotlight-node-plus {
-  font-size: 13px;
-  font-weight: 700;
+.blender-search-list::-webkit-scrollbar {
+  width: 3px;
+}
+
+.blender-search-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.blender-empty-search {
+  font-size: 11px;
   color: #64748b;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.spotlight-node-card:hover .spotlight-node-plus {
-  opacity: 1;
-  color: #60a5fa;
+  text-align: center;
+  padding: 16px 8px;
 }
 
 /* Node Elements on Canvas */

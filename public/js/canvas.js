@@ -165,19 +165,12 @@ class NodeCanvasEditor {
         </div>
       </div>
 
-      <!-- Spotlight Blueprint Node Search Popover Modal (Blender Style) -->
-      <div class="node-spotlight-catalog" id="node-spotlight-catalog" style="display:none;">
+      <!-- Blender-Style Add Node Menu Popover -->
+      <div class="node-spotlight-catalog blender-add-menu" id="node-spotlight-catalog" style="display:none;">
         <div class="spotlight-search-header">
           <span class="spotlight-search-icon">🔍</span>
-          <input type="text" class="spotlight-search-input" id="spotlight-search-input" placeholder="${canvasT('palette_search_placeholder', 'Search node or action... (Shift+A)')}" oninput="window.nodeCanvas.filterSpotlight(this.value)" />
+          <input type="text" class="spotlight-search-input" id="spotlight-search-input" placeholder="${canvasT('palette_search_placeholder', 'Search... (Shift+A)')}" oninput="window.nodeCanvas.filterSpotlight(this.value)" />
           <button type="button" class="spotlight-close-btn" onclick="window.nodeCanvas.hideNodeCatalog()">✕</button>
-        </div>
-        <div class="spotlight-category-tabs" id="spotlight-category-tabs">
-          <button type="button" class="spotlight-cat-tab active" data-cat="all" onclick="window.nodeCanvas.setCategoryFilter('all')">🌐 ${window.currentLang === 'en' ? 'All' : 'ทั้งหมด'}</button>
-          <button type="button" class="spotlight-cat-tab" data-cat="triggers" onclick="window.nodeCanvas.setCategoryFilter('triggers')">⚡ Triggers</button>
-          <button type="button" class="spotlight-cat-tab" data-cat="actions" onclick="window.nodeCanvas.setCategoryFilter('actions')">🎮 Actions</button>
-          <button type="button" class="spotlight-cat-tab" data-cat="flow" onclick="window.nodeCanvas.setCategoryFilter('flow')">🌿 Logic</button>
-          <button type="button" class="spotlight-cat-tab" data-cat="utilities" onclick="window.nodeCanvas.setCategoryFilter('utilities')">🛡️ Safety</button>
         </div>
         <div class="spotlight-catalog-body" id="spotlight-catalog-body"></div>
       </div>
@@ -4031,34 +4024,33 @@ class NodeCanvasEditor {
     let posX = (clientX !== undefined ? clientX : (containerRect.left + containerRect.width / 2)) - containerRect.left;
     let posY = (clientY !== undefined ? clientY : (containerRect.top + containerRect.height / 2)) - containerRect.top;
 
-    // Boundary constraints
-    const menuWidth = 340;
-    const menuHeight = 440;
+    // Boundary constraints for compact Blender menu
+    const menuWidth = 220;
+    const menuHeight = 175;
+    const isNearRightEdge = (posX + 440 > containerRect.width);
     if (posX + menuWidth > containerRect.width - 20) {
       posX = Math.max(20, containerRect.width - menuWidth - 20);
     }
     if (posY + menuHeight > containerRect.height - 20) {
-      posY = Math.max(20, containerRect.height - menuHeight - 30);
+      posY = Math.max(20, containerRect.height - menuHeight - 20);
     }
 
     this.spotlightCatalog.style.left = `${Math.max(20, posX)}px`;
     this.spotlightCatalog.style.top = `${Math.max(20, posY)}px`;
     this.spotlightCatalog.style.display = 'flex';
 
-    this.currentCategoryFilter = 'all';
-    if (this.spotlightCatalog) {
-      const tabs = this.spotlightCatalog.querySelectorAll('.spotlight-cat-tab');
-      tabs.forEach(tab => {
-        if (tab.getAttribute('data-cat') === 'all') tab.classList.add('active');
-        else tab.classList.remove('active');
-      });
-    }
-
     if (this.spotlightInput) {
       this.spotlightInput.value = '';
       setTimeout(() => this.spotlightInput.focus(), 50);
     }
     this.renderSpotlightCatalog('');
+
+    // Apply open-left if close to right boundary
+    const submenus = this.spotlightCatalog.querySelectorAll('.blender-submenu');
+    submenus.forEach(sm => {
+      if (isNearRightEdge) sm.classList.add('open-left');
+      else sm.classList.remove('open-left');
+    });
   }
 
   hideNodeCatalog() {
@@ -4072,10 +4064,13 @@ class NodeCanvasEditor {
     if (!this.spotlightCatalog) return;
     if (this.spotlightCatalog.style.display === 'none' || !this.spotlightCatalog.style.display) {
       let clientX, clientY;
+      const menuWidth = 220;
+      const menuHeight = 175;
+
       if (triggerEl && typeof triggerEl.getBoundingClientRect === 'function') {
         const rect = triggerEl.getBoundingClientRect();
-        clientX = rect.left + rect.width / 2 - 170;
-        clientY = rect.top - 460;
+        clientX = Math.round(rect.left + (rect.width / 2) - (menuWidth / 2));
+        clientY = Math.round(rect.top - menuHeight - 12);
       }
       this.showNodeCatalog(clientX, clientY, null);
     } else {
@@ -4087,107 +4082,110 @@ class NodeCanvasEditor {
     this.renderSpotlightCatalog(query);
   }
 
-  setCategoryFilter(catId) {
-    this.currentCategoryFilter = catId || 'all';
-    if (this.spotlightCatalog) {
-      const tabs = this.spotlightCatalog.querySelectorAll('.spotlight-cat-tab');
-      tabs.forEach(tab => {
-        if (tab.getAttribute('data-cat') === this.currentCategoryFilter) {
-          tab.classList.add('active');
-        } else {
-          tab.classList.remove('active');
-        }
-      });
-    }
-    this.renderSpotlightCatalog(this.spotlightInput ? this.spotlightInput.value : '');
-  }
-
   renderSpotlightCatalog(query = '') {
     if (!this.spotlightBody) return;
     const q = (query || '').toLowerCase().trim();
-    const selectedCat = this.currentCategoryFilter || 'all';
 
     const categories = [
       {
         id: 'triggers',
-        name: canvasT('cat_triggers', '⚡ Triggers & Events'),
+        icon: '⚡',
+        name: canvasT('cat_triggers', 'Triggers & Events'),
         items: [
-          { type: 'trigger', icon: '⚡', name: this.getNodeTypeLabel('trigger'), desc: canvasT('node_desc_trigger', 'Starts flow on hotkey or event') },
-          { type: 'emit_event', icon: '📡', name: this.getNodeTypeLabel('emit_event'), desc: canvasT('node_desc_emit_event', 'Broadcasts custom event to active profiles') }
+          { type: 'trigger', icon: '⚡', name: this.getNodeTypeLabel('trigger') },
+          { type: 'emit_event', icon: '📡', name: this.getNodeTypeLabel('emit_event') }
         ]
       },
       {
         id: 'actions',
-        name: canvasT('cat_actions', '🎮 Actions & Macros'),
+        icon: '🎮',
+        name: canvasT('cat_actions', 'Actions & Macros'),
         items: [
-          { type: 'loop_scheduler', icon: '⏱️', name: this.getNodeTypeLabel('loop_scheduler'), desc: canvasT('node_desc_loop_scheduler', 'Independent multi-timer dispatcher with anti-collision guard queue') },
-          { type: 'loop', icon: '🔄', name: this.getNodeTypeLabel('loop'), desc: canvasT('node_desc_loop', 'Continuously loops key sequence with timing') },
-          { type: 'sequencer', icon: '⚔️', name: this.getNodeTypeLabel('sequencer'), desc: canvasT('node_desc_sequencer', 'Executes skills & instant items in sequence with animation delays') },
-          { type: 'buff_sequence', icon: '🛡️', name: this.getNodeTypeLabel('buff_sequence'), desc: canvasT('node_desc_buff_sequence', 'Executes combo skill queue sequentially') },
-          { type: 'key_hold', icon: '⚓', name: this.getNodeTypeLabel('key_hold'), desc: canvasT('node_desc_key_hold', 'Toggle hold key down in game client') },
-          { type: 'key_press', icon: '⌨️', name: this.getNodeTypeLabel('key_press'), desc: canvasT('node_desc_key_press', 'Sends a single keypress with delay') },
-          { type: 'forwarder', icon: '🔗', name: this.getNodeTypeLabel('forwarder'), desc: canvasT('node_desc_forwarder', 'Forwards key to multiple game clients') },
-          { type: 'macro_group', icon: '🔀', name: this.getNodeTypeLabel('macro_group'), desc: canvasT('node_desc_buff_sequence', 'Step-by-step combo macro sequences') }
+          { type: 'loop_scheduler', icon: '⏱️', name: this.getNodeTypeLabel('loop_scheduler') },
+          { type: 'loop', icon: '🔄', name: this.getNodeTypeLabel('loop') },
+          { type: 'sequencer', icon: '⚔️', name: this.getNodeTypeLabel('sequencer') },
+          { type: 'buff_sequence', icon: '🛡️', name: this.getNodeTypeLabel('buff_sequence') },
+          { type: 'key_hold', icon: '⚓', name: this.getNodeTypeLabel('key_hold') },
+          { type: 'key_press', icon: '⌨️', name: this.getNodeTypeLabel('key_press') },
+          { type: 'forwarder', icon: '🔗', name: this.getNodeTypeLabel('forwarder') },
+          { type: 'macro_group', icon: '🔀', name: this.getNodeTypeLabel('macro_group') }
         ]
       },
       {
         id: 'flow',
-        name: canvasT('cat_flow', '🌿 Logic & Flow'),
+        icon: '🌿',
+        name: canvasT('cat_flow', 'Logic & Flow'),
         items: [
-          { type: 'branch', icon: '🌿', name: this.getNodeTypeLabel('branch'), desc: canvasT('node_desc_branch', 'Branches execution based on condition') },
-          { type: 'control', icon: '🎛️', name: this.getNodeTypeLabel('control'), desc: canvasT('node_desc_control', 'Toggles, starts, or stops other actions') },
-          { type: 'delay', icon: '⏳', name: this.getNodeTypeLabel('delay'), desc: canvasT('node_desc_delay', 'Pauses flow for specified duration') }
+          { type: 'branch', icon: '🌿', name: this.getNodeTypeLabel('branch') },
+          { type: 'control', icon: '🎛️', name: this.getNodeTypeLabel('control') },
+          { type: 'delay', icon: '⏳', name: this.getNodeTypeLabel('delay') }
         ]
       },
       {
         id: 'utilities',
-        name: canvasT('cat_utilities', '🛡️ Safety & Utilities'),
+        icon: '🛡️',
+        name: canvasT('cat_utilities', 'Safety & Utilities'),
         items: [
-          { type: 'emergency_stop', icon: '🛑', name: this.getNodeTypeLabel('emergency_stop'), desc: canvasT('node_desc_emergency_stop', 'Immediately stops active actions') },
-          { type: 'sound', icon: '🔊', name: this.getNodeTypeLabel('sound'), desc: canvasT('node_desc_sound', 'Plays customizable audio alert') }
+          { type: 'emergency_stop', icon: '🛑', name: this.getNodeTypeLabel('emergency_stop') },
+          { type: 'sound', icon: '🔊', name: this.getNodeTypeLabel('sound') }
         ]
       }
     ];
 
-    const activeCategories = (selectedCat === 'all' || q) ? categories : categories.filter(c => c.id === selectedCat);
-
     let html = '';
-    let totalFound = 0;
 
-    activeCategories.forEach(cat => {
-      const filtered = cat.items.filter(item => {
-        if (!q) return true;
-        return item.name.toLowerCase().includes(q) || item.type.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q);
+    if (!q) {
+      // 1. Blender Cascading Menu View (Default when not searching)
+      html = `
+        <div class="blender-menu-list">
+          ${categories.map(cat => `
+            <div class="blender-menu-item has-submenu">
+              <div class="blender-item-main">
+                <span class="blender-item-icon">${cat.icon}</span>
+                <span class="blender-item-label">${cat.name}</span>
+                <span class="blender-item-arrow">▶</span>
+              </div>
+              <div class="blender-submenu">
+                ${cat.items.map(it => `
+                  <div class="blender-sub-item" onclick="window.nodeCanvas.addNodeFromSpotlight('${it.type}')">
+                    <span class="blender-sub-icon">${it.icon}</span>
+                    <span class="blender-sub-label">${it.name}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } else {
+      // 2. Search Results View (Compact Flat List)
+      let matchedItems = [];
+      categories.forEach(cat => {
+        cat.items.forEach(it => {
+          if (it.name.toLowerCase().includes(q) || it.type.toLowerCase().includes(q)) {
+            matchedItems.push(it);
+          }
+        });
       });
 
-      if (filtered.length > 0) {
-        totalFound += filtered.length;
-        html += `
-          <div class="spotlight-section">
-            <div class="spotlight-category-title">${cat.name}</div>
-            <div class="spotlight-grid">
-              ${filtered.map(item => `
-                <div class="spotlight-node-card" onclick="window.nodeCanvas.addNodeFromSpotlight('${item.type}')">
-                  <span class="spotlight-node-icon">${item.icon}</span>
-                  <div class="spotlight-node-info">
-                    <span class="spotlight-node-name">${item.name}</span>
-                    <span class="spotlight-node-desc">${item.desc}</span>
-                  </div>
-                  <span class="spotlight-node-plus">+</span>
-                </div>
-              `).join('')}
-            </div>
+      if (matchedItems.length > 0) {
+        html = `
+          <div class="blender-search-list">
+            ${matchedItems.map(it => `
+              <div class="blender-sub-item search-match" onclick="window.nodeCanvas.addNodeFromSpotlight('${it.type}')">
+                <span class="blender-sub-icon">${it.icon}</span>
+                <span class="blender-sub-label">${it.name}</span>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else {
+        html = `
+          <div class="blender-empty-search">
+            ${window.currentLang === 'en' ? `No nodes matching "${query}"` : `ไม่พบคำสั่ง "${query}"`}
           </div>
         `;
       }
-    });
-
-    if (totalFound === 0) {
-      html = `
-        <div style="font-size:12px; color:var(--muted); text-align:center; padding:32px 16px;">
-          ${window.currentLang === 'en' ? `No nodes found matching "${query}"` : `ไม่พบคำสั่งที่ตรงกับ "${query}"`}
-        </div>
-      `;
     }
 
     this.spotlightBody.innerHTML = html;
