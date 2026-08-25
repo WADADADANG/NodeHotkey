@@ -349,8 +349,33 @@ class SystemUpdater {
           if (item.isDirectory()) {
             copyRecursive(srcPath, destPath, relPath);
           } else {
-            fs.copyFileSync(srcPath, destPath);
-            copiedFilesCount++;
+            // Check if file is already identical to avoid unnecessary write / lock issues
+            if (fs.existsSync(destPath)) {
+              try {
+                const srcStat = fs.statSync(srcPath);
+                const destStat = fs.statSync(destPath);
+                if (srcStat.size === destStat.size) {
+                  const srcBuf = fs.readFileSync(srcPath);
+                  const destBuf = fs.readFileSync(destPath);
+                  if (srcBuf.equals(destBuf)) {
+                    copiedFilesCount++;
+                    continue;
+                  }
+                }
+              } catch (e) {}
+            }
+
+            try {
+              fs.copyFileSync(srcPath, destPath);
+              copiedFilesCount++;
+            } catch (err) {
+              if (err.code === 'EBUSY' || err.code === 'EPERM') {
+                console.warn(`[Updater] Resource busy/locked (${err.code}), skipping active file: ${destPath}`);
+                copiedFilesCount++;
+              } else {
+                throw err;
+              }
+            }
           }
         }
       };

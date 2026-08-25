@@ -2269,11 +2269,13 @@ public class AsyncAudioPlayer {
                     }
                 }
                 
-                await Task.Delay(4000);
+                await Task.Delay(2500);
                 
-                while (activePlayers.Count > 50) {
+                while (!activePlayers.IsEmpty) {
                     MediaPlayer p;
-                    activePlayers.TryTake(out p);
+                    if (activePlayers.TryTake(out p)) {
+                        try { p.Close(); } catch {}
+                    }
                 }
             } catch {}
         });
