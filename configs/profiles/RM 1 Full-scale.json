@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "RM 1 Full-scale",
   "canvas": {
-    "zoom": 0.9366035482043648,
+    "zoom": 0.7586488740455354,
     "pan": {
-      "x": 185,
-      "y": -1770
+      "x": -146,
+      "y": -285
     }
   },
   "nodes": [
@@ -15,7 +15,7 @@
       "title": "Btn Heal Rain",
       "position": {
         "x": 780,
-        "y": 830
+        "y": 800
       },
       "data": {
         "enabled": true,
@@ -69,7 +69,7 @@
       "type": "buff_sequence",
       "title": "Full Buff",
       "position": {
-        "x": 1540,
+        "x": 1430,
         "y": 1770
       },
       "data": {
@@ -120,8 +120,8 @@
       "type": "control",
       "title": "AC Stop Loop Restore MP",
       "position": {
-        "x": 2540,
-        "y": 1280
+        "x": 2550,
+        "y": 1330
       },
       "data": {
         "enabled": true,
@@ -137,8 +137,8 @@
       "type": "control",
       "title": "AC Stop Loop Merkabar",
       "position": {
-        "x": 2540,
-        "y": 1480
+        "x": 2550,
+        "y": 1530
       },
       "data": {
         "enabled": true,
@@ -154,13 +154,15 @@
       "type": "loop",
       "title": "Loop Buff GT",
       "position": {
-        "x": 1930,
-        "y": 820
+        "x": 1850,
+        "y": 1030
       },
       "data": {
         "enabled": true,
         "targetClient": "1",
-        "keys": [],
+        "keys": [
+          "3"
+        ],
         "interval": 27000,
         "jitter": 250,
         "executeImmediately": false,
@@ -172,8 +174,8 @@
       "type": "control",
       "title": "AC Stop Loop Buff GT",
       "position": {
-        "x": 2540,
-        "y": 1380
+        "x": 2550,
+        "y": 1430
       },
       "data": {
         "enabled": true,
@@ -189,8 +191,8 @@
       "type": "control",
       "title": "AC Stop Full Buff",
       "position": {
-        "x": 1420,
-        "y": 1620
+        "x": 1330,
+        "y": 1630
       },
       "data": {
         "enabled": true,
@@ -206,8 +208,8 @@
       "type": "control",
       "title": "AC Stop Loop Heal Rain",
       "position": {
-        "x": 2540,
-        "y": 1580
+        "x": 2550,
+        "y": 1630
       },
       "data": {
         "enabled": true,
@@ -223,8 +225,8 @@
       "type": "trigger",
       "title": "Btn Full Buff",
       "position": {
-        "x": 710,
-        "y": 1640
+        "x": 720,
+        "y": 1610
       },
       "data": {
         "enabled": true,
@@ -253,8 +255,8 @@
       "type": "key_press",
       "title": "Buff GT",
       "position": {
-        "x": 2270,
-        "y": 980
+        "x": 2520,
+        "y": 990
       },
       "data": {
         "enabled": true,
@@ -271,8 +273,8 @@
       "type": "emit_event",
       "title": "Emit Event",
       "position": {
-        "x": 1660,
-        "y": 630
+        "x": 1870,
+        "y": 680
       },
       "data": {
         "enabled": true,

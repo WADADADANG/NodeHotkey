@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 0.7639750518840006,
     "pan": {
-      "x": -165,
-      "y": -349
+      "x": -268,
+      "y": -233
     }
   },
   "nodes": [
@@ -15,7 +15,7 @@
       "title": "Btn Heal 1",
       "position": {
         "x": 1170,
-        "y": 560
+        "y": 510
       },
       "data": {
         "enabled": true,
@@ -110,7 +110,7 @@
       "title": "Btn Heal Rain All",
       "position": {
         "x": 1170,
-        "y": 1000
+        "y": 970
       },
       "data": {
         "enabled": true,
@@ -122,7 +122,7 @@
     {
       "id": "node_1786684306401",
       "type": "branch",
-      "title": "Branch (If / Else)",
+      "title": "Check Heal Rain 1",
       "position": {
         "x": 1490,
         "y": 970
@@ -140,7 +140,7 @@
       "title": "AC Start Heal Rain All",
       "position": {
         "x": 1820,
-        "y": 1060
+        "y": 1070
       },
       "data": {
         "enabled": true,
@@ -196,7 +196,7 @@
       "type": "loop",
       "title": "Loop MP 2",
       "position": {
-        "x": 2130,
+        "x": 2140,
         "y": 1550
       },
       "data": {
@@ -224,7 +224,7 @@
         "keys": [
           "3"
         ],
-        "interval": 12300,
+        "interval": 11000,
         "executeImmediately": false,
         "actionId": "1786684545395_4783"
       }
@@ -235,7 +235,7 @@
       "title": "AC Stop Loop MP 1",
       "position": {
         "x": 1520,
-        "y": 1750
+        "y": 1740
       },
       "data": {
         "enabled": true,
@@ -373,7 +373,7 @@
       "title": "Restore HP 5",
       "position": {
         "x": 2810,
-        "y": 690
+        "y": 680
       },
       "data": {
         "enabled": true,
@@ -407,7 +407,7 @@
       "title": "Restore MP 1,2,3,4",
       "position": {
         "x": 2810,
-        "y": 800
+        "y": 810
       },
       "data": {
         "enabled": true,
@@ -486,7 +486,7 @@
       "title": "Btn Start Heal 4",
       "position": {
         "x": 1170,
-        "y": 790
+        "y": 740
       },
       "data": {
         "enabled": true,
@@ -521,7 +521,7 @@
       "title": "EmitEvent_4564E",
       "position": {
         "x": 1520,
-        "y": 1860
+        "y": 1840
       },
       "data": {
         "enabled": true,
@@ -535,7 +535,7 @@
       "title": "EmitEvent_EW944DDA",
       "position": {
         "x": 1520,
-        "y": 1330
+        "y": 1340
       },
       "data": {
         "enabled": true,

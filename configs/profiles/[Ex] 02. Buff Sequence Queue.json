@@ -4,7 +4,7 @@
   "canvas": {
     "zoom": 1,
     "pan": {
-      "x": 112,
+      "x": 715,
       "y": 19
     }
   },
@@ -14,8 +14,8 @@
       "type": "trigger",
       "title": "Btn Start Full Buff",
       "position": {
-        "x": 100,
-        "y": 150
+        "x": 110,
+        "y": 110
       },
       "data": {
         "enabled": true,

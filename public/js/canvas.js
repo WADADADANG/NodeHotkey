@@ -271,6 +271,8 @@ class NodeCanvasEditor {
 
         if (!e.shiftKey && !e.ctrlKey) {
           this.selectedNodeIds.clear();
+          this.updateNodeSelectionClasses();
+          this.closeInspector();
         }
 
         // Create selection box element
@@ -382,6 +384,8 @@ class NodeCanvasEditor {
           this.selectionBoxEl.remove();
           this.selectionBoxEl = null;
         }
+
+        this.updateNodeSelectionClasses();
 
         if (this.selectedNodeIds.size === 1) {
           const singleId = Array.from(this.selectedNodeIds)[0];
@@ -1917,6 +1921,20 @@ class NodeCanvasEditor {
       }, 1300);
     }
 
+    this.updateOutlinerSelectionClasses();
+  }
+
+  updateNodeSelectionClasses() {
+    if (!this.nodesLayer) return;
+    const nodeEls = this.nodesLayer.querySelectorAll('.canvas-node');
+    nodeEls.forEach(el => {
+      const id = el.dataset.id;
+      if (this.selectedNodeIds.has(id)) {
+        el.classList.add('selected');
+      } else {
+        el.classList.remove('selected');
+      }
+    });
     this.updateOutlinerSelectionClasses();
   }
 

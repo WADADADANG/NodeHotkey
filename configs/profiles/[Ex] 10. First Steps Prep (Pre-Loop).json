@@ -30,7 +30,7 @@
       "title": "Heal & Buff GT (FirstSteps)",
       "position": {
         "x": 450,
-        "y": 100
+        "y": 150
       },
       "data": {
         "enabled": true,

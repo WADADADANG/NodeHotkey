@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 1,
     "pan": {
-      "x": 963,
-      "y": 599
+      "x": 955,
+      "y": 530
     }
   },
   "nodes": [
@@ -14,8 +14,8 @@
       "type": "trigger",
       "title": "Btn Start",
       "position": {
-        "x": 100,
-        "y": 150
+        "x": 120,
+        "y": 130
       },
       "data": {
         "enabled": true,

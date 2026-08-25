@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 1.2100000000000002,
     "pan": {
-      "x": 0,
-      "y": 0
+      "x": 707,
+      "y": 166
     }
   },
   "nodes": [
@@ -14,8 +14,8 @@
       "type": "trigger",
       "title": "Btn Start Heal",
       "position": {
-        "x": 100,
-        "y": 150
+        "x": 110,
+        "y": 100
       },
       "data": {
         "enabled": true,

@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Add-ons",
   "canvas": {
-    "zoom": 0.5132864860323239,
+    "zoom": 0.6210766480991119,
     "pan": {
-      "x": 222,
-      "y": -720
+      "x": 1171,
+      "y": -470
     }
   },
   "nodes": [
@@ -61,14 +61,14 @@
       "type": "key_press",
       "title": "Single Key Press",
       "position": {
-        "x": 580,
+        "x": 570,
         "y": 480
       },
       "data": {
         "enabled": true,
         "targetClient": "all",
         "keys": [
-          "LEFT ALT + 0"
+          "Z"
         ],
         "actionId": "1786880124294"
       }
@@ -79,7 +79,7 @@
       "title": "Btn Start Psy Knight AOE",
       "position": {
         "x": 280,
-        "y": 750
+        "y": 840
       },
       "data": {
         "enabled": true,
@@ -93,8 +93,8 @@
       "type": "loop",
       "title": "Knight Loop FP 5",
       "position": {
-        "x": 1170,
-        "y": 600
+        "x": 1030,
+        "y": 730
       },
       "data": {
         "enabled": true,
@@ -112,8 +112,8 @@
       "type": "control",
       "title": "AC Stop Knight Loop FP 5",
       "position": {
-        "x": 1170,
-        "y": 810
+        "x": 1030,
+        "y": 940
       },
       "data": {
         "enabled": true,
@@ -160,7 +160,7 @@
       "title": "Global Trigger",
       "position": {
         "x": 270,
-        "y": 1400
+        "y": 1710
       },
       "data": {
         "enabled": true,
@@ -190,7 +190,7 @@
       "title": "Knight Buff HOS",
       "position": {
         "x": 590,
-        "y": 1560
+        "y": 1570
       },
       "data": {
         "enabled": true,
@@ -222,8 +222,8 @@
       "type": "loop",
       "title": "Knight Loop FP 6",
       "position": {
-        "x": 1160,
-        "y": 970
+        "x": 1030,
+        "y": 1080
       },
       "data": {
         "enabled": true,
@@ -241,8 +241,8 @@
       "type": "control",
       "title": "AC Stop Knight Loop FP 6",
       "position": {
-        "x": 1160,
-        "y": 1180
+        "x": 1030,
+        "y": 1290
       },
       "data": {
         "enabled": true,
@@ -259,7 +259,7 @@
       "title": "STOP ALL",
       "position": {
         "x": 590,
-        "y": 1400
+        "y": 1710
       },
       "data": {
         "enabled": true,
@@ -288,7 +288,7 @@
       "type": "key_press",
       "title": "Single Key Press",
       "position": {
-        "x": 630,
+        "x": 590,
         "y": 1920
       },
       "data": {

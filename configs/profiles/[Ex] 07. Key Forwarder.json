@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 0.9,
     "pan": {
-      "x": 288,
-      "y": 116
+      "x": 756,
+      "y": 81
     }
   },
   "nodes": [
@@ -25,25 +25,27 @@
       }
     },
     {
-      "id": "node_act_1786227690905",
-      "type": "forward",
+      "id": "node_1787598609040",
+      "type": "forwarder",
       "title": "Forward Heal Rain (Client 1 & 2)",
       "position": {
-        "x": 430,
-        "y": 160
+        "x": 460,
+        "y": 150
       },
       "data": {
         "enabled": true,
-        "actionId": "act_1786227690905"
+        "targetKey": "1",
+        "targetClient": "1",
+        "actionId": "1787598609040"
       }
     }
   ],
   "connections": [
     {
-      "id": "conn_1",
+      "id": "conn_1787598612179",
       "fromNodeId": "trig_act_1786227690905",
       "fromPort": "exec_out",
-      "toNodeId": "node_act_1786227690905",
+      "toNodeId": "node_1787598609040",
       "toPort": "exec_in"
     }
   ]

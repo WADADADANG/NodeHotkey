@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 1,
     "pan": {
-      "x": -447,
-      "y": -85
+      "x": -653,
+      "y": 558
     }
   },
   "nodes": [
@@ -15,7 +15,7 @@
       "title": "Btn Start Heal 1",
       "position": {
         "x": 750,
-        "y": 290
+        "y": 240
       },
       "data": {
         "enabled": true,
@@ -48,8 +48,8 @@
       "type": "trigger",
       "title": "Btn Start Heal Rain Both",
       "position": {
-        "x": 750,
-        "y": 720
+        "x": 760,
+        "y": 690
       },
       "data": {
         "enabled": true,
@@ -204,7 +204,7 @@
       "title": "AC Stop Heal Rain Both",
       "position": {
         "x": 1800,
-        "y": 160
+        "y": 170
       },
       "data": {
         "enabled": true,
@@ -236,8 +236,8 @@
       "type": "control",
       "title": "AC Stop Heal 1",
       "position": {
-        "x": 1800,
-        "y": 430
+        "x": 1860,
+        "y": 440
       },
       "data": {
         "enabled": true,
@@ -269,7 +269,7 @@
       "title": "AC Stop Heal Both",
       "position": {
         "x": 1520,
-        "y": 750
+        "y": 760
       },
       "data": {
         "enabled": true,

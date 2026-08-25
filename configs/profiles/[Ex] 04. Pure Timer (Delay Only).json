@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 1,
     "pan": {
-      "x": 24,
-      "y": 262
+      "x": 315,
+      "y": 171
     }
   },
   "nodes": [
@@ -15,7 +15,7 @@
       "title": "Btn Start",
       "position": {
         "x": 100,
-        "y": 150
+        "y": 160
       },
       "data": {
         "enabled": true,
@@ -25,65 +25,74 @@
       }
     },
     {
-      "id": "node_act_1786225814509",
-      "type": "single_press",
+      "id": "node_1787598494704",
+      "type": "key_press",
       "title": "Heal",
       "position": {
-        "x": 380,
+        "x": 370,
         "y": 160
       },
       "data": {
         "enabled": true,
-        "actionId": "act_1786225814509"
+        "targetClient": "1",
+        "keys": [
+          "1"
+        ],
+        "actionId": "1787598494704"
       }
     },
     {
-      "id": "node_act_1786225961313",
-      "type": "delay_only",
+      "id": "node_1787598512711",
+      "type": "delay",
       "title": "Wait 3 Sec",
       "position": {
-        "x": 680,
+        "x": 660,
         "y": 160
       },
       "data": {
         "enabled": true,
-        "actionId": "act_1786225961313"
+        "delayMs": 1000,
+        "actionId": "1787598512711"
       }
     },
     {
-      "id": "node_act_1786226034323",
-      "type": "single_press",
+      "id": "node_1787598526111",
+      "type": "key_press",
       "title": "Buff GT",
       "position": {
-        "x": 970,
+        "x": 940,
         "y": 160
       },
       "data": {
         "enabled": true,
-        "actionId": "act_1786226034323"
+        "targetClient": "1",
+        "keys": [
+          "2"
+        ],
+        "actionId": "1787598526111"
       }
     }
   ],
   "connections": [
     {
-      "id": "conn_1786794093301",
+      "id": "conn_1787598507011",
       "fromNodeId": "trig_act_1786225814509",
       "fromPort": "exec_out",
-      "toNodeId": "node_act_1786225814509",
+      "toNodeId": "node_1787598494704",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1786794097789",
-      "fromNodeId": "node_act_1786225814509",
+      "id": "conn_1787598517459",
+      "fromNodeId": "node_1787598494704",
       "fromPort": "next",
-      "toNodeId": "node_act_1786225961313",
+      "toNodeId": "node_1787598512711",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1786794101645",
-      "fromNodeId": "node_act_1786225961313",
+      "id": "conn_1787598530610",
+      "fromNodeId": "node_1787598512711",
       "fromPort": "next",
-      "toNodeId": "node_act_1786226034323",
+      "toNodeId": "node_1787598526111",
       "toPort": "exec_in"
     }
   ]

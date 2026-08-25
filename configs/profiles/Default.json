@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 1,
     "pan": {
-      "x": 73,
-      "y": 130
+      "x": 549,
+      "y": 207
     }
   },
   "nodes": [
@@ -15,7 +15,7 @@
       "title": "Btn Start Heal",
       "position": {
         "x": 100,
-        "y": 150
+        "y": 100
       },
       "data": {
         "enabled": true,
@@ -50,7 +50,7 @@
       "title": "Btn Start Heal Rain",
       "position": {
         "x": 100,
-        "y": 350
+        "y": 300
       },
       "data": {
         "enabled": true,
@@ -85,7 +85,7 @@
       "title": "Btn Full Buff",
       "position": {
         "x": 100,
-        "y": 540
+        "y": 500
       },
       "data": {
         "enabled": true,
@@ -129,7 +129,7 @@
       "title": "Stop All ",
       "position": {
         "x": 940,
-        "y": 360
+        "y": 370
       },
       "data": {
         "enabled": true,

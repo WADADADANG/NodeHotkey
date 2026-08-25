@@ -29,8 +29,8 @@
       "type": "loop",
       "title": "Multi Heal Rain",
       "position": {
-        "x": 430,
-        "y": 100
+        "x": 440,
+        "y": 150
       },
       "data": {
         "enabled": true,
