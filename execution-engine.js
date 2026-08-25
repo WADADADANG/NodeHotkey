@@ -194,7 +194,8 @@ class NodeExecutionEngine {
       key_hold: 'key_hold',
       macro_group: 'macro_group',
       sequencer: 'sequencer',
-      loop_scheduler: 'loop_scheduler'
+      loop_scheduler: 'loop_scheduler',
+      variable: 'variable'
     };
 
     const actions = [];
@@ -234,6 +235,13 @@ class NodeExecutionEngine {
         controlTargetIds: Array.isArray(d.controlTargetIds) ? d.controlTargetIds : (d.controlTargetId ? [d.controlTargetId] : []),
         conditionTargetId: d.conditionTargetId || '',
         conditionRule: d.conditionRule || 'is_running',
+        conditionValue: d.conditionValue !== undefined ? d.conditionValue : '',
+        varName: d.varName || node.title || '',
+        varType: d.varType || 'boolean',
+        scope: d.scope || 'client',
+        initialValue: d.initialValue !== undefined ? d.initialValue : 'false',
+        operation: d.operation || 'toggle',
+        opValue: d.opValue !== undefined ? d.opValue : '1',
         stopScope: d.stopScope || 'all',
         showOverlayNotice: d.showOverlayNotice !== false,
         soundSource: d.soundSource || 'preset',

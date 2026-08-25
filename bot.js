@@ -103,6 +103,7 @@ let activeOnceBuffSequences = {};
 let isBuffSequenceRunning = {};
 let isSequencerRunning = {};
 let buffSequenceTokens = {};  // Per-action cancellation tokens: { actionId: tokenNumber }
+let profileVariables = {};
 global.activeLoopStates = activeLoopStates;
 global.activeSequencerLoops = activeSequencerLoops;
 global.activeOnceSequencers = activeOnceSequencers;
@@ -111,6 +112,7 @@ global.isBuffSequenceRunning = isBuffSequenceRunning;
 global.isSequencerRunning = isSequencerRunning;
 global.pressedRemapKeys = pressedRemapKeys;
 global.activeHoldStates = activeHoldStates;
+global.profileVariables = profileVariables;
 let isSystemInitialized = false;
 let overlayProcess = null;
 let lastEnableOverlaySetting = true;
@@ -2497,6 +2499,77 @@ async function runEmitEventAction(action, callStack) {
     await fireChain(action, 'onFired', resolvedStack);
 }
 
+function getVariableKey(action, clientOverride = null) {
+    const scope = action.scope || 'client';
+    const pName = action._profileName || 'Active';
+    const varId = action.id;
+    const clientStr = scope === 'global' ? 'global' : String(clientOverride !== null ? clientOverride : (action.targetClient || '1'));
+    return { pName, varId, clientStr };
+}
+
+function getVariableValue(action, clientOverride = null) {
+    const { pName, varId, clientStr } = getVariableKey(action, clientOverride);
+    if (!global.profileVariables[pName]) global.profileVariables[pName] = {};
+    if (!global.profileVariables[pName][varId]) global.profileVariables[pName][varId] = {};
+
+    if (global.profileVariables[pName][varId][clientStr] !== undefined) {
+        return global.profileVariables[pName][varId][clientStr];
+    }
+
+    // Fallback to initialValue parsed according to varType
+    const vType = action.varType || 'boolean';
+    const init = action.initialValue;
+    if (vType === 'boolean') {
+        return init === true || String(init) === 'true';
+    } else if (vType === 'number') {
+        return parseFloat(init) || 0;
+    } else {
+        return String(init !== undefined ? init : '');
+    }
+}
+
+function setVariableValue(action, val, clientOverride = null) {
+    const { pName, varId, clientStr } = getVariableKey(action, clientOverride);
+    if (!global.profileVariables[pName]) global.profileVariables[pName] = {};
+    if (!global.profileVariables[pName][varId]) global.profileVariables[pName][varId] = {};
+    global.profileVariables[pName][varId][clientStr] = val;
+    return val;
+}
+
+async function runVariableAction(action, callStack) {
+    if (global.isSuspended) return;
+    const vType = action.varType || 'boolean';
+    const op = action.operation || 'toggle';
+    const opVal = action.opValue;
+    const currentVal = getVariableValue(action);
+
+    let nextVal = currentVal;
+    if (vType === 'boolean') {
+        if (op === 'toggle') nextVal = !currentVal;
+        else if (op === 'set_true') nextVal = true;
+        else if (op === 'set_false') nextVal = false;
+        else if (op === 'reset') {
+            const init = action.initialValue;
+            nextVal = (init === true || String(init) === 'true');
+        }
+    } else if (vType === 'number') {
+        const curNum = typeof currentVal === 'number' ? currentVal : (parseFloat(currentVal) || 0);
+        const step = parseFloat(opVal) || 0;
+        if (op === 'set_value') nextVal = step;
+        else if (op === 'increment') nextVal = curNum + step;
+        else if (op === 'decrement') nextVal = curNum - step;
+        else if (op === 'reset') nextVal = parseFloat(action.initialValue) || 0;
+    } else {
+        if (op === 'set_value') nextVal = String(opVal !== undefined ? opVal : '');
+        else if (op === 'reset') nextVal = String(action.initialValue !== undefined ? action.initialValue : '');
+    }
+
+    setVariableValue(action, nextVal);
+    console.log(`📦 [Variable] "${action.name}" (${action.varName || action.name}) ➔ Changed from [${currentVal}] to [${nextVal}] (Op: ${op})`);
+    emitSignal(action.id, 'onComplete');
+    await fireChain(action, 'onComplete', callStack);
+}
+
 // Unified trigger entry point
 function handleActionTrigger(act) {
     if (global.isSuspended) return;
@@ -2540,6 +2613,8 @@ function handleActionTrigger(act) {
         runEmergencyStopAction(act).catch(err => console.error(`Error in runEmergencyStopAction:`, err));
     } else if (act.mode === 'emit_event' || act.mode === 'send_event') {
         runEmitEventAction(act).catch(err => console.error(`Error in runEmitEventAction:`, err));
+    } else if (act.mode === 'variable') {
+        runVariableAction(act).catch(err => console.error(`Error in runVariableAction:`, err));
     } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence') {
         if (act.modeType === 'once') {
             runCastSequencerOnce(act).catch(err => console.error(`Error in runCastSequencerOnce:`, err));
@@ -2649,6 +2724,8 @@ async function runChainedAction(action, callStack) {
         await runEmergencyStopAction(action, callStack).catch(err => console.error(`[Chain Error] runEmergencyStopAction:`, err));
     } else if (action.mode === 'emit_event' || action.mode === 'send_event') {
         await runEmitEventAction(action, callStack).catch(err => console.error(`[Chain Error] runEmitEventAction:`, err));
+    } else if (action.mode === 'variable') {
+        await runVariableAction(action, callStack).catch(err => console.error(`[Chain Error] runVariableAction:`, err));
     } else if (action.mode === 'sequencer' || action.mode === 'cast_sequence') {
         if (action.modeType === 'once') {
             await runCastSequencerOnce(action, callStack).catch(err => console.error(`[Chain Error] runCastSequencerOnce:`, err));
@@ -2838,6 +2915,8 @@ async function runActionControl(act, callStack) {
             if (op === 'start' || op === 'toggle') {
                 await runSinglePressAction(targetAction, resolvedStack).catch(err => console.error(err));
             }
+        } else if (targetAction.mode === 'variable') {
+            await runVariableAction(targetAction, resolvedStack).catch(err => console.error(err));
         } else if (targetAction.mode === 'control' || targetAction.mode === 'action_control') {
             await runActionControl(targetAction, resolvedStack).catch(err => console.error(err));
         } else if (targetAction.mode === 'branch' || targetAction.mode === 'action_condition') {
@@ -2887,13 +2966,43 @@ async function runActionCondition(act, callStack) {
     }
     resolvedStack.add(stackKey);
 
-    const isRunning = isActionRunning(targetId);
-    const isTrue = (rule === 'is_running') ? isRunning : !isRunning;
-
-    const targetAct = activeActions.find(a => a.id === targetId);
+    const targetAct = activeActions.find(a => a.id === targetId || a.id === `node_${targetId}` || (a.nodeId && a.nodeId === targetId));
     const targetName = targetAct ? targetAct.name : targetId;
+    let isTrue = false;
 
-    console.log(`[Condition Check] "${act.name}": Checking target "${targetName}" (${rule}) ➔ Result: ${isTrue ? 'TRUE' : 'FALSE'}`);
+    if (targetAct && targetAct.mode === 'variable') {
+        const varVal = getVariableValue(targetAct);
+        const vType = targetAct.varType || 'boolean';
+        const condVal = act.conditionValue;
+
+        if (vType === 'boolean') {
+            const boolVal = (varVal === true || String(varVal) === 'true');
+            if (rule === 'is_true') isTrue = boolVal;
+            else if (rule === 'is_false') isTrue = !boolVal;
+            else isTrue = boolVal;
+        } else if (vType === 'number') {
+            const numVal = typeof varVal === 'number' ? varVal : (parseFloat(varVal) || 0);
+            const compareNum = parseFloat(condVal) || 0;
+            if (rule === 'equals') isTrue = (numVal === compareNum);
+            else if (rule === 'not_equals') isTrue = (numVal !== compareNum);
+            else if (rule === 'greater_than') isTrue = (numVal > compareNum);
+            else if (rule === 'less_than') isTrue = (numVal < compareNum);
+            else if (rule === 'greater_or_equal') isTrue = (numVal >= compareNum);
+            else if (rule === 'less_or_equal') isTrue = (numVal <= compareNum);
+            else isTrue = (numVal === compareNum);
+        } else {
+            const strVal = String(varVal !== undefined ? varVal : '');
+            const compareStr = String(condVal !== undefined ? condVal : '');
+            if (rule === 'equals') isTrue = (strVal === compareStr);
+            else if (rule === 'not_equals') isTrue = (strVal !== compareStr);
+            else isTrue = (strVal === compareStr);
+        }
+        console.log(`[Condition Check] "${act.name}": Checking Variable "${targetName}" [Value: ${varVal}] (${rule} vs "${condVal !== undefined ? condVal : ''}") ➔ Result: ${isTrue ? 'TRUE' : 'FALSE'}`);
+    } else {
+        const isRunning = isActionRunning(targetId);
+        isTrue = (rule === 'is_running') ? isRunning : !isRunning;
+        console.log(`[Condition Check] "${act.name}": Checking target "${targetName}" (${rule}) ➔ Result: ${isTrue ? 'TRUE' : 'FALSE'}`);
+    }
 
     if (isTrue) {
         emitSignal(act.id, 'onTrue');

@@ -91,7 +91,8 @@ class NodeCanvasEditor {
       sound: canvasT('canvas_sound', isEn ? 'Sound Alert' : 'เสียงแจ้งเตือน (Sound)'),
       key_hold: canvasT('canvas_key_hold', isEn ? 'Key Hold' : 'กดค้าง (Hold)'),
       sequencer: canvasT('canvas_sequencer', isEn ? 'Cast Sequencer' : 'จัดคิวสกิล (Sequencer)'),
-      loop_scheduler: canvasT('canvas_loop_scheduler', isEn ? 'Loop Scheduler' : 'ตารางลูปกันชน (Scheduler)')
+      loop_scheduler: canvasT('canvas_loop_scheduler', isEn ? 'Loop Scheduler' : 'ตารางลูปกันชน (Scheduler)'),
+      variable: canvasT('canvas_variable', isEn ? 'Variable / State' : 'ตัวแปร / สถานะ (Variable)')
     };
     return map[type] || canvasT(`canvas_${type}`, (type || '').toUpperCase());
   }
@@ -571,7 +572,8 @@ class NodeCanvasEditor {
         sound: '🔊',
         emit_event: '📡',
         sequencer: '⚔️',
-        loop_scheduler: '⏱️'
+        loop_scheduler: '⏱️',
+        variable: '📦'
       };
 
       const icon = iconMap[node.type] || '📦';
@@ -849,6 +851,36 @@ class NodeCanvasEditor {
           </div>
           <div style="background:rgba(0,0,0,0.25); border-radius:6px; padding:4px 8px; margin-top:6px; border:1px solid rgba(255,255,255,0.06); max-height:260px; overflow-y:auto;">
             ${stepItemsHTML || '<div style="font-size:10px; color:var(--muted); text-align:center;">No steps added</div>'}
+          </div>
+        `;
+      } else if (node.type === 'variable') {
+        const vType = node.data?.varType || 'boolean';
+        const vScope = node.data?.scope || 'client';
+        const op = node.data?.operation || 'toggle';
+        const scopeLabel = vScope === 'global' ? 'Global (All)' : `Client ${node.data?.targetClient || '1'}`;
+        const typeMap = {
+          boolean: '🔘 Boolean',
+          number: '🔢 Number',
+          string: '📝 Text'
+        };
+        const opMap = {
+          toggle: '🔄 Toggle',
+          set_true: '🟢 Set True',
+          set_false: '🔴 Set False',
+          set_value: `✏️ Set: ${node.data?.opValue !== undefined ? node.data.opValue : '-'}`,
+          increment: `➕ +${node.data?.opValue !== undefined ? node.data.opValue : 1}`,
+          decrement: `➖ -${node.data?.opValue !== undefined ? node.data.opValue : 1}`,
+          reset: '🔁 Reset'
+        };
+        bodyHTML = `
+          <div class="node-info-row">
+            <span>Type:</span> <span class="node-info-value" style="color:#a855f7; font-weight:700;">${typeMap[vType] || vType}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Scope:</span> <span class="node-info-value" style="color:#38bdf8;">${scopeLabel}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Op:</span> <span class="node-info-value" style="color:#10b981; font-weight:700;">${opMap[op] || op}</span>
           </div>
         `;
       } else {
@@ -1752,12 +1784,23 @@ class NodeCanvasEditor {
       emit_event: 'Emit Event',
       key_hold: 'Key Hold Toggle',
       sequencer: 'Cast Sequencer',
-      loop_scheduler: 'Loop Scheduler'
+      loop_scheduler: 'Loop Scheduler',
+      variable: 'isBuffActive'
     };
 
     let initialData = { enabled: true };
     if (type === 'trigger') {
       initialData = { triggerType: 'keyboard', triggerValue: '1', enabled: true };
+    } else if (type === 'variable') {
+      initialData = {
+        varType: 'boolean', // 'boolean' | 'number' | 'string'
+        scope: 'client',    // 'client' | 'global'
+        targetClient: '1',
+        initialValue: 'false',
+        operation: 'toggle', // 'toggle' | 'set_true' | 'set_false' | 'set_value' | 'increment' | 'decrement' | 'reset'
+        opValue: '1',
+        enabled: true
+      };
     } else if (type === 'emit_event') {
       initialData = { eventName: 'party_heal', enabled: true };
     } else if (type === 'loop_scheduler') {
@@ -2366,6 +2409,8 @@ class NodeCanvasEditor {
         </div>
         ${this.renderSkillCooldownHelper(node)}
       `;
+    } else if (node.type === 'variable') {
+      fieldsHTML += this.renderVariableHelper(node);
     } else if (node.type === 'macro_group') {
       fieldsHTML += this.renderMacroGroupHelper(node);
     } else {
@@ -2392,6 +2437,108 @@ class NodeCanvasEditor {
 
     formBody.innerHTML = fieldsHTML;
     this.inspectorPanel.classList.add('open');
+  }
+
+  renderVariableHelper(node) {
+    const vName = node.data?.varName || node.title || 'isBuffActive';
+    const vType = node.data?.varType || 'boolean';
+    const vScope = node.data?.scope || 'client';
+    const initVal = node.data?.initialValue !== undefined ? node.data.initialValue : 'false';
+    const op = node.data?.operation || 'toggle';
+    const opVal = node.data?.opValue !== undefined ? node.data.opValue : '1';
+
+    let initValHTML = '';
+    if (vType === 'boolean') {
+      initValHTML = `
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'initialValue', this.value === 'true')">
+          <option value="false" ${String(initVal) === 'false' ? 'selected' : ''}>🔴 False (Off)</option>
+          <option value="true" ${String(initVal) === 'true' ? 'selected' : ''}>🟢 True (On)</option>
+        </select>
+      `;
+    } else if (vType === 'number') {
+      initValHTML = `
+        <input type="number" class="inspector-input" value="${initVal}" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'initialValue', parseFloat(this.value) || 0)" />
+      `;
+    } else {
+      initValHTML = `
+        <input type="text" class="inspector-input" value="${initVal}" placeholder="Initial text..." onchange="window.nodeCanvas.updateNodeData('${node.id}', 'initialValue', this.value)" />
+      `;
+    }
+
+    let opOptionsHTML = '';
+    let opValInputHTML = '';
+
+    if (vType === 'boolean') {
+      opOptionsHTML = `
+        <option value="toggle" ${op === 'toggle' ? 'selected' : ''}>${canvasT('var_op_toggle', '🔄 Toggle (True ⇄ False)')}</option>
+        <option value="set_true" ${op === 'set_true' ? 'selected' : ''}>${canvasT('var_op_set_true', '🟢 Set True (Enable)')}</option>
+        <option value="set_false" ${op === 'set_false' ? 'selected' : ''}>${canvasT('var_op_set_false', '🔴 Set False (Disable)')}</option>
+        <option value="reset" ${op === 'reset' ? 'selected' : ''}>${canvasT('var_op_reset', '🔁 Reset to Initial')}</option>
+      `;
+    } else if (vType === 'number') {
+      opOptionsHTML = `
+        <option value="set_value" ${op === 'set_value' ? 'selected' : ''}>${canvasT('var_op_set_value', '✏️ Set Value')}</option>
+        <option value="increment" ${op === 'increment' ? 'selected' : ''}>${canvasT('var_op_increment', '➕ Increment (+step)')}</option>
+        <option value="decrement" ${op === 'decrement' ? 'selected' : ''}>${canvasT('var_op_decrement', '➖ Decrement (-step)')}</option>
+        <option value="reset" ${op === 'reset' ? 'selected' : ''}>${canvasT('var_op_reset', '🔁 Reset to Initial')}</option>
+      `;
+      if (op === 'set_value' || op === 'increment' || op === 'decrement') {
+        opValInputHTML = `
+          <div class="inspector-field-group" style="margin-top:6px;">
+            <label class="inspector-label">${canvasT('inspector_var_op_value', 'Value / Step Amount')}</label>
+            <input type="number" class="inspector-input" value="${opVal}" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'opValue', parseFloat(this.value) || 0)" />
+          </div>
+        `;
+      }
+    } else {
+      opOptionsHTML = `
+        <option value="set_value" ${op === 'set_value' ? 'selected' : ''}>${canvasT('var_op_set_value', '✏️ Set Value')}</option>
+        <option value="reset" ${op === 'reset' ? 'selected' : ''}>${canvasT('var_op_reset', '🔁 Reset to Initial')}</option>
+      `;
+      if (op === 'set_value') {
+        opValInputHTML = `
+          <div class="inspector-field-group" style="margin-top:6px;">
+            <label class="inspector-label">${canvasT('inspector_var_op_value', 'New Text Value')}</label>
+            <input type="text" class="inspector-input" value="${opVal}" placeholder="New value..." onchange="window.nodeCanvas.updateNodeData('${node.id}', 'opValue', this.value)" />
+          </div>
+        `;
+      }
+    }
+
+    return `
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_var_scope', 'Variable Scope')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'scope', this.value); window.nodeCanvas.openInspector('${node.id}');">
+          <option value="client" ${vScope === 'client' ? 'selected' : ''}>${canvasT('var_scope_client', '🎯 Client Screen Specific')}</option>
+          <option value="global" ${vScope === 'global' ? 'selected' : ''}>${canvasT('var_scope_global', '🌐 Global (Shared All Clients)')}</option>
+        </select>
+      </div>
+      ${vScope === 'client' ? `
+        <div class="inspector-field-group">
+          <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen')}</label>
+          ${this.renderClientButtonSelector(node)}
+        </div>
+      ` : ''}
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_var_type', 'Variable Type')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'varType', this.value); window.nodeCanvas.openInspector('${node.id}');">
+          <option value="boolean" ${vType === 'boolean' ? 'selected' : ''}>${canvasT('var_type_boolean', '🔘 Boolean (True / False)')}</option>
+          <option value="number" ${vType === 'number' ? 'selected' : ''}>${canvasT('var_type_number', '🔢 Number (Counter / Value)')}</option>
+          <option value="string" ${vType === 'string' ? 'selected' : ''}>${canvasT('var_type_string', '📝 Text (String)')}</option>
+        </select>
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_var_initial', 'Initial Value (Default)')}</label>
+        ${initValHTML}
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_var_operation', 'Operation on Exec In')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'operation', this.value); window.nodeCanvas.openInspector('${node.id}');">
+          ${opOptionsHTML}
+        </select>
+        ${opValInputHTML}
+      </div>
+    `;
   }
 
   renderIntervalHelper(node) {
@@ -3279,14 +3426,80 @@ class NodeCanvasEditor {
     const rawTargetId = node.data?.conditionTargetId || '';
     const canonicalTargetId = rawTargetId.startsWith('node_') ? rawTargetId.replace('node_', '') : rawTargetId;
     const rule = node.data?.conditionRule || 'is_running';
+    const condVal = node.data?.conditionValue !== undefined ? node.data.conditionValue : '';
     const nonCheckableTypes = ['trigger', 'branch', 'control', 'emergency_stop'];
     const checkableNodes = this.nodes.filter(n => n.id !== node.id && !nonCheckableTypes.includes(n.type));
 
+    const selectedTargetNode = this.nodes.find(n => {
+      let actId = n.data?.actionId || (n.id.startsWith('node_') ? n.id.replace('node_', '') : n.id);
+      if (actId.startsWith('node_')) actId = actId.replace('node_', '');
+      return actId === canonicalTargetId || n.id === rawTargetId;
+    });
+
+    const isVariableTarget = selectedTargetNode && selectedTargetNode.type === 'variable';
+    const varType = selectedTargetNode?.data?.varType || 'boolean';
+
+    let rulesHTML = '';
+    let valueInputHTML = '';
+
+    if (isVariableTarget) {
+      if (varType === 'boolean') {
+        const booleanRule = (rule === 'is_false') ? 'is_false' : 'is_true';
+        rulesHTML = `
+          <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionRule', this.value)">
+            <option value="is_true" ${booleanRule === 'is_true' ? 'selected' : ''}>🟢 ${canvasT('conditionIsTrue', 'Is True (On)')}</option>
+            <option value="is_false" ${booleanRule === 'is_false' ? 'selected' : ''}>🔴 ${canvasT('conditionIsFalse', 'Is False (Off)')}</option>
+          </select>
+        `;
+      } else if (varType === 'number') {
+        const numRule = (rule === 'is_running' || rule === 'is_true') ? 'equals' : rule;
+        rulesHTML = `
+          <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionRule', this.value)">
+            <option value="equals" ${numRule === 'equals' ? 'selected' : ''}>${canvasT('conditionEquals', 'Equals (==)')}</option>
+            <option value="not_equals" ${numRule === 'not_equals' ? 'selected' : ''}>${canvasT('conditionNotEquals', 'Not Equals (!=)')}</option>
+            <option value="greater_than" ${numRule === 'greater_than' ? 'selected' : ''}>${canvasT('conditionGreaterThan', 'Greater Than (>)')}</option>
+            <option value="less_than" ${numRule === 'less_than' ? 'selected' : ''}>${canvasT('conditionLessThan', 'Less Than (<)')}</option>
+            <option value="greater_or_equal" ${numRule === 'greater_or_equal' ? 'selected' : ''}>${canvasT('conditionGreaterOrEqual', 'Greater or Equal (>=)')}</option>
+            <option value="less_or_equal" ${numRule === 'less_or_equal' ? 'selected' : ''}>${canvasT('conditionLessOrEqual', 'Less or Equal (<=)')}</option>
+          </select>
+        `;
+        valueInputHTML = `
+          <div class="inspector-field-group" style="margin-top:6px;">
+            <label class="inspector-label">${canvasT('inspector_condition_compare_value', 'Value to Compare')}</label>
+            <input type="number" class="inspector-input" value="${condVal !== '' ? condVal : 0}" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionValue', parseFloat(this.value) || 0)" />
+          </div>
+        `;
+      } else {
+        const strRule = (rule === 'not_equals') ? 'not_equals' : 'equals';
+        rulesHTML = `
+          <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionRule', this.value)">
+            <option value="equals" ${strRule === 'equals' ? 'selected' : ''}>${canvasT('conditionEquals', 'Equals (==)')}</option>
+            <option value="not_equals" ${strRule === 'not_equals' ? 'selected' : ''}>${canvasT('conditionNotEquals', 'Not Equals (!=)')}</option>
+          </select>
+        `;
+        valueInputHTML = `
+          <div class="inspector-field-group" style="margin-top:6px;">
+            <label class="inspector-label">${canvasT('inspector_condition_compare_value', 'Text to Compare')}</label>
+            <input type="text" class="inspector-input" value="${condVal}" placeholder="e.g. phase_1" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionValue', this.value)" />
+          </div>
+        `;
+      }
+    } else {
+      rulesHTML = `
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionRule', this.value)">
+          <option value="is_running" ${rule === 'is_running' ? 'selected' : ''}>🟢 ${canvasT('conditionRunning', 'Is Running')}</option>
+          <option value="is_stopped" ${rule === 'is_stopped' ? 'selected' : ''}>🔴 ${canvasT('conditionStopped', 'Is Stopped')}</option>
+          <option value="on_cooldown" ${rule === 'on_cooldown' ? 'selected' : ''}>⏳ ${canvasT('conditionCooldown', 'Is on Cooldown')}</option>
+          <option value="is_ready" ${rule === 'is_ready' ? 'selected' : ''}>🛡️ ${canvasT('conditionReady', 'Is Ready')}</option>
+        </select>
+      `;
+    }
+
     return `
       <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_condition_target_label', 'Target Action to Check')}</label>
-        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionTargetId', this.value)">
-          <option value="">${canvasT('inspector_select_action_check', '-- Select Action to Check --')}</option>
+        <label class="inspector-label">${canvasT('inspector_condition_target_label', 'Target to Check')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionTargetId', this.value); window.nodeCanvas.openInspector('${node.id}');">
+          <option value="">${canvasT('inspector_select_action_check', '-- Select Action / Variable to Check --')}</option>
           ${checkableNodes.length === 0 ? `
             <option value="" disabled>(${canvasT('inspector_no_other_actions', 'No other actions on canvas')})</option>
           ` : checkableNodes.map(n => {
@@ -3298,12 +3511,8 @@ class NodeCanvasEditor {
       </div>
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_condition_rule_label', 'Condition Evaluation Rule')}</label>
-        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionRule', this.value)">
-          <option value="is_running" ${rule === 'is_running' ? 'selected' : ''}>🟢 ${canvasT('conditionRunning', 'Is Running')}</option>
-          <option value="is_stopped" ${rule === 'is_stopped' ? 'selected' : ''}>🔴 ${canvasT('conditionStopped', 'Is Stopped')}</option>
-          <option value="on_cooldown" ${rule === 'on_cooldown' ? 'selected' : ''}>⏳ ${canvasT('conditionCooldown', 'Is on Cooldown')}</option>
-          <option value="is_ready" ${rule === 'is_ready' ? 'selected' : ''}>🛡️ ${canvasT('conditionReady', 'Is Ready')}</option>
-        </select>
+        ${rulesHTML}
+        ${valueInputHTML}
       </div>
     `;
   }
@@ -3773,9 +3982,18 @@ class NodeCanvasEditor {
         if (d.customCooldownMs) cleanData.customCooldownMs = parseInt(d.customCooldownMs, 10);
       } else if (type === 'delay') {
         cleanData.delayMs = d.delayMs !== undefined ? parseInt(d.delayMs, 10) : 1000;
+      } else if (type === 'variable') {
+        cleanData.varName = d.varName || node.title || 'isBuffActive';
+        cleanData.varType = d.varType || 'boolean';
+        cleanData.scope = d.scope || 'client';
+        cleanData.targetClient = d.targetClient || '1';
+        cleanData.initialValue = d.initialValue !== undefined ? d.initialValue : 'false';
+        cleanData.operation = d.operation || 'toggle';
+        cleanData.opValue = d.opValue !== undefined ? d.opValue : '1';
       } else if (type === 'branch' || type === 'condition') {
         cleanData.conditionTargetId = d.conditionTargetId || '';
         cleanData.conditionRule = d.conditionRule || 'is_running';
+        if (d.conditionValue !== undefined) cleanData.conditionValue = d.conditionValue;
       } else if (type === 'control') {
         cleanData.controlOperation = d.controlOperation || 'toggle';
         cleanData.controlTargetIds = Array.isArray(d.controlTargetIds) ? d.controlTargetIds : (d.controlTargetId ? [d.controlTargetId] : []);
@@ -4117,6 +4335,7 @@ class NodeCanvasEditor {
         name: canvasT('cat_flow', 'Logic & Flow'),
         items: [
           { type: 'branch', icon: '🌿', name: this.getNodeTypeLabel('branch') },
+          { type: 'variable', icon: '📦', name: this.getNodeTypeLabel('variable') },
           { type: 'control', icon: '🎛️', name: this.getNodeTypeLabel('control') },
           { type: 'delay', icon: '⏳', name: this.getNodeTypeLabel('delay') }
         ]

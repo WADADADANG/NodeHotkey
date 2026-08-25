@@ -1,7 +1,7 @@
 {
-  "activeProfile": "[CW] RM 1 2 4",
+  "activeProfile": "Test",
   "activeProfiles": [
-    "[CW] RM 1 2 4"
+    "Test"
   ],
   "disabledClients": [],
   "globalSettings": {

@@ -2,12 +2,164 @@
   "version": "3.1.0",
   "name": "Test",
   "canvas": {
-    "zoom": 0.8019000000000002,
+    "zoom": 0.85,
     "pan": {
-      "x": 664,
-      "y": -87
+      "x": 487,
+      "y": 61
     }
   },
-  "nodes": [],
-  "connections": []
+  "nodes": [
+    {
+      "id": "node_trig_toggle",
+      "type": "trigger",
+      "title": "Global Trigger (Mouse 5)",
+      "position": {
+        "x": 120,
+        "y": 180
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "mouse",
+        "triggerValue": "5",
+        "actionId": "trig_toggle"
+      }
+    },
+    {
+      "id": "node_var_buff",
+      "type": "variable",
+      "title": "isBuffActive",
+      "position": {
+        "x": 460,
+        "y": 180
+      },
+      "data": {
+        "enabled": true,
+        "varName": "isBuffActive",
+        "varType": "boolean",
+        "scope": "client",
+        "targetClient": "1",
+        "initialValue": "false",
+        "operation": "toggle",
+        "opValue": "1",
+        "actionId": "var_buff"
+      }
+    },
+    {
+      "id": "node_sound_alert",
+      "type": "sound",
+      "title": "Sound Alert (Ding)",
+      "position": {
+        "x": 800,
+        "y": 180
+      },
+      "data": {
+        "enabled": true,
+        "soundSource": "preset",
+        "soundPreset": "ding",
+        "volume": 100,
+        "actionId": "sound_alert"
+      }
+    },
+    {
+      "id": "node_trig_action",
+      "type": "trigger",
+      "title": "Global Trigger (F1)",
+      "position": {
+        "x": 110,
+        "y": 420
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "F1",
+        "actionId": "trig_action"
+      }
+    },
+    {
+      "id": "node_branch_check",
+      "type": "branch",
+      "title": "Check isBuffActive",
+      "position": {
+        "x": 460,
+        "y": 420
+      },
+      "data": {
+        "enabled": true,
+        "conditionTargetId": "var_buff",
+        "conditionRule": "is_true",
+        "actionId": "branch_check"
+      }
+    },
+    {
+      "id": "node_key_attack",
+      "type": "key_press",
+      "title": "Attack Skill (Key 1)",
+      "position": {
+        "x": 820,
+        "y": 350
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "1"
+        ],
+        "actionId": "key_attack"
+      }
+    },
+    {
+      "id": "node_key_buff",
+      "type": "key_press",
+      "title": "Buff Skill (Key 2)",
+      "position": {
+        "x": 810,
+        "y": 530
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "2"
+        ],
+        "actionId": "key_buff"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1",
+      "fromNodeId": "node_trig_toggle",
+      "fromPort": "exec_out",
+      "toNodeId": "node_var_buff",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_2",
+      "fromNodeId": "node_var_buff",
+      "fromPort": "next",
+      "toNodeId": "node_sound_alert",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_3",
+      "fromNodeId": "node_trig_action",
+      "fromPort": "exec_out",
+      "toNodeId": "node_branch_check",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_4",
+      "fromNodeId": "node_branch_check",
+      "fromPort": "onTrue",
+      "toNodeId": "node_key_attack",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_5",
+      "fromNodeId": "node_branch_check",
+      "fromPort": "onFalse",
+      "toNodeId": "node_key_buff",
+      "toPort": "exec_in"
+    }
+  ]
 }
