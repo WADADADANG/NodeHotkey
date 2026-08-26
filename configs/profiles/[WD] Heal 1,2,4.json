@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 0.7639750518840006,
     "pan": {
-      "x": -268,
-      "y": -233
+      "x": -1256,
+      "y": -967
     }
   },
   "nodes": [
@@ -58,7 +58,7 @@
         "keys": [
           "2"
         ],
-        "interval": 1000,
+        "interval": 900,
         "jitter": 100,
         "executeImmediately": true,
         "actionId": "1786680432366"
@@ -69,8 +69,8 @@
       "type": "loop",
       "title": "Heal Rain 2",
       "position": {
-        "x": 1830,
-        "y": 1510
+        "x": 1760,
+        "y": 1500
       },
       "data": {
         "enabled": true,
@@ -78,7 +78,7 @@
         "keys": [
           "2"
         ],
-        "interval": 1000,
+        "interval": 900,
         "jitter": 100,
         "executeImmediately": true,
         "actionId": "1786680465713_967"
@@ -98,7 +98,7 @@
         "keys": [
           "2"
         ],
-        "interval": 1000,
+        "interval": 1100,
         "jitter": 100,
         "executeImmediately": true,
         "actionId": "1786680473923_7676"
@@ -196,7 +196,7 @@
       "type": "loop",
       "title": "Loop MP 2",
       "position": {
-        "x": 2140,
+        "x": 2130,
         "y": 1550
       },
       "data": {
@@ -224,7 +224,7 @@
         "keys": [
           "3"
         ],
-        "interval": 11000,
+        "interval": 9400,
         "executeImmediately": false,
         "actionId": "1786684545395_4783"
       }
@@ -453,7 +453,7 @@
       "type": "forwarder",
       "title": "Heal Rain Tab 4",
       "position": {
-        "x": 1490,
+        "x": 1500,
         "y": 1160
       },
       "data": {

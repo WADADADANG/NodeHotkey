@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 0.6210766480991119,
     "pan": {
-      "x": 1171,
-      "y": -470
+      "x": 700,
+      "y": -162
     }
   },
   "nodes": [
@@ -79,7 +79,7 @@
       "title": "Btn Start Psy Knight AOE",
       "position": {
         "x": 280,
-        "y": 840
+        "y": 820
       },
       "data": {
         "enabled": true,
@@ -94,7 +94,7 @@
       "title": "Knight Loop FP 5",
       "position": {
         "x": 1030,
-        "y": 730
+        "y": 710
       },
       "data": {
         "enabled": true,
@@ -113,7 +113,7 @@
       "title": "AC Stop Knight Loop FP 5",
       "position": {
         "x": 1030,
-        "y": 940
+        "y": 920
       },
       "data": {
         "enabled": true,
@@ -130,7 +130,7 @@
       "title": "Psy MaximumCrisis",
       "position": {
         "x": 700,
-        "y": 680
+        "y": 660
       },
       "data": {
         "enabled": true,
@@ -145,7 +145,7 @@
       "title": "Knight  PowerStomp 5",
       "position": {
         "x": 700,
-        "y": 840
+        "y": 820
       },
       "data": {
         "enabled": true,
@@ -159,8 +159,8 @@
       "type": "trigger",
       "title": "Global Trigger",
       "position": {
-        "x": 270,
-        "y": 1710
+        "x": 860,
+        "y": 470
       },
       "data": {
         "enabled": true,
@@ -174,8 +174,8 @@
       "type": "trigger",
       "title": "Global Trigger",
       "position": {
-        "x": 270,
-        "y": 1570
+        "x": 860,
+        "y": 330
       },
       "data": {
         "enabled": true,
@@ -189,8 +189,8 @@
       "type": "key_press",
       "title": "Knight Buff HOS",
       "position": {
-        "x": 590,
-        "y": 1570
+        "x": 1180,
+        "y": 330
       },
       "data": {
         "enabled": true,
@@ -208,7 +208,7 @@
       "title": "Knight  PowerStomp 6",
       "position": {
         "x": 700,
-        "y": 1000
+        "y": 980
       },
       "data": {
         "enabled": true,
@@ -223,7 +223,7 @@
       "title": "Knight Loop FP 6",
       "position": {
         "x": 1030,
-        "y": 1080
+        "y": 1060
       },
       "data": {
         "enabled": true,
@@ -242,7 +242,7 @@
       "title": "AC Stop Knight Loop FP 6",
       "position": {
         "x": 1030,
-        "y": 1290
+        "y": 1270
       },
       "data": {
         "enabled": true,
@@ -258,8 +258,8 @@
       "type": "emergency_stop",
       "title": "STOP ALL",
       "position": {
-        "x": 590,
-        "y": 1710
+        "x": 1180,
+        "y": 470
       },
       "data": {
         "enabled": true,
@@ -273,8 +273,8 @@
       "type": "trigger",
       "title": "Btn Merk All ",
       "position": {
-        "x": 258,
-        "y": 1914
+        "x": 1470,
+        "y": 320
       },
       "data": {
         "enabled": true,
@@ -288,8 +288,8 @@
       "type": "key_press",
       "title": "Single Key Press",
       "position": {
-        "x": 590,
-        "y": 1920
+        "x": 1790,
+        "y": 320
       },
       "data": {
         "enabled": true,
@@ -299,6 +299,70 @@
         ],
         "cooldownPresetId": "skill_ringmaster_merkaba-hanzelrusha",
         "actionId": "1787489813291"
+      }
+    },
+    {
+      "id": "node_1787667456642",
+      "type": "trigger",
+      "title": "Btn Start Knight Buff Page 5 & 6",
+      "position": {
+        "x": 1470,
+        "y": 480
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "NUMPAD 9",
+        "actionId": "1787667456642"
+      }
+    },
+    {
+      "id": "node_1787667512836",
+      "type": "key_press",
+      "title": "Single Key Press",
+      "position": {
+        "x": 1800,
+        "y": 480
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "5,6",
+        "keys": [
+          "LEFT ALT + 3"
+        ],
+        "actionId": "1787667512836"
+      }
+    },
+    {
+      "id": "node_1787667538101",
+      "type": "trigger",
+      "title": "Btn Start Use FortuneElixir 1hr All",
+      "position": {
+        "x": 860,
+        "y": 160
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "NUMPAD 4",
+        "actionId": "1787667538101"
+      }
+    },
+    {
+      "id": "node_1787667577344",
+      "type": "key_press",
+      "title": "Single Key Press",
+      "position": {
+        "x": 1190,
+        "y": 160
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "all",
+        "keys": [
+          "LEFT ALT + 9"
+        ],
+        "actionId": "1787667577344"
       }
     }
   ],
@@ -385,6 +449,20 @@
       "fromNodeId": "node_1787489789387",
       "fromPort": "exec_out",
       "toNodeId": "node_1787489813291",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787667516381",
+      "fromNodeId": "node_1787667456642",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1787667512836",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787667582481",
+      "fromNodeId": "node_1787667538101",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1787667577344",
       "toPort": "exec_in"
     }
   ]

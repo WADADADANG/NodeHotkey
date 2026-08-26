@@ -14,8 +14,8 @@
       "type": "trigger",
       "title": "Btn Heal Rain",
       "position": {
-        "x": 780,
-        "y": 800
+        "x": 770,
+        "y": 790
       },
       "data": {
         "enabled": true,
@@ -29,8 +29,8 @@
       "type": "loop",
       "title": "Heal Rain",
       "position": {
-        "x": 1370,
-        "y": 930
+        "x": 1360,
+        "y": 920
       },
       "data": {
         "enabled": true,
@@ -287,8 +287,8 @@
       "type": "branch",
       "title": "Check Heal Rain",
       "position": {
-        "x": 1100,
-        "y": 800
+        "x": 1090,
+        "y": 790
       },
       "data": {
         "enabled": true,

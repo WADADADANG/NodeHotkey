@@ -104,6 +104,8 @@ let isBuffSequenceRunning = {};
 let isSequencerRunning = {};
 let buffSequenceTokens = {};  // Per-action cancellation tokens: { actionId: tokenNumber }
 let profileVariables = {};
+let activeSchedulerStates = {};
+let schedulerTokens = {};
 global.activeLoopStates = activeLoopStates;
 global.activeSequencerLoops = activeSequencerLoops;
 global.activeOnceSequencers = activeOnceSequencers;
@@ -113,6 +115,8 @@ global.isSequencerRunning = isSequencerRunning;
 global.pressedRemapKeys = pressedRemapKeys;
 global.activeHoldStates = activeHoldStates;
 global.profileVariables = profileVariables;
+global.activeSchedulerStates = activeSchedulerStates;
+global.schedulerTokens = schedulerTokens;
 let isSystemInitialized = false;
 let overlayProcess = null;
 let lastEnableOverlaySetting = true;
@@ -2131,9 +2135,6 @@ async function runCastSequencerOnce(action, callStack) {
         sendOverlayUpdate();
     }
 }
-
-let activeSchedulerStates = {};
-let schedulerTokens = {};
 
 // Start a Loop Scheduler Action (Multi-Timer Dispatcher with Anti-Collision Guard Queue)
 async function startLoopSchedulerAction(action, callStack) {
