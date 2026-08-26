@@ -106,6 +106,7 @@ let buffSequenceTokens = {};  // Per-action cancellation tokens: { actionId: tok
 let profileVariables = {};
 let activeSchedulerStates = {};
 let schedulerTokens = {};
+let sequencerTokens = {};
 global.activeLoopStates = activeLoopStates;
 global.activeSequencerLoops = activeSequencerLoops;
 global.activeOnceSequencers = activeOnceSequencers;
@@ -117,6 +118,7 @@ global.activeHoldStates = activeHoldStates;
 global.profileVariables = profileVariables;
 global.activeSchedulerStates = activeSchedulerStates;
 global.schedulerTokens = schedulerTokens;
+global.sequencerTokens = sequencerTokens;
 let isSystemInitialized = false;
 let overlayProcess = null;
 let lastEnableOverlaySetting = true;
@@ -1777,19 +1779,39 @@ function stopLoopAction(actionId, actionName) {
     }
 }
 
-// Stop all running loops
+// Stop all running loops, schedulers, sequences, and queues
 function stopAllLoops() {
     for (let act of activeActions) {
         if (act.mode === 'loop') {
             stopLoopAction(act.id, act.name);
         } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence') {
             stopCastSequencerAction(act.id, act.name);
+            sequencerTokens[act.id] = (sequencerTokens[act.id] || 0) + 1;
+        } else if (act.mode === 'loop_scheduler') {
+            stopLoopSchedulerAction(act.id, act.name);
+            schedulerTokens[act.id] = (schedulerTokens[act.id] || 0) + 1;
+        } else if (act.mode === 'buff_sequence') {
+            buffSequenceTokens[act.id] = (buffSequenceTokens[act.id] || 0) + 1;
         }
     }
+    activeOnceSequencers = {};
+    activeOnceBuffSequences = {};
+    global.activeOnceSequencers = activeOnceSequencers;
+    global.activeOnceBuffSequences = activeOnceBuffSequences;
+    Object.keys(isBuffSequenceRunning).forEach(cIdx => {
+        isBuffSequenceRunning[cIdx] = false;
+    });
+    Object.keys(isSequencerRunning).forEach(cIdx => {
+        delete isSequencerRunning[cIdx];
+    });
 }
 
-// Stop active loops for a specific client
+// Stop active loops, schedulers, and sequences for a specific client
 function stopLoopsForClient(clientIndex) {
+    const clientStr = String(clientIndex);
+    isBuffSequenceRunning[clientStr] = false;
+    delete isSequencerRunning[clientStr];
+
     for (let act of activeActions) {
         const targets = getActionTargets(act.targetClient).map(x => parseInt(x, 10));
         if (targets.includes(clientIndex)) {
@@ -1797,6 +1819,12 @@ function stopLoopsForClient(clientIndex) {
                 stopLoopAction(act.id, act.name);
             } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence') {
                 stopCastSequencerAction(act.id, act.name);
+                sequencerTokens[act.id] = (sequencerTokens[act.id] || 0) + 1;
+            } else if (act.mode === 'loop_scheduler') {
+                stopLoopSchedulerAction(act.id, act.name);
+                schedulerTokens[act.id] = (schedulerTokens[act.id] || 0) + 1;
+            } else if (act.mode === 'buff_sequence') {
+                buffSequenceTokens[act.id] = (buffSequenceTokens[act.id] || 0) + 1;
             }
         }
     }
@@ -1968,8 +1996,6 @@ async function toggleKeyHoldAction(action, callStack) {
     fireChain(action, nextState ? 'onEnable' : 'onDisable', callStack);
     sendOverlayUpdate();
 }
-
-let sequencerTokens = {};
 
 // Start a Sequencer Loop Action (Continuous execution with step delays and interval rest)
 async function startCastSequencerLoop(action, callStack) {

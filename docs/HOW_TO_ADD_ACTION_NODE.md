@@ -201,9 +201,53 @@ actions.push({
 
 ---
 
+### 🔹 ขั้นตอนที่ 6: จัดการวงจรการหยุดทำงาน (Lifecycle & Stop Handlers)
+
+หากโหนดที่สร้างขึ้นเป็นประเภท **การทำงานต่อเนื่อง (Loop / Multi-Timer / Continuous Async)**:
+
+1. **สร้าง Cancellation Token หรือ State Dictionary ใน `bot.js`**:
+   - ประกาศตัวแปร State ที่ **ส่วนหัวของไฟล์ `bot.js`** (Top-level globals) เสมอ
+   ```javascript
+   let activeMyActionStates = {};
+   let myActionTokens = {};
+   global.activeMyActionStates = activeMyActionStates;
+   global.myActionTokens = myActionTokens;
+   ```
+
+2. **เขียนฟังก์ชันสั่งหยุด `stopMyAction(actionId, actionName)`**:
+   ```javascript
+   function stopMyAction(actionId, actionName) {
+     myActionTokens[actionId] = (myActionTokens[actionId] || 0) + 1;
+     const state = activeMyActionStates[actionId];
+     if (state) {
+       state.running = false;
+       if (state.timeout) clearTimeout(state.timeout);
+       const act = activeActions.find(a => a.id === actionId);
+       if (act) fireChain(act, 'onStop');
+     }
+     sendOverlayUpdate();
+   }
+   ```
+
+3. **ลงทะเบียนใน `stopAllLoops()` และ `stopLoopsForClient(clientIndex)`**:
+   - เพื่อให้เวลาผู้ใช้กดปุ่ม `END` (Emergency Suspend / Stop All) หรือคำสั่งหยุดเฉพาะจอ ระบบจะสั่งหยุดโหนดนี้ด้วยเสมอ
+   ```javascript
+   // ใน stopAllLoops()
+   } else if (act.mode === 'my_action') {
+       stopMyAction(act.id, act.name);
+   }
+   ```
+
+4. **ลงทะเบียนใน `runEmergencyStopAction()` และ `getClientStatuses()`**:
+   - เพื่อให้หน้าต่าง **Overlay HUD** แสดงและเคลียร์สถานะได้อย่างถูกต้องแบบ Real-time
+
+---
+
 ## ✅ สรุป Checklist สำหรับนักพัฒนา
 - [ ] เพิ่ม Definition & UI Component ใน `public/js/canvas.js`
 - [ ] เพิ่ม Type Map ใน `converter.js`
 - [ ] เพิ่ม Schema Field ใน `execution-engine.js`
 - [ ] เขียนฟังก์ชัน Execute และเรียก `fireChain()` ใน `bot.js`
+- [ ] หากเป็น Continuous Action: เขียน `stopAction()`, ลงทะเบียนใน `stopAllLoops()` และ `getClientStatuses()`
 - [ ] เพิ่ม Rule ตรวจสอบใน `public/js/validator.js`
+
