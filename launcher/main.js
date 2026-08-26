@@ -119,9 +119,7 @@ function createTray() {
       {
         label: '❌ Exit All',
         click: () => {
-          app.isQuitting = true;
-          stopBotProcess();
-          app.quit();
+          exitApplicationCleanly();
         }
       }
     ]);
@@ -672,9 +670,48 @@ app.whenReady().then(() => {
   });
 });
 
+function exitApplicationCleanly() {
+  app.isQuitting = true;
+  if (healthCheckInterval) {
+    clearInterval(healthCheckInterval);
+    healthCheckInterval = null;
+  }
+
+  // 1. Destroy tray immediately to remove tray icon from taskbar instantly
+  if (tray) {
+    try { tray.destroy(); } catch (e) {}
+    tray = null;
+  }
+
+  // 2. Hide and destroy all active windows
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    try { overlayWindow.destroy(); } catch (e) {}
+    overlayWindow = null;
+  }
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    try { mainWindow.destroy(); } catch (e) {}
+    mainWindow = null;
+  }
+
+  // 3. Terminate bot core process tree
+  stopBotProcess();
+
+  // 4. Clean exit with hard exit fallback to guarantee zero hang
+  setTimeout(() => {
+    app.quit();
+    setTimeout(() => {
+      process.exit(0);
+    }, 300);
+  }, 100);
+}
+
 app.on('before-quit', () => {
   app.isQuitting = true;
   if (healthCheckInterval) clearInterval(healthCheckInterval);
+  if (tray) {
+    try { tray.destroy(); } catch (e) {}
+    tray = null;
+  }
   stopBotProcess();
 });
 
@@ -683,6 +720,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin' && !app.isQuitting) {
     // Hidden in tray
   } else {
-    app.quit();
+    exitApplicationCleanly();
   }
 });
+
