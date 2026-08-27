@@ -43,6 +43,13 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'ui', 'index.html'));
 
+  // Prevent Mouse Button 4 & 5 (Back / Forward) from reloading/navigating the app
+  mainWindow.on('app-command', (e, cmd) => {
+    if (cmd === 'browser-backward' || cmd === 'browser-forward') {
+      e.preventDefault();
+    }
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
@@ -251,11 +258,13 @@ function createOverlayWindow() {
   overlayWindow = new BrowserWindow({
     width: 210,
     height: 60,
+    minWidth: 210,
+    maxWidth: 210,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
     skipTaskbar: true, // 100% hidden from Taskbar!
-    resizable: true, // Required on Windows for setBounds / setSize
+    resizable: false, // Disables manual cursor border resizing
     hasShadow: false,
     useContentSize: true,
     icon: path.join(PROJECT_DIR, 'icon.ico'),
@@ -552,6 +561,11 @@ ipcMain.handle('update:relaunch-app', () => {
 });
 
 ipcMain.handle('app:open-web', () => openWebDashboard());
+ipcMain.handle('app:open-external', (event, targetUrl) => {
+  if (targetUrl && (targetUrl.startsWith('https://') || targetUrl.startsWith('http://'))) {
+    shell.openExternal(targetUrl);
+  }
+});
 
 ipcMain.on('window:minimize', () => {
   if (mainWindow) mainWindow.minimize();

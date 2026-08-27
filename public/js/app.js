@@ -27,6 +27,13 @@ import {
   renderClientToggles,
   launchClient,
   closeClient,
+  toggleActiveProfilesDropdown,
+  toggleProfileActionsDropdown,
+  closeProfileActionsDropdown,
+  setAllProfilesActive,
+  selectCurrentProfileActive,
+  setGroupProfilesActive,
+  switchToEditProfile,
   triggerUndo,
   triggerRedo,
   toggleCanvasFullscreen,
@@ -118,6 +125,16 @@ window.changeLang = (lang) => {
     updateLanguageUI();
   });
 };
+
+// Listen for Language Switch messages from Electron Host Shell
+window.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'NODEHOTKEY_CHANGE_LANG') {
+    const lang = event.data.lang;
+    if (lang && (lang === 'th' || lang === 'en')) {
+      window.changeLang(lang);
+    }
+  }
+});
 window.onProfileSelectChange = onProfileSelectChange;
 window.activateProfile = activateProfile;
 window.activateOnlyProfile = activateOnlyProfile;
@@ -137,7 +154,13 @@ window.toggleGhostMouseSettings = toggleGhostMouseSettings;
 window.saveCurrentProfile = saveCurrentProfile;
 window.onManualSaveProfile = onManualSaveProfile;
 window.triggerUndo = triggerUndo;
-window.triggerRedo = triggerRedo;
+window.toggleActiveProfilesDropdown = toggleActiveProfilesDropdown;
+window.toggleProfileActionsDropdown = toggleProfileActionsDropdown;
+window.closeProfileActionsDropdown = closeProfileActionsDropdown;
+window.setAllProfilesActive = setAllProfilesActive;
+window.selectCurrentProfileActive = selectCurrentProfileActive;
+window.setGroupProfilesActive = setGroupProfilesActive;
+window.switchToEditProfile = switchToEditProfile;
 window.toggleCanvasFullscreen = toggleCanvasFullscreen;
 window.toggleClientEnable = toggleClientEnable;
 window.launchClient = launchClient;
@@ -513,6 +536,28 @@ async function checkAppUpdate() {
     }
   } catch (e) {}
 }
+
+// Prevent Mouse Button 4 & 5 (Back/Forward) from navigating or reloading the Canvas
+window.addEventListener('mouseup', (e) => {
+  if (e.button === 3 || e.button === 4) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}, true);
+
+window.addEventListener('mousedown', (e) => {
+  if (e.button === 3 || e.button === 4) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}, true);
+
+window.addEventListener('auxclick', (e) => {
+  if (e.button === 3 || e.button === 4) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}, true);
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initApp);

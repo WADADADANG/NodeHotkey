@@ -11,7 +11,7 @@
     "enableOverlay": true,
     "suspendHotkey": "END",
     "ghostMouseJitter": {
-      "enabled": false,
+      "enabled": true,
       "intervalMin": 8000,
       "intervalMax": 25000,
       "maxOffset": 12
@@ -93,6 +93,7 @@
         "w": 919,
         "h": 712
       }
-    }
+    },
+    "useAppMode": true
   }
 }

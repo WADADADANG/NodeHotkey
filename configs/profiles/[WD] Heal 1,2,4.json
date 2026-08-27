@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Heal 1,2,4",
   "canvas": {
-    "zoom": 0.7639750518840006,
+    "zoom": 0.5826065502489727,
     "pan": {
-      "x": -1256,
-      "y": -967
+      "x": -769,
+      "y": -258
     }
   },
   "nodes": [
@@ -158,8 +158,8 @@
       "type": "control",
       "title": "AC Stop Heal Rain All",
       "position": {
-        "x": 2030,
-        "y": 900
+        "x": 2040,
+        "y": 950
       },
       "data": {
         "enabled": true,
@@ -197,7 +197,7 @@
       "title": "Loop MP 2",
       "position": {
         "x": 2130,
-        "y": 1550
+        "y": 1610
       },
       "data": {
         "enabled": true,
@@ -307,7 +307,7 @@
       "title": "AC Stop Loop MP 2",
       "position": {
         "x": 2130,
-        "y": 1750
+        "y": 1810
       },
       "data": {
         "enabled": true,
@@ -469,7 +469,7 @@
       "title": "AC Stop Heal Rain 4",
       "position": {
         "x": 2140,
-        "y": 1170
+        "y": 1240
       },
       "data": {
         "enabled": true,
@@ -541,6 +541,23 @@
         "enabled": true,
         "eventName": "onWEHealRainStarted",
         "actionId": "1786885674397"
+      }
+    },
+    {
+      "id": "node_1787861178664",
+      "type": "key_press",
+      "title": "Buff HOS",
+      "position": {
+        "x": 1970,
+        "y": 820
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "6",
+        "keys": [
+          "8"
+        ],
+        "actionId": "1787861178664"
       }
     }
   ],
@@ -711,6 +728,13 @@
       "fromNodeId": "node_1786680432366",
       "fromPort": "onBeforeStart",
       "toNodeId": "node_1786885674397",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787861183576",
+      "fromNodeId": "node_1786879715668_3660",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_1787861178664",
       "toPort": "exec_in"
     }
   ]

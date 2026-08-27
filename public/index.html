@@ -12,167 +12,121 @@
     rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/canvas.css">
+  <style>
+    .btn-action-item:hover {
+      background: rgba(255, 255, 255, 0.08) !important;
+    }
+    .btn-action-item.danger:hover {
+      background: rgba(239, 68, 68, 0.18) !important;
+      color: #fff !important;
+    }
+  </style>
 </head>
 
 <body>
 
-  <header>
-    <div class="logo">
-      <div class="logo-icon">C</div>
-      <h1 data-i18n="appTitle">NodeHotkey Control Center</h1>
+  <!-- Top Studio Bar: Profile Manager & Actions (Compact Pro Bar) -->
+  <header style="height: 46px; padding: 6px 14px; background: #0b101c; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; gap: 12px; z-index: 1000; position: relative;">
+    <!-- Profile Manager Bar: Left Section (Dropdown Selector) -->
+    <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 320px; max-width: 580px;">
+      <span style="font-size: 11px; font-weight: 800; color: #94a3b8; letter-spacing: 0.5px; white-space: nowrap;" data-i18n="profileManagerTitle">PROFILE</span>
+      
+      <!-- Unified Dropdown Bar -->
+      <div class="custom-multi-dropdown" id="active-profiles-dropdown-wrap" style="position: relative; width: 100%;">
+        <button type="button" id="active-profiles-dropdown-btn" onclick="window.toggleActiveProfilesDropdown(event)" style="width: 100%; background: #131d31; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 4px 10px; color: var(--text); font-family: 'Outfit'; font-size: 12px; outline: none; height: 32px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; text-align: left; transition: border-color 0.15s;">
+          <div id="active-profiles-summary" style="display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; font-weight: 600; flex: 1;">
+            <!-- Summary of Editing + Active profiles -->
+          </div>
+          <span id="active-profiles-count-badge" style="background: #064e3b; border: 1px solid #10b981; color: #34d399; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 800; margin-left: 6px; white-space: nowrap;">0 Active ▾</span>
+        </button>
+
+        <!-- Dropdown Menu Popover -->
+        <div id="active-profiles-menu" style="display: none; position: absolute; top: calc(100% + 6px); left: 0; width: 100%; min-width: 520px; background: #0f172a; border: 1px solid rgba(255,255,255,0.18); border-radius: 8px; box-shadow: 0 16px 40px rgba(0,0,0,0.95); z-index: 10000; padding: 12px; flex-direction: column; gap: 8px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <span data-i18n="activeProfilesHint" style="font-size: 11px; font-weight: 700; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">เลือกโปรไฟล์ที่ต้องการรันบอท (Checkbox) หรือคลิกแก้ไขผัง</span>
+            <div style="display: flex; gap: 5px; flex-shrink: 0;">
+              <button type="button" class="btn btn-ghost" data-i18n="activeProfilesSelectCurrent" onclick="window.selectCurrentProfileActive()" style="padding: 2px 7px; font-size: 10px; border-color: rgba(56,189,248,0.4); color: #38bdf8; background: rgba(56,189,248,0.08); white-space: nowrap;">🎯 Current</button>
+              <button type="button" class="btn btn-ghost" data-i18n="activeProfilesSelectAll" onclick="window.setAllProfilesActive(true)" style="padding: 2px 7px; font-size: 10px; border-color: rgba(16,185,129,0.3); color: #34d399; white-space: nowrap;">✓ Select All</button>
+              <button type="button" class="btn btn-ghost" data-i18n="activeProfilesClearAll" onclick="window.setAllProfilesActive(false)" style="padding: 2px 7px; font-size: 10px; border-color: rgba(239,68,68,0.3); color: #ef4444; white-space: nowrap;">✕ Clear All</button>
+            </div>
+          </div>
+          <div id="active-profiles-list" style="display: flex; flex-direction: column; gap: 4px; max-height: 320px; overflow-y: auto; padding-right: 2px;"></div>
+        </div>
+      </div>
     </div>
-    <div style="display:flex; align-items:center; gap:16px;">
-      <div id="update-badge-container" style="display:none;">
-        <a id="update-badge-link" href="https://github.com/WADADADANG/NodeHotkey" target="_blank" rel="noopener"
-          style="display:flex; align-items:center; gap:6px; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); border-radius:20px; padding:4px 12px; font-size:12px; font-weight:700; color:#fcd34d; text-decoration:none; transition:all 0.2s;" title="Click to view update on GitHub">
-          🚀 <span id="update-badge-text">New Version Available!</span>
-        </a>
-      </div>
-      <div class="lang-switch">
-        <button class="lang-btn en" onclick="changeLang('en')">EN</button>
-        <button class="lang-btn th" onclick="changeLang('th')">TH</button>
-      </div>
-      <div class="live-badge">
-        <div class="live-dot"></div>
-        <span data-i18n="dashboardLive">Dashboard Live</span>
+
+    <!-- Profile Actions Buttons: Right Section (Compact Pro Dropdown) -->
+    <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; position: relative;">
+      <!-- 1. Primary Action: + New Profile -->
+      <button type="button" class="btn btn-ghost" onclick="openNewProfileModal()" style="padding: 4px 12px; font-size: 11px; font-weight: 700; height: 30px; border-color: rgba(56,189,248,0.4); color: #38bdf8; background: rgba(56,189,248,0.1); border-radius: 6px; display: flex; align-items: center; gap: 5px;">
+        <span>➕</span>
+        <span data-i18n="newProfileLabel">New Profile</span>
+      </button>
+
+      <!-- 2. Profile Actions Dropdown Menu -->
+      <div class="custom-multi-dropdown" id="profile-actions-dropdown-wrap" style="position: relative;">
+        <button type="button" id="profile-actions-dropdown-btn" onclick="window.toggleProfileActionsDropdown(event)" style="background: #131d31; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 4px 12px; color: var(--text); font-family: 'Outfit'; font-size: 11px; font-weight: 700; outline: none; height: 30px; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.15s;">
+          <span>⚙️</span>
+          <span data-i18n="profileActionsMenuBtn">Actions ▾</span>
+        </button>
+
+        <!-- Dropdown Menu Popover -->
+        <div id="profile-actions-menu" style="display: none; position: absolute; top: calc(100% + 6px); right: 0; width: 230px; background: #0f172a; border: 1px solid rgba(255,255,255,0.18); border-radius: 8px; box-shadow: 0 16px 40px rgba(0,0,0,0.95); z-index: 10000; padding: 6px; flex-direction: column; gap: 2px;">
+          
+          <button type="button" class="btn-action-item" onclick="window.closeProfileActionsDropdown(); openRenameProfileModal();" style="width: 100%; text-align: left; padding: 7px 10px; font-size: 11.5px; font-weight: 600; color: #e2e8f0; background: transparent; border: none; border-radius: 5px; cursor: pointer; display: flex; align-items: center; transition: background 0.12s;">
+            <span data-i18n="renameProfileBtn">✏️ Rename Profile</span>
+          </button>
+
+          <button type="button" class="btn-action-item" onclick="window.closeProfileActionsDropdown(); openValidatorModal();" style="width: 100%; text-align: left; padding: 7px 10px; font-size: 11.5px; font-weight: 600; color: #e2e8f0; background: transparent; border: none; border-radius: 5px; cursor: pointer; display: flex; align-items: center; transition: background 0.12s;">
+            <span data-i18n="validateProfileBtn">🔍 Validate Profile</span>
+          </button>
+
+          <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 4px 0;"></div>
+
+          <button type="button" class="btn-action-item" onclick="window.closeProfileActionsDropdown(); exportCurrentProfile();" style="width: 100%; text-align: left; padding: 7px 10px; font-size: 11.5px; font-weight: 600; color: #e2e8f0; background: transparent; border: none; border-radius: 5px; cursor: pointer; display: flex; align-items: center; transition: background 0.12s;">
+            <span data-i18n="exportProfileBtn">📤 Export Profile (.json)</span>
+          </button>
+
+          <button type="button" class="btn-action-item" onclick="window.closeProfileActionsDropdown(); triggerImportProfile();" style="width: 100%; text-align: left; padding: 7px 10px; font-size: 11.5px; font-weight: 600; color: #e2e8f0; background: transparent; border: none; border-radius: 5px; cursor: pointer; display: flex; align-items: center; transition: background 0.12s;">
+            <span data-i18n="importProfileBtn">📥 Import Profile (.json)</span>
+          </button>
+          <input type="file" id="import-profile-file-input" accept=".json" style="display: none;" onchange="handleImportProfileFile(event)" />
+
+          <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 4px 0;"></div>
+
+          <button type="button" class="btn-action-item danger" onclick="window.closeProfileActionsDropdown(); deleteProfile();" style="width: 100%; text-align: left; padding: 7px 10px; font-size: 11.5px; font-weight: 600; color: #f87171; background: transparent; border: none; border-radius: 5px; cursor: pointer; display: flex; align-items: center; transition: background 0.12s;">
+            <span data-i18n="deleteProfileBtn">🗑️ Delete Profile</span>
+          </button>
+
+        </div>
       </div>
     </div>
   </header>
 
-  <div class="workspace">
-    <!-- ════════ LEFT PANEL ════════ -->
-    <div class="left-panel">
-
-      <!-- Unified Profile Manager -->
-      <div class="unified-profile-bar" style="display:flex; flex-direction:column; gap:8px; width:100%;">
-        <div style="display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:6px;">
-          <label style="font-size:11px; letter-spacing:0.5px; font-weight:700; color:var(--text); margin:0;" data-i18n="profileManagerTitle">
-            PROFILE MANAGER
-          </label>
-          <div style="display:flex; gap:5px; flex-wrap:wrap;">
-            <button class="btn btn-ghost" onclick="openNewProfileModal()" data-i18n="newProfileBtn" style="padding:2px 8px; font-size:10px;">+ New</button>
-            <button class="btn btn-ghost" onclick="openRenameProfileModal()" data-i18n="renameProfileBtn" style="padding:2px 8px; font-size:10px; border-color:#3b82f6; color:#3b82f6; background:rgba(59,130,246,0.08);">Rename</button>
-            <button class="btn btn-ghost" onclick="exportCurrentProfile()" data-i18n="exportProfileBtn" style="padding:2px 8px; font-size:10px; border-color:#10b981; color:#34d399; background:rgba(16,185,129,0.08);" title="Export profile as .json file">Export</button>
-            <button class="btn btn-ghost" onclick="triggerImportProfile()" data-i18n="importProfileBtn" style="padding:2px 8px; font-size:10px; border-color:#06b6d4; color:#22d3ee; background:rgba(6,182,212,0.08);" title="Import profile from .json file">Import</button>
-            <input type="file" id="import-profile-file-input" accept=".json" style="display:none;" onchange="handleImportProfileFile(event)" />
-            <button class="btn btn-ghost" onclick="openValidatorModal()" data-i18n="validateProfileBtn" style="padding:2px 8px; font-size:10px; border-color:#a855f7; color:#a855f7; background:rgba(168,85,247,0.08);">Validate</button>
-            <button class="btn btn-danger" onclick="deleteProfile()" data-i18n="deleteProfileBtn" style="padding:2px 8px; font-size:10px;">Delete</button>
-          </div>
-        </div>
-
-        <!-- Unified Dropdown Bar -->
-        <div class="custom-multi-dropdown" id="active-profiles-dropdown-wrap" style="position:relative; width:100%;">
-          <button type="button" id="active-profiles-dropdown-btn" onclick="window.toggleActiveProfilesDropdown(event)" style="width:100%; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:6px 12px; color:var(--text); font-family:'Outfit'; font-size:13px; outline:none; min-height:38px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; text-align:left; transition:all 0.2s;">
-            <div id="active-profiles-summary" style="display:flex; align-items:center; gap:8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:600; flex:1;">
-              <!-- Summary of Editing + Active profiles -->
-            </div>
-            <span id="active-profiles-count-badge" style="background:rgba(255,255,255,0.08); color:var(--muted); padding:2px 8px; border-radius:12px; font-size:11px; font-weight:700; margin-left:8px; white-space:nowrap;">0 Active ▾</span>
-          </button>
-
-          <!-- Dropdown Menu Popover -->
-          <div id="active-profiles-menu" style="display:none; position:absolute; top:calc(100% + 6px); left:0; width:100%; min-width:360px; background:#0f172a; border:1px solid rgba(255,255,255,0.16); border-radius:10px; box-shadow:0 16px 40px rgba(0,0,0,0.85); z-index:10000; padding:10px; flex-direction:column; gap:8px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.08);">
-              <span data-i18n="activeProfilesHint" style="font-size:11px; font-weight:700; color:var(--muted);">เลือกโปรไฟล์ทำงาน (Checkbox) หรือคลิกเพื่อแก้ไข (Canvas)</span>
-              <div style="display:flex; gap:5px;">
-                <button type="button" class="btn btn-ghost" data-i18n="activeProfilesSelectCurrent" onclick="window.selectCurrentProfileActive()" style="padding:2px 7px; font-size:9.5px; border-color:rgba(56,189,248,0.4); color:#38bdf8; background:rgba(56,189,248,0.08);">Current</button>
-                <button type="button" class="btn btn-ghost" data-i18n="activeProfilesSelectAll" onclick="window.setAllProfilesActive(true)" style="padding:2px 7px; font-size:9.5px; border-color:rgba(16,185,129,0.3); color:#34d399;">Select All</button>
-                <button type="button" class="btn btn-ghost" data-i18n="activeProfilesClearAll" onclick="window.setAllProfilesActive(false)" style="padding:2px 7px; font-size:9.5px; border-color:rgba(239,68,68,0.3); color:#ef4444;">Clear All</button>
-              </div>
-            </div>
-            <div id="active-profiles-list" style="display:flex; flex-direction:column; gap:4px; max-height:280px; overflow-y:auto; padding-right:2px;">
-              <!-- Grouped Items -->
-            </div>
-          </div>
-        </div>
+  <!-- Full Height Workspace -->
+  <div class="workspace" style="height: calc(100vh - 48px); margin: 0; padding: 0; width: 100vw; display: flex; flex-direction: column; overflow: hidden;">
+    <!-- Hidden Form fields for backward compatibility -->
+    <div style="display:none;">
+      <input type="text" id="target-url-keyword" value="universe.flyff.com">
+      <input type="checkbox" id="enable-overlay-checkbox">
+      <input type="text" id="suspend-hotkey-input" value="END">
+      <button id="gui-suspend-btn"></button>
+      <input type="checkbox" id="ghost-mouse-enabled">
+      <div id="ghost-mouse-settings">
+        <input type="number" id="ghost-mouse-interval-min" value="8000">
+        <input type="number" id="ghost-mouse-interval-max" value="25000">
+        <input type="number" id="ghost-mouse-max-offset" value="12">
       </div>
+      <div id="client-toggles-container"></div>
+    </div>
 
-        <!-- Client Control Center Grid (Clients 1 - 8) -->
-        <div id="client-toggles-wrapper" style="display:flex; flex-direction:column; gap:8px; width:100%; margin-top:10px; border-top:1px dashed rgba(255,255,255,0.08); padding-top:10px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; width:100%; flex-wrap:wrap; gap:4px;">
-            <label style="font-size:11px; letter-spacing:0.5px; font-weight:700; color:var(--text);" data-i18n="activeClientsTitle">
-              🎮 CLIENT CONTROL CENTER (1 - 8)
-            </label>
-            <span style="font-size:10px; color:var(--muted);" data-i18n="activeClientsHint">Launch, pause or close client instances</span>
-          </div>
-          <div id="client-toggles-container"></div>
-        </div>
-        <div
-          style="display:flex; width:100%; align-items:center; gap:12px; margin-top:12px; border-top:1px solid rgba(255,255,255,0.05); padding-top:10px;">
-          <label style="font-size:11px; letter-spacing:0.5px;" data-i18n="targetUrlKeyword">TARGET URL KEYWORD</label>
-          <input type="text" id="target-url-keyword" placeholder="e.g. universe.flyff.com"
-            style="flex:1; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:6px 12px; color:var(--text); font-family:'Outfit'; font-size:13px; outline:none; height:34px;">
-        </div>
-        <div
-          style="display:flex; width:100%; align-items:center; gap:12px; margin-top:10px; border-top:1px dashed rgba(255,255,255,0.05); padding-top:10px;">
-          <label
-            style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); cursor:pointer; font-weight:600;">
-            <input type="checkbox" id="enable-overlay-checkbox" style="accent-color:var(--primary); cursor:pointer;"
-              onchange="saveCurrentProfile()">
-            <span data-i18n="enableOverlayLabel">Enable Desktop Status Overlay</span>
-          </label>
-        </div>
-        <div
-          style="display:flex; flex-direction:column; gap:8px; margin-top:10px; border-top:1px dashed rgba(255,255,255,0.05); padding-top:10px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
-            <label style="font-size:11px; letter-spacing:0.5px; font-weight:700; color:var(--muted);"
-              data-i18n="suspendHotkeyTitle">GLOBAL PAUSE HOTKEY</label>
-            <button id="gui-suspend-btn" class="btn btn-ghost" onclick="toggleSuspendState()"
-              style="padding: 4px 10px; font-size: 10px; margin-left: auto; border-color: #ef4444; color: #ef4444; font-weight:700; border-radius:6px; background:rgba(239,68,68,0.07); cursor:pointer; transition: all 0.2s;">
-              🔴 Pause Bot
-            </button>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; width:100%;">
-            <input type="text" id="suspend-hotkey-input" readonly placeholder="Click to bind key..."
-              style="flex:1; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:6px 12px; color:var(--text); font-family:'JetBrains Mono'; font-size:13px; outline:none; height:34px; text-align:center; font-weight:bold; cursor:pointer;"
-              onfocus="startRecordingSuspendHotkey(this)" onblur="stopRecordingKey(this)">
-            <button class="btn btn-ghost" onclick="openVirtualKeyboard(document.getElementById('suspend-hotkey-input'), null, 'suspend_hotkey')" style="height:34px; padding:0 10px; border-color:var(--primary); color:var(--primary); border-radius:8px;" title="Open Virtual Keyboard Picker">⌨️</button>
-            <button class="btn btn-ghost" onclick="clearSuspendHotkey()"
-              style="height:34px; padding:0 12px; border-color:var(--border); color:var(--muted); border-radius:8px;">✕</button>
-          </div>
-        </div>
-        <div
-          style="display:flex; width:100%; align-items:center; gap:12px; margin-top:10px; border-top:1px dashed rgba(255,255,255,0.05); padding-top:10px;">
-          <label
-            style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); cursor:pointer; font-weight:600;">
-            <input type="checkbox" id="ghost-mouse-enabled" style="accent-color:#a855f7; cursor:pointer;"
-              onchange="toggleGhostMouseSettings(); saveCurrentProfile()">
-            <span>🖱️ Ghost Mouse Jitter</span>
-          </label>
-        </div>
-        <div id="ghost-mouse-settings"
-          style="display:none; margin-top:8px; padding:10px; background:rgba(168,85,247,0.07); border:1px solid rgba(168,85,247,0.2); border-radius:8px; gap:10px; flex-direction:column;">
-          <div style="font-size:11px; color:var(--muted); margin-bottom:4px;">สุ่มขยับเมาส์เล็กน้อยในแท็บเกมเพื่อสร้าง
-            <code>mousemove</code> event ป้องกันการตรวจจับ</div>
-          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-            <label style="font-size:11px; color:var(--muted); display:flex; flex-direction:column; gap:4px;">
-              Min Interval (ms)
-              <input type="number" id="ghost-mouse-interval-min" min="1000" max="60000" step="500" value="8000"
-                style="background:var(--bg-input); border:1px solid var(--border); border-radius:6px; padding:4px 8px; color:var(--text); font-size:12px; outline:none; height:28px;"
-                onchange="saveCurrentProfile()">
-            </label>
-            <label style="font-size:11px; color:var(--muted); display:flex; flex-direction:column; gap:4px;">
-              Max Interval (ms)
-              <input type="number" id="ghost-mouse-interval-max" min="1000" max="120000" step="500" value="25000"
-                style="background:var(--bg-input); border:1px solid var(--border); border-radius:6px; padding:4px 8px; color:var(--text); font-size:12px; outline:none; height:28px;"
-                onchange="saveCurrentProfile()">
-            </label>
-            <label style="font-size:11px; color:var(--muted); display:flex; flex-direction:column; gap:4px;">
-              Max Offset (px)
-              <input type="number" id="ghost-mouse-max-offset" min="1" max="100" step="1" value="12"
-                style="background:var(--bg-input); border:1px solid var(--border); border-radius:6px; padding:4px 8px; color:var(--text); font-size:12px; outline:none; height:28px;"
-                onchange="saveCurrentProfile()">
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <!-- Visual Node Canvas Studio View Container -->
-      <div id="canvas-view-container" style="display:block; width:100%;">
-        <div class="node-canvas-wrapper" id="node-canvas-container"></div>
-      </div>
-
-    </div><!-- /left-panel -->
+    <!-- Visual Node Canvas Studio View Container (100% Height & Width) -->
+    <div id="canvas-view-container" style="display:block; width:100%; height:100%; flex:1; position:relative; overflow:hidden;">
+      <div class="node-canvas-wrapper" id="node-canvas-container" style="width:100%; height:100%;"></div>
+    </div>
   </div>
+
+
 
   <!-- ════════ NEW PROFILE MODAL ════════ -->
   <div class="modal-bg" id="new-profile-modal">
@@ -494,98 +448,70 @@
             </div>
           </div>
 
-          <!-- 2. NAVIGATION & ARROWS SECTION -->
-          <div class="vk-section">
-            <!-- Row 0: Print/Scroll/Pause -->
-            <div class="vk-row">
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('PRINT SCREEN')">PrtSc</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('SCROLL LOCK')">ScrLk</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('PAUSE')">Pause</button>
+          <!-- 2. NAVIGATION & ARROW CLUSTER -->
+          <div class="vk-section" style="width:130px; justify-content:space-between;">
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div class="vk-row">
+                <button type="button" class="keycap u-1" onclick="pressVirtualKey('PRINT SCREEN')">PrtSc</button>
+                <button type="button" class="keycap u-1" onclick="pressVirtualKey('SCROLL LOCK')">ScrLk</button>
+                <button type="button" class="keycap u-1" onclick="pressVirtualKey('PAUSE')">Pause</button>
+              </div>
+              <div class="vk-row">
+                <button type="button" class="keycap u-1" onclick="pressVirtualKey('INSERT')">Ins</button>
+                <button type="button" class="keycap u-1" onclick="pressVirtualKey('HOME')">Home</button>
+                <button type="button" class="keycap u-1" onclick="pressVirtualKey('PAGE UP')">PgUp</button>
+              </div>
+              <div class="vk-row">
+                <button type="button" class="keycap u-1" onclick="pressVirtualKey('DELETE')">Del</button>
+                <button type="button" class="keycap u-1" onclick="pressVirtualKey('END')">End</button>
+                <button type="button" class="keycap u-1" onclick="pressVirtualKey('PAGE DOWN')">PgDn</button>
+              </div>
             </div>
 
-            <!-- Row 1: Insert/Home/PgUp -->
-            <div class="vk-row">
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('INSERT')">Ins</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('HOME')">Home</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('PAGE UP')">PgUp</button>
-            </div>
-
-            <!-- Row 2: Delete/End/PgDn -->
-            <div class="vk-row">
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('DELETE')">Del</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('END')">End</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('PAGE DOWN')">PgDn</button>
-            </div>
-
-            <!-- Row 3: Spacer -->
-            <div class="vk-row">
-              <div class="keycap keycap-blank u-1"></div>
-              <div class="keycap keycap-blank u-1"></div>
-              <div class="keycap keycap-blank u-1"></div>
-            </div>
-
-            <!-- Row 4: Up Arrow -->
-            <div class="vk-row">
-              <div class="keycap keycap-blank u-1"></div>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('UP')">▲</button>
-              <div class="keycap keycap-blank u-1"></div>
-            </div>
-
-            <!-- Row 5: Left/Down/Right Arrows -->
-            <div class="vk-row">
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('LEFT')">◄</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('DOWN')">▼</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('RIGHT')">►</button>
+            <!-- Arrows -->
+            <div style="display:flex; flex-direction:column; gap:6px; margin-top:8px;">
+              <div class="vk-row">
+                <div class="keycap keycap-blank u-1"></div>
+                <button type="button" class="keycap u-1" onclick="pressVirtualKey('UP')">▲</button>
+                <div class="keycap keycap-blank u-1"></div>
+              </div>
+              <div class="vk-row">
+                <button type="button" class="keycap u-1" onclick="pressVirtualKey('LEFT')">◄</button>
+                <button type="button" class="keycap u-1" onclick="pressVirtualKey('DOWN')">▼</button>
+                <button type="button" class="keycap u-1" onclick="pressVirtualKey('RIGHT')">►</button>
+              </div>
             </div>
           </div>
 
-          <!-- 3. NUMPAD SECTION -->
-          <div class="vk-section">
-            <!-- Row 0: Blank spacer -->
-            <div class="vk-row">
-              <div class="keycap keycap-blank u-1"></div>
-              <div class="keycap keycap-blank u-1"></div>
-              <div class="keycap keycap-blank u-1"></div>
-              <div class="keycap keycap-blank u-1"></div>
-            </div>
+          <!-- 3. NUMPAD SECTION (True 4-Column Grid) -->
+          <div class="vk-section" style="width:175px;">
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 5.5px; width: 100%;">
+              <!-- Row 1 -->
+              <button type="button" class="keycap" onclick="pressVirtualKey('NUM LOCK')">Num</button>
+              <button type="button" class="keycap" onclick="pressVirtualKey('NUMPAD DIVIDE')">/</button>
+              <button type="button" class="keycap" onclick="pressVirtualKey('NUMPAD MULTIPLY')">*</button>
+              <button type="button" class="keycap" onclick="pressVirtualKey('NUMPAD MINUS')">-</button>
 
-            <!-- Row 1: NumLock / / * / - -->
-            <div class="vk-row">
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('NUM LOCK')">Num</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('NUMPAD DIVIDE')">/</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('NUMPAD MULTIPLY')">*</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('NUMPAD MINUS')">-</button>
-            </div>
+              <!-- Row 2 -->
+              <button type="button" class="keycap" onclick="pressVirtualKey('NUMPAD 7')">7</button>
+              <button type="button" class="keycap" onclick="pressVirtualKey('NUMPAD 8')">8</button>
+              <button type="button" class="keycap" onclick="pressVirtualKey('NUMPAD 9')">9</button>
+              <button type="button" class="keycap" style="grid-row: span 2; height: 100%; min-height: 81px;" onclick="pressVirtualKey('NUMPAD PLUS')">+</button>
 
-            <!-- Row 2: 7 8 9 + -->
-            <div class="vk-row">
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('NUMPAD 7')">7</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('NUMPAD 8')">8</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('NUMPAD 9')">9</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('NUMPAD PLUS')">+</button>
-            </div>
+              <!-- Row 3 -->
+              <button type="button" class="keycap" onclick="pressVirtualKey('NUMPAD 4')">4</button>
+              <button type="button" class="keycap" onclick="pressVirtualKey('NUMPAD 5')">5</button>
+              <button type="button" class="keycap" onclick="pressVirtualKey('NUMPAD 6')">6</button>
 
-            <!-- Row 3: 4 5 6 -->
-            <div class="vk-row">
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('NUMPAD 4')">4</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('NUMPAD 5')">5</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('NUMPAD 6')">6</button>
-              <div class="keycap keycap-blank u-1"></div>
-            </div>
+              <!-- Row 4 -->
+              <button type="button" class="keycap" onclick="pressVirtualKey('NUMPAD 1')">1</button>
+              <button type="button" class="keycap" onclick="pressVirtualKey('NUMPAD 2')">2</button>
+              <button type="button" class="keycap" onclick="pressVirtualKey('NUMPAD 3')">3</button>
+              <button type="button" class="keycap" style="grid-row: span 2; height: 100%; min-height: 81px;" onclick="pressVirtualKey('NUMPAD ENTER')">Ent</button>
 
-            <!-- Row 4: 1 2 3 Enter -->
-            <div class="vk-row">
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('NUMPAD 1')">1</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('NUMPAD 2')">2</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('NUMPAD 3')">3</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('NUMPAD ENTER')">Ent</button>
-            </div>
-
-            <!-- Row 5: 0 . -->
-            <div class="vk-row">
-              <button type="button" class="keycap u-2" onclick="pressVirtualKey('NUMPAD 0')">0</button>
-              <button type="button" class="keycap u-1" onclick="pressVirtualKey('NUMPAD DOT')">.</button>
-              <div class="keycap keycap-blank u-1"></div>
+              <!-- Row 5 -->
+              <button type="button" class="keycap" style="grid-column: span 2;" onclick="pressVirtualKey('NUMPAD 0')">0</button>
+              <button type="button" class="keycap" onclick="pressVirtualKey('NUMPAD DOT')">.</button>
             </div>
           </div>
 

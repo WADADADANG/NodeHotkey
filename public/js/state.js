@@ -431,6 +431,7 @@ export function renderActiveProfilesPills() {
   // 1. Update Dropdown Summary Bar (Unified Editing + Active Status)
   const tNone = TRANSLATIONS[currentLang]?.activeProfilesNone || (currentLang === 'en' ? '0 Active (Paused)' : '0 Active (ปิดทั้งหมด)');
   const tEditing = TRANSLATIONS[currentLang]?.activeProfilesEditingBadge || (currentLang === 'en' ? 'Editing' : 'กำลังแก้ไข');
+  const tEditLabel = currentLang === 'en' ? 'Edit:' : 'แก้ไข:';
   const tActiveSuffix = currentLang === 'en' ? 'Active' : 'เปิดทำงาน';
   const curEditName = currentEditProfile || names[0] || 'Default';
 
@@ -442,7 +443,7 @@ export function renderActiveProfilesPills() {
 
   summaryEl.innerHTML = `
     <div style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-      <span style="font-size:11px; color:var(--muted);">Edit:</span>
+      <span style="font-size:11px; color:var(--muted); font-weight:700;">${tEditLabel}</span>
       <span style="color:#60a5fa; font-weight:700; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${curEditName}</span>
       <span style="color:rgba(255,255,255,0.2);">|</span>
       ${activeStatusHtml}
@@ -632,7 +633,7 @@ export function renderActiveProfilesPills() {
           transition: all 0.15s;
           white-space: nowrap;
         `;
-        editBtn.textContent = currentLang === 'en' ? 'Edit Canvas' : 'Edit Canvas';
+        editBtn.textContent = currentLang === 'en' ? 'Edit Canvas' : 'แก้ไขผัง';
         editBtn.onmouseenter = () => {
           editBtn.style.background = 'rgba(59,130,246,0.25)';
           editBtn.style.color = '#fff';
@@ -771,15 +772,36 @@ export function selectCurrentProfileActive() {
     });
 }
 
+export function toggleProfileActionsDropdown(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('profile-actions-menu');
+  if (!menu) return;
+  const isShown = menu.style.display === 'flex';
+  menu.style.display = isShown ? 'none' : 'flex';
+}
+
+export function closeProfileActionsDropdown() {
+  const menu = document.getElementById('profile-actions-menu');
+  if (menu) menu.style.display = 'none';
+}
+
 window.toggleActiveProfilesDropdown = toggleActiveProfilesDropdown;
+window.toggleProfileActionsDropdown = toggleProfileActionsDropdown;
+window.closeProfileActionsDropdown = closeProfileActionsDropdown;
 window.setAllProfilesActive = setAllProfilesActive;
 window.selectCurrentProfileActive = selectCurrentProfileActive;
 
 document.addEventListener('click', (e) => {
-  const wrap = document.getElementById('active-profiles-dropdown-wrap');
-  const menu = document.getElementById('active-profiles-menu');
-  if (menu && menu.style.display === 'flex' && wrap && !wrap.contains(e.target)) {
-    menu.style.display = 'none';
+  const activeWrap = document.getElementById('active-profiles-dropdown-wrap');
+  const activeMenu = document.getElementById('active-profiles-menu');
+  if (activeMenu && activeMenu.style.display === 'flex' && activeWrap && !activeWrap.contains(e.target)) {
+    activeMenu.style.display = 'none';
+  }
+
+  const actionsWrap = document.getElementById('profile-actions-dropdown-wrap');
+  const actionsMenu = document.getElementById('profile-actions-menu');
+  if (actionsMenu && actionsMenu.style.display === 'flex' && actionsWrap && !actionsWrap.contains(e.target)) {
+    actionsMenu.style.display = 'none';
   }
 });
 

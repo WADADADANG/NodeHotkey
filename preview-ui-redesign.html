@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NodeHotkey Studio - Unified Dev Style</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-app: #080c14;
+      --bg-sidebar: #0b101c;
+      --bg-surface: #0f1626;
+      --bg-card: #131d31;
+      --bg-card-alt: #18253e;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-subtle: rgba(255, 255, 255, 0.04);
+      --primary: #2563eb;
+      --primary-glow: rgba(37, 99, 235, 0.3);
+      --accent-emerald: #10b981;
+      --accent-cyan: #06b6d4;
+      --accent-amber: #f59e0b;
+      --accent-rose: #ef4444;
+      --accent-purple: #8b5cf6;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      font-family: 'Inter', 'Outfit', 'Prompt', sans-serif;
+      font-size: 12px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       1. UNIFIED DEV STYLE COMPACT SIDEBAR (ซ้ายสุด ~180px)
+    ══════════════════════════════════════════════════════════ */
+    .unified-sidebar {
+      width: 190px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 50;
+    }
+
+    /* Top: App Brand */
+    .sidebar-brand-box {
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .brand-logo-gem {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #2563eb, #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 900;
+      color: #fff;
+      box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+    }
+
+    .brand-title-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-name-text {
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .brand-badge-text {
+      font-size: 9.5px;
+      color: var(--accent-emerald);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .brand-badge-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+    }
+
+    /* Center: Navigation Menu Items (Unified Dev / Linear Style) */
+    .sidebar-menu-list {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 10px 8px;
+      flex: 1;
+    }
+
+    .menu-section-label {
+      font-size: 9.5px;
+      font-weight: 800;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding: 8px 8px 3px 8px;
+    }
+
+    .sidebar-nav-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.12s ease;
+      text-align: left;
+    }
+
+    .sidebar-nav-btn:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: #fff;
+    }
+
+    .sidebar-nav-btn.active {
+      background: var(--bg-surface);
+      border-color: var(--border);
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .nav-btn-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-btn-icon {
+      font-size: 13px;
+      opacity: 0.8;
+    }
+
+    .sidebar-nav-btn.active .nav-btn-icon {
+      opacity: 1;
+      color: #60a5fa;
+    }
+
+    .nav-pill-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+    }
+
+    .sidebar-nav-btn.active .nav-pill-badge {
+      background: rgba(37, 99, 235, 0.2);
+      color: #93c5fd;
+    }
+
+    /* Bottom: Controls & Links */
+    .sidebar-bottom-actions {
+      padding: 10px 8px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-toggle-engine-sidebar {
+      width: 100%;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #10b981;
+      background: #059669;
+      color: #fff;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.15s;
+    }
+
+    .btn-toggle-engine-sidebar:hover { background: #047857; }
+
+    .sidebar-footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .btn-github-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 3px 6px;
+      border-radius: 4px;
+    }
+
+    .btn-github-pill:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .btn-github-pill svg {
+      width: 13px;
+      height: 13px;
+      fill: currentColor;
+    }
+
+    .lang-switcher-wrap {
+      display: flex;
+      gap: 2px;
+    }
+
+    .lang-toggle-btn {
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.3);
+      color: var(--text-muted);
+      font-size: 9.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .lang-toggle-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       2. RIGHT MAIN CONTENT WORKSPACE
+    ══════════════════════════════════════════════════════════ */
+    .main-content-layout {
+      flex: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-surface);
+      overflow: hidden;
+    }
+
+    /* Top Breadcrumbs & Window Controls */
+    .topbar-header {
+      height: 38px;
+      background: var(--bg-sidebar);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      flex-shrink: 0;
+    }
+
+    .topbar-path {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .topbar-path strong { color: #fff; }
+
+    .topbar-window-buttons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .win-action-btn {
+      width: 22px;
+      height: 22px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 10px;
+      cursor: pointer;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .win-action-btn:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+    .win-action-btn.close:hover { background: var(--accent-rose); color: #fff; }
+
+    /* Page View Containers */
+    .views-main-wrapper {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .single-page-view {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      overflow-y: auto;
+    }
+
+    .single-page-view.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       VIEW 1: DASHBOARD & CLIENTS (CENTERED COMPACT)
+    ══════════════════════════════════════════════════════════ */
+    .dash-inner-container {
+      max-width: 1080px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .stats-summary-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .summary-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .summary-title { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+    .summary-value { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #fff; }
+
+    /* Client Matrix (4 x 2 Grid) */
+    .client-matrix-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .matrix-box-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .grid-4x2-clients {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .client-box-tile {
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: all 0.12s;
+    }
+
+    .client-box-tile:hover { border-color: rgba(37, 99, 235, 0.4); }
+    .client-box-tile.online { border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05); }
+
+    .tile-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .tile-status-dot { width: 7px; height: 7px; border-radius: 50%; background: #475569; }
+    .client-box-tile.online .tile-status-dot { background: var(--accent-emerald); box-shadow: 0 0 5px var(--accent-emerald); }
+    .tile-alias-text { font-size: 10.5px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .tile-button-strip {
+      display: flex;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .btn-tile-action {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 9.5px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+    }
+
+    .btn-tile-action:hover { color: #fff; background: rgba(255, 255, 255, 0.1); }
+
+    /* Console Logs Feed */
+    .console-stream-card {
+      background: #060a12;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      height: 240px;
+    }
+
+    .console-stream-header {
+      padding: 6px 12px;
+      background: #090e1a;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .console-stream-scroll {
+      flex: 1;
+      padding: 10px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      color: #94a3b8;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .t-row { display: flex; gap: 6px; align-items: baseline; }
+    .t-time { color: var(--text-dim); font-size: 10px; flex-shrink: 0; }
+    .t-tag { font-weight: 700; border-radius: 3px; padding: 0 4px; font-size: 9.5px; flex-shrink: 0; }
+    .t-tag.act { color: #34d399; background: rgba(16, 185, 129, 0.1); }
+    .t-tag.cd { color: #fbbf24; background: rgba(245, 158, 11, 0.1); }
+    .t-tag.sys { color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
+    .t-msg { color: #cbd5e1; word-break: break-word; }
+
+    /* ══════════════════════════════════════════════════════════
+       VIEW 2: ACTION NODE STUDIO (PROFILE MANAGER + CANVAS)
+    ══════════════════════════════════════════════════════════ */
+    .studio-root-layout {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ─── Profile Manager Integrated Bar (ตรงตามรูปของคุณ 100%) ─── */
+    .pm-full-bar {
+      background: #090e1a;
+      border-bottom: 1px solid var(--border);
+      padding: 8px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .pm-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .pm-title-text { font-size: 12px; font-weight: 900; color: #fff; letter-spacing: 0.5px; }
+
+    .pm-buttons-row { display: flex; gap: 4px; }
+    .pm-btn {
+      padding: 3px 9px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+    }
+    .pm-btn:hover { background: rgba(255, 255, 255, 0.1); }
+    .pm-btn.new { background: rgba(255, 255, 255, 0.08); color: #fff; }
+    .pm-btn.rename { border-color: #3b82f6; color: #60a5fa; background: rgba(59, 130, 246, 0.1); }
+    .pm-btn.export { border-color: #10b981; color: #34d399; background: rgba(16, 185, 129, 0.1); }
+    .pm-btn.import { border-color: #06b6d4; color: #22d3ee; background: rgba(6, 182, 212, 0.1); }
+    .pm-btn.validate { border-color: #a855f7; color: #c084fc; background: rgba(168, 85, 247, 0.1); }
+    .pm-btn.delete { border-color: #ef4444; color: #f87171; background: rgba(239, 68, 68, 0.1); }
+
+    .pm-summary-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    .pm-summary-card:hover { border-color: rgba(37, 99, 235, 0.4); }
+
+    .pm-accordion-drawer {
+      display: none;
+      background: #070c17;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      margin-top: 4px;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .pm-accordion-drawer.show { display: flex; }
+
+    /* Canvas Area เต็มจอ */
+    .canvas-studio-main {
+      flex: 1;
+      width: 100%;
+      background: #04070f;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      background-size: 18px 18px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .canvas-nodes-plane {
+      flex: 1;
+      position: relative;
+      padding: 20px;
+    }
+
+    .node-preview-box {
+      position: absolute;
+      width: 180px;
+      background: #0d1424;
+      border: 1px solid #3b82f6;
+      border-radius: 6px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.7);
+      overflow: hidden;
+      font-size: 11px;
+    }
+
+    .node-preview-head {
+      padding: 5px 8px;
+      background: rgba(59, 130, 246, 0.2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .node-preview-body {
+      padding: 6px 8px;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .node-preview-pins {
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(0, 0, 0, 0.3);
+      padding: 4px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5px;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       VIEW 3: SYSTEM SETTINGS
+    ══════════════════════════════════════════════════════════ */
+    .settings-centered-view {
+      max-width: 760px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .setting-block-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .setting-block-title {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #fff;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      padding-bottom: 5px;
+    }
+
+    .setting-field-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════
+       1. SIDEBAR (UNIFIED DEV STYLE ~190px)
+  ══════════════════════════════════════════════════════════ -->
+  <aside class="unified-sidebar">
+    
+    <!-- Top: Brand -->
+    <div>
+      <div class="sidebar-brand-box">
+        <div class="brand-logo-gem">⚡</div>
+        <div class="brand-title-wrap">
+          <span class="brand-name-text">NodeHotkey</span>
+          <span class="brand-badge-text"><span class="brand-badge-dot"></span> Studio Pro v3.1</span>
+        </div>
+      </div>
+
+      <!-- Center: Navigation Buttons (Unified Dev Style) -->
+      <div class="sidebar-menu-list">
+        <span class="menu-section-label">Main Workspace</span>
+
+        <button class="sidebar-nav-btn active" onclick="switchNavTab('dashboard', this)">
+          <div class="nav-btn-left">
+            <span class="nav-btn-icon">🏠</span>
+            <span>Dashboard</span>
+          </div>
+          <span class="nav-pill-badge">8/8</span>
+        </button>
+
+        <button class="sidebar-nav-btn" onclick="switchNavTab('studio', this)">
+          <div class="nav-btn-left">
+            <span class="nav-btn-icon">🎮</span>
+            <span>Action Node</span>
+          </div>
+          <span class="nav-pill-badge" style="background:#064e3b; color:#34d399;">Active</span>
+        </button>
+
+        <span class="menu-section-label" style="margin-top:8px;">Configuration</span>
+
+        <button class="sidebar-nav-btn" onclick="switchNavTab('settings', this)">
+          <div class="nav-btn-left">
+            <span class="nav-btn-icon">⚙️</span>
+            <span>Settings & HUD</span>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bottom: Master Engine Toggle Button -->
+    <div class="sidebar-bottom-actions">
+      <button class="btn-toggle-engine-sidebar" onclick="toggleEngineRunning(this)">
+        <span>⏸️ Pause Bot Engine</span>
+      </button>
+      <div style="font-size:10px; color:var(--text-dim); text-align:center; padding-top:2px;">
+        Zero-Latency CDP Fast Dispatch
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════════════════════
+       2. RIGHT MAIN CONTENT WORKSPACE
+  ══════════════════════════════════════════════════════════ -->
+  <main class="main-content-layout">
+    
+    <!-- Topbar Header with Breadcrumbs + GitHub + Lang + Window Controls -->
+    <header class="topbar-header">
+      <div class="topbar-path">
+        <span>NodeHotkey</span>
+        <span>/</span>
+        <strong id="view-breadcrumb-text">Dashboard & Clients</strong>
+      </div>
+
+      <div class="topbar-window-buttons">
+        <span style="font-family:'JetBrains Mono'; font-size:10.5px; color:var(--text-dim); margin-right:4px;">PID: 14820 | Port: 3000</span>
+        
+        <!-- GitHub Button (ชัดเจนที่มุมขวาบน) -->
+        <a href="https://github.com/WADADADANG/NodeHotkey" target="_blank" class="btn-github-pill" title="Open GitHub Repository">
+          <svg viewBox="0 0 16 16">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+
+        <!-- Language Switcher (TH / EN) -->
+        <div class="lang-switcher-wrap">
+          <button class="lang-toggle-btn active" onclick="switchLangChoice('th', this)">TH</button>
+          <button class="lang-toggle-btn" onclick="switchLangChoice('en', this)">EN</button>
+        </div>
+
+        <div style="width:1px; height:16px; background:var(--border); margin:0 4px;"></div>
+
+        <!-- Window Buttons -->
+        <button class="win-action-btn" title="Minimize">─</button>
+        <button class="win-action-btn" title="Maximize">🗖</button>
+        <button class="win-action-btn close" title="Close">✕</button>
+      </div>
+    </header>
+
+    <!-- Page Views Container -->
+    <div class="views-main-wrapper">
+
+      <!-- ── PAGE 1: DASHBOARD & CLIENTS (CENTERED COMPACT) ── -->
+      <div class="single-page-view active" id="pane-dashboard">
+        <div class="dash-inner-container">
+          
+          <!-- Summary Metrics Strip -->
+          <div class="stats-summary-strip">
+            <div class="summary-card"><span class="summary-title">Active Clients</span><span class="summary-value" style="color:#38bdf8;">8 / 8 Online</span></div>
+            <div class="summary-card"><span class="summary-title">Overlay HUD</span><span class="summary-value" style="color:#34d399;">Active</span></div>
+            <div class="summary-card"><span class="summary-title">Active Profiles</span><span class="summary-value" style="color:#c084fc;">3 Profiles</span></div>
+            <div class="summary-card"><span class="summary-title">Emergency Key</span><span class="summary-value" style="color:#fbbf24;">[ END ]</span></div>
+          </div>
+
+          <!-- Clients 1 - 8 Matrix (4 x 2 Grid) -->
+          <div class="client-matrix-box">
+            <div class="matrix-box-header">
+              <span>🎮 CLIENT CONTROL MATRIX (หน้าจอ 1 - 8)</span>
+              <div style="display:flex; gap:4px;">
+                <button style="padding:2px 8px; font-size:10px; font-weight:700; border-radius:4px; background:#064e3b; border:1px solid #10b981; color:#34d399; cursor:pointer;">Launch All</button>
+                <button style="padding:2px 8px; font-size:10px; font-weight:700; border-radius:4px; background:#7f1d1d; border:1px solid #ef4444; color:#f87171; cursor:pointer;">Stop All</button>
+              </div>
+            </div>
+
+            <div class="grid-4x2-clients">
+              <!-- Row 1 -->
+              <div class="client-box-tile online">
+                <div class="tile-top-row"><span>Client 1</span><span class="tile-status-dot"></span></div>
+                <div class="tile-alias-text">Main Knight</div>
+                <div class="tile-button-strip"><button class="btn-tile-action">Focus</button><button class="btn-tile-action">Restart</button></div>
+              </div>
+
+              <div class="client-box-tile online">
+                <div class="tile-top-row"><span>Client 2</span><span class="tile-status-dot"></span></div>
+                <div class="tile-alias-text">Ringmaster</div>
+                <div class="tile-button-strip"><button class="btn-tile-action">Focus</button><button class="btn-tile-action">Restart</button></div>
+              </div>
+
+              <div class="client-box-tile online">
+                <div class="tile-top-row"><span>Client 3</span><span class="tile-status-dot"></span></div>
+                <div class="tile-alias-text">Psykeeper</div>
+                <div class="tile-button-strip"><button class="btn-tile-action">Focus</button><button class="btn-tile-action">Restart</button></div>
+              </div>
+
+              <div class="client-box-tile online">
+                <div class="tile-top-row"><span>Client 4</span><span class="tile-status-dot"></span></div>
+                <div class="tile-alias-text">Blade 1</div>
+                <div class="tile-button-strip"><button class="btn-tile-action">Focus</button><button class="btn-tile-action">Restart</button></div>
+              </div>
+
+              <!-- Row 2 -->
+              <div class="client-box-tile online">
+                <div class="tile-top-row"><span>Client 5</span><span class="tile-status-dot"></span></div>
+                <div class="tile-alias-text">Elementor</div>
+                <div class="tile-button-strip"><button class="btn-tile-action">Focus</button><button class="btn-tile-action">Restart</button></div>
+              </div>
+
+              <div class="client-box-tile online">
+                <div class="tile-top-row"><span>Client 6</span><span class="tile-status-dot"></span></div>
+                <div class="tile-alias-text">Jester</div>
+                <div class="tile-button-strip"><button class="btn-tile-action">Focus</button><button class="btn-tile-action">Restart</button></div>
+              </div>
+
+              <div class="client-box-tile online">
+                <div class="tile-top-row"><span>Client 7</span><span class="tile-status-dot"></span></div>
+                <div class="tile-alias-text">Ranger</div>
+                <div class="tile-button-strip"><button class="btn-tile-action">Focus</button><button class="btn-tile-action">Restart</button></div>
+              </div>
+
+              <div class="client-box-tile online">
+                <div class="tile-top-row"><span>Client 8</span><span class="tile-status-dot"></span></div>
+                <div class="tile-alias-text">Buffer 2</div>
+                <div class="tile-button-strip"><button class="btn-tile-action">Focus</button><button class="btn-tile-action">Restart</button></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Logs Feed -->
+          <div class="console-stream-card">
+            <div class="console-stream-header">
+              <span>📟 LIVE EXECUTION LOGS & CDP STREAM</span>
+              <div style="display:flex; gap:3px;">
+                <button style="padding:1px 6px; font-size:9.5px; border-radius:3px; background:rgba(37,99,235,0.15); border:1px solid rgba(37,99,235,0.3); color:#93c5fd;">All</button>
+                <button style="padding:1px 6px; font-size:9.5px; border-radius:3px; background:transparent; border:1px solid transparent; color:var(--text-muted);">Actions</button>
+                <button style="padding:1px 6px; font-size:9.5px; border-radius:3px; background:transparent; border:1px solid transparent; color:var(--text-muted);">Cooldown</button>
+              </div>
+            </div>
+            <div class="console-stream-scroll">
+              <div class="t-row"><span class="t-time">19:00:01</span><span class="t-tag sys">SYS</span><span class="t-msg">Bot Engine initialized 100% across all 8 clients with CDP Fast Dispatch.</span></div>
+              <div class="t-row"><span class="t-time">19:00:02</span><span class="t-tag sys">SYS</span><span class="t-msg">Active Profiles loaded: [CW] Full Party Rm3-Psy1-Knight2, [WD] Add-ons</span></div>
+              <div class="t-row"><span class="t-time">19:00:04</span><span class="t-tag act">ACT</span><span class="t-msg">[Client 2] Key press sent: "1" (Heal Rain | Hold: 80ms)</span></div>
+              <div class="t-row"><span class="t-time">19:00:06</span><span class="t-tag cd">CD</span><span class="t-msg">[Client 2] ⏱️ Skipped "Heal Rain" - Cooldown active ➔ Fired onCooldown wire</span></div>
+              <div class="t-row"><span class="t-time">19:00:07</span><span class="t-tag act">ACT</span><span class="t-msg">[Client 2] Fallback action triggered ➔ Sent key: "2" (Patience)</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── PAGE 2: ACTION NODE STUDIO (PROFILE MANAGER + CANVAS) ── -->
+      <div class="single-page-view" id="pane-studio">
+        <div class="studio-root-layout">
+          
+          <!-- Profile Manager Bar (ตามรูปภาพเป๊ะๆ) -->
+          <div class="pm-full-bar">
+            <div class="pm-title-row">
+              <span class="pm-title-text">PROFILE MANAGER</span>
+              <div class="pm-buttons-row">
+                <button class="pm-btn new">+ New</button>
+                <button class="pm-btn rename">✏️ Rename</button>
+                <button class="pm-btn export">📥 Export</button>
+                <button class="pm-btn import">📤 Import</button>
+                <button class="pm-btn validate">🔍 Validate Profile</button>
+                <button class="pm-btn delete">✕ Delete</button>
+              </div>
+            </div>
+
+            <div class="pm-summary-card" onclick="toggleDrawer()">
+              <div style="display:flex; align-items:center; gap:6px; font-size:11.5px;">
+                <span>Edit: <strong style="color:#60a5fa;">[WD] Add-ons</strong></span>
+                <span style="color:var(--text-dim);">|</span>
+                <span>🟢 <strong style="color:#34d399;">[WD] Add-ons, [WD] Full Buff +1</strong></span>
+              </div>
+              <span style="background:#064e3b; border:1px solid #10b981; color:#34d399; font-size:10px; font-weight:800; padding:1px 7px; border-radius:10px;">3 Active ▾</span>
+            </div>
+
+            <!-- Drawer Accordion Panel -->
+            <div class="pm-accordion-drawer" id="pm-drawer">
+              <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px;">
+                <div style="display:flex; gap:4px;">
+                  <span style="font-size:10px; color:var(--text-dim); align-self:center;">Tags:</span>
+                  <button style="padding:2px 6px; font-size:10px; font-weight:700; border-radius:3px; background:var(--primary); color:#fff; border:none;">All</button>
+                  <button style="padding:2px 6px; font-size:10px; font-weight:700; border-radius:3px; background:var(--bg-card); color:var(--text-muted); border:1px solid var(--border);">CW</button>
+                  <button style="padding:2px 6px; font-size:10px; font-weight:700; border-radius:3px; background:var(--bg-card); color:var(--text-muted); border:1px solid var(--border);">Dg</button>
+                </div>
+                <div style="display:flex; gap:4px;">
+                  <button style="padding:1px 6px; font-size:9.5px; font-weight:700; border-radius:3px; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); color:#38bdf8;">Select Current</button>
+                  <button style="padding:1px 6px; font-size:9.5px; font-weight:700; border-radius:3px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#34d399;">Select All</button>
+                </div>
+              </div>
+
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:4px 8px; background:var(--bg-card); border-radius:4px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <input type="checkbox" checked style="accent-color:#10b981;" />
+                  <span>[CW] Full Party Rm3-Psy1-Knight2</span>
+                </div>
+                <button style="padding:2px 6px; border-radius:3px; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); color:#93c5fd; font-size:10px; font-weight:700;">Edit Canvas ➔</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Canvas เต็มจอ -->
+          <div class="canvas-studio-main">
+            <div class="canvas-nodes-plane">
+              <div class="node-preview-box" style="top:25px; left:25px; border-color:#38bdf8;">
+                <div class="node-preview-head" style="background:rgba(56,189,248,0.2);"><span>⚡ Hotkey F1</span><span style="color:#38bdf8;">TRIGGER</span></div>
+                <div class="node-preview-body"><span>Key: <strong>F1</strong></span></div>
+                <div class="node-preview-pins"><div style="display:flex; justify-content:space-between;"><span>Output ▶</span><span style="width:6px; height:6px; border-radius:50%; background:#38bdf8;"></span></div></div>
+              </div>
+
+              <div class="node-preview-box" style="top:25px; left:240px; border-color:#10b981;">
+                <div class="node-preview-head" style="background:rgba(16,185,129,0.2);"><span>✨ Heal Rain</span><span style="color:#10b981;">ACTION</span></div>
+                <div class="node-preview-body">
+                  <span>Target: <strong>Client 2</strong></span>
+                  <span>Key: <strong>1</strong></span>
+                  <span>Guard: <strong style="color:#fbbf24;">4.0s (Cooldown)</strong></span>
+                </div>
+                <div class="node-preview-pins">
+                  <div style="display:flex; justify-content:space-between;"><span style="color:#34d399;">On Complete ▶</span><span style="width:6px; height:6px; border-radius:50%; background:#10b981;"></span></div>
+                  <div style="display:flex; justify-content:space-between;"><span style="color:#fbbf24;">On Cooldown ▶</span><span style="width:6px; height:6px; border-radius:50%; background:#f59e0b;"></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── PAGE 3: SYSTEM SETTINGS ── -->
+      <div class="single-page-view" id="pane-settings">
+        <div class="settings-centered-view">
+          <div class="setting-block-card">
+            <div class="setting-block-title">⌨️ Global Emergency Pause Hotkey</div>
+            <div class="setting-field-row">
+              <div>
+                <div style="font-weight:600; color:#fff;">ปุ่มระงับการทำงานฉุกเฉิน</div>
+                <div style="font-size:10px; color:var(--text-dim);">กดเพื่อหยุดลูป คิวสกิล และปล่อยปุ่มค้างทั้งหมดในเกมทันที</div>
+              </div>
+              <input type="text" value="END" style="background:rgba(0,0,0,0.4); border:1px solid var(--border); border-radius:4px; padding:3px 8px; color:#fff; font-family:'JetBrains Mono'; font-weight:700; width:70px; text-align:center;" />
+            </div>
+          </div>
+
+          <div class="setting-block-card">
+            <div class="setting-block-title">🖥️ Desktop Overlay HUD</div>
+            <div class="setting-field-row">
+              <div>
+                <div style="font-weight:600; color:#fff;">เปิดใช้งาน Desktop Overlay HUD</div>
+                <div style="font-size:10px; color:var(--text-dim);">แสดงสถานะบอทโปร่งแสงบนหน้าจอเกมแบบ Real-time</div>
+              </div>
+              <input type="checkbox" checked style="width:16px; height:16px; accent-color:#3b82f6;" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    function switchNavTab(paneId, btn) {
+      document.querySelectorAll('.sidebar-nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.single-page-view').forEach(p => p.classList.remove('active'));
+
+      btn.classList.add('active');
+      const target = document.getElementById('pane-' + paneId);
+      if (target) target.classList.add('active');
+
+      const titles = {
+        'dashboard': 'Dashboard & Clients',
+        'studio': 'Action Node Studio',
+        'settings': 'System Settings & HUD'
+      };
+      const titleEl = document.getElementById('view-breadcrumb-text');
+      if (titleEl) titleEl.textContent = titles[paneId] || 'Workspace';
+    }
+
+    function switchLangChoice(lang, btn) {
+      document.querySelectorAll('.lang-toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function toggleDrawer() {
+      const el = document.getElementById('pm-drawer');
+      if (el) el.classList.toggle('show');
+    }
+
+    let isBotRunning = true;
+    function toggleEngineRunning(btn) {
+      isBotRunning = !isBotRunning;
+      if (isBotRunning) {
+        btn.innerHTML = '<span>⏸️ Pause Bot Engine</span>';
+        btn.style.background = '#059669';
+        btn.style.borderColor = '#10b981';
+      } else {
+        btn.innerHTML = '<span>▶️ Resume Bot Engine</span>';
+        btn.style.background = '#2563eb';
+        btn.style.borderColor = '#3b82f6';
+      }
+    }
+  </script>
+</body>
+</html>

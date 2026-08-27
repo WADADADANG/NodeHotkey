@@ -3,210 +3,663 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NodeHotkey Control Center</title>
+  <title>NodeHotkey Studio Pro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="launcher.css">
 </head>
-<body>
-  <!-- Custom Frameless Titlebar with Navigation Tabs -->
-  <header class="launcher-titlebar" id="titlebar">
-    <div class="titlebar-drag-region">
-      <div class="app-brand">
-        <span class="app-icon">⚡</span>
-        <span class="app-name">NodeHotkey</span>
-        <span class="app-badge">v3.0.0</span>
+<body class="app-root-body">
+  
+  <!-- ══════════════════════════════════════════════════════════
+       1. LEFT SIDEBAR NAVIGATION (UNIFIED DEV STYLE ~190px)
+  ══════════════════════════════════════════════════════════ -->
+  <aside class="unified-sidebar">
+    <div class="sidebar-top-section">
+      <!-- App Brand Logo -->
+      <div class="sidebar-brand-box">
+        <div class="brand-logo-gem">⚡</div>
+        <div class="brand-title-wrap">
+          <span class="brand-name-text">NodeHotkey</span>
+          <span class="brand-badge-text"><span class="brand-badge-dot"></span> Studio Pro v3.0</span>
+        </div>
       </div>
 
-      <!-- Navigation Tabs (สลับหน้าจอ) -->
-      <nav class="titlebar-nav-tabs">
-        <button class="nav-tab-btn active" id="tab-nav-launcher" title="หน้าควบคุมหลักและสตรีม Logs">
-          <span class="tab-icon">📟</span>
-          <span>ควบคุม & Logs</span>
+      <!-- Navigation Menu (Unified Dev Sidebar) -->
+      <nav class="sidebar-menu-list">
+        <span class="menu-section-label">Main Workspace</span>
+
+        <button class="sidebar-nav-btn active" id="tab-nav-dashboard" title="แดชบอร์ด ควบคุมจอ และสตรีม Logs">
+          <div class="nav-btn-left">
+            <span class="nav-btn-icon">🏠</span>
+            <span>Dashboard</span>
+          </div>
+          <span class="nav-pill-badge" id="badge-clients-count">0/8</span>
         </button>
-        <button class="nav-tab-btn" id="tab-nav-editor" title="หน้าผัง Canvas ออกแบบ Action Node">
-          <span class="tab-icon">🎮</span>
-          <span>Action Node</span>
-          <span class="tab-live-dot" id="tab-editor-dot"></span>
+
+        <button class="sidebar-nav-btn" id="tab-nav-editor" title="ผัง Canvas ออกแบบ Action Node และจัดการโปรไฟล์">
+          <div class="nav-btn-left">
+            <span class="nav-btn-icon">🎮</span>
+            <span>Action Node</span>
+          </div>
+          <span class="nav-pill-badge active-tag" id="badge-profile-active">Studio</span>
+        </button>
+
+        <span class="menu-section-label" style="margin-top:8px;">Configuration</span>
+
+        <button class="sidebar-nav-btn" id="tab-nav-settings" title="ตั้งค่าระบบ ปุ่มฉุกเฉิน และ Overlay HUD">
+          <div class="nav-btn-left">
+            <span class="nav-btn-icon">⚙️</span>
+            <span>Settings & HUD</span>
+          </div>
         </button>
       </nav>
     </div>
 
-    <div class="window-controls">
-      <button class="win-btn" id="btn-win-min" title="ย่อหน้าต่าง (Minimize)">─</button>
-      <button class="win-btn" id="btn-win-max" title="ขยายเต็มจอ (Maximize)">🗖</button>
-      <button class="win-btn close" id="btn-win-close" title="ซ่อนไปยัง System Tray (Close)">✕</button>
+    <!-- Bottom Action Button: Master Engine Toggle -->
+    <div class="sidebar-bottom-actions">
+      <button id="btn-toggle-engine" class="btn-toggle-engine-sidebar btn-start" title="เริ่ม/หยุดการทำงานของบอททั้งหมด">
+        <span id="hero-icon">▶</span>
+        <span id="hero-title">เริ่มการทำงาน</span>
+      </button>
+      <div class="sidebar-bot-tag" id="hero-sub">CDP Fast Dispatch</div>
     </div>
-  </header>
+  </aside>
 
-  <!-- Main View Container Switcher -->
-  <main class="views-wrapper">
-    <!-- ================= VIEW 1: LAUNCHER & CONSOLE ================= -->
-    <div class="app-view active" id="view-launcher">
-      <div class="launcher-container">
-        <!-- Top Action Control Bar -->
-        <section class="control-panel-card">
-          <div class="main-actions-group">
-            <!-- Main Toggle Engine Button -->
-            <button id="btn-toggle-engine" class="btn-hero-primary btn-start">
-              <span class="btn-icon" id="hero-icon">▶</span>
-              <div class="btn-text-group">
-                <span class="btn-title" id="hero-title">เริ่มการทำงาน</span>
-                <span class="btn-sub" id="hero-sub">Start Bot Engine</span>
-              </div>
-            </button>
-
-            <button id="btn-switch-to-editor" class="btn-accent" title="สลับไปหน้าจอผัง Action Node Editor">
-              <span class="btn-icon">🎮</span>
-              <span>Action Node</span>
-            </button>
-          </div>
-
-          <div class="utility-actions-group">
-            <button id="btn-open-logs" class="btn-ghost" title="เปิดโฟลเดอร์เก็บ Logs รายวันใน Windows Explorer">
-              <span class="btn-icon">📂</span>
-              <span>เปิดโฟลเดอร์ Logs</span>
-            </button>
-
-            <button id="btn-check-update" class="btn-ghost" title="ตรวจสอบการอัปเดตระบบจาก Git">
-              <span class="btn-icon">✨</span>
-              <span>อัปเดตระบบ</span>
-            </button>
-          </div>
-        </section>
-
-        <!-- Diagnostics / Health Status Cards Grid -->
-        <section class="diagnostics-grid">
-          <!-- Card 1: Engine Process -->
-          <div class="diag-card" id="card-engine-status">
-            <div class="diag-card-header">
-              <span class="diag-title">สถานะโปรแกรม</span>
-              <span class="diag-indicator-dot" id="dot-engine"></span>
-            </div>
-            <div class="diag-value" id="val-engine-status">กำลังเริ่ม...</div>
-            <div class="diag-sub" id="sub-engine-info">PID: - | Uptime: 0s</div>
-          </div>
-
-          <!-- Card 2: Server & Port -->
-          <div class="diag-card" id="card-server-status">
-            <div class="diag-card-header">
-              <span class="diag-title">Web Server</span>
-              <span class="diag-indicator-dot" id="dot-server"></span>
-            </div>
-            <div class="diag-value" id="val-server-status">Port 3000</div>
-            <div class="diag-sub" id="sub-server-info">http://localhost:3000</div>
-          </div>
-
-          <!-- Card 3: Active Profile -->
-          <div class="diag-card" id="card-profile-status">
-            <div class="diag-card-header">
-              <span class="diag-title">โปรไฟล์ที่เปิดใช้งาน</span>
-              <span class="diag-icon">📑</span>
-            </div>
-            <div class="diag-value" id="val-profile-name">Default</div>
-            <div class="diag-sub" id="sub-profile-count">1 Active Profile</div>
-          </div>
-
-          <!-- Card 4: Game Clients (CDP) -->
-          <div class="diag-card" id="card-clients-status">
-            <div class="diag-card-header">
-              <span class="diag-title">จอเกมที่ตรวจพบ</span>
-              <span class="diag-icon">🎮</span>
-            </div>
-            <div class="diag-value" id="val-clients-count">0 จอ</div>
-            <div class="diag-sub" id="sub-clients-info">CDP WebGL Integration</div>
-          </div>
-        </section>
-
-        <!-- Live Colorized Terminal Section -->
-        <section class="terminal-card">
-          <div class="terminal-header">
-            <div class="terminal-title-group">
-              <span class="term-icon">📟</span>
-              <span class="term-title">Console Output & Real-time Logs</span>
-              <span class="term-status-badge" id="term-live-badge">● LIVE</span>
-            </div>
-
-            <div class="terminal-filters">
-              <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="log-search-input" placeholder="ค้นหา Logs..." />
-              </div>
-
-              <div class="filter-pills">
-                <button class="filter-pill active" data-filter="all">ทั้งหมด</button>
-                <button class="filter-pill" data-filter="error">🔴 Error</button>
-                <button class="filter-pill" data-filter="warn">🟡 Warning</button>
-                <button class="filter-pill" data-filter="action">🟣 Action</button>
-              </div>
-
-              <div class="terminal-actions">
-                <button id="btn-toggle-autoscroll" class="term-btn active" title="เลื่อนหน้าจออัตโนมัติ (Auto-scroll)">⬇️ Auto-scroll</button>
-                <button id="btn-clear-terminal" class="term-btn" title="ล้างหน้าจอ Terminal">🗑️ ล้าง</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Terminal Output Viewer (Read-only, Selectable) -->
-          <div class="terminal-body" id="terminal-body">
-            <div class="log-welcome-banner">
-              <div class="banner-title">⚡ NodeHotkey Control Center Ready</div>
-              <div class="banner-sub">Logs are streamed in real-time and automatically rotated into daily folders. Text is read-only and freely selectable for copy.</div>
-            </div>
-            <div class="log-entries" id="log-entries"></div>
-          </div>
-
-          <!-- Terminal Footer Bar -->
-          <div class="terminal-footer">
-            <div class="footer-left">
-              <span>📁 วันนี้: </span>
-              <span class="footer-path" id="footer-log-path">logs/YYYY-MM-DD/</span>
-            </div>
-            <div class="footer-right">
-              <span id="log-counter-badge">0 Lines</span>
-            </div>
-          </div>
-        </section>
+  <!-- ══════════════════════════════════════════════════════════
+       2. RIGHT MAIN CONTENT WORKSPACE
+  ══════════════════════════════════════════════════════════ -->
+  <main class="main-content-layout">
+    
+    <!-- Topbar Header (Breadcrumbs + Quick Tools + GitHub + Lang + Window Controls) -->
+    <header class="launcher-topbar" id="titlebar">
+      <div class="topbar-drag-area">
+        <div class="topbar-path">
+          <span>NodeHotkey</span>
+          <span>/</span>
+          <strong id="view-breadcrumb-text">Dashboard & Clients</strong>
+        </div>
       </div>
-    </div>
 
-    <!-- ================= VIEW 2: NODE CANVAS EDITOR ================= -->
-    <div class="app-view" id="view-editor">
-      <div class="editor-view-container">
-        <div class="editor-top-quickbar">
-          <div class="quickbar-left">
-            <span class="quickbar-icon">🎮</span>
-            <span class="quickbar-title">Node Canvas Workflow Editor</span>
-          </div>
-          <div class="quickbar-right">
-            <button id="btn-reload-canvas" class="btn-micro" title="รีเฟรชผัง Node">🔄 รีเฟรช</button>
-            <button id="btn-open-external-browser" class="btn-micro" title="เปิดบนเว็บเบราว์เซอร์ภายนอก (Chrome/Edge)">🌐 เปิดบนเบราว์เซอร์ภายนอก</button>
+      <div class="topbar-right-utils">
+        <!-- Studio Custom Action Buttons (Shown in Action Node view) -->
+        <div id="studio-topbar-actions" style="display:none; align-items:center; gap:6px;">
+          <button id="btn-reload-studio" class="btn-topbar-tool" onclick="window.reloadEditorFrame()" title="รีโหลดหน้า Action Node Studio">
+            <span>🔄</span>
+            <span id="lbl-reload-studio">Reload</span>
+          </button>
+          <button id="btn-open-browser-studio" class="btn-topbar-tool" onclick="window.openEditorInBrowser()" title="เปิดในเบราว์เซอร์แยก (Google Chrome / Edge)">
+            <span>↗️</span>
+            <span id="lbl-browser-studio">Browser</span>
+          </button>
+        </div>
+
+        <!-- Quick Action Buttons -->
+        <button id="btn-open-logs" class="btn-topbar-tool" title="เปิดโฟลเดอร์ Logs ใน Windows Explorer">
+          <span>📂</span>
+          <span>Logs</span>
+        </button>
+
+        <button id="btn-check-update" class="btn-topbar-tool" title="ตรวจสอบการอัปเดตระบบจาก GitHub">
+          <span>✨</span>
+          <span>Update</span>
+        </button>
+
+        <!-- GitHub Pill -->
+        <a href="#" id="btn-top-github" class="btn-util-pill" title="เปิด GitHub Repository">
+          <svg viewBox="0 0 16 16" class="util-svg">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+
+        <!-- Language Switcher -->
+        <div class="lang-pill-wrap">
+          <button class="btn-lang-toggle active" id="btn-lang-th">TH</button>
+          <button class="btn-lang-toggle" id="btn-lang-en">EN</button>
+        </div>
+
+        <div class="util-divider"></div>
+
+        <!-- Window Controls -->
+        <div class="window-controls">
+          <button class="win-btn" id="btn-win-min" title="ย่อหน้าต่าง (Minimize)">─</button>
+          <button class="win-btn" id="btn-win-max" title="ขยายเต็มจอ (Maximize)">🗖</button>
+          <button class="win-btn close" id="btn-win-close" title="ซ่อนไปยัง System Tray (Close)">✕</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Views Container -->
+    <div class="views-wrapper">
+      
+      <!-- ================= VIEW 1: DASHBOARD & CLIENT MATRIX ================= -->
+      <div class="app-view active" id="view-dashboard">
+        <div class="dashboard-scroll-layout">
+          
+          <!-- Top Diagnostics 4 Cards -->
+          <section class="diagnostics-grid">
+            <!-- Card 1: Engine Process -->
+            <div class="diag-card" id="card-engine-status">
+              <div class="diag-card-header">
+                <span class="diag-title">สถานะโปรแกรม</span>
+                <span class="diag-indicator-dot" id="dot-engine"></span>
+              </div>
+              <div class="diag-value" id="val-engine-status">กำลังเริ่ม...</div>
+              <div class="diag-sub" id="sub-engine-info">PID: - | Uptime: 0s</div>
+            </div>
+
+            <!-- Card 2: Server & Port -->
+            <div class="diag-card" id="card-server-status">
+              <div class="diag-card-header">
+                <span class="diag-title">Web Server</span>
+                <span class="diag-indicator-dot" id="dot-server"></span>
+              </div>
+              <div class="diag-value" id="val-server-status">Port 3000</div>
+              <div class="diag-sub" id="sub-server-info">http://localhost:3000</div>
+            </div>
+
+            <!-- Card 3: Active Profile -->
+            <div class="diag-card" id="card-profile-status">
+              <div class="diag-card-header">
+                <span class="diag-title">โปรไฟล์ที่เปิดใช้งาน</span>
+                <span class="diag-icon">📑</span>
+              </div>
+              <div class="diag-value" id="val-profile-name">Default</div>
+              <div class="diag-sub" id="sub-profile-count">1 Active Profile</div>
+            </div>
+
+            <!-- Card 4: Game Clients (CDP) -->
+            <div class="diag-card" id="card-clients-status">
+              <div class="diag-card-header">
+                <span class="diag-title">จอเกมที่ตรวจพบ</span>
+                <span class="diag-icon">🎮</span>
+              </div>
+              <div class="diag-value" id="val-clients-count">0 จอ</div>
+              <div class="diag-sub" id="sub-clients-info">CDP WebGL Integration</div>
+            </div>
+          </section>
+
+          <!-- Client Control Matrix (หน้าจอ 1 - 8 แบบ 4x2) -->
+          <section class="client-matrix-panel">
+            <div class="matrix-panel-head">
+              <div class="matrix-title-group">
+                <span style="font-size:13px;">🎮</span>
+                <span style="font-weight:800; font-size:12px; color:#fff;" id="matrix-title-label">CLIENT CONTROL MATRIX (จอ 1 - 8)</span>
+              </div>
+              <div class="matrix-action-buttons">
+                <button id="btn-matrix-launch-all" class="btn-matrix-action launch" onclick="window.launchAllClients && window.launchAllClients()">🚀 เปิดทุกจอ</button>
+                <button id="btn-matrix-stop-all" class="btn-matrix-action stop" onclick="window.stopAllClients && window.stopAllClients()">⏹️ ปิดทุกจอ</button>
+              </div>
+            </div>
+
+            <!-- 8 Client Cards Container -->
+            <div class="client-tiles-grid-4x2" id="launcher-client-matrix-grid">
+              <!-- Dynamically rendered via launcher.js -->
+            </div>
+          </section>
+
+          <!-- Live Terminal Section -->
+          <section class="terminal-card">
+            <div class="terminal-header">
+              <div class="terminal-title-group">
+                <span class="term-icon">📟</span>
+                <span class="term-title">Console Output & Real-time Logs</span>
+                <span class="term-status-badge" id="term-live-badge">● LIVE</span>
+              </div>
+
+              <div class="terminal-filters">
+                <div class="search-box">
+                  <span class="search-icon">🔍</span>
+                  <input type="text" id="log-search-input" placeholder="ค้นหา Logs..." />
+                </div>
+
+                <div class="filter-pills">
+                  <button class="filter-pill active" data-filter="all">ทั้งหมด</button>
+                  <button class="filter-pill" data-filter="error">🔴 Error</button>
+                  <button class="filter-pill" data-filter="warn">🟡 Warning</button>
+                  <button class="filter-pill" data-filter="action">🟣 Action</button>
+                </div>
+
+                <div class="terminal-actions">
+                  <button id="btn-toggle-autoscroll" class="term-btn active" title="เลื่อนหน้าจออัตโนมัติ (Auto-scroll)">⬇️ Auto-scroll</button>
+                  <button id="btn-clear-terminal" class="term-btn" title="ล้างหน้าจอ Terminal">🗑️ ล้าง</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Terminal Output Viewer -->
+            <div class="terminal-body" id="terminal-body">
+              <div class="log-welcome-banner">
+                <div class="banner-title">⚡ NodeHotkey Control Center Ready</div>
+                <div class="banner-sub">Logs are streamed in real-time and automatically rotated into daily folders. Text is read-only and freely selectable for copy.</div>
+              </div>
+              <div class="log-entries" id="log-entries"></div>
+            </div>
+
+            <!-- Terminal Footer Bar -->
+            <div class="terminal-footer">
+              <div class="footer-left">
+                <span>📁 วันนี้: </span>
+                <span class="footer-path" id="footer-log-path">logs/YYYY-MM-DD/</span>
+              </div>
+              <div class="footer-right">
+                <span id="log-counter-badge">0 Lines</span>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+
+      <!-- ================= VIEW 2: ACTION NODE STUDIO ================= -->
+      <div class="app-view" id="view-editor">
+        <div class="editor-view-container" style="position:relative; width:100%; height:100%;">
+          <iframe id="editor-frame" class="editor-iframe" src="about:blank"></iframe>
+          
+          <!-- Offline Placeholder Panel (Shown when Bot Engine is stopped) -->
+          <div id="editor-offline-placeholder" style="display:none; position:absolute; inset:0; background:var(--bg-card); z-index:10; flex-direction:column; align-items:center; justify-content:center; gap:16px; text-align:center; padding:20px;">
+            <div style="font-size:48px; filter:drop-shadow(0 4px 12px rgba(239,68,68,0.3));">🛑</div>
+            <div style="max-width:440px;">
+              <h2 id="lbl-offline-head" style="margin:0 0 8px 0; font-size:18px; font-weight:800; color:#fff;">Bot Engine Offline</h2>
+              <p id="lbl-offline-desc" style="margin:0; font-size:12.5px; color:var(--muted); line-height:1.5;">Web Server และระบบบอทยังไม่ได้เริ่มทำงาน กรุณากดปุ่มเพื่อเริ่มใช้งาน Action Node Studio</p>
+            </div>
+            <button type="button" class="btn-matrix-action launch" id="btn-start-engine-from-studio" onclick="window.startBotFromStudio()" style="padding:10px 24px; font-size:13px; font-weight:800; border-radius:8px; display:flex; align-items:center; gap:8px;">
+              <span>▶️</span>
+              <span id="lbl-offline-btn">Start Bot Engine Now</span>
+            </button>
           </div>
         </div>
-        <iframe id="editor-frame" class="editor-iframe" src="about:blank"></iframe>
       </div>
+
+      <!-- ================= VIEW 3: SYSTEM SETTINGS ================= -->
+      <div class="app-view" id="view-settings">
+        <div class="settings-page-container" style="max-width: 720px; margin: 0 auto; padding: 20px 10px; display: flex; flex-direction: column; gap: 14px;">
+          
+          <!-- 1. Emergency Pause Hotkey -->
+          <div class="settings-card-box">
+            <div class="setting-row-head" id="lbl-setting-head-emergency">⌨️ Global Emergency Pause Hotkey</div>
+            <div class="setting-row-body" style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+              <div>
+                <div class="setting-label" id="lbl-setting-key-title">ปุ่มระงับการทำงานฉุกเฉิน</div>
+                <div class="setting-desc" id="lbl-setting-key-desc">กดเพื่อสั่งหยุดลูป คิวสกิล และปล่อยปุ่มค้างทั้งหมดในเกมทันที (คลิกที่กล่องเพื่อกดบันทึกปุ่มใหม่)</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                <input type="text" id="setting-suspend-key" value="END" class="setting-input-key" readonly onclick="window.startRecordingSuspendKey()" title="คลิกแล้วกดปุ่มบนคีย์บอร์ดที่ต้องการ" style="width:100px; text-align:center; cursor:pointer; font-weight:800; font-family:var(--font-mono); background:#0f172a; border:1px solid #3b82f6; color:#60a5fa; padding:6px 10px; border-radius:6px;" />
+                <button type="button" class="btn-topbar-tool" onclick="window.openLauncherKeyPicker()" title="เปิดคีย์บอร์ดเสมือนจริง (Visual Key Picker)" style="padding:6px 10px; height:32px; border-color:#3b82f6; color:#60a5fa; background:rgba(59,130,246,0.1);">⌨️</button>
+                <button type="button" class="btn-topbar-tool" onclick="window.clearSuspendKey()" title="ล้างปุ่มลัด" style="padding:6px 10px; height:32px;">✕</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Desktop Overlay HUD -->
+          <div class="settings-card-box">
+            <div class="setting-row-head" id="lbl-setting-head-overlay">🖥️ Desktop Overlay HUD</div>
+            <div class="setting-row-body" style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+              <div>
+                <div class="setting-label" id="lbl-setting-overlay-title">เปิดใช้งาน Desktop Overlay HUD</div>
+                <div class="setting-desc" id="lbl-setting-overlay-desc">แสดงแถบสถานะโปร่งแสงบนหน้าจอเกมแบบ Real-time (เปิด/ปิด อัตโนมัติตามบอท)</div>
+              </div>
+              <input type="checkbox" id="setting-enable-overlay" class="setting-checkbox" onchange="window.saveSettingsFromUI()" style="width:18px; height:18px; cursor:pointer; accent-color:#10b981;" />
+            </div>
+          </div>
+
+          <!-- 3. Human Random Jitter -->
+          <div class="settings-card-box">
+            <div class="setting-row-head" id="lbl-setting-head-jitter">🛡️ Anti-Detect & Ghost Mouse Jitter</div>
+            <div class="setting-row-body" style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+              <div>
+                <div class="setting-label" id="lbl-setting-jitter-title">สุ่มหน่วงเวลาการกดปุ่มและขยับเมาส์ (Human Random Jitter)</div>
+                <div class="setting-desc" id="lbl-setting-jitter-desc">จำลองพฤติกรรมมนุษย์ด้วยการสุ่มขยับเมาส์เล็กน้อยและหน่วงเวลากดปุ่มเพื่อป้องกันการตรวจจับ</div>
+              </div>
+              <input type="checkbox" id="setting-enable-jitter" class="setting-checkbox" onchange="window.toggleJitterSubSettings(); window.saveSettingsFromUI();" style="width:18px; height:18px; cursor:pointer; accent-color:#10b981;" />
+            </div>
+
+            <!-- Expandable Jitter Sub-Settings Panel -->
+            <div id="jitter-sub-settings" style="display:none; margin-top:12px; padding:12px; background:rgba(0,0,0,0.25); border-radius:6px; border:1px dashed rgba(255,255,255,0.08); display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <div>
+                  <div style="font-size:12px; font-weight:700; color:#e2e8f0;" id="lbl-jitter-interval-title">⏱️ ช่วงเวลาสุ่มขยับเมาส์ (Interval Min - Max)</div>
+                  <div style="font-size:10.5px; color:var(--muted);" id="lbl-jitter-interval-desc">ระบบจะสุ่มขยับเมาส์อัตโนมัติทุกๆ ช่วงเวลานี้ (หน่วยเป็น มิลลิวินาที / ms)</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                  <input type="number" id="setting-jitter-min" min="1000" step="500" value="8000" onchange="window.saveSettingsFromUI()" style="width:75px; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:5px; padding:4px 6px; color:#fff; font-size:11.5px; font-family:var(--font-mono); text-align:center;" />
+                  <span style="font-size:11px; color:var(--muted);">-</span>
+                  <input type="number" id="setting-jitter-max" min="1000" step="500" value="25000" onchange="window.saveSettingsFromUI()" style="width:75px; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:5px; padding:4px 6px; color:#fff; font-size:11.5px; font-family:var(--font-mono); text-align:center;" />
+                  <span style="font-size:11px; color:var(--muted);">ms</span>
+                </div>
+              </div>
+
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px dashed rgba(255,255,255,0.05); padding-top:8px;">
+                <div>
+                  <div style="font-size:12px; font-weight:700; color:#e2e8f0;" id="lbl-jitter-offset-title">🎯 ระยะการขยับพิกัดเมาส์ (Max Pixel Offset)</div>
+                  <div style="font-size:10.5px; color:var(--muted);" id="lbl-jitter-offset-desc">ระยะทางพิกัดที่เมาส์จะสุ่มเคลื่อนที่รอบตำแหน่งเดิม (หน่วยเป็น พิกเซล / px)</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                  <span style="font-size:11px; color:var(--muted);">±</span>
+                  <input type="number" id="setting-jitter-offset" min="1" max="100" value="12" onchange="window.saveSettingsFromUI()" style="width:75px; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:5px; padding:4px 6px; color:#fff; font-size:11.5px; font-family:var(--font-mono); text-align:center;" />
+                  <span style="font-size:11px; color:var(--muted);">px</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Target Game URL Keyword -->
+          <div class="settings-card-box">
+            <div class="setting-row-head" id="lbl-setting-head-url">🌐 Target Game URL Filter</div>
+            <div class="setting-row-body" style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+              <div style="flex:1;">
+                <div class="setting-label" id="lbl-setting-url-title">คีย์เวิร์ด URL สำหรับตรวจจับจอเกม</div>
+                <div class="setting-desc" id="lbl-setting-url-desc">ระบบจะค้นหาแท็บเบราว์เซอร์ที่มีคำนี้เพื่อเชื่อมต่อ CDP อัตโนมัติ</div>
+              </div>
+              <input type="text" id="setting-target-url" placeholder="universe.flyff.com" onchange="window.saveSettingsFromUI()" style="width:200px; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:6px; padding:6px 10px; color:#fff; font-size:12px; font-family:var(--font-mono); outline:none;" />
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   </main>
 
+  <!-- ════════ CLIENT INDIVIDUAL SETTINGS MODAL (ORIGINAL SYSTEM) ════════ -->
+  <div class="modal-overlay" id="client-settings-modal" style="display:none;" onclick="if(event.target===this) closeClientSettingsModal()">
+    <div class="modal-card" style="width: 500px; max-width: 94%;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed var(--border); padding-bottom:10px; margin-bottom:12px;">
+        <h3 id="client-settings-modal-title" style="margin:0; font-size:14px; font-weight:800; color:#fff; display:flex; align-items:center; gap:6px;">
+          <span>⚙️</span>
+          <span id="client-settings-modal-name">Client Settings</span>
+        </h3>
+        <button class="win-btn close" onclick="closeClientSettingsModal()" style="width:24px; height:24px; border-radius:4px;">✕</button>
+      </div>
+
+      <input type="hidden" id="modal-client-idx" value="1" />
+
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        
+        <!-- 1. Browser Selection Section (Top) -->
+        <div>
+          <label style="font-size:11px; font-weight:700; color:#34d399; display:block; margin-bottom:5px;">🌐 BROWSER ENGINE & DISPLAY MODE</label>
+          <select id="modal-client-browser" style="width:100%; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:6px; padding:6px 10px; color:#fff; font-size:11.5px; outline:none;">
+            <option value="1" style="background:#0f172a; color:#fff;">🌐 Google Chrome (Recommended)</option>
+            <option value="1-app" style="background:#0f172a; color:#fff;">🚀 Google Chrome (App Mode)</option>
+            <option value="2" style="background:#0f172a; color:#fff;">🌊 Microsoft Edge</option>
+            <option value="2-app" style="background:#0f172a; color:#fff;">🚀 Microsoft Edge (App Mode)</option>
+            <option value="3" style="background:#0f172a; color:#fff;">🦊 Mozilla Firefox</option>
+          </select>
+        </div>
+
+        <!-- 2. User-Agent (Anti-Detect) Section -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <label style="font-size:11px; font-weight:700; color:#38bdf8;">🌐 User-Agent (Anti-Detect)</label>
+            <div style="display:flex; gap:4px;">
+              <button type="button" class="btn-topbar-tool" onclick="randomizeModalUA()" style="padding:2px 7px; font-size:10px; border-color:#a855f7; color:#c084fc; background:rgba(168,85,247,0.1);">🎲 Random</button>
+              <button type="button" class="btn-topbar-tool" onclick="clearModalUA()" style="padding:2px 7px; font-size:10px;">✕ Clear</button>
+            </div>
+          </div>
+          <input type="text" id="modal-client-ua" placeholder="Default Browser User-Agent (Empty)" style="width:100%; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:6px; padding:6px 10px; color:#fff; font-family:var(--font-mono); font-size:11px; outline:none;" />
+        </div>
+
+        <!-- 3. IP / Proxy Section -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <label style="font-size:11px; font-weight:700; color:#c084fc;">🛡️ IP / Proxy Settings</label>
+            <button type="button" class="btn-topbar-tool" onclick="clearModalProxy()" style="padding:2px 7px; font-size:10px;">✕ Clear</button>
+          </div>
+          <input type="text" id="modal-client-proxy" placeholder="http://ip:port or socks5://ip:port or ip:port:user:pass" style="width:100%; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:6px; padding:6px 10px; color:#fff; font-family:var(--font-mono); font-size:11px; outline:none;" />
+          <span style="font-size:9.5px; color:var(--text-dim); margin-top:3px; display:block;">ใช้แยก IP สำหรับแต่ละจอเพื่อป้องกันการตรวจจับ (IP Detection)</span>
+        </div>
+
+      </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05);">
+        <button class="btn-topbar-tool" onclick="closeClientSettingsModal()">Cancel</button>
+        <button class="btn-matrix-action launch" style="padding:6px 14px; font-size:11px;" onclick="saveClientSettingsFromModal()">💾 Save Settings</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Update Notification Modal -->
-  <div class="modal-overlay" id="update-modal" style="display:none;">
-    <div class="modal-card">
-      <div class="modal-header">
-        <span class="modal-icon">✨</span>
-        <span class="modal-title">ตรวจสอบการอัปเดตระบบ</span>
-        <button class="modal-close-btn" id="btn-close-update-modal">✕</button>
+  <div class="modal-overlay" id="update-modal" style="display:none; z-index:300;">
+    <div class="modal-card" style="width: 520px; max-width: 95%;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed var(--border); padding-bottom:10px; margin-bottom:12px;">
+        <h3 style="margin:0; font-size:14px; font-weight:800; color:#fff; display:flex; align-items:center; gap:6px;">
+          <span>✨</span>
+          <span id="lbl-update-modal-title">ตรวจสอบการอัปเดตระบบ</span>
+        </h3>
+        <button class="win-btn close" id="btn-close-update-modal" style="width:24px; height:24px; border-radius:4px;">✕</button>
       </div>
       <div class="modal-body" id="update-modal-body">
-        <div class="update-checking-state">
+        <div style="display:flex; align-items:center; gap:10px; padding:12px 0;">
           <div class="spinner"></div>
           <span>กำลังตรวจสอบสถานะ Git Remote...</span>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn-secondary" id="btn-cancel-update">ปิด</button>
-        <button class="btn-hero-primary" id="btn-perform-update" style="display:none;">📥 ดาวน์โหลดและอัปเดตทันที</button>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05);">
+        <button class="btn-topbar-tool" id="btn-cancel-update" style="padding:6px 14px;">ยกเลิก</button>
+        <button class="btn-matrix-action launch" id="btn-perform-update" style="display:none; padding:6px 18px; font-size:11.5px; font-weight:800;">📥 ดาวน์โหลดและอัปเดตทันที</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Visual Key Picker & Editor Modal -->
+  <div class="modal-overlay" id="launcher-key-picker-modal" style="display:none; z-index:300;" onclick="if(event.target===this) window.closeLauncherKeyPicker()">
+    <div class="modal-card" style="width: 880px; max-width: 96%; max-height: 90vh; overflow-y: auto; background: #0d1424; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 20px;">
+      
+      <!-- Header -->
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
+        <h3 style="margin:0; font-size:15px; font-weight:800; color:#fff; display:flex; align-items:center; gap:8px;">
+          <span>⌨️</span>
+          <span id="lbl-vk-modal-title">Visual Key Picker & Editor</span>
+        </h3>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button type="button" class="btn-topbar-tool" id="btn-vk-toggle-manual" onclick="window.toggleLauncherManualMode()" style="padding:4px 10px; font-size:11px; border-color:#3b82f6; color:#60a5fa; background:rgba(59,130,246,0.1);">
+            ✏️ Switch to Manual Typing
+          </button>
+          <button type="button" class="win-btn close" onclick="window.closeLauncherKeyPicker()" style="width:24px; height:24px; border-radius:4px;">✕</button>
+        </div>
+      </div>
+
+      <!-- Preview Bar -->
+      <div style="background:rgba(0,0,0,0.4); border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between;">
+        <div id="launcher-vk-preview" style="font-family:var(--font-mono); font-size:16px; font-weight:800; color:#38bdf8;">END</div>
+        <div style="display:flex; gap:6px;">
+          <button type="button" class="btn-topbar-tool" onclick="window.popLauncherVirtualKey()" style="padding:4px 10px; font-size:11px;">⌫ Backspace</button>
+          <button type="button" class="btn-topbar-tool" onclick="window.clearLauncherVirtualKey()" style="padding:4px 10px; font-size:11px; color:#ef4444; border-color:rgba(239,68,68,0.3);">✕ Clear</button>
+        </div>
+      </div>
+
+      <!-- Manual Area (Hidden by default) -->
+      <div id="launcher-vk-manual-area" style="display:none; flex-direction:column; gap:8px; margin-bottom:14px;">
+        <label style="font-size:11.5px; color:var(--text-muted); font-weight:600;" id="lbl-vk-manual-desc">พิมพ์ปุ่มที่ต้องการ (เช่น "END", "F12", "PAUSE", "ALT + F1"):</label>
+        <input type="text" id="launcher-vk-manual-input" placeholder="e.g. END or F12" style="background:var(--bg-card-alt); border:1px solid var(--border); border-radius:6px; padding:8px 12px; color:#fff; font-family:var(--font-mono); font-size:14px; outline:none; width:100%;" oninput="window.onLauncherManualInput(this.value)">
+      </div>
+
+      <!-- Key Picker Area (100% Full Mechanical Keyboard Layout) -->
+      <div id="launcher-vk-picker-area" style="display:flex; justify-content:center; overflow-x:auto; padding:6px 0;">
+        <div class="vk-frame-100">
+
+          <!-- 1. ALPHA-NUMERIC 60% SECTION -->
+          <div class="vk-section" style="flex:1;">
+            <!-- Row 0: Function Keys -->
+            <div class="vk-row">
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('ESC')">Esc</button>
+              <div class="keycap keycap-blank u-0-5"></div>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('F1')">F1</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('F2')">F2</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('F3')">F3</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('F4')">F4</button>
+              <div class="keycap keycap-blank u-0-5"></div>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('F5')">F5</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('F6')">F6</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('F7')">F7</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('F8')">F8</button>
+              <div class="keycap keycap-blank u-0-5"></div>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('F9')">F9</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('F10')">F10</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('F11')">F11</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('F12')">F12</button>
+            </div>
+
+            <!-- Row 1: Numbers -->
+            <div class="vk-row">
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('`')">`</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('1')">1</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('2')">2</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('3')">3</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('4')">4</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('5')">5</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('6')">6</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('7')">7</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('8')">8</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('9')">9</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('0')">0</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('-')">-</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('=')">=</button>
+              <button type="button" class="keycap u-2" onclick="window.popLauncherVirtualKey()">Backspace</button>
+            </div>
+
+            <!-- Row 2: QWERTY -->
+            <div class="vk-row">
+              <button type="button" class="keycap u-1-5" onclick="window.pressLauncherVirtualKey('TAB')">Tab</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('Q')">Q</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('W')">W</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('E')">E</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('R')">R</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('T')">T</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('Y')">Y</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('U')">U</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('I')">I</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('O')">O</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('P')">P</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('[')">[</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey(']')">]</button>
+              <button type="button" class="keycap u-1-5" onclick="window.pressLauncherVirtualKey('\\')">\</button>
+            </div>
+
+            <!-- Row 3: ASDF -->
+            <div class="vk-row">
+              <button type="button" class="keycap u-1-75" onclick="window.pressLauncherVirtualKey('CAPS LOCK')">Caps Lock</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('A')">A</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('S')">S</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('D')">D</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('F')">F</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('G')">G</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('H')">H</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('J')">J</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('K')">K</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('L')">L</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey(';')">;</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('\'')">'</button>
+              <button type="button" class="keycap u-2-25" onclick="window.pressLauncherVirtualKey('ENTER')">Enter</button>
+            </div>
+
+            <!-- Row 4: ZXCV -->
+            <div class="vk-row">
+              <button type="button" class="keycap vk-mod-btn u-2-25" data-mod="SHIFT" onclick="window.toggleLauncherModifier('SHIFT')">Shift</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('Z')">Z</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('X')">X</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('C')">C</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('V')">V</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('B')">B</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('N')">N</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('M')">M</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey(',')">,</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('.')">.</button>
+              <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('/')">/</button>
+              <button type="button" class="keycap vk-mod-btn u-2-75" data-mod="SHIFT" onclick="window.toggleLauncherModifier('SHIFT')">Shift</button>
+            </div>
+
+            <!-- Row 5: Modifiers & Space -->
+            <div class="vk-row">
+              <button type="button" class="keycap vk-mod-btn u-1-25" data-mod="CTRL" onclick="window.toggleLauncherModifier('CTRL')">Ctrl</button>
+              <button type="button" class="keycap u-1-25" onclick="window.pressLauncherVirtualKey('WIN')">Win</button>
+              <button type="button" class="keycap vk-mod-btn u-1-25" data-mod="LEFT ALT" onclick="window.toggleLauncherModifier('LEFT ALT')">Alt</button>
+              <button type="button" class="keycap u-6-25" onclick="window.pressLauncherVirtualKey('SPACE')">Space</button>
+              <button type="button" class="keycap vk-mod-btn u-1-25" data-mod="LEFT ALT" onclick="window.toggleLauncherModifier('LEFT ALT')">Alt</button>
+              <button type="button" class="keycap u-1-25" onclick="window.pressLauncherVirtualKey('FN')">Fn</button>
+              <button type="button" class="keycap u-1-25" onclick="window.pressLauncherVirtualKey('MENU')">Menu</button>
+              <button type="button" class="keycap vk-mod-btn u-1-25" data-mod="CTRL" onclick="window.toggleLauncherModifier('CTRL')">Ctrl</button>
+            </div>
+          </div>
+
+          <!-- 2. NAVIGATION & ARROW CLUSTER -->
+          <div class="vk-section" style="width:130px; justify-content:space-between;">
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              <div class="vk-row">
+                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('PRINTSCREEN')">PrtSc</button>
+                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('SCROLLLOCK')">ScrLk</button>
+                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('PAUSE')">Pause</button>
+              </div>
+              <div class="vk-row">
+                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('INSERT')">Ins</button>
+                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('HOME')">Home</button>
+                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('PAGEUP')">PgUp</button>
+              </div>
+              <div class="vk-row">
+                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('DELETE')">Del</button>
+                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('END')">End</button>
+                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('PAGEDOWN')">PgDn</button>
+              </div>
+            </div>
+
+            <!-- Arrows -->
+            <div style="display:flex; flex-direction:column; gap:6px; margin-top:8px;">
+              <div class="vk-row">
+                <div class="keycap keycap-blank u-1"></div>
+                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('UP')">▲</button>
+                <div class="keycap keycap-blank u-1"></div>
+              </div>
+              <div class="vk-row">
+                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('LEFT')">◄</button>
+                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('DOWN')">▼</button>
+                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('RIGHT')">►</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. NUMPAD SECTION (True 4-Column Grid) -->
+          <div class="vk-section" style="width:175px;">
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 5.5px; width: 100%;">
+              <!-- Row 1 -->
+              <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMLOCK')">Num</button>
+              <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD_DIVIDE')">/</button>
+              <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD_MULTIPLY')">*</button>
+              <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD_SUBTRACT')">-</button>
+
+              <!-- Row 2 -->
+              <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD7')">7</button>
+              <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD8')">8</button>
+              <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD9')">9</button>
+              <button type="button" class="keycap" style="grid-row: span 2; height: 100%; min-height: 81px;" onclick="window.pressLauncherVirtualKey('NUMPAD_ADD')">+</button>
+
+              <!-- Row 3 -->
+              <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD4')">4</button>
+              <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD5')">5</button>
+              <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD6')">6</button>
+
+              <!-- Row 4 -->
+              <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD1')">1</button>
+              <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD2')">2</button>
+              <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD3')">3</button>
+              <button type="button" class="keycap" style="grid-row: span 2; height: 100%; min-height: 81px;" onclick="window.pressLauncherVirtualKey('NUMPAD_ENTER')">Ent</button>
+
+              <!-- Row 5 -->
+              <button type="button" class="keycap" style="grid-column: span 2;" onclick="window.pressLauncherVirtualKey('NUMPAD0')">0</button>
+              <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD_DECIMAL')">.</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
+        <button type="button" class="btn-topbar-tool" onclick="window.closeLauncherKeyPicker()" style="padding:6px 14px;">Cancel</button>
+        <button type="button" class="btn-matrix-action launch" onclick="window.applyLauncherKeyPicker()" style="padding:6px 18px; font-size:11.5px; font-weight:800;">💾 Apply Key</button>
+      </div>
+
     </div>
   </div>
 

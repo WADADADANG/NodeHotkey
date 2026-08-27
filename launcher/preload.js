@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld('launcherAPI', {
 
   // External & UI
   openWebDashboard: () => ipcRenderer.invoke('app:open-web'),
+  openExternal: (url) => ipcRenderer.invoke('app:open-external', url),
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   maximizeWindow: () => ipcRenderer.send('window:maximize'),
   closeWindow: () => ipcRenderer.send('window:close'),
