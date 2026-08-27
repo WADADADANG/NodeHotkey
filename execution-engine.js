@@ -119,7 +119,8 @@ class NodeExecutionEngine {
         (portName === 'onDisable' && conn.fromPort === 'on_disable') ||
         (portName === 'onBeforeStart' && conn.fromPort === 'on_before_start') ||
         (portName === 'onAfterStart' && conn.fromPort === 'on_after_start') ||
-        (portName === 'onStep' && (conn.fromPort === 'onStep' || conn.fromPort === 'on_step'));
+        (portName === 'onStep' && (conn.fromPort === 'onStep' || conn.fromPort === 'on_step')) ||
+        (portName === 'onCooldown' && (conn.fromPort === 'onCooldown' || conn.fromPort === 'on_cooldown'));
 
       if (matchesPort) {
         const targetNode = this.nodesMap.get(conn.toNodeId);

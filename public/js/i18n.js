@@ -209,6 +209,7 @@ export const TRANSLATIONS = {
     port_onTrue: "True",
     port_onFalse: "False",
     port_onComplete: "On Complete",
+    port_onCooldown: "On Cooldown",
 
     // Canvas Inspector Detailed Fields
     inspector_title: "INSPECTOR / NODE CONFIG",
@@ -547,6 +548,7 @@ export const TRANSLATIONS = {
     port_onTrue: "จริง",
     port_onFalse: "เท็จ",
     port_onComplete: "เมื่อเสร็จ",
+    port_onCooldown: "เมื่อติดคูลดาวน์",
 
     // Canvas Inspector (Thai)
     inspector_title: "ตั้งค่าโหนด (INSPECTOR)",

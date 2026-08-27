@@ -232,6 +232,23 @@ export function renderSkillPickerGrid(renderActionsCb) {
     currentPresetId = currentAct ? currentAct.cooldownPresetId : '';
   }
 
+  // Add "None / Disable Cooldown" card at the very top of the list
+  const isNoneSelected = !currentPresetId || currentPresetId === 'none';
+  const noneBorderStyle = isNoneSelected ? '2px solid #ef4444' : '1px solid var(--border)';
+  const noneBgStyle = isNoneSelected ? 'rgba(239,68,68,0.1)' : 'var(--bg-input)';
+  html += `
+    <div class="skill-picker-card" data-preset-id="" style="background:${noneBgStyle}; border:${noneBorderStyle}; border-radius:10px; padding:10px 12px; cursor:pointer; display:flex; gap:10px; align-items:center; transition:all 0.2s;">
+      <div style="width:36px; height:36px; border-radius:6px; background:rgba(239,68,68,0.15); display:flex; align-items:center; justify-content:center; font-size:16px;">🚫</div>
+      <div style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:13px; font-weight:700; color:var(--text);">${window.currentLang === 'en' ? 'No Cooldown Guard (Disable)' : 'ไม่มี Cooldown Guard (ปิดใช้งาน)'}</span>
+          <span style="font-size:10px; font-weight:700; color:#ef4444; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); border-radius:4px; padding:1px 5px; flex-shrink:0;">✕ Clear</span>
+        </div>
+        <span style="font-size:11px; color:var(--muted); line-height:1.3; margin-top:2px;">${window.currentLang === 'en' ? 'Disable cooldown tracking & remove On Cooldown port' : 'ปิดระบบป้องกันการกดซ้ำ และยกเลิกเชื่อมต่อพอร์ต On Cooldown'}</span>
+      </div>
+    </div>
+  `;
+
   items.forEach(item => {
     const isSelected = item.id === currentPresetId;
     const cdText = item.cooldownMs ? `${item.cooldownMs / 1000}s` : 'No Cooldown';
@@ -269,9 +286,13 @@ export function selectSkillForAction(presetId, renderActionsCb) {
   if (!activePickerActionId) return;
 
   if (window.nodeCanvas && window.nodeCanvas.nodes && window.nodeCanvas.nodes.some(n => n.id === activePickerActionId)) {
-    window.nodeCanvas.updateNodeData(activePickerActionId, 'cooldownPresetId', presetId);
-    window.nodeCanvas.openInspector(activePickerActionId);
-    window.nodeCanvas.renderNodes();
+    if (!presetId || presetId === 'none') {
+      window.nodeCanvas.clearSkillCooldown(activePickerActionId);
+    } else {
+      window.nodeCanvas.updateNodeData(activePickerActionId, 'cooldownPresetId', presetId);
+      window.nodeCanvas.openInspector(activePickerActionId);
+      window.nodeCanvas.renderNodes();
+    }
     closeSkillPickerModal();
     return;
   }

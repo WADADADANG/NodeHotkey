@@ -1549,25 +1549,31 @@ async function getCDPSession(targetIdx) {
 // ============================================================================
 // ACTION & LOOP FUNCTIONS
 // ============================================================================
-async function sendKey(action, key) {
-    if (global.isSuspended) return;
-    const target = action.targetClient || '1';
+async function sendKey(action, key, clientOverride = null, callStack = null) {
+    if (clientOverride && typeof clientOverride === 'object' && clientOverride instanceof Set) {
+        callStack = clientOverride;
+        clientOverride = null;
+    }
+    if (global.isSuspended) return false;
+    const target = clientOverride !== null ? String(clientOverride) : (action.targetClient || '1');
     const targets = getActionTargets(target);
-    if (targets.length === 0) return;
+    if (targets.length === 0) return false;
 
     if (targets.length > 1) {
         // Sequentially send to all targets in the list
+        let allSuccess = true;
         for (let targetIdxStr of targets) {
-            await sendKey({ ...action, targetClient: targetIdxStr }, key);
+            const ok = await sendKey({ ...action, targetClient: targetIdxStr }, key, null, callStack);
+            if (ok === false) allSuccess = false;
         }
-        return;
+        return allSuccess;
     }
 
     const targetIdx = parseInt(targets[0], 10);
     const targetPage = clientPages[targetIdx];
     const clientName = `Client ${targetIdx}`;
 
-    if (!targetPage) return;
+    if (!targetPage) return false;
 
     // Cooldown Prevention Check per client
     let activeCooldownMs = 0;
@@ -1602,7 +1608,9 @@ async function sendKey(action, key) {
         if (now < expireTime && (now - lastCycle) > 1500) {
             const remainingSec = ((expireTime - now) / 1000).toFixed(1);
             console.log(`[Cooldown] [${clientName}] ⏱️ Skipped "${action.name}" (${cdLabel}) - Skill on cooldown (${remainingSec}s remaining)`);
-            return; // Skip sending key!
+            emitSignal(action.id, 'onCooldown');
+            await fireChain(action, 'onCooldown', callStack);
+            return false; // Skip sending key!
         }
 
         // Update timestamp for new action trigger burst
@@ -1650,7 +1658,7 @@ async function sendKey(action, key) {
                 }, holdTime);
                 console.log(`[Action] [${clientName}] Sent key: "${key}" (Formatted: "${formattedParts.join('+')}" | Combo | Hold: ${holdTime}ms)`);
             }
-            return;
+            return true;
         }
 
         const formattedKey = formatKeyForPlaywright(key);
@@ -1681,8 +1689,10 @@ async function sendKey(action, key) {
 
             console.log(`[Action] [${clientName}] Sent key: "${key}" (Formatted: "${formattedKey}" | Hold: ${holdTime}ms)`);
         }
+        return true;
     } catch (e) {
         console.error(`[Action Error] [${clientName}] Failed to send key "${key}":`, e.message);
+        return false;
     }
 }
 
@@ -1838,7 +1848,7 @@ async function runLoopStep(action, callStack) {
     if (action.keys && action.keys.length > 0) {
         for (let key of action.keys) {
             if (!state || !state.running) return;
-            await sendKey(action, key);
+            await sendKey(action, key, null, callStack);
         }
     }
 
@@ -1895,7 +1905,11 @@ async function runBuffSequenceAction(action, callStack) {
                     wasInterrupted = true;
                     break;
                 }
-                await sendKey(action, key);
+                const ok = await sendKey(action, key, null, callStack);
+                if (ok === false) {
+                    wasInterrupted = true;
+                    break;
+                }
                 await new Promise(res => setTimeout(res, delay));
             }
         }
@@ -1925,11 +1939,17 @@ async function runSinglePressAction(action, callStack) {
     if (global.isSuspended) return;
     const target = action.targetClient || '1';
     console.log(`⚡ [Action] Single Press: "${action.name}" on Client ${target}`);
+    let allPassed = true;
     if (action.keys && action.keys.length > 0) {
         for (let key of action.keys) {
-            await sendKey(action, key);
+            const ok = await sendKey(action, key, null, callStack);
+            if (ok === false) {
+                allPassed = false;
+                break;
+            }
         }
     }
+    if (!allPassed) return;
     const delayAfter = action.delayAfter !== undefined ? parseInt(action.delayAfter, 10) : 0;
     if (delayAfter > 0) {
         await new Promise(res => setTimeout(res, delayAfter));
@@ -2063,7 +2083,7 @@ async function runSequencerLoopStep(action, callStack, myToken) {
         for (let t of targets) {
             const page = clientPages[t];
             if (!page) continue;
-            await sendKey(action, rawKey, t);
+            await sendKey(action, rawKey, t, callStack);
         }
 
         await fireChain(action, 'onStep', callStack);
@@ -2128,7 +2148,7 @@ async function runCastSequencerOnce(action, callStack) {
                 for (let t of targets) {
                     const page = clientPages[t];
                     if (!page) continue;
-                    await sendKey(action, rawKey, t);
+                    await sendKey(action, rawKey, t, callStack);
                 }
 
                 await fireChain(action, 'onStep', callStack);

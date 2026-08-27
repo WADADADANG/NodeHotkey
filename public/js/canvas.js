@@ -902,6 +902,14 @@ class NodeCanvasEditor {
         portsHTML += `<div class="node-port port-in" data-node="${node.id}" data-port="exec_in" title="Input (exec_in)"></div>`;
       }
 
+      const hasCooldown = this.hasCooldownGuard(node);
+      const cooldownPinRowHTML = hasCooldown ? `
+        <div class="node-pin-row">
+          <span class="node-pin-label onCooldown">${canvasT('port_onCooldown', 'On Cooldown')} ▶</span>
+          <div class="node-port port-out port-onCooldown" data-node="${node.id}" data-port="onCooldown" title="${canvasT('port_onCooldown', 'On Cooldown')}"></div>
+        </div>
+      ` : '';
+
       if (node.type === 'loop') {
         pinsHTML = `
           <div class="node-pins-section">
@@ -921,6 +929,7 @@ class NodeCanvasEditor {
               <span class="node-pin-label onStop">${canvasT('port_onStop', 'onStop')} ▶</span>
               <div class="node-port port-out port-onStop" data-node="${node.id}" data-port="onStop" title="${canvasT('port_onStop', 'onStop')}"></div>
             </div>
+            ${cooldownPinRowHTML}
           </div>
         `;
       } else if (node.type === 'buff_sequence') {
@@ -938,6 +947,7 @@ class NodeCanvasEditor {
               <span class="node-pin-label onComplete">${canvasT('port_onComplete', 'onComplete')} ▶</span>
               <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="onComplete" title="${canvasT('port_onComplete', 'onComplete')}"></div>
             </div>
+            ${cooldownPinRowHTML}
           </div>
         `;
       } else if (node.type === 'sequencer') {
@@ -955,6 +965,35 @@ class NodeCanvasEditor {
               <span class="node-pin-label onStop">${canvasT('port_onStop', 'onStop / onComplete')} ▶</span>
               <div class="node-port port-out port-onStop" data-node="${node.id}" data-port="onStop" title="${canvasT('port_onStop', 'onStop')}"></div>
             </div>
+            ${cooldownPinRowHTML}
+          </div>
+        `;
+      } else if (node.type === 'key_press') {
+        if (hasCooldown) {
+          pinsHTML = `
+            <div class="node-pins-section">
+              <div class="node-pin-row">
+                <span class="node-pin-label onComplete">${canvasT('port_onComplete', 'On Complete')} ▶</span>
+                <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="next" title="${canvasT('port_onComplete', 'On Complete')}"></div>
+              </div>
+              ${cooldownPinRowHTML}
+            </div>
+          `;
+        } else {
+          portsHTML += `<div class="node-port port-out" data-node="${node.id}" data-port="next" title="Output (next)"></div>`;
+        }
+      } else if (node.type === 'forwarder') {
+        pinsHTML = `
+          <div class="node-pins-section">
+            <div class="node-pin-row">
+              <span class="node-pin-label onAfterStart">${canvasT('port_onKeyDown', 'On Key Down')} ▶</span>
+              <div class="node-port port-out port-onAfterStart" data-node="${node.id}" data-port="onKeyDown" title="On Key Down"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label onComplete">${canvasT('port_onActivated', 'On Activated')} ▶</span>
+              <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="onActivated" title="On Activated"></div>
+            </div>
+            ${cooldownPinRowHTML}
           </div>
         `;
       } else if (node.type === 'loop_scheduler') {
@@ -978,6 +1017,7 @@ class NodeCanvasEditor {
               <span class="node-pin-label onStop">${canvasT('port_onStop', 'onStop')} ▶</span>
               <div class="node-port port-out port-onStop" data-node="${node.id}" data-port="onStop" title="${canvasT('port_onStop', 'onStop')}"></div>
             </div>
+            ${cooldownPinRowHTML}
           </div>
         `;
       } else if (node.type === 'branch' || node.type === 'condition') {
@@ -1190,10 +1230,11 @@ class NodeCanvasEditor {
     const x = isOutput ? node.position.x + 221 : node.position.x - 1;
     let y = node.position.y + 38;
     if (portName === 'onBeforeStart') y = node.position.y + 75;
-    else if (portName === 'onAfterStart') y = node.position.y + 100;
+    else if (portName === 'onAfterStart' || portName === 'onKeyDown') y = node.position.y + 100;
     else if (portName === 'onEachCycle' || portName === 'on_interval') y = node.position.y + 125;
     else if (portName === 'onStop') y = node.position.y + 150;
-    else if (portName === 'onComplete' || portName === 'on_complete') y = node.position.y + 125;
+    else if (portName === 'onComplete' || portName === 'on_complete' || portName === 'onActivated') y = node.position.y + 125;
+    else if (portName === 'onCooldown' || portName === 'on_cooldown') y = node.position.y + 150;
     else if (portName === 'onTrue' || portName === 'on_true') y = node.position.y + 75;
     else if (portName === 'onFalse' || portName === 'on_false') y = node.position.y + 100;
 
@@ -1220,6 +1261,10 @@ class NodeCanvasEditor {
           <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
         <filter id="wire-glow-red" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="wire-glow-amber" x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="3" result="blur" />
           <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
@@ -1288,6 +1333,9 @@ class NodeCanvasEditor {
       orbColor = '#06b6d4';
     } else if (colorOverride === 'purple') {
       orbColor = '#c084fc';
+    } else if (colorOverride === 'amber' || colorOverride === 'orange') {
+      colorKey = 'amber';
+      orbColor = '#f59e0b';
     } else {
       const pName = conn.fromPort || '';
       if (pName === 'onBeforeStart') {
@@ -1305,6 +1353,9 @@ class NodeCanvasEditor {
       } else if (pName === 'onStop' || pName === 'on_stop' || pName === 'onFalse' || pName === 'on_false') {
         colorKey = 'red';
         orbColor = '#f87171';
+      } else if (pName === 'onCooldown' || pName === 'on_cooldown') {
+        colorKey = 'amber';
+        orbColor = '#f59e0b';
       }
     }
 
@@ -1539,6 +1590,16 @@ class NodeCanvasEditor {
       this._actionRunStates[actionId] = false;
       const stopConns = this.connections.filter(c => c.fromNodeId === sourceNode.id && (c.fromPort === 'onStop' || c.fromPort === 'on_stop'));
       stopConns.forEach(c => this.firePulseOnWire(c, 'red'));
+    } else if (eventName === 'onCooldown') {
+      const cdConns = this.connections.filter(c => c.fromNodeId === sourceNode.id && (c.fromPort === 'onCooldown' || c.fromPort === 'on_cooldown'));
+      cdConns.forEach(conn => {
+        this.firePulseOnWire(conn, 'amber', () => {
+          const nextNode = this.nodes.find(n => n.id === conn.toNodeId);
+          if (nextNode) {
+            this.propagateSignalFlow(nextNode, true, new Set(), 1);
+          }
+        });
+      });
     }
   }
 
@@ -3619,11 +3680,19 @@ class NodeCanvasEditor {
     }
 
     const border = isCustom ? '#a855f7' : (presetId && presetsById[presetId] ? '#10b981' : 'var(--border)');
+    const hasActiveGuard = !!(presetId || customMs > 0);
 
     return `
       <div class="inspector-field-group" style="margin-top:10px; border-top:1px dashed rgba(255,255,255,0.08); padding-top:10px;">
         <label class="inspector-label" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
           <span>⏱️ ${trans.skillCooldownGuardLabel || 'Skill Cooldown Guard (ระบบป้องกันการกดซ้ำ)'}</span>
+          ${hasActiveGuard ? `
+            <button type="button" onclick="event.stopPropagation(); window.nodeCanvas.clearSkillCooldown('${node.id}');"
+                    title="ปิดใช้งาน Cooldown Guard (ตัดการเชื่อมต่อพอร์ต On Cooldown อัตโนมัติ)"
+                    style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.35); color:#f87171; border-radius:5px; padding:2px 8px; font-size:10px; font-weight:700; cursor:pointer; transition:all 0.2s;">
+              ✕ ${window.currentLang === 'en' ? 'Disable' : 'ปิดใช้งาน'}
+            </button>
+          ` : ''}
         </label>
         <div class="custom-skill-select-card ${presetId ? 'active' : ''}"
              onclick="if(window.openSkillPickerModal) window.openSkillPickerModal('${node.id}')"
@@ -3793,7 +3862,31 @@ class NodeCanvasEditor {
   }
 
   closeInspector() {
-    this.inspectorPanel.classList.remove('open');
+    if (this.inspectorPanel) {
+      this.inspectorPanel.classList.remove('open');
+    }
+  }
+
+  hasCooldownGuard(node) {
+    if (!node || !node.data) return false;
+    const presetId = node.data.cooldownPresetId;
+    const customMs = parseInt(node.data.customCooldownMs, 10);
+    return !!((presetId && presetId !== 'none' && presetId !== '') || (customMs > 0));
+  }
+
+  clearSkillCooldown(nodeId) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node) return;
+    if (!node.data) node.data = {};
+    node.data.cooldownPresetId = '';
+    node.data.customCooldownMs = 0;
+    // Auto-prune all connections going out from onCooldown
+    this.connections = this.connections.filter(c => !(c.fromNodeId === nodeId && (c.fromPort === 'onCooldown' || c.fromPort === 'on_cooldown')));
+    this.renderNodes();
+    this.renderWires();
+    this.openInspector(nodeId);
+    this.addHistory('⏱️', `ปิดใช้งาน Cooldown Guard ของโหนด "${node.title || node.type}"`);
+    this.onProfileChanged();
   }
 
   updateNodeData(nodeId, key, value) {
@@ -3805,6 +3898,13 @@ class NodeCanvasEditor {
       if (!node.data) node.data = {};
       node.data[key] = value;
     }
+
+    // If cooldown was cleared or set to 0, auto-prune any onCooldown wire connections
+    if ((key === 'cooldownPresetId' || key === 'customCooldownMs') && !this.hasCooldownGuard(node)) {
+      this.connections = this.connections.filter(c => !(c.fromNodeId === nodeId && (c.fromPort === 'onCooldown' || c.fromPort === 'on_cooldown')));
+      this.renderWires();
+    }
+
     this.renderNodes();
     this.addHistory('⚙️', `แก้ไข ${key} ของโหนด "${node.title || node.type}"`);
     this.onProfileChanged();

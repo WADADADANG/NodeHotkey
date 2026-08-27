@@ -800,6 +800,7 @@
 .node-pin-label.onComplete { color: #34d399; }
 .node-pin-label.onTrue { color: #34d399; }
 .node-pin-label.onFalse { color: #f87171; }
+.node-pin-label.onCooldown { color: #fbbf24; }
 
 .node-pin-row .node-port {
   position: absolute;
@@ -881,6 +882,17 @@
 .node-port.port-on-false:hover {
   background: #ef4444;
   box-shadow: 0 0 10px #ef4444;
+}
+
+.node-port.port-onCooldown,
+.node-port.port-on-cooldown {
+  border-color: #f59e0b;
+  background: #78350f;
+}
+.node-port.port-onCooldown:hover,
+.node-port.port-on-cooldown:hover {
+  background: #f59e0b;
+  box-shadow: 0 0 10px #f59e0b;
 }
 
 /* Floating Port Context Menu (Unreal Engine Blueprint Break Links Style) */

@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Add-ons",
   "canvas": {
-    "zoom": 0.6210766480991119,
+    "zoom": 1.0002501525301013,
     "pan": {
-      "x": 700,
-      "y": -162
+      "x": 5,
+      "y": 124
     }
   },
   "nodes": [
@@ -160,7 +160,7 @@
       "title": "Global Trigger",
       "position": {
         "x": 860,
-        "y": 470
+        "y": 520
       },
       "data": {
         "enabled": true,
@@ -259,7 +259,7 @@
       "title": "STOP ALL",
       "position": {
         "x": 1180,
-        "y": 470
+        "y": 520
       },
       "data": {
         "enabled": true,
@@ -307,7 +307,7 @@
       "title": "Btn Start Knight Buff Page 5 & 6",
       "position": {
         "x": 1470,
-        "y": 480
+        "y": 510
       },
       "data": {
         "enabled": true,
@@ -321,8 +321,8 @@
       "type": "key_press",
       "title": "Single Key Press",
       "position": {
-        "x": 1800,
-        "y": 480
+        "x": 1790,
+        "y": 510
       },
       "data": {
         "enabled": true,

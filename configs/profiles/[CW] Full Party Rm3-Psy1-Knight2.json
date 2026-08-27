@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 0.5513684346952022,
     "pan": {
-      "x": 415,
-      "y": -1635
+      "x": -604,
+      "y": -1780
     }
   },
   "nodes": [
@@ -269,8 +269,8 @@
       "type": "key_press",
       "title": "Restore Mp 4",
       "position": {
-        "x": 2650,
-        "y": 4150
+        "x": 2660,
+        "y": 4280
       },
       "data": {
         "enabled": true,
@@ -286,8 +286,8 @@
       "type": "key_press",
       "title": "Merkaba 4",
       "position": {
-        "x": 2650,
-        "y": 4030
+        "x": 2660,
+        "y": 4100
       },
       "data": {
         "enabled": true,
@@ -304,8 +304,8 @@
       "type": "key_press",
       "title": "MoomBeam 4",
       "position": {
-        "x": 2650,
-        "y": 3910
+        "x": 2660,
+        "y": 3920
       },
       "data": {
         "enabled": true,
@@ -322,8 +322,8 @@
       "type": "key_press",
       "title": "Heal Rain 4",
       "position": {
-        "x": 2650,
-        "y": 3790
+        "x": 2660,
+        "y": 3740
       },
       "data": {
         "enabled": true,
@@ -340,8 +340,8 @@
       "type": "loop_scheduler",
       "title": "RM 4",
       "position": {
-        "x": 2240,
-        "y": 3830
+        "x": 2230,
+        "y": 3960
       },
       "data": {
         "enabled": true,
@@ -397,8 +397,8 @@
       "type": "key_press",
       "title": "Buff GT",
       "position": {
-        "x": 2650,
-        "y": 4250
+        "x": 2660,
+        "y": 4440
       },
       "data": {
         "enabled": true,
@@ -406,7 +406,6 @@
         "keys": [
           "6"
         ],
-        "cooldownPresetId": "skill_ringmaster_gvur-tialla",
         "actionId": "1787585392867"
       }
     },
@@ -415,8 +414,8 @@
       "type": "key_hold",
       "title": "Spy  SpiritBomb",
       "position": {
-        "x": 2240,
-        "y": 4480
+        "x": 2260,
+        "y": 4740
       },
       "data": {
         "enabled": true,
@@ -430,8 +429,8 @@
       "type": "loop",
       "title": "Psy Resotre MP",
       "position": {
-        "x": 2590,
-        "y": 4480
+        "x": 2610,
+        "y": 4740
       },
       "data": {
         "enabled": true,
@@ -449,8 +448,8 @@
       "type": "control",
       "title": "AC Stop Psy Restore MP",
       "position": {
-        "x": 2590,
-        "y": 4690
+        "x": 2610,
+        "y": 4950
       },
       "data": {
         "enabled": true,

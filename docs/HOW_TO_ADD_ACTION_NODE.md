@@ -42,13 +42,13 @@ graph LR
    ```javascript
    // พอร์ตขาเข้า: รับสัญญาณจาก Trigger หรือโหนดก่อนหน้า
    inputs: [{ id: 'exec_in', label: 'In', type: 'execution' }]
-   
-   // พอร์ตขาออก: ส่งสัญญาณต่อไปยังโหนดถัดไปเมื่อคลิกเสร็จ
-   outputs: [
-     { id: 'next', label: 'Completed', type: 'execution' },
-     { id: 'onError', label: 'Error', type: 'execution' }
-   ]
-   ```
+      // พอร์ตขาออก: ส่งสัญญาณต่อไปยังโหนดถัดไปเมื่อคลิกเสร็จ
+    outputs: [
+      { id: 'next', label: 'Completed', type: 'execution' },
+      { id: 'onCooldown', label: 'On Cooldown', type: 'execution' }, // 👈 พอร์ตเมื่อติด Skill Cooldown Guard
+      { id: 'onError', label: 'Error', type: 'execution' }
+    ]
+    ```
 
 3. **เพิ่มส่วนแสดงผลบนการ์ดโหนด (Node Card Body HTML):**
    ```javascript
