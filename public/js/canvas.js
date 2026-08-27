@@ -292,6 +292,24 @@ class NodeCanvasEditor {
       const worldPos = this.clientToWorld(e.clientX, e.clientY);
       this.lastMousePos = { clientX: e.clientX, clientY: e.clientY, world: worldPos };
 
+      // Auto-recover from stuck pan/drag when mouseup occurred outside window/iframe
+      if (this.isPanning && (e.buttons & 2) === 0) {
+        this.isPanning = false;
+        this.viewport.classList.remove('panning');
+      }
+      if (this.isBoxSelecting && (e.buttons & 1) === 0) {
+        this.isBoxSelecting = false;
+        if (this.selectionBoxEl) {
+          this.selectionBoxEl.remove();
+          this.selectionBoxEl = null;
+        }
+      }
+      if (this.isDraggingNodes && (e.buttons & 1) === 0) {
+        this.isDraggingNodes = false;
+        this.hasActuallyDraggedNodes = false;
+        this.dragInitialPositions.clear();
+      }
+
       // 1. Box Selection / คลุมดำ (Left-Click Drag on background)
       if (this.isBoxSelecting && this.selectionBoxEl) {
         const minX = Math.min(this.selectionStart.x, worldPos.x);
@@ -433,6 +451,35 @@ class NodeCanvasEditor {
         this.draftWire = null;
         this.renderWires();
       }
+    });
+
+    // Safety resets on window blur, mouseenter, or focus loss
+    const resetCanvasDragStates = () => {
+      if (this.isPanning) {
+        this.isPanning = false;
+        this.viewport.classList.remove('panning');
+      }
+      if (this.isBoxSelecting) {
+        this.isBoxSelecting = false;
+        if (this.selectionBoxEl) {
+          this.selectionBoxEl.remove();
+          this.selectionBoxEl = null;
+        }
+      }
+      if (this.isDraggingNodes) {
+        this.isDraggingNodes = false;
+        this.hasActuallyDraggedNodes = false;
+        this.dragInitialPositions.clear();
+      }
+      if (this.draftWire) {
+        this.draftWire = null;
+        this.renderWires();
+      }
+    };
+
+    window.addEventListener('blur', resetCanvasDragStates);
+    window.addEventListener('mouseenter', (e) => {
+      if (e.buttons === 0) resetCanvasDragStates();
     });
 
     // Delete or Backspace key to delete all selected nodes
