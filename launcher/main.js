@@ -535,9 +535,14 @@ ipcMain.handle('update:apply', async () => {
 });
 
 ipcMain.handle('update:hot-reload-ui', async () => {
-  broadcastLog('✨ [Level 1] Applying Seamless UI Hot-Reload (ZERO bot disruption)...', 'info');
+  broadcastLog('✨ [Level 1] Applying Seamless UI Hot-Reload (Launcher & Canvas)...', 'info');
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('app:hot-reload');
+    setTimeout(() => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.reload();
+      }
+    }, 600);
   }
   return { success: true };
 });
@@ -547,6 +552,11 @@ ipcMain.handle('update:restart-engine', async () => {
   await restartBotProcess();
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('app:hot-reload');
+    setTimeout(() => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.reload();
+      }
+    }, 600);
   }
   return { success: true };
 });

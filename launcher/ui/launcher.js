@@ -1527,6 +1527,9 @@
       if (editorFrame) {
         editorFrame.src = 'http://localhost:3000/?t=' + Date.now();
       }
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     });
   }
 
