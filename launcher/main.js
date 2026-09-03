@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, shell, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { spawn } = require('child_process');
 const http = require('http');
 const LogManager = require('./log-manager');
@@ -282,6 +283,40 @@ function createOverlayWindow() {
   });
 }
 
+function isOverlayEnabledInConfig() {
+  try {
+    const globalJsonPath = path.join(PROJECT_DIR, 'configs', 'global.json');
+    if (fs.existsSync(globalJsonPath)) {
+      const parsed = JSON.parse(fs.readFileSync(globalJsonPath, 'utf8'));
+      if (parsed && parsed.globalSettings && parsed.globalSettings.enableOverlay !== undefined) {
+        return !!parsed.globalSettings.enableOverlay;
+      }
+    }
+  } catch (e) {}
+  return true;
+}
+
+function syncOverlayOnEngineState(running) {
+  if (running) {
+    const isEnabled = isOverlayEnabledInConfig();
+    if (isEnabled && !isOverlayExplicitlyClosed) {
+      createOverlayWindow();
+      if (overlayWindow && !overlayWindow.isDestroyed() && !overlayWindow.isVisible()) {
+        overlayWindow.show();
+      }
+    } else {
+      if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
+        overlayWindow.hide();
+      }
+    }
+  } else {
+    // Engine stopped -> immediately hide overlay window
+    if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
+      overlayWindow.hide();
+    }
+  }
+}
+
 function checkBotHealth() {
   const req = http.get('http://localhost:3000/api/config', { timeout: 1500 }, (res) => {
     let data = '';
@@ -296,6 +331,12 @@ function checkBotHealth() {
             activeProfiles: json.activeProfiles || [json.activeProfile || 'Default'],
             activeClientsCount: json.activeClients ? json.activeClients.length : 0
           });
+        }
+
+        // If bot is stopped by user or not running, ensure overlay stays hidden
+        if (!isBotRunning) {
+          syncOverlayOnEngineState(false);
+          return;
         }
 
         // Overlay Sync
@@ -339,6 +380,9 @@ function checkBotHealth() {
   });
 
   req.on('error', () => {
+    if (!isBotRunning && overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
+      overlayWindow.hide();
+    }
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('bot:diagnostics', {
         serverOnline: false,
@@ -367,6 +411,7 @@ function startBotProcess() {
 
     isBotRunning = true;
     broadcastStatus();
+    syncOverlayOnEngineState(true);
 
     botProcess.stdout.on('data', (data) => {
       const lines = data.toString().split(/\r?\n/);
@@ -411,10 +456,8 @@ function startBotProcess() {
       botProcess = null;
       isBotRunning = false;
       broadcastStatus();
+      syncOverlayOnEngineState(false);
       checkBotHealth();
-      if (overlayWindow && !overlayWindow.isDestroyed()) {
-        overlayWindow.webContents.send('overlay:update', { activeClients: [], clientStatuses: {}, isSuspended: false });
-      }
     });
 
     botProcess.on('error', (err) => {
@@ -422,9 +465,7 @@ function startBotProcess() {
       botProcess = null;
       isBotRunning = false;
       broadcastStatus();
-      if (overlayWindow && !overlayWindow.isDestroyed()) {
-        overlayWindow.webContents.send('overlay:update', { activeClients: [], clientStatuses: {}, isSuspended: false });
-      }
+      syncOverlayOnEngineState(false);
     });
 
     // Start periodic health checking
@@ -436,6 +477,7 @@ function startBotProcess() {
     broadcastLog(`❌ Spawn Error: ${err.message}`, 'error');
     isBotRunning = false;
     broadcastStatus();
+    syncOverlayOnEngineState(false);
     return { success: false, error: err.message };
   }
 }
@@ -463,10 +505,8 @@ function stopBotProcess() {
   botProcess = null;
   isBotRunning = false;
   broadcastStatus();
+  syncOverlayOnEngineState(false);
   checkBotHealth();
-  if (overlayWindow && !overlayWindow.isDestroyed()) {
-    overlayWindow.webContents.send('overlay:update', { activeClients: [], clientStatuses: {}, isSuspended: false });
-  }
   return { success: true };
 }
 

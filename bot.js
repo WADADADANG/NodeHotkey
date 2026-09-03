@@ -457,6 +457,9 @@ global.toggleSuspendState = function (forcedState) {
                 delete forwardHoldTimers[key];
             }
         }
+    } else {
+        // Resumed from suspend
+        syncGhostMouseJitter();
     }
 
     sendOverlayUpdate();
@@ -1315,8 +1318,12 @@ function startGhostMouseJitter(clientIndex) {
         const delay = intervalMin + Math.random() * (intervalMax - intervalMin);
 
         ghostMouseJitterTimers[clientIndex] = setTimeout(async () => {
-            // Re-check if still enabled and page is still valid
+            // Re-check if still enabled, page is still valid, and bot is not suspended
             if (!ghostMouseJitterConfig.enabled) return;
+            if (global.isSuspended) {
+                scheduleNext();
+                return;
+            }
             const currentPage = clientPages[clientIndex];
             if (!currentPage) return;
 
