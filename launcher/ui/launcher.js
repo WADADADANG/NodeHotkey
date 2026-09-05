@@ -204,13 +204,16 @@
       btnStartEngine: "เริ่มการทำงาน",
       btnStopEngine: "หยุดการทำงาน",
       matrixTitle: "CLIENT CONTROL MATRIX (จอ 1 - 8)",
+      unitScreens: "จอ",
       btnLaunchAll: "🚀 เปิดทุกจอ",
       btnStopAll: "⏹️ ปิดทุกจอ",
       btnLaunchAllLoading: "⏳ กำลังเปิดทุกจอ...",
       cBtnLaunch: "➕ เปิดจอ",
       cBtnLaunching: "⏳ กำลังเปิด...",
       cBtnPause: "⏸️ พักบอท",
+      cBtnPauseTitle: "หยุดการกดสกิลในจอนี้ชั่วคราว",
       cBtnResume: "▶️ เปิดบอท",
+      cBtnResumeTitle: "เปิดการทำงานต่อสำหรับจอนี้",
       cBadgeOffline: "OFFLINE",
       cBadgeActive: "🟢 ทำงาน",
       cBadgePaused: "🔴 พักบอท",
@@ -279,13 +282,16 @@
       btnStartEngine: "Start Bot Engine",
       btnStopEngine: "Stop Bot Engine",
       matrixTitle: "CLIENT CONTROL MATRIX (1 - 8)",
+      unitScreens: "Clients",
       btnLaunchAll: "🚀 Launch All",
       btnStopAll: "⏹️ Stop All",
       btnLaunchAllLoading: "⏳ Launching All...",
       cBtnLaunch: "➕ Launch",
       cBtnLaunching: "⏳ Launching...",
-      cBtnPause: "⏸️ Pause Bot",
-      cBtnResume: "▶️ Resume Bot",
+      cBtnPause: "⏸️ Pause",
+      cBtnPauseTitle: "Temporarily pause skills for this client",
+      cBtnResume: "▶️ Resume",
+      cBtnResumeTitle: "Resume skills for this client",
       cBadgeOffline: "OFFLINE",
       cBadgeActive: "🟢 ACTIVE",
       cBadgePaused: "🔴 PAUSED",
@@ -893,9 +899,10 @@
   window.launchAllClients = async function() {
     if (isLaunchingAll) return;
     isLaunchingAll = true;
+    const t = i18nDict[currentLang] || i18nDict.th;
     const launchAllBtn = document.getElementById('btn-matrix-launch-all');
     if (launchAllBtn) {
-      launchAllBtn.textContent = '⏳ กำลังเปิดทุกจอ...';
+      launchAllBtn.textContent = t.btnLaunchAllLoading;
       launchAllBtn.style.pointerEvents = 'none';
       launchAllBtn.style.opacity = '0.7';
     }
@@ -923,7 +930,8 @@
       isLaunchingAll = false;
       launchingClients.clear();
       if (launchAllBtn) {
-        launchAllBtn.textContent = '🚀 เปิดทุกจอ';
+        const curT = i18nDict[currentLang] || i18nDict.th;
+        launchAllBtn.textContent = curT.btnLaunchAll;
         launchAllBtn.style.pointerEvents = 'auto';
         launchAllBtn.style.opacity = '1';
       }
@@ -979,15 +987,15 @@
           statusBadge = `<span class="c-tile-badge paused">${t.cBadgePaused}</span>`;
           tileClass = 'c-matrix-tile paused';
           actionButtons = `
-            <button class="btn-c-action resume" onclick="toggleClientPause(${i})" title="${t.cBtnResume}">${t.cBtnResume}</button>
+            <button class="btn-c-action resume" onclick="toggleClientPause(${i})" title="${t.cBtnResumeTitle || t.cBtnResume}">${t.cBtnResume}</button>
             <button class="btn-c-close" onclick="closeClient(${i})" title="${t.cCloseTitle}">❌</button>
           `;
         } else {
           statusBadge = `<span class="c-tile-badge active">${t.cBadgeActive}</span>`;
           tileClass = 'c-matrix-tile active';
           actionButtons = `
-            <button class="btn-c-action pause" onclick="toggleClientPause(${i})" title="หยุดการกดสกิลในจอนี้ชั่วคราว">⏸️ พักบอท</button>
-            <button class="btn-c-close" onclick="closeClient(${i})" title="ปิดหน้าจอเกม">❌</button>
+            <button class="btn-c-action pause" onclick="toggleClientPause(${i})" title="${t.cBtnPauseTitle || t.cBtnPause}">${t.cBtnPause}</button>
+            <button class="btn-c-close" onclick="closeClient(${i})" title="${t.cCloseTitle}">❌</button>
           `;
         }
       }
@@ -997,11 +1005,11 @@
           <div class="c-tile-head">
             <div class="c-tile-title-box">
               <span>${bIcon} Client ${i}</span>
-              <button type="button" class="btn-c-gear" onclick="openClientSettingsModal(${i})" title="ตั้งค่า Proxy, User-Agent, Browser">⚙️</button>
+              <button type="button" class="btn-c-gear" onclick="openClientSettingsModal(${i})" title="${t.cSettingsTitle}">⚙️</button>
             </div>
             ${statusBadge}
           </div>
-          <input type="text" class="c-alias-input" id="c-alias-${i}" value="${alias.replace(/"/g, '&quot;')}" placeholder="ตั้งชื่อจอ (เช่น Knight, RM)" onchange="saveClientAlias(${i}, this.value)" title="คลิกเพื่อเปลี่ยนชื่อจอ" />
+          <input type="text" class="c-alias-input" id="c-alias-${i}" value="${alias.replace(/"/g, '&quot;')}" placeholder="${t.cAliasPlaceholder}" onchange="saveClientAlias(${i}, this.value)" title="${t.cAliasTitle}" />
           <div class="c-tile-tools">
             ${actionButtons}
           </div>
@@ -1046,7 +1054,8 @@
 
         // Update Client Count
         if (data.activeClients && Array.isArray(data.activeClients)) {
-          valClientsCount.textContent = `${data.activeClients.length} จอ`;
+          const curT = i18nDict[currentLang] || i18nDict.th;
+          valClientsCount.textContent = `${data.activeClients.length} ${curT.unitScreens || 'จอ'}`;
           const badgeCount = document.getElementById('badge-clients-count');
           if (badgeCount) badgeCount.textContent = `${data.activeClients.length}/8`;
         }
@@ -1101,26 +1110,27 @@
   }
 
   function updateStatusUI(status) {
+    const curT = i18nDict[currentLang] || i18nDict.th;
     isRunning = status.running;
     isRestarting = status.restarting;
 
     if (isRestarting) {
       btnToggleEngine.className = 'btn-toggle-engine-sidebar btn-restarting';
       heroIcon.textContent = '🔄';
-      heroTitle.textContent = 'กำลังรีสตาร์ท...';
+      heroTitle.textContent = curT.statusRestarting;
       heroSub.textContent = 'Restarting Engine';
 
       dotEngine.className = 'diag-indicator-dot pending';
-      valEngineStatus.textContent = 'กำลังรีสตาร์ท';
+      valEngineStatus.textContent = curT.statusRestarting;
       subEngineInfo.textContent = 'Reloading processes';
     } else if (isRunning) {
       btnToggleEngine.className = 'btn-toggle-engine-sidebar running';
       heroIcon.textContent = '⏹';
-      heroTitle.textContent = 'หยุดการทำงาน';
+      heroTitle.textContent = curT.btnStopEngine;
       heroSub.textContent = 'Stop Bot Engine';
 
       dotEngine.className = 'diag-indicator-dot online';
-      valEngineStatus.textContent = '🟢 กำลังทำงาน';
+      valEngineStatus.textContent = curT.statusRunning;
       if (!uptimeInterval) {
         startTime = Date.now();
         uptimeInterval = setInterval(updateUptime, 1000);
@@ -1128,11 +1138,11 @@
     } else {
       btnToggleEngine.className = 'btn-toggle-engine-sidebar btn-start';
       heroIcon.textContent = '▶';
-      heroTitle.textContent = 'เริ่มการทำงาน';
+      heroTitle.textContent = curT.btnStartEngine;
       heroSub.textContent = 'Start Bot Engine';
 
       dotEngine.className = 'diag-indicator-dot offline';
-      valEngineStatus.textContent = '🔴 หยุดทำงาน';
+      valEngineStatus.textContent = curT.statusStopped;
       subEngineInfo.textContent = 'Process Stopped';
       if (uptimeInterval) {
         clearInterval(uptimeInterval);
@@ -1273,7 +1283,8 @@
     }
 
     if (diag.activeClientsCount !== undefined) {
-      valClientsCount.textContent = `${diag.activeClientsCount} จอ`;
+      const curT = i18nDict[currentLang] || i18nDict.th;
+      valClientsCount.textContent = `${diag.activeClientsCount} ${curT.unitScreens || 'จอ'}`;
       subClientsInfo.textContent = diag.activeClientsCount > 0 ? '🟢 Connected Clients' : 'No clients attached';
     }
   });
