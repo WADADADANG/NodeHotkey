@@ -2626,6 +2626,109 @@ async function runVariableAction(action, callStack) {
     await fireChain(action, 'onComplete', callStack);
 }
 
+// Outbound HTTP Webhook Execution
+async function runHttpRequestAction(act, callStack) {
+    if (global.isSuspended) return;
+    const url = (act.url || '').trim();
+    if (!url) {
+        console.warn(`⚠️ [Webhook Out] "${act.name}": URL is empty, skipping.`);
+        emitSignal(act.id, 'onError');
+        await fireChain(act, 'onError', callStack);
+        return;
+    }
+
+    const method = (act.method || 'POST').toUpperCase();
+    let headers = {};
+    try {
+        if (act.headers) {
+            headers = typeof act.headers === 'string' ? JSON.parse(act.headers) : act.headers;
+        }
+    } catch (e) {
+        headers = {};
+    }
+    if (!headers['Content-Type'] && method !== 'GET' && method !== 'HEAD') {
+        headers['Content-Type'] = 'application/json';
+    }
+
+    const timeoutMs = parseInt(act.timeoutMs, 10) || 5000;
+    let body = undefined;
+    if (method !== 'GET' && method !== 'HEAD' && act.payload !== undefined && act.payload !== '') {
+        body = typeof act.payload === 'string' ? act.payload : JSON.stringify(act.payload);
+    }
+
+    console.log(`🌐 [Webhook Out] "${act.name}" ➔ ${method} ${url}`);
+    emitSignal(act.id, 'trigger');
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+        const response = await fetch(url, {
+            method,
+            headers,
+            body,
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        console.log(`✅ [Webhook Out] "${act.name}" ➔ Status: ${response.status} ${response.statusText}`);
+        emitSignal(act.id, 'onComplete');
+        await fireChain(act, 'onComplete', callStack);
+    } catch (err) {
+        console.error(`❌ [Webhook Out] "${act.name}" Error:`, err.message);
+        emitSignal(act.id, 'onError');
+        await fireChain(act, 'onError', callStack);
+    }
+}
+
+// Inbound HTTP Webhook Trigger Handler
+function triggerWebhookEvent(eventName, payload = null) {
+    if (global.isSuspended) {
+        console.warn(`⚠️ [Webhook Trigger] Skipped: Bot is suspended (Emergency Pause active).`);
+        return { count: 0, actions: [] };
+    }
+
+    const cleanEventName = String(eventName || '').trim().toLowerCase();
+    console.log(`🌐 [Webhook Inbound] Received external event: "${eventName}"`);
+
+    // 1. Direct Graph Engine Matching
+    const downstreamGraphTargets = activeWorkflowEngine && typeof activeWorkflowEngine.getTriggerDownstreamNodes === 'function'
+        ? activeWorkflowEngine.getTriggerDownstreamNodes('webhook', cleanEventName)
+        : [];
+
+    const executedActions = [];
+    if (downstreamGraphTargets.length > 0) {
+        downstreamGraphTargets.forEach(({ node, triggerNode }) => {
+            if (triggerNode) emitSignal(triggerNode.id, 'trigger');
+            const actId = node.data?.actionId || (node.id.startsWith('node_') ? node.id.replace('node_', '') : node.id);
+            const targetAction = activeActions.find(a => a.id === actId || a.id === node.id);
+            if (targetAction && targetAction.enabled) {
+                executedActions.push(targetAction.name || targetAction.id);
+                console.log(`⚡ [Webhook Triggered] Event "${eventName}" ➔ Firing Node "${targetAction.name}"`);
+                handleActionTrigger(targetAction);
+            }
+        });
+    }
+
+    // 2. ActiveActions Fallback Trigger Matching
+    const directListeners = activeActions.filter(act => 
+        act.enabled && 
+        act.trigger && 
+        act.trigger.type === 'webhook' && 
+        String(act.trigger.value || '').trim().toLowerCase() === cleanEventName &&
+        !executedActions.includes(act.name || act.id)
+    );
+
+    for (const listener of directListeners) {
+        executedActions.push(listener.name || listener.id);
+        console.log(`⚡ [Webhook Triggered] Event "${eventName}" ➔ Firing Action "${listener.name}"`);
+        handleActionTrigger(listener);
+    }
+
+    return { count: executedActions.length, actions: executedActions };
+}
+global.triggerWebhookEvent = triggerWebhookEvent;
+
 // Unified trigger entry point
 function handleActionTrigger(act) {
     if (global.isSuspended) return;
@@ -2671,6 +2774,8 @@ function handleActionTrigger(act) {
         runEmitEventAction(act).catch(err => console.error(`Error in runEmitEventAction:`, err));
     } else if (act.mode === 'variable') {
         runVariableAction(act).catch(err => console.error(`Error in runVariableAction:`, err));
+    } else if (act.mode === 'webhook_out' || act.mode === 'http_request') {
+        runHttpRequestAction(act).catch(err => console.error(`Error in runHttpRequestAction:`, err));
     } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence') {
         if (act.modeType === 'once') {
             runCastSequencerOnce(act).catch(err => console.error(`Error in runCastSequencerOnce:`, err));
@@ -2782,6 +2887,8 @@ async function runChainedAction(action, callStack) {
         await runEmitEventAction(action, callStack).catch(err => console.error(`[Chain Error] runEmitEventAction:`, err));
     } else if (action.mode === 'variable') {
         await runVariableAction(action, callStack).catch(err => console.error(`[Chain Error] runVariableAction:`, err));
+    } else if (action.mode === 'webhook_out' || action.mode === 'http_request') {
+        await runHttpRequestAction(action, callStack).catch(err => console.error(`[Chain Error] runHttpRequestAction:`, err));
     } else if (action.mode === 'sequencer' || action.mode === 'cast_sequence') {
         if (action.modeType === 'once') {
             await runCastSequencerOnce(action, callStack).catch(err => console.error(`[Chain Error] runCastSequencerOnce:`, err));

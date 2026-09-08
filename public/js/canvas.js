@@ -92,7 +92,8 @@ class NodeCanvasEditor {
       key_hold: canvasT('canvas_key_hold', isEn ? 'Key Hold' : 'กดค้าง (Hold)'),
       sequencer: canvasT('canvas_sequencer', isEn ? 'Cast Sequencer' : 'จัดคิวสกิล (Sequencer)'),
       loop_scheduler: canvasT('canvas_loop_scheduler', isEn ? 'Loop Scheduler' : 'ตารางลูปกันชน (Scheduler)'),
-      variable: canvasT('canvas_variable', isEn ? 'Variable / State' : 'ตัวแปร / สถานะ (Variable)')
+      variable: canvasT('canvas_variable', isEn ? 'Variable / State' : 'ตัวแปร / สถานะ (Variable)'),
+      webhook_out: canvasT('canvas_webhook_out', isEn ? 'HTTP Webhook' : 'ส่ง Webhook / HTTP')
     };
     return map[type] || canvasT(`canvas_${type}`, (type || '').toUpperCase());
   }
@@ -624,7 +625,8 @@ class NodeCanvasEditor {
         emit_event: '📡',
         sequencer: '⚔️',
         loop_scheduler: '⏱️',
-        variable: '📦'
+        variable: '📦',
+        webhook_out: '🌐'
       };
 
       const icon = iconMap[node.type] || '📦';
@@ -632,12 +634,31 @@ class NodeCanvasEditor {
       let bodyHTML = '';
       if (node.type === 'trigger') {
         const isEventTrigger = node.data?.triggerType === 'event';
+        const isWebhookTrigger = node.data?.triggerType === 'webhook';
+        let trigTypeLabel = 'keyboard';
+        if (isWebhookTrigger) trigTypeLabel = 'Webhook (Inbound)';
+        else if (isEventTrigger) trigTypeLabel = 'Custom Event';
+        else trigTypeLabel = node.data?.triggerType || 'keyboard';
+
+        const colorStyle = isWebhookTrigger ? 'color:#38bdf8; font-weight:700;' : (isEventTrigger ? 'color:#06b6d4; font-weight:700;' : '');
         bodyHTML = `
           <div class="node-info-row">
-            <span>Type:</span> <span class="node-info-value" style="${isEventTrigger ? 'color:#06b6d4; font-weight:700;' : ''}">${isEventTrigger ? 'Custom Event' : (node.data?.triggerType || 'keyboard')}</span>
+            <span>Type:</span> <span class="node-info-value" style="${colorStyle}">${trigTypeLabel}</span>
           </div>
           <div class="node-info-row">
-            <span>${isEventTrigger ? 'Event:' : 'Key/Val:'}</span> <span class="node-info-value" style="${isEventTrigger ? 'color:#06b6d4; font-weight:700;' : ''}">${node.data?.triggerValue || '-'}</span>
+            <span>${isWebhookTrigger ? 'Endpoint:' : (isEventTrigger ? 'Event:' : 'Key/Val:')}</span> <span class="node-info-value" style="${colorStyle}">${node.data?.triggerValue || '-'}</span>
+          </div>
+        `;
+      } else if (node.type === 'webhook_out') {
+        const method = (node.data?.method || 'POST').toUpperCase();
+        let displayUrl = node.data?.url || '-';
+        if (displayUrl.length > 28) displayUrl = displayUrl.substring(0, 26) + '...';
+        bodyHTML = `
+          <div class="node-info-row">
+            <span>Method:</span> <span class="node-info-value" style="color:#38bdf8; font-weight:700;">${method}</span>
+          </div>
+          <div class="node-info-row">
+            <span>URL:</span> <span class="node-info-value" title="${node.data?.url || ''}" style="color:#cbd5e1; font-family:'JetBrains Mono',monospace; font-size:10px;">${displayUrl}</span>
           </div>
         `;
       } else if (node.type === 'emit_event') {
@@ -1090,6 +1111,19 @@ class NodeCanvasEditor {
             <div class="node-pin-row">
               <span class="node-pin-label onDisable">${canvasT('port_onDisable', 'onDisable')} ▶</span>
               <div class="node-port port-out port-onDisable" data-node="${node.id}" data-port="onDisable" title="${canvasT('port_onDisable', 'onDisable')}"></div>
+            </div>
+          </div>
+        `;
+      } else if (node.type === 'webhook_out') {
+        pinsHTML = `
+          <div class="node-pins-section">
+            <div class="node-pin-row">
+              <span class="node-pin-label onComplete">${canvasT('port_onComplete', 'On Success')} ▶</span>
+              <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="onComplete" title="On Success (2xx)"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label onFalse" style="color:#ef4444;">${canvasT('port_onError', 'On Error')} ▶</span>
+              <div class="node-port port-out port-onFalse" style="border-color:#ef4444;" data-node="${node.id}" data-port="onError" title="On Error (Network/HTTP Error)"></div>
             </div>
           </div>
         `;
@@ -1897,12 +1931,23 @@ class NodeCanvasEditor {
       key_hold: 'Key Hold Toggle',
       sequencer: 'Cast Sequencer',
       loop_scheduler: 'Loop Scheduler',
-      variable: 'isBuffActive'
+      variable: 'isBuffActive',
+      webhook_out: 'Discord / HTTP Webhook'
     };
 
     let initialData = { enabled: true };
     if (type === 'trigger') {
       initialData = { triggerType: 'keyboard', triggerValue: '1', enabled: true };
+    } else if (type === 'webhook_out') {
+      initialData = {
+        name: 'Discord / HTTP Webhook',
+        url: '',
+        method: 'POST',
+        headers: '{\n  "Content-Type": "application/json"\n}',
+        payload: '{\n  "content": "⚡ NodeHotkey Alert: Triggered!"\n}',
+        timeoutMs: 5000,
+        enabled: true
+      };
     } else if (type === 'variable') {
       initialData = {
         varType: 'boolean', // 'boolean' | 'number' | 'string'
@@ -2375,6 +2420,16 @@ class NodeCanvasEditor {
           <input type="text" class="inspector-input" value="${node.data?.triggerValue || ''}" placeholder="e.g. party_heal, boss_spawn" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'triggerValue', this.value.trim())" style="font-family:'JetBrains Mono'; font-weight:700; color:#06b6d4;" />
           <span style="font-size:10px; color:var(--muted); margin-top:4px; display:block;">${canvasT('inspector_event_trigger_hint', 'Triggers automatically when any active profile emits this event.')}</span>
         `;
+      } else if (trigType === 'webhook') {
+        const currentVal = node.data?.triggerValue || 'start_farm';
+        triggerValueInputHTML = `
+          <input type="text" class="inspector-input" value="${node.data?.triggerValue || ''}" placeholder="e.g. start_farm, heal_now" oninput="window.nodeCanvas.updateWebhookTriggerVal('${node.id}', this.value.trim())" style="font-family:'JetBrains Mono'; font-weight:700; color:#38bdf8;" />
+          <div style="background:rgba(14, 165, 233, 0.1); border:1px solid rgba(14, 165, 233, 0.3); border-radius:6px; padding:8px 10px; margin-top:8px;">
+            <div style="font-size:11px; font-weight:700; color:#38bdf8; margin-bottom:4px;">🌐 Inbound Webhook URL:</div>
+            <code id="webhook-trigger-url-${node.id}" style="font-size:11px; color:#e0f2fe; word-break:break-all; user-select:all; display:block; font-family:'JetBrains Mono',monospace;">http://localhost:3000/api/trigger/${currentVal || '{eventName}'}</code>
+            <div style="font-size:10px; color:var(--muted); margin-top:4px;">${canvasT('inspector_webhook_event_hint', 'Send HTTP POST or GET to this URL to trigger this flow.')}</div>
+          </div>
+        `;
       } else {
         triggerValueInputHTML = `
           <div style="display:flex; align-items:center; gap:6px;">
@@ -2391,11 +2446,53 @@ class NodeCanvasEditor {
             <option value="keyboard" ${trigType === 'keyboard' ? 'selected' : ''}>⌨️ ${canvasT('triggerKeyboard', 'Keyboard Hotkey')}</option>
             <option value="mouse" ${trigType === 'mouse' ? 'selected' : ''}>🖱️ ${canvasT('triggerMouse', 'Mouse Button')}</option>
             <option value="event" ${trigType === 'event' ? 'selected' : ''}>📡 ${canvasT('triggerEventLabel', 'Custom Event Listener')}</option>
+            <option value="webhook" ${trigType === 'webhook' ? 'selected' : ''}>🌐 ${canvasT('triggerWebhookLabel', 'Webhook / HTTP (Inbound)')}</option>
           </select>
         </div>
         <div class="inspector-field-group">
-          <label class="inspector-label">${trigType === 'event' ? canvasT('inspector_event_name_label', 'Event Name to Listen') : canvasT('inspector_trigger_value_label', 'Trigger Key / Value')}</label>
+          <label class="inspector-label">${trigType === 'event' ? canvasT('inspector_event_name_label', 'Event Name to Listen') : (trigType === 'webhook' ? canvasT('inspector_webhook_event_name', 'Event Name (Endpoint)') : canvasT('inspector_trigger_value_label', 'Trigger Key / Value'))}</label>
           ${triggerValueInputHTML}
+        </div>
+      `;
+    } else if (node.type === 'webhook_out') {
+      const isEn = window.currentLang === 'en';
+      const method = (node.data?.method || 'POST').toUpperCase();
+      const headersVal = node.data?.headers !== undefined ? (typeof node.data.headers === 'string' ? node.data.headers : JSON.stringify(node.data.headers, null, 2)) : '{\n  "Content-Type": "application/json"\n}';
+      const payloadVal = node.data?.payload !== undefined ? (typeof node.data.payload === 'string' ? node.data.payload : JSON.stringify(node.data.payload, null, 2)) : '{\n  "content": "⚡ NodeHotkey Alert: Triggered!"\n}';
+      const timeoutVal = node.data?.timeoutMs !== undefined ? node.data.timeoutMs : 5000;
+
+      fieldsHTML += `
+        <div class="inspector-field-group">
+          <label class="inspector-label">${canvasT('inspector_webhook_url', 'Target Webhook URL')}</label>
+          <input type="text" class="inspector-input" value="${node.data?.url || ''}" placeholder="https://discord.com/api/webhooks/... or http://..." onchange="window.nodeCanvas.updateNodeData('${node.id}', 'url', this.value.trim())" style="font-family:'JetBrains Mono'; font-size:11px;" />
+        </div>
+        <div class="inspector-field-group">
+          <label class="inspector-label">${canvasT('inspector_webhook_method', 'HTTP Method')}</label>
+          <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'method', this.value)">
+            <option value="POST" ${method === 'POST' ? 'selected' : ''}>POST</option>
+            <option value="GET" ${method === 'GET' ? 'selected' : ''}>GET</option>
+            <option value="PUT" ${method === 'PUT' ? 'selected' : ''}>PUT</option>
+            <option value="DELETE" ${method === 'DELETE' ? 'selected' : ''}>DELETE</option>
+          </select>
+        </div>
+        <div class="inspector-field-group">
+          <label class="inspector-label">${canvasT('inspector_webhook_headers', 'Headers (JSON format)')}</label>
+          <textarea class="inspector-input" rows="3" style="font-family:'JetBrains Mono'; font-size:11px; resize:vertical;" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'headers', this.value)">${headersVal}</textarea>
+        </div>
+        <div class="inspector-field-group">
+          <label class="inspector-label">${canvasT('inspector_webhook_payload', 'Payload Body (JSON / Text)')}</label>
+          <textarea class="inspector-input" rows="4" style="font-family:'JetBrains Mono'; font-size:11px; resize:vertical;" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'payload', this.value)">${payloadVal}</textarea>
+          <span style="font-size:10px; color:var(--muted); margin-top:4px; display:block;">${isEn ? 'For Discord Webhooks, use JSON format with a "content" field.' : 'สำหรับ Discord Webhook ให้ใช้ฟอร์แมต JSON ที่มีฟิลด์ "content"'}</span>
+        </div>
+        <div class="inspector-field-group">
+          <label class="inspector-label">${canvasT('inspector_webhook_timeout', 'Timeout (ms)')}</label>
+          <input type="number" class="inspector-input" min="500" max="30000" step="500" value="${timeoutVal}" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'timeoutMs', parseInt(this.value, 10) || 5000)" />
+        </div>
+        <div class="inspector-field-group" style="margin-top:12px;">
+          <button type="button" id="btn-test-webhook-${node.id}" class="btn btn-ghost" onclick="window.nodeCanvas.testWebhookSend('${node.id}')" style="width:100%; border-color:#0ea5e9; color:#38bdf8; font-weight:700; height:34px; border-radius:6px; display:flex; align-items:center; justify-content:center; gap:6px;">
+            ${canvasT('inspector_webhook_test_btn', '⚡ Test Webhook')}
+          </button>
+          <div id="webhook-test-status-${node.id}" style="display:none; font-size:11px; margin-top:6px; padding:6px 8px; border-radius:4px; background:rgba(15, 23, 42, 0.6); word-break:break-all;"></div>
         </div>
       `;
     } else if (node.type === 'emit_event') {
@@ -2798,8 +2895,12 @@ class NodeCanvasEditor {
     if (type === 'mouse' && !['4', '5'].includes(String(node.data.triggerValue))) {
       node.data.triggerValue = '4';
     } else if (type === 'event') {
-      if (!node.data.triggerValue || ['1', '4', '5'].includes(String(node.data.triggerValue))) {
+      if (!node.data.triggerValue || ['1', '4', '5', 'start_farm'].includes(String(node.data.triggerValue))) {
         node.data.triggerValue = 'party_heal';
+      }
+    } else if (type === 'webhook') {
+      if (!node.data.triggerValue || ['1', '4', '5', 'party_heal'].includes(String(node.data.triggerValue))) {
+        node.data.triggerValue = 'start_farm';
       }
     } else if (type === 'keyboard' && ['4', '5'].includes(String(node.data.triggerValue))) {
       node.data.triggerValue = '1';
@@ -2808,6 +2909,58 @@ class NodeCanvasEditor {
     this.openInspector(node.id);
     this.addHistory('⚡', `เปลี่ยนประเภท Trigger ของ "${node.title || node.type}" เป็น ${type}`);
     this.onProfileChanged();
+  }
+
+  updateWebhookTriggerVal(nodeId, val) {
+    this.updateNodeData(nodeId, 'triggerValue', val);
+    const codeEl = document.getElementById(`webhook-trigger-url-${nodeId}`);
+    if (codeEl) {
+      codeEl.textContent = `http://localhost:3000/api/trigger/${val || '{eventName}'}`;
+    }
+  }
+
+  testWebhookSend(nodeId) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node) return;
+    const statusBox = document.getElementById(`webhook-test-status-${nodeId}`);
+    const btn = document.getElementById(`btn-test-webhook-${nodeId}`);
+    if (statusBox) {
+      statusBox.style.display = 'block';
+      statusBox.style.color = '#38bdf8';
+      statusBox.textContent = canvasT('inspector_webhook_testing', '⏳ Sending test request...');
+    }
+    if (btn) btn.disabled = true;
+
+    fetch('http://localhost:3000/api/webhook/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: node.data?.url || '',
+        method: node.data?.method || 'POST',
+        headers: node.data?.headers || '',
+        payload: node.data?.payload !== undefined ? node.data.payload : '',
+        timeoutMs: node.data?.timeoutMs || 5000
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (btn) btn.disabled = false;
+      if (!statusBox) return;
+      if (data.success) {
+        statusBox.style.color = '#34d399';
+        statusBox.textContent = `${canvasT('inspector_webhook_test_ok', '✅ Test succeeded! HTTP Status: ')} ${data.status} ${data.statusText || ''}`;
+      } else {
+        statusBox.style.color = '#ef4444';
+        statusBox.textContent = `${canvasT('inspector_webhook_test_err', '❌ Test failed: ')} ${data.error || ('Status ' + data.status)}`;
+      }
+    })
+    .catch(err => {
+      if (btn) btn.disabled = false;
+      if (statusBox) {
+        statusBox.style.color = '#ef4444';
+        statusBox.textContent = `${canvasT('inspector_webhook_test_err', '❌ Test failed: ')} ${err.message}`;
+      }
+    });
   }
 
   renderEmitEventHelper(node) {
@@ -4185,6 +4338,12 @@ class NodeCanvasEditor {
         if (d.repeatCount && parseInt(d.repeatCount, 10) > 1) cleanData.repeatCount = parseInt(d.repeatCount, 10);
       } else if (type === 'emit_event') {
         cleanData.eventName = d.eventName || 'party_heal';
+      } else if (type === 'webhook_out') {
+        cleanData.url = d.url || '';
+        cleanData.method = d.method || 'POST';
+        cleanData.headers = d.headers || '';
+        cleanData.payload = d.payload !== undefined ? d.payload : '';
+        cleanData.timeoutMs = d.timeoutMs !== undefined ? parseInt(d.timeoutMs, 10) : 5000;
       } else if (type === 'macro_group') {
         cleanData.targetClient = d.targetClient || '1';
         cleanData.repeatCount = d.repeatCount || 1;
@@ -4476,7 +4635,8 @@ class NodeCanvasEditor {
         name: canvasT('cat_triggers', 'Triggers & Events'),
         items: [
           { type: 'trigger', icon: '⚡', name: this.getNodeTypeLabel('trigger') },
-          { type: 'emit_event', icon: '📡', name: this.getNodeTypeLabel('emit_event') }
+          { type: 'emit_event', icon: '📡', name: this.getNodeTypeLabel('emit_event') },
+          { type: 'webhook_out', icon: '🌐', name: this.getNodeTypeLabel('webhook_out') }
         ]
       },
       {

@@ -335,7 +335,20 @@ export const TRANSLATIONS = {
     conditionLessThan: "Less Than (<)",
     conditionGreaterOrEqual: "Greater or Equal (>=)",
     conditionLessOrEqual: "Less or Equal (<=)",
-    inspector_condition_compare_value: "Value to Compare"
+    inspector_condition_compare_value: "Value to Compare",
+    triggerWebhookLabel: "🌐 Webhook / HTTP (Inbound)",
+    inspector_webhook_event_hint: "Send HTTP POST or GET to this URL to trigger this flow from external apps, Stream Deck, or scripts.",
+    canvas_webhook_out: "HTTP Webhook (Outbound)",
+    node_desc_webhook_out: "Sends HTTP/HTTPS requests (Discord, Telegram, Line, or custom REST APIs)",
+    inspector_webhook_url: "Target Webhook URL",
+    inspector_webhook_method: "HTTP Method",
+    inspector_webhook_headers: "Headers (JSON format)",
+    inspector_webhook_payload: "Payload Body (JSON or Text)",
+    inspector_webhook_timeout: "Timeout (ms)",
+    inspector_webhook_test_btn: "⚡ Test Webhook",
+    inspector_webhook_testing: "⏳ Sending test request...",
+    inspector_webhook_test_ok: "✅ Test succeeded! HTTP Status: ",
+    inspector_webhook_test_err: "❌ Test failed: "
   },
   th: {
     appTitle: "ศูนย์ควบคุมบอทอัตโนมัติ",
@@ -676,7 +689,20 @@ export const TRANSLATIONS = {
     conditionLessThan: "น้อยกว่า (<)",
     conditionGreaterOrEqual: "มากกว่าหรือเท่ากับ (>=)",
     conditionLessOrEqual: "น้อยกว่าหรือเท่ากับ (<=)",
-    inspector_condition_compare_value: "ค่าที่ต้องการเปรียบเทียบ"
+    inspector_condition_compare_value: "ค่าที่ต้องการเปรียบเทียบ",
+    triggerWebhookLabel: "🌐 Webhook / HTTP (Inbound)",
+    inspector_webhook_event_hint: "ส่งคำขอ HTTP POST หรือ GET มายัง URL นี้เพื่อสั่งให้คำสั่งนี้เริ่มทำงาน (จาก Stream Deck, Python หรือภายนอก)",
+    canvas_webhook_out: "ส่ง Webhook / HTTP (Outbound)",
+    node_desc_webhook_out: "ส่งคำขอ HTTP/HTTPS ไปยัง Discord, Telegram, Line หรือ REST API ภายนอก",
+    inspector_webhook_url: "URL ปลายทาง (Webhook URL)",
+    inspector_webhook_method: "ประเภทคำสั่ง (HTTP Method)",
+    inspector_webhook_headers: "ส่วนหัว Headers (รูปแบบ JSON)",
+    inspector_webhook_payload: "เนื้อหา Payload Body (JSON หรือข้อความ)",
+    inspector_webhook_timeout: "หมดเวลารอ Timeout (มิลลิวินาที)",
+    inspector_webhook_test_btn: "⚡ ทดสอบยิง Webhook",
+    inspector_webhook_testing: "⏳ กำลังทดสอบส่ง...",
+    inspector_webhook_test_ok: "✅ ทดสอบสำเร็จ! HTTP Status: ",
+    inspector_webhook_test_err: "❌ ทดสอบไม่สำเร็จ: "
   }
 };
 

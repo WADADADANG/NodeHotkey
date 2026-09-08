@@ -261,6 +261,93 @@ function getClientStatusesPayload() {
     return;
   }
 
+  // --- POST / GET /api/trigger/:eventName → Inbound Webhook Trigger ---
+  if (urlPath.startsWith('/api/trigger/')) {
+    const rawEvent = urlPath.replace('/api/trigger/', '').trim();
+    const eventName = decodeURIComponent(rawEvent);
+    if (!eventName) {
+      return sendJSON(res, 400, { error: 'Event name is required' });
+    }
+
+    const executeTrigger = (payloadData) => {
+      if (typeof global.triggerWebhookEvent === 'function') {
+        const result = global.triggerWebhookEvent(eventName, payloadData);
+        console.log(`[Server] 🌐 Inbound Webhook Event received: "${eventName}" (Matched: ${result.count})`);
+        return sendJSON(res, 200, {
+          success: true,
+          event: eventName,
+          matchedTriggers: result.count,
+          executedActions: result.actions
+        });
+      } else {
+        return sendJSON(res, 503, { error: 'Bot Engine / Webhook Trigger handler not ready' });
+      }
+    };
+
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', c => body += c);
+      req.on('end', () => {
+        let payloadData = null;
+        try { payloadData = body ? JSON.parse(body) : null; } catch (e) { payloadData = body; }
+        executeTrigger(payloadData);
+      });
+    } else {
+      executeTrigger(null);
+    }
+    return;
+  }
+
+  // --- POST /api/webhook/test → Test fire an outbound webhook from Studio Inspector ---
+  if (urlPath === '/api/webhook/test' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', async () => {
+      try {
+        const { url, method = 'POST', headers = {}, payload, timeoutMs = 5000 } = JSON.parse(body);
+        if (!url) return sendJSON(res, 400, { error: 'URL is required' });
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), parseInt(timeoutMs, 10) || 5000);
+
+        let parsedHeaders = {};
+        if (typeof headers === 'string') {
+          try { parsedHeaders = JSON.parse(headers); } catch (e) {}
+        } else if (typeof headers === 'object' && headers !== null) {
+          parsedHeaders = headers;
+        }
+        if (!parsedHeaders['Content-Type'] && method.toUpperCase() !== 'GET' && method.toUpperCase() !== 'HEAD') {
+          parsedHeaders['Content-Type'] = 'application/json';
+        }
+
+        const reqBody = (method.toUpperCase() !== 'GET' && method.toUpperCase() !== 'HEAD' && payload !== undefined && payload !== '')
+          ? (typeof payload === 'string' ? payload : JSON.stringify(payload))
+          : undefined;
+
+        const response = await fetch(url, {
+          method: method.toUpperCase(),
+          headers: parsedHeaders,
+          body: reqBody,
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        let responseText = '';
+        try { responseText = await response.text(); } catch (e) {}
+
+        sendJSON(res, 200, {
+          success: response.ok,
+          status: response.status,
+          statusText: response.statusText,
+          responseBody: responseText.slice(0, 1000)
+        });
+      } catch (err) {
+        sendJSON(res, 500, { error: err.message });
+      }
+    });
+    return;
+  }
+
   // --- POST /api/suspend/toggle → toggle suspend state ---
   if (urlPath === '/api/suspend/toggle' && req.method === 'POST') {
     if (typeof global.toggleSuspendState === 'function') {

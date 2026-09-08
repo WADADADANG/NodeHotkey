@@ -87,7 +87,8 @@ function convertLegacyProfileToNodeWorkflow(legacyProfile) {
       stop_all: 'emergency_stop',
       send_event: 'emit_event',
       sequencer: 'sequencer',
-      cast_sequence: 'sequencer'
+      cast_sequence: 'sequencer',
+      webhook_out: 'webhook_out'
     };
     const nodeType = typeMap[act.mode] || act.mode || 'loop';
     const mainNodeX = hasTrigger ? 450 : 100;
@@ -98,6 +99,11 @@ function convertLegacyProfileToNodeWorkflow(legacyProfile) {
       name: act.name || '',
       enabled: act.enabled !== false,
       targetClient: act.targetClient || '1',
+      url: act.url || '',
+      method: act.method || 'POST',
+      headers: act.headers || '',
+      payload: act.payload !== undefined ? act.payload : '',
+      timeoutMs: act.timeoutMs !== undefined ? act.timeoutMs : 5000,
       keys: Array.isArray(act.keys) ? act.keys : (act.keys ? [act.keys] : ['1']),
       interval: act.interval !== undefined ? act.interval : 1000,
       jitter: act.jitter !== undefined ? act.jitter : 0,

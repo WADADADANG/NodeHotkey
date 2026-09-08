@@ -105,12 +105,13 @@ class NodeExecutionEngine {
     const targetNodes = [];
 
     connections.forEach(conn => {
-      const isNextPort = conn.fromPort === 'next' || conn.fromPort === 'exec_out' || conn.fromPort === 'onComplete' || conn.fromPort === 'on_complete' || conn.fromPort === 'onFired' || conn.fromPort === 'onActivated';
-      const isReqNext = portName === 'onComplete' || portName === 'next' || portName === 'exec_out' || portName === 'on_complete' || portName === 'onFired' || portName === 'onActivated' || portName === 'onKeyDown';
+      const isNextPort = conn.fromPort === 'next' || conn.fromPort === 'exec_out' || conn.fromPort === 'onComplete' || conn.fromPort === 'on_complete' || conn.fromPort === 'onFired' || conn.fromPort === 'onActivated' || conn.fromPort === 'onSuccess';
+      const isReqNext = portName === 'onComplete' || portName === 'next' || portName === 'exec_out' || portName === 'on_complete' || portName === 'onFired' || portName === 'onActivated' || portName === 'onKeyDown' || portName === 'onSuccess';
 
       const matchesPort = !portName || 
         conn.fromPort === portName || 
         (isReqNext && isNextPort) ||
+        (portName === 'onError' && (conn.fromPort === 'onError' || conn.fromPort === 'on_error')) ||
         (portName === 'onEachCycle' && (conn.fromPort === 'on_interval' || conn.fromPort === 'onInterval')) ||
         (portName === 'onStop' && conn.fromPort === 'on_stop') ||
         (portName === 'onTrue' && conn.fromPort === 'on_true') ||
@@ -196,7 +197,8 @@ class NodeExecutionEngine {
       macro_group: 'macro_group',
       sequencer: 'sequencer',
       loop_scheduler: 'loop_scheduler',
-      variable: 'variable'
+      variable: 'variable',
+      webhook_out: 'webhook_out'
     };
 
     const actions = [];
@@ -218,6 +220,11 @@ class NodeExecutionEngine {
         mode: modeMap[node.type] || node.type || 'loop',
         modeType: d.modeType || 'loop',
         trigger: trig,
+        url: d.url || '',
+        method: d.method || 'POST',
+        headers: d.headers || '',
+        payload: d.payload !== undefined ? d.payload : '',
+        timeoutMs: d.timeoutMs !== undefined ? d.timeoutMs : 5000,
         eventName: d.eventName || '',
         targetClient: d.targetClient || '1',
         keys: Array.isArray(d.keys) ? d.keys : (d.keys ? [d.keys] : ['1']),
