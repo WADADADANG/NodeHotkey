@@ -299,7 +299,12 @@ html, body {
 
 .client-status.hold,
 .sub-action-item.hold .sub-action-name {
-  color: #c084fc;
+  color: #a78bfa;
+}
+
+.client-status.party,
+.sub-action-item.party .sub-action-name {
+  color: #06b6d4;
 }
 
 .client-status.suspended,

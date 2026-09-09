@@ -30,7 +30,8 @@ export function getModeDescription(mode) {
     branch: TRANSLATIONS[lang]?.modeBranchDesc || '',
     emergency_stop: TRANSLATIONS[lang]?.modeEmergencyStopDesc || '',
     sound_alert: TRANSLATIONS[lang]?.modeSoundAlertDesc || '',
-    emit_event: TRANSLATIONS[lang]?.modeEmitEventDesc || ''
+    emit_event: TRANSLATIONS[lang]?.modeEmitEventDesc || '',
+    party_target_router: currentLang === 'en' ? 'Scan party and click target in game, then emit signal' : 'สแกนปาร์ตี้และคลิกเลือกเป้าหมายในเกม แล้วส่งต่อสัญญาณให้ Action Node อื่น'
   };
   return descMap[norm] || '';
 }
@@ -48,7 +49,8 @@ export function getModeBadgeInfo(mode) {
     branch: { label: 'BRANCH', color: '#c084fc', bg: 'rgba(168, 85, 247, 0.18)', border: 'rgba(168, 85, 247, 0.4)' },
     emergency_stop: { label: 'STOP ALL', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.18)', border: 'rgba(239, 68, 68, 0.4)' },
     sound_alert: { label: 'SOUND', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.18)', border: 'rgba(168, 85, 247, 0.4)' },
-    emit_event: { label: 'EVENT', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.18)', border: 'rgba(6, 182, 212, 0.4)' }
+    emit_event: { label: 'EVENT', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.18)', border: 'rgba(6, 182, 212, 0.4)' },
+    party_target_router: { label: 'PARTY TARGET', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.15)', border: 'rgba(6, 182, 212, 0.35)' }
   };
   return badgeMap[norm] || { label: (norm || '').toUpperCase(), color: 'var(--primary)', bg: 'var(--primary-dim)', border: 'rgba(99,102,241,0.2)' };
 }
@@ -186,6 +188,7 @@ export function renderActions(actions) {
               <option value="control" ${normalizeMode(act.mode) === 'control' ? 'selected' : ''}>${TRANSLATIONS[currentLang].modeControl}</option>
               <option value="branch" ${normalizeMode(act.mode) === 'branch' ? 'selected' : ''}>${TRANSLATIONS[currentLang].modeBranch || TRANSLATIONS[currentLang].modeCondition}</option>
               <option value="emit_event" ${normalizeMode(act.mode) === 'emit_event' ? 'selected' : ''}>📡 ${TRANSLATIONS[currentLang].modeEmitEvent || 'Broadcast Event'}</option>
+              <option value="party_target_router" ${normalizeMode(act.mode) === 'party_target_router' ? 'selected' : ''}>👥 ${currentLang === 'en' ? 'Party Target Router' : 'เลือกเป้าหมายปาร์ตี้ (Party Target)'}</option>
             </select>
             <div class="mode-desc-hint" id="mode-desc-${act.id}" style="font-size:11px; color:var(--muted); margin-top:4px; font-style:italic;">${getModeDescription(act.mode)}</div>
           </div>
@@ -504,6 +507,38 @@ export function renderModeSpecificFields(act) {
           <div style="display:flex; align-items:center; gap:6px; width:100%;">
             <input type="text" class="buff-keys" value="${escapeHtml((act.keys || []).join(', '))}" placeholder="${currentLang === 'en' ? 'Click to record...' : 'คลิกเพื่อบันทึก...'}" readonly onfocus="startRecordingKey(this, '${act.id}', 'comma_keys')" onblur="stopRecordingKey(this)" style="flex:1; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:9px 12px; color:var(--text); font-family:'JetBrains Mono'; font-size:13px; outline:none; cursor:pointer;">
             <button type="button" class="btn btn-ghost" onclick="openVirtualKeyboard(this.previousElementSibling, '${act.id}', 'comma_keys')" style="height:38px; padding:0 10px; border-color:var(--primary); color:var(--primary); border-radius:8px;" title="Open Virtual Keyboard Picker">⌨️</button>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (act.mode === 'party_target_router' || act.mode === 'party_target') {
+    html = `
+      <div style="display:flex; flex-direction:column; gap:12px; border-top:1px dashed var(--border); padding-top:12px;">
+        <div class="field-row">
+          <div class="field">
+            <label style="color:var(--primary); font-weight:700;">🎯 ${currentLang === 'en' ? 'Targeting Mode' : 'โหมดการเลือกเป้าหมาย'}</label>
+            <select class="party-target-mode" onchange="saveCurrentProfile()" style="background:#131826; border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:'Outfit'; font-size:13px; outline:none; width:100%;">
+              <option value="heal_priority" ${(act.targetMode || 'heal_priority') === 'heal_priority' ? 'selected' : ''}>🚑 ${currentLang === 'en' ? 'Heal Priority (Lowest HP Member)' : 'เช็คเลือดฉุกเฉิน (คลิกคนที่เลือดน้อยสุดที่ < เกณฑ์)'}</option>
+              <option value="buff_loop" ${(act.targetMode || 'heal_priority') === 'buff_loop' ? 'selected' : ''}>📜 ${currentLang === 'en' ? 'Buff Sequence Loop (Cycle all members)' : 'วนแจกบัฟทีละคน (ข้ามคนตาย/นอกระยะ)'}</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>⚡ ${currentLang === 'en' ? 'Scan Interval (ms)' : 'รอบเวลาสแกน (มิลลิวินาที)'}</label>
+            <input type="number" class="party-scan-interval" value="${act.scanIntervalMs ?? 250}" min="50" max="3000" step="50" placeholder="250" onchange="saveCurrentProfile()" style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:'JetBrains Mono'; font-size:13px; outline:none; width:100%;">
+            <span style="font-size:10px; color:var(--muted); margin-top:2px;">${currentLang === 'en' ? '100ms (Fast) / 250ms (Recommended) / 500ms (Low CPU)' : '100ms (เร็ว) / 250ms (แนะนำ) / 500ms (ประหยัด CPU)'}</span>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>🩸 ${currentLang === 'en' ? 'Low HP Threshold (%)' : 'เกณฑ์เลือดต่ำสำหรับฮีล (%)'}</label>
+            <input type="number" class="party-low-hp-threshold" value="${act.lowHpThreshold ?? 70}" min="1" max="99" placeholder="70" onchange="saveCurrentProfile()" style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:'JetBrains Mono'; font-size:13px; outline:none; width:100%;">
+            <span style="font-size:10px; color:var(--muted); margin-top:2px;">${currentLang === 'en' ? 'Trigger onMemberLowHp when HP <= threshold' : 'ส่งสัญญาณ onMemberLowHp เมื่อเลือด <= ค่านี้'}</span>
+          </div>
+          <div class="field">
+            <label>⏱️ ${currentLang === 'en' ? 'Delay After Click (ms)' : 'หน่วงเวลาหลังคลิกก่อนส่งสัญญาณ (ms)'}</label>
+            <input type="number" class="party-delay-after-click" value="${act.delayAfterClick ?? 80}" min="0" max="1000" step="10" placeholder="80" onchange="saveCurrentProfile()" style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:'JetBrains Mono'; font-size:13px; outline:none; width:100%;">
+            <span style="font-size:10px; color:var(--muted); margin-top:2px;">${currentLang === 'en' ? 'Wait time for game to switch target' : 'รอให้เกมเปลี่ยนเป้าหมายสมบูรณ์ก่อนกดยิงสกิล'}</span>
           </div>
         </div>
       </div>
@@ -849,7 +884,8 @@ function getChainEventsForMode(mode, act) {
     branch: ['onTrue', 'onFalse'],
     emit_event: ['onFired'],
     sound_alert: ['onFired'],
-    emergency_stop: ['onFired']
+    emergency_stop: ['onFired'],
+    party_target_router: ['onMemberLowHp', 'onNextMember', 'onComplete', 'onError']
   };
   return map[norm] || [];
 }
@@ -1064,6 +1100,18 @@ export function syncActionFromDom(actionId) {
   } else if (normalizeMode(act.mode) === 'emit_event') {
     const eventNameEl = card.querySelector('.emit-event-name');
     if (eventNameEl) act.eventName = eventNameEl.value.trim();
+  } else if (normalizeMode(act.mode) === 'party_target_router') {
+    const modeEl = card.querySelector('.party-target-mode');
+    if (modeEl) act.targetMode = modeEl.value;
+
+    const intervalEl = card.querySelector('.party-scan-interval');
+    if (intervalEl) act.scanIntervalMs = parseInt(intervalEl.value) || 250;
+
+    const hpEl = card.querySelector('.party-low-hp-threshold');
+    if (hpEl) act.lowHpThreshold = parseInt(hpEl.value) || 70;
+
+    const delayClickEl = card.querySelector('.party-delay-after-click');
+    if (delayClickEl) act.delayAfterClick = parseInt(delayClickEl.value) || 80;
   }
 
   const chainEnabledEl = card.querySelector('.chain-enabled');

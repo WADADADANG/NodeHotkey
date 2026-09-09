@@ -88,6 +88,7 @@ function convertLegacyProfileToNodeWorkflow(legacyProfile) {
       send_event: 'emit_event',
       sequencer: 'sequencer',
       cast_sequence: 'sequencer',
+      party_target_router: 'party_target',
       webhook_out: 'webhook_out'
     };
     const nodeType = typeMap[act.mode] || act.mode || 'loop';
@@ -99,6 +100,10 @@ function convertLegacyProfileToNodeWorkflow(legacyProfile) {
       name: act.name || '',
       enabled: act.enabled !== false,
       targetClient: act.targetClient || '1',
+      targetMode: act.targetMode || 'heal_priority',
+      lowHpThreshold: act.lowHpThreshold !== undefined ? act.lowHpThreshold : 70,
+      scanIntervalMs: act.scanIntervalMs !== undefined ? act.scanIntervalMs : 250,
+      delayAfterClick: act.delayAfterClick !== undefined ? act.delayAfterClick : 80,
       url: act.url || '',
       method: act.method || 'POST',
       headers: act.headers || '',

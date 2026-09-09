@@ -2,163 +2,215 @@
   "version": "3.1.0",
   "name": "Test",
   "canvas": {
-    "zoom": 0.85,
+    "zoom": 0.7144929000000003,
     "pan": {
-      "x": 476,
-      "y": 73
+      "x": -393,
+      "y": -18
     }
   },
   "nodes": [
     {
-      "id": "node_trig_toggle",
+      "id": "node_1788945959254",
       "type": "trigger",
-      "title": "Global Trigger (Mouse 5)",
+      "title": "Start Party Buff (F1)",
       "position": {
-        "x": 120,
-        "y": 180
-      },
-      "data": {
-        "enabled": true,
-        "triggerType": "mouse",
-        "triggerValue": "5",
-        "actionId": "trig_toggle"
-      }
-    },
-    {
-      "id": "node_var_buff",
-      "type": "variable",
-      "title": "isBuffActive",
-      "position": {
-        "x": 460,
-        "y": 180
-      },
-      "data": {
-        "enabled": true,
-        "varName": "isBuffActive",
-        "varType": "boolean",
-        "scope": "client",
-        "targetClient": "1",
-        "initialValue": "false",
-        "operation": "toggle",
-        "opValue": "1",
-        "actionId": "var_buff"
-      }
-    },
-    {
-      "id": "node_sound_alert",
-      "type": "sound",
-      "title": "Sound Alert (Ding)",
-      "position": {
-        "x": 800,
-        "y": 180
-      },
-      "data": {
-        "enabled": true,
-        "soundSource": "preset",
-        "soundPreset": "ding",
-        "volume": 100,
-        "actionId": "sound_alert"
-      }
-    },
-    {
-      "id": "node_trig_action",
-      "type": "trigger",
-      "title": "Global Trigger (F1)",
-      "position": {
-        "x": 110,
-        "y": 420
+        "x": 180,
+        "y": 280
       },
       "data": {
         "enabled": true,
         "triggerType": "keyboard",
         "triggerValue": "F1",
-        "actionId": "trig_action"
+        "actionId": "1788945959254"
       }
     },
     {
-      "id": "node_branch_check",
-      "type": "branch",
-      "title": "Check isBuffActive",
+      "id": "node_1788945798980",
+      "type": "party_target",
+      "title": "Party Target Router",
       "position": {
-        "x": 460,
-        "y": 420
+        "x": 560,
+        "y": 280
       },
       "data": {
         "enabled": true,
-        "conditionTargetId": "var_buff",
-        "conditionRule": "is_true",
-        "actionId": "branch_check"
+        "targetClient": "7",
+        "targetMode": "buff_loop",
+        "lowHpThreshold": 70,
+        "scanIntervalMs": 250,
+        "delayAfterClick": 200,
+        "showOverlay": true,
+        "actionId": "1788945798980"
       }
     },
     {
-      "id": "node_key_attack",
-      "type": "key_press",
-      "title": "Attack Skill (Key 1)",
+      "id": "node_sound_alert_1788946200",
+      "type": "sound",
+      "title": "Buff Complete Alert",
       "position": {
-        "x": 820,
-        "y": 350
+        "x": 1000,
+        "y": 810
       },
       "data": {
         "enabled": true,
-        "targetClient": "1",
-        "keys": [
-          "1"
+        "soundSource": "preset",
+        "soundPreset": "success",
+        "volume": 100,
+        "actionId": "sound_alert_1788946200"
+      }
+    },
+    {
+      "id": "node_1788954300388",
+      "type": "sequencer",
+      "title": "Full Buff",
+      "position": {
+        "x": 1010,
+        "y": 140
+      },
+      "data": {
+        "enabled": true,
+        "modeType": "once",
+        "targetClient": "7",
+        "interval": 1000,
+        "repeatCount": 1,
+        "delayAfter": 0,
+        "steps": [
+          {
+            "key": "F2",
+            "delay": 200,
+            "castTimeMs": 200
+          },
+          {
+            "key": "1",
+            "delay": 800,
+            "castTimeMs": 800
+          },
+          {
+            "key": "2",
+            "delay": 800,
+            "castTimeMs": 800
+          },
+          {
+            "key": "3",
+            "delay": 800,
+            "castTimeMs": 800
+          },
+          {
+            "key": "4",
+            "delay": 800,
+            "castTimeMs": 800
+          },
+          {
+            "key": "5",
+            "delay": 800,
+            "castTimeMs": 800
+          },
+          {
+            "key": "6",
+            "delay": 800,
+            "castTimeMs": 800
+          },
+          {
+            "key": "LEFT ALT + 1",
+            "delay": 800,
+            "castTimeMs": 800
+          },
+          {
+            "key": "LEFT ALT + 2",
+            "delay": 800,
+            "castTimeMs": 800
+          },
+          {
+            "key": "LEFT ALT + 3",
+            "delay": 800,
+            "castTimeMs": 800
+          },
+          {
+            "key": "LEFT ALT + 4",
+            "delay": 800,
+            "castTimeMs": 800
+          },
+          {
+            "key": "LEFT ALT + 5",
+            "delay": 800,
+            "castTimeMs": 800
+          },
+          {
+            "key": "F1",
+            "delay": 200,
+            "castTimeMs": 200
+          }
         ],
-        "actionId": "key_attack"
+        "actionId": "1788954300388"
       }
     },
     {
-      "id": "node_key_buff",
-      "type": "key_press",
-      "title": "Buff Skill (Key 2)",
+      "id": "node_1788954375480",
+      "type": "sound",
+      "title": "Sound Alert",
       "position": {
-        "x": 810,
-        "y": 530
+        "x": 1330,
+        "y": 550
       },
       "data": {
         "enabled": true,
-        "targetClient": "1",
-        "keys": [
-          "2"
-        ],
-        "actionId": "key_buff"
+        "soundSource": "preset",
+        "soundPreset": "ding",
+        "volume": 28,
+        "actionId": "1788954375480"
+      }
+    },
+    {
+      "id": "node_1788957697659",
+      "type": "sound",
+      "title": "Sound Alert",
+      "position": {
+        "x": 830,
+        "y": 610
+      },
+      "data": {
+        "enabled": true,
+        "soundSource": "preset",
+        "soundPreset": "alarm",
+        "volume": 18,
+        "actionId": "1788957697659"
       }
     }
   ],
   "connections": [
     {
-      "id": "conn_1",
-      "fromNodeId": "node_trig_toggle",
+      "id": "conn_start_buff",
+      "fromNodeId": "node_1788945959254",
       "fromPort": "exec_out",
-      "toNodeId": "node_var_buff",
+      "toNodeId": "node_1788945798980",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_2",
-      "fromNodeId": "node_var_buff",
-      "fromPort": "next",
-      "toNodeId": "node_sound_alert",
+      "id": "conn_party_all_complete",
+      "fromNodeId": "node_1788945798980",
+      "fromPort": "onComplete",
+      "toNodeId": "node_sound_alert_1788946200",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_3",
-      "fromNodeId": "node_trig_action",
-      "fromPort": "exec_out",
-      "toNodeId": "node_branch_check",
+      "id": "conn_1788954350584",
+      "fromNodeId": "node_1788945798980",
+      "fromPort": "onNextMember",
+      "toNodeId": "node_1788954300388",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_4",
-      "fromNodeId": "node_branch_check",
-      "fromPort": "onTrue",
-      "toNodeId": "node_key_attack",
+      "id": "conn_1788955655454",
+      "fromNodeId": "node_1788954300388",
+      "fromPort": "onStop",
+      "toNodeId": "node_1788954375480",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_5",
-      "fromNodeId": "node_branch_check",
-      "fromPort": "onFalse",
-      "toNodeId": "node_key_buff",
+      "id": "conn_1788957703414",
+      "fromNodeId": "node_1788945798980",
+      "fromPort": "onError",
+      "toNodeId": "node_1788957697659",
       "toPort": "exec_in"
     }
   ]

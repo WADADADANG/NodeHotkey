@@ -13,7 +13,8 @@
   "dependencies": {
     "global-mouse-events": "^1.2.0",
     "node-global-key-listener": "^0.1.1",
-    "playwright": "^1.45.0"
+    "playwright": "^1.45.0",
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
     "electron": "^43.4.1"

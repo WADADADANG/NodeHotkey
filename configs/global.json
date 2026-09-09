@@ -1,9 +1,7 @@
 {
-  "activeProfile": "[WD] Add-ons",
+  "activeProfile": "Test",
   "activeProfiles": [
-    "[WD] Add-ons",
-    "[WD] Full Buff",
-    "[WD] Heal 1,2,4"
+    "Test"
   ],
   "disabledClients": [],
   "globalSettings": {
@@ -11,7 +9,7 @@
     "enableOverlay": true,
     "suspendHotkey": "END",
     "ghostMouseJitter": {
-      "enabled": true,
+      "enabled": false,
       "intervalMin": 8000,
       "intervalMax": 25000,
       "maxOffset": 12

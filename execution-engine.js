@@ -105,15 +105,15 @@ class NodeExecutionEngine {
     const targetNodes = [];
 
     connections.forEach(conn => {
-      const isNextPort = conn.fromPort === 'next' || conn.fromPort === 'exec_out' || conn.fromPort === 'onComplete' || conn.fromPort === 'on_complete' || conn.fromPort === 'onFired' || conn.fromPort === 'onActivated' || conn.fromPort === 'onSuccess';
-      const isReqNext = portName === 'onComplete' || portName === 'next' || portName === 'exec_out' || portName === 'on_complete' || portName === 'onFired' || portName === 'onActivated' || portName === 'onKeyDown' || portName === 'onSuccess';
+      const isNextPort = conn.fromPort === 'next' || conn.fromPort === 'exec_out' || conn.fromPort === 'onComplete' || conn.fromPort === 'on_complete' || conn.fromPort === 'onFired' || conn.fromPort === 'onActivated' || conn.fromPort === 'onSuccess' || conn.fromPort === 'onStop' || conn.fromPort === 'on_stop';
+      const isReqNext = portName === 'onComplete' || portName === 'next' || portName === 'exec_out' || portName === 'on_complete' || portName === 'onFired' || portName === 'onActivated' || portName === 'onKeyDown' || portName === 'onSuccess' || portName === 'onStop' || portName === 'on_stop';
 
       const matchesPort = !portName || 
         conn.fromPort === portName || 
         (isReqNext && isNextPort) ||
         (portName === 'onError' && (conn.fromPort === 'onError' || conn.fromPort === 'on_error')) ||
         (portName === 'onEachCycle' && (conn.fromPort === 'on_interval' || conn.fromPort === 'onInterval')) ||
-        (portName === 'onStop' && conn.fromPort === 'on_stop') ||
+        ((portName === 'onStop' || portName === 'onComplete') && (conn.fromPort === 'on_stop' || conn.fromPort === 'onStop' || conn.fromPort === 'onComplete' || conn.fromPort === 'on_complete')) ||
         (portName === 'onTrue' && conn.fromPort === 'on_true') ||
         (portName === 'onFalse' && conn.fromPort === 'on_false') ||
         (portName === 'onEnable' && conn.fromPort === 'on_enable') ||
@@ -198,6 +198,8 @@ class NodeExecutionEngine {
       sequencer: 'sequencer',
       loop_scheduler: 'loop_scheduler',
       variable: 'variable',
+      party_target: 'party_target_router',
+      party_target_router: 'party_target_router',
       webhook_out: 'webhook_out'
     };
 
@@ -220,6 +222,11 @@ class NodeExecutionEngine {
         mode: modeMap[node.type] || node.type || 'loop',
         modeType: d.modeType || 'loop',
         trigger: trig,
+        targetMode: d.targetMode || 'heal_priority',
+        lowHpThreshold: d.lowHpThreshold !== undefined ? parseInt(d.lowHpThreshold, 10) : 70,
+        scanIntervalMs: d.scanIntervalMs !== undefined ? parseInt(d.scanIntervalMs, 10) : 250,
+        delayAfterClick: d.delayAfterClick !== undefined ? parseInt(d.delayAfterClick, 10) : 80,
+        showOverlay: d.showOverlay !== false,
         url: d.url || '',
         method: d.method || 'POST',
         headers: d.headers || '',

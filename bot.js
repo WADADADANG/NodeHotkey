@@ -14,10 +14,23 @@ global.activeWorkflowEngine = activeWorkflowEngine;
 
 let keyboard, mouseEvents;
 let clientPages = {};    // clientIndex -> page
+global.clientPages = clientPages;
 let clientContexts = {}; // clientIndex -> browserContext
 let activeClients = [];  // Array of active client indices, e.g. [2, 4]
 global.activeClients = activeClients;
 let clientCooldowns = {}; // clientIndex -> { [presetId]: expireTimestamp, [presetId_lastCycle]: lastCycleTimestamp }
+
+let runPartyTargetRouterAction = async (action, callStack) => {
+    try {
+        delete require.cache[require.resolve('./vision-service')];
+        delete require.cache[require.resolve('./party-target-handler')];
+        const handler = require('./party-target-handler');
+        return await handler.runPartyTargetRouterAction(action, callStack);
+    } catch (e) {
+        console.error('⚠️ [Vision Module] PartyTargetHandler error:', e.message);
+    }
+};
+global.activePartyTargetRouters = {};
 
 // Real-time execution signal broadcast
 function emitSignal(actionId, eventName, targetId = null) {
@@ -183,6 +196,15 @@ function getClientStatuses() {
                     type: 'forward',
                     icon: '⚡',
                     detail: `${a.trigger?.value || 'Key'} ➜ ${a.targetKey || '1'}`
+                });
+            } else if ((a.mode === 'party_target_router' || a.mode === 'party_target') && global.activePartyTargetRouters && global.activePartyTargetRouters[a.id]) {
+                const info = global.activePartyTargetRouters[a.id];
+                runningActions.push({
+                    id: a.id,
+                    name: a.name || 'Party Target',
+                    type: 'party_target',
+                    icon: '👥',
+                    detail: info.detail || 'Targeting...'
                 });
             }
         });
@@ -1930,7 +1952,13 @@ async function runBuffSequenceAction(action, callStack) {
                 console.log(`⚪ [Action] Finished Buff Sequence: "${action.name}" on Client ${t}`);
             }
         }
+
         if (!wasInterrupted) {
+            const delayAfter = action.delayAfter !== undefined ? parseInt(action.delayAfter, 10) : 0;
+            if (delayAfter > 0) {
+                console.log(`⏳ [Action] Waiting Delay After: ${delayAfter}ms for "${action.name}"`);
+                await new Promise(res => setTimeout(res, delayAfter));
+            }
             await fireChain(action, 'onComplete', callStack);
         }
     } finally {
@@ -2794,6 +2822,10 @@ function handleActionTrigger(act) {
         } else {
             startLoopSchedulerAction(act).catch(err => console.error(`Error in startLoopSchedulerAction:`, err));
         }
+    } else if (act.mode === 'party_target_router' || act.mode === 'party_target') {
+        if (typeof runPartyTargetRouterAction === 'function') {
+            runPartyTargetRouterAction(act, []).catch(err => console.error(`Error in runPartyTargetRouterAction:`, err));
+        }
     }
 }
 
@@ -2804,6 +2836,7 @@ function handleActionTrigger(act) {
 // Fire downstream connected actions for a given source action and event name directly from Graph Engine.
 // callStack prevents infinite loops (A→B→A).
 async function fireChain(sourceAction, eventName, callStack = new Set()) {
+    global.fireChain = fireChain;
     if (global.isSuspended || !sourceAction) return;
 
     // 1. Direct Graph Connections Execution (First Priority: Single Source of Truth)
@@ -2837,20 +2870,23 @@ async function fireChain(sourceAction, eventName, callStack = new Set()) {
 
     if (targetActionsToRun.length === 0) return;
 
+    const safeStack = (callStack instanceof Set) ? callStack : new Set(Array.isArray(callStack) ? callStack : []);
+
     const executeChain = async () => {
         for (const targetAction of targetActionsToRun) {
-            if (callStack.has(targetAction.id)) {
-                console.warn(`[Graph Chain] Circular chain detected: ${Array.from(callStack).join(' → ')} → ${targetAction.id}. Aborting branch.`);
+            if (safeStack.has(targetAction.id)) {
+                console.warn(`[Graph Chain] Circular chain detected: ${Array.from(safeStack).join(' → ')} → ${targetAction.id}. Aborting branch.`);
                 continue;
             }
             console.log(`[Graph Chain] "${sourceAction.name}" [${eventName}] ➔ "${targetAction.name}"`);
             emitSignal(sourceAction.id, eventName, targetAction.id);
-            await runChainedAction(targetAction, new Set([...callStack, targetAction.id]));
+            await runChainedAction(targetAction, new Set([...safeStack, targetAction.id]));
         }
     };
 
     await executeChain().catch(err => console.error(`[Graph Chain Error] executeChain:`, err));
 }
+global.fireChain = fireChain;
 
 // Run a target action directly (bypasses hotkey requirement).
 async function runChainedAction(action, callStack) {
@@ -2890,7 +2926,7 @@ async function runChainedAction(action, callStack) {
     } else if (action.mode === 'webhook_out' || action.mode === 'http_request') {
         await runHttpRequestAction(action, callStack).catch(err => console.error(`[Chain Error] runHttpRequestAction:`, err));
     } else if (action.mode === 'sequencer' || action.mode === 'cast_sequence') {
-        if (action.modeType === 'once') {
+        if (action.modeType === 'once' || (callStack && callStack.size > 0)) {
             await runCastSequencerOnce(action, callStack).catch(err => console.error(`[Chain Error] runCastSequencerOnce:`, err));
         } else {
             const state = activeSequencerLoops[action.id];
@@ -2906,6 +2942,10 @@ async function runChainedAction(action, callStack) {
             stopLoopSchedulerAction(action.id, action.name);
         } else {
             await startLoopSchedulerAction(action, callStack).catch(err => console.error(`[Chain Error] startLoopSchedulerAction:`, err));
+        }
+    } else if (action.mode === 'party_target_router' || action.mode === 'party_target') {
+        if (typeof runPartyTargetRouterAction === 'function') {
+            await runPartyTargetRouterAction(action, callStack).catch(err => console.error(`[Chain Error] runPartyTargetRouterAction:`, err));
         }
     }
 }

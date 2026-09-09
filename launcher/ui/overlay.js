@@ -66,6 +66,8 @@
         return { icon: '⚔️', text: 'Sequencer', className: 'sequencer' };
       case 'hold':
         return { icon: '⚓', text: 'Holding', className: 'hold' };
+      case 'party_target':
+        return { icon: '👥', text: 'Party Target', className: 'party' };
       default:
         return { icon: '💤', text: 'Standby', className: 'standby' };
     }

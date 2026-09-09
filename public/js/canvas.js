@@ -93,6 +93,7 @@ class NodeCanvasEditor {
       sequencer: canvasT('canvas_sequencer', isEn ? 'Cast Sequencer' : 'จัดคิวสกิล (Sequencer)'),
       loop_scheduler: canvasT('canvas_loop_scheduler', isEn ? 'Loop Scheduler' : 'ตารางลูปกันชน (Scheduler)'),
       variable: canvasT('canvas_variable', isEn ? 'Variable / State' : 'ตัวแปร / สถานะ (Variable)'),
+      party_target: canvasT('canvas_party_target', isEn ? 'Party Target Router' : 'เลือกเป้าหมายปาร์ตี้ (Party Target)'),
       webhook_out: canvasT('canvas_webhook_out', isEn ? 'HTTP Webhook' : 'ส่ง Webhook / HTTP')
     };
     return map[type] || canvasT(`canvas_${type}`, (type || '').toUpperCase());
@@ -626,6 +627,7 @@ class NodeCanvasEditor {
         sequencer: '⚔️',
         loop_scheduler: '⏱️',
         variable: '📦',
+        party_target: '👥',
         webhook_out: '🌐'
       };
 
@@ -824,6 +826,26 @@ class NodeCanvasEditor {
           <div class="node-info-row">
             <span>Rule:</span> <span class="node-info-value">${ruleLabel}</span>
           </div>
+        `;
+      } else if (node.type === 'party_target') {
+        const mode = node.data?.targetMode || 'heal_priority';
+        const modeLabel = mode === 'buff_loop' ? '📜 Buff Loop' : '🚑 Heal Priority';
+        const interval = node.data?.scanIntervalMs || 250;
+        const hpThresh = node.data?.lowHpThreshold || 70;
+        bodyHTML = `
+          <div class="node-info-row">
+            <span>Target:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Mode:</span> <span class="node-info-value" style="color:#06b6d4; font-weight:700;">${modeLabel}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Interval:</span> <span class="node-info-value">${interval}ms</span>
+          </div>
+          ${mode === 'heal_priority' ? `
+          <div class="node-info-row">
+            <span>HP Limit:</span> <span class="node-info-value" style="color:#ef4444; font-weight:700;">&lt; ${hpThresh}%</span>
+          </div>` : ''}
         `;
       } else if (node.type === 'control') {
         bodyHTML = `
@@ -1050,6 +1072,27 @@ class NodeCanvasEditor {
         } else {
           portsHTML += `<div class="node-port port-out" data-node="${node.id}" data-port="next" title="Output (next)"></div>`;
         }
+      } else if (node.type === 'party_target') {
+        pinsHTML = `
+          <div class="node-pins-section">
+            <div class="node-pin-row">
+              <span class="node-pin-label onStop" style="color:#ef4444;">🚨 On Low HP ▶</span>
+              <div class="node-port port-out port-onStop" data-node="${node.id}" data-port="onMemberLowHp" title="Triggered when member HP <= threshold"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label onComplete" style="color:#10b981;">📜 Next Member ▶</span>
+              <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="onNextMember" title="Triggered for each active member in buff loop"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label onAfterStart" style="color:#38bdf8;">🏁 All Complete ▶</span>
+              <div class="node-port port-out port-onAfterStart" data-node="${node.id}" data-port="onComplete" title="Triggered when all members in buff loop are finished"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label" style="color:#f59e0b;">⚠️ Error ▶</span>
+              <div class="node-port port-out" data-node="${node.id}" data-port="onError" title="Error / Party not found"></div>
+            </div>
+          </div>
+        `;
       } else if (node.type === 'forwarder') {
         pinsHTML = `
           <div class="node-pins-section">
@@ -1984,6 +2027,15 @@ class NodeCanvasEditor {
         ],
         enabled: true
       };
+    } else if (type === 'party_target') {
+      initialData = {
+        targetClient: '1',
+        targetMode: 'heal_priority', // 'heal_priority' | 'buff_loop'
+        lowHpThreshold: 70,
+        scanIntervalMs: 250,
+        delayAfterClick: 250,
+        enabled: true
+      };
     } else if (type === 'buff_sequence') {
       initialData = { targetClient: '1', keys: ['1', '2'], delayBuff: 800, delayAfter: 0, enabled: true };
     } else if (type === 'key_press') {
@@ -2636,6 +2688,8 @@ class NodeCanvasEditor {
       fieldsHTML += this.renderVariableHelper(node);
     } else if (node.type === 'macro_group') {
       fieldsHTML += this.renderMacroGroupHelper(node);
+    } else if (node.type === 'party_target') {
+      fieldsHTML += this.renderPartyTargetHelper(node);
     } else {
       fieldsHTML += `
         <div class="inspector-field-group">
@@ -2760,6 +2814,53 @@ class NodeCanvasEditor {
           ${opOptionsHTML}
         </select>
         ${opValInputHTML}
+      </div>
+    `;
+  }
+
+  renderPartyTargetHelper(node) {
+    const targetMode = node.data?.targetMode || 'heal_priority';
+    const lowHpThreshold = node.data?.lowHpThreshold ?? 70;
+    const scanIntervalMs = node.data?.scanIntervalMs ?? 250;
+    const delayAfterClick = node.data?.delayAfterClick ?? 250;
+
+    return `
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen (Vision)')}</label>
+        ${this.renderClientButtonSelector(node)}
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_party_mode', 'Party Target Mode')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'targetMode', this.value); window.nodeCanvas.openInspector('${node.id}');">
+          <option value="heal_priority" ${targetMode === 'heal_priority' ? 'selected' : ''}>🚑 Auto Heal Priority (Click lowest HP &lt;= Threshold)</option>
+          <option value="buff_loop" ${targetMode === 'buff_loop' ? 'selected' : ''}>📜 Buff Loop (Cycle click alive members 1 by 1)</option>
+        </select>
+      </div>
+      ${targetMode === 'heal_priority' ? `
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_party_low_hp', 'Low HP Threshold (%)')}</label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="range" min="10" max="95" step="5" value="${lowHpThreshold}" style="flex:1; accent-color:#ef4444;" oninput="this.nextElementSibling.innerText = this.value + '%'; window.nodeCanvas.updateNodeData('${node.id}', 'lowHpThreshold', parseInt(this.value, 10));" />
+          <span style="min-width:44px; font-weight:700; color:#ef4444; font-family:'JetBrains Mono',monospace;">${lowHpThreshold}%</span>
+        </div>
+      </div>
+      ` : ''}
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_party_scan_interval', 'Scan Interval (ms)')}</label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="number" class="inspector-input" value="${scanIntervalMs}" min="50" max="3000" step="50" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'scanIntervalMs', parseInt(this.value, 10))" style="flex:1;" />
+          <span style="font-size:11px; opacity:0.6;">(50 - 2000 ms)</span>
+        </div>
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_party_delay_click', 'Delay After Click (ms)')}</label>
+        <input type="number" class="inspector-input" value="${delayAfterClick}" min="0" max="2000" step="50" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'delayAfterClick', parseInt(this.value, 10))" />
+      </div>
+      <div class="inspector-field-group" style="margin-top:6px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+          <input type="checkbox" ${node.data?.showOverlay !== false ? 'checked' : ''} onchange="window.nodeCanvas.updateNodeData('${node.id}', 'showOverlay', this.checked)" style="accent-color:#06b6d4; cursor:pointer;" />
+          <span>👁️ ${canvasT('inspector_party_show_overlay', 'แสดงเส้น HUD บนหน้าจอเกม (Visual Overlay)')}</span>
+        </label>
       </div>
     `;
   }
@@ -4382,6 +4483,13 @@ class NodeCanvasEditor {
           executeImmediately: it.executeImmediately !== false,
           enabled: it.enabled !== false
         })) : [];
+      } else if (type === 'party_target') {
+        cleanData.targetClient = d.targetClient || '1';
+        cleanData.targetMode = d.targetMode || 'heal_priority';
+        cleanData.lowHpThreshold = d.lowHpThreshold !== undefined ? parseInt(d.lowHpThreshold, 10) : 70;
+        cleanData.scanIntervalMs = d.scanIntervalMs !== undefined ? parseInt(d.scanIntervalMs, 10) : 250;
+        cleanData.delayAfterClick = d.delayAfterClick !== undefined ? parseInt(d.delayAfterClick, 10) : 200;
+        cleanData.showOverlay = d.showOverlay !== false;
       }
 
       let actionId = d.actionId || (node.id.startsWith('node_') ? node.id.replace('node_', '') : node.id);
@@ -4651,6 +4759,7 @@ class NodeCanvasEditor {
           { type: 'key_hold', icon: '⚓', name: this.getNodeTypeLabel('key_hold') },
           { type: 'key_press', icon: '⌨️', name: this.getNodeTypeLabel('key_press') },
           { type: 'forwarder', icon: '🔗', name: this.getNodeTypeLabel('forwarder') },
+          { type: 'party_target', icon: '👥', name: this.getNodeTypeLabel('party_target') },
           { type: 'macro_group', icon: '🔀', name: this.getNodeTypeLabel('macro_group') }
         ]
       },
