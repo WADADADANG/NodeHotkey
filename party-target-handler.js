@@ -325,6 +325,12 @@ async function runPartyBuffAction(action, callStack) {
         lastTargetY = target.barY || target.click.y;
         lastTargetX = target.click.x;
 
+        // 🛡️ ข้ามสมาชิกที่อยู่นอกระยะ (out_of_range), คนตาย (dead), หรือออฟไลน์ (offline)
+        if (!target.isAlive || target.statusCode === 'out_of_range' || target.statusCode === 'dead' || target.statusCode === 'offline') {
+            console.log(`⏩ [PartyBuff] Client ${targetClientId}: [คนที่ ${i + 1}/${totalMembers}] ข้าม Slot ${target.slot || i + 1} เนื่องจากอยู่นอกระยะ/ไม่อยู่ (${target.statusCode || 'inactive'})`);
+            continue;
+        }
+
         console.log(`🎯 [PartyBuff] Client ${targetClientId}: [บัฟคนที่ ${i + 1}/${totalMembers}] คลิก Slot ${target.slot || i + 1} ที่ (${target.click.x}, ${target.click.y})`);
 
         // วาด HUD Overlay
