@@ -98,6 +98,12 @@ class SystemUpdater {
   analyzeImpact(changedFiles = []) {
     const normalized = changedFiles.map(f => f.replace(/\\/g, '/').toLowerCase());
     
+    // Check for Dependencies changes (package.json or package-lock.json)
+    const hasDependencyChanges = normalized.some(f => 
+      f === 'package.json' || 
+      f === 'package-lock.json'
+    );
+
     // Level 3: Core App (Requires full Electron App Relaunch)
     const isLevel3 = normalized.some(f => 
       f.includes('launcher/main.js') || 
@@ -106,6 +112,22 @@ class SystemUpdater {
       f === 'package.json'
     );
     if (isLevel3) {
+      if (hasDependencyChanges && !this.hasGitRepo) {
+        return {
+          level: 3,
+          levelName: 'core_dependencies',
+          badge: '⚠️ New Modules / Full Setup Required',
+          badgeClass: 'level-core',
+          color: '#ef4444',
+          title: 'อัปเดตโมดูลระบบใหม่ (New Dependencies)',
+          description: 'มีการเพิ่มหรือปรับปรุง Library ระบบ (package.json) การอัปเดตอัตโนมัติอาจขาดโมดูลใหม่ แนะนำให้ดาวน์โหลดตัวติดตั้งใหม่ (Full Setup) เพื่อการทำงานที่สมบูรณ์ 100%',
+          actionLabel: 'ปิดและเปิดโปรแกรมใหม่',
+          hasDependencyChanges: true,
+          needsRelaunch: true,
+          needsEngineRestart: true,
+          isUiOnly: false
+        };
+      }
       return {
         level: 3,
         levelName: 'core_app',
@@ -115,6 +137,7 @@ class SystemUpdater {
         title: 'อัปเดตระบบหลัก (Core System)',
         description: 'มีการแก้ไขไฟล์ระบบหลักของ Launcher จำเป็นต้องปิดและเปิดโปรแกรมใหม่',
         actionLabel: 'ปิดและเปิดโปรแกรมใหม่',
+        hasDependencyChanges: !!hasDependencyChanges,
         needsRelaunch: true,
         needsEngineRestart: true,
         isUiOnly: false
@@ -384,6 +407,17 @@ class SystemUpdater {
 
       if (copiedFilesCount === 0) {
         throw new Error('No files were updated during installation.');
+      }
+
+      // If dependencies changed, try running npm install if npm is available in the environment
+      if (impact && impact.hasDependencyChanges) {
+        try {
+          if (typeof onProgressCallback === 'function') onProgressCallback('📦 Checking and installing new node modules...');
+          await this.runCommand('npm install --omit=dev --ignore-scripts');
+          if (typeof onProgressCallback === 'function') onProgressCallback('✅ Node modules updated successfully!');
+        } catch (npmErr) {
+          console.warn('[Updater] npm install in standalone environment skipped or unavailable:', npmErr.message);
+        }
       }
 
       // Cleanup staging

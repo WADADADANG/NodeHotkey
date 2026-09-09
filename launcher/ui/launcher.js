@@ -1373,9 +1373,32 @@
               <div>Local: <strong>${result.localHash}</strong> ➔ Remote: <strong>${result.remoteHash}</strong></div>
               <div style="color:#60a5fa; margin-top:4px;">"${result.commitMessage || 'New features & improvements'}"</div>
             </div>
+            ${impact.hasDependencyChanges ? `
+              <div style="background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239, 68, 68, 0.4); border-radius:6px; padding:10px; margin:8px 0; color:#fca5a5; font-size:11.5px; line-height:1.45;">
+                <div style="font-weight:700; display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                  <span>⚠️ มีการเพิ่ม Library ระบบใหม่ (package.json)</span>
+                </div>
+                <div>เวอร์ชันนี้มีการเพิ่มโมดูลระบบใหม่ (เช่น Vision สแกนภาพ) หากอัปเดตแบบอัตโนมัติอาจยังไม่มีโมดูลนี้ในเครื่อง แนะนำให้ดาวน์โหลด <strong>ตัวติดตั้งใหม่ (Full Setup)</strong> จาก GitHub เพื่อการทำงานที่สมบูรณ์ 100%</div>
+                <div style="margin-top:8px;">
+                  <button id="btnOpenReleases" type="button" style="background:#dc2626; color:#fff; border:none; border-radius:4px; padding:5px 12px; font-size:11px; cursor:pointer; font-weight:600;">
+                    🌐 ไปยังหน้า GitHub Releases (ดาวน์โหลดตัวเต็ม)
+                  </button>
+                </div>
+              </div>
+            ` : ''}
             <div style="font-size:11px; color:#cbd5e1; margin-top:6px;">💡 <strong>ผลกระทบ:</strong> ${impact.description}</div>
             ${renderFileList(result.changedFiles)}
           `;
+          const btnReleases = document.getElementById('btnOpenReleases');
+          if (btnReleases) {
+            btnReleases.onclick = () => {
+              if (api && typeof api.openExternal === 'function') {
+                api.openExternal('https://github.com/WADADADANG/NodeHotkey/releases');
+              } else {
+                window.open('https://github.com/WADADADANG/NodeHotkey/releases', '_blank');
+              }
+            };
+          }
           btnPerformUpdate.style.display = 'block';
           btnPerformUpdate.disabled = false;
           btnPerformUpdate.textContent = '📥 Step 1: ดาวน์โหลดแพ็คเกจ';
@@ -1471,6 +1494,11 @@
           <div style="font-size:11.5px; color:#cbd5e1; line-height:1.5;">
             มีการเปลี่ยนแปลงในไฟล์ระบบหลัก (Core Launcher) จำเป็นต้องรีสตาร์ทตัวโปรแกรมเพื่อให้การตั้งค่าใหม่มีผล
           </div>
+          ${impact.hasDependencyChanges ? `
+            <div style="margin-top:8px; background:rgba(239, 68, 68, 0.12); border:1px solid rgba(239, 68, 68, 0.3); border-radius:6px; padding:8px 10px; font-size:11px; color:#fca5a5; line-height:1.4;">
+              💡 <strong>หมายเหตุสำหรับโมดูลใหม่:</strong> หากเปิดใช้งานแล้วพบแจ้งเตือนโมดูลไม่ครบ (เช่น Cannot find module 'sharp') ให้ดาวน์โหลดตัวติดตั้งใหม่ (Full Setup) มาติดตั้งทับได้ทันทีครับ
+            </div>
+          ` : ''}
         `;
         btnPerformUpdate.style.display = 'block';
         btnPerformUpdate.disabled = false;
