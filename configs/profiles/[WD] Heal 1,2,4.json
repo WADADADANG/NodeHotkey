@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Heal 1,2,4",
   "canvas": {
-    "zoom": 0.5826065502489727,
+    "zoom": 0.7049539258012572,
     "pan": {
-      "x": -769,
-      "y": -258
+      "x": -1302,
+      "y": -901
     }
   },
   "nodes": [
@@ -50,7 +50,7 @@
       "title": "Heal Rain 1",
       "position": {
         "x": 1200,
-        "y": 1510
+        "y": 1590
       },
       "data": {
         "enabled": true,
@@ -69,8 +69,8 @@
       "type": "loop",
       "title": "Heal Rain 2",
       "position": {
-        "x": 1760,
-        "y": 1500
+        "x": 1750,
+        "y": 1600
       },
       "data": {
         "enabled": true,
@@ -89,8 +89,8 @@
       "type": "loop",
       "title": "Heal Rain 4",
       "position": {
-        "x": 2400,
-        "y": 1520
+        "x": 2390,
+        "y": 1600
       },
       "data": {
         "enabled": true,
@@ -158,8 +158,8 @@
       "type": "control",
       "title": "AC Stop Heal Rain All",
       "position": {
-        "x": 2040,
-        "y": 950
+        "x": 2030,
+        "y": 900
       },
       "data": {
         "enabled": true,
@@ -177,8 +177,8 @@
       "type": "loop",
       "title": "Loop MP 1",
       "position": {
-        "x": 1520,
-        "y": 1540
+        "x": 1510,
+        "y": 1620
       },
       "data": {
         "enabled": true,
@@ -186,7 +186,7 @@
         "keys": [
           "3"
         ],
-        "interval": 12700,
+        "interval": 10800,
         "executeImmediately": false,
         "actionId": "1786684521954"
       }
@@ -196,8 +196,8 @@
       "type": "loop",
       "title": "Loop MP 2",
       "position": {
-        "x": 2130,
-        "y": 1610
+        "x": 2120,
+        "y": 1690
       },
       "data": {
         "enabled": true,
@@ -205,7 +205,7 @@
         "keys": [
           "3"
         ],
-        "interval": 14000,
+        "interval": 10900,
         "executeImmediately": false,
         "actionId": "1786684538557_1206"
       }
@@ -215,8 +215,8 @@
       "type": "loop",
       "title": "Loop MP 4",
       "position": {
-        "x": 2710,
-        "y": 1550
+        "x": 2700,
+        "y": 1630
       },
       "data": {
         "enabled": true,
@@ -224,7 +224,7 @@
         "keys": [
           "3"
         ],
-        "interval": 9400,
+        "interval": 5500,
         "executeImmediately": false,
         "actionId": "1786684545395_4783"
       }
@@ -234,8 +234,8 @@
       "type": "control",
       "title": "AC Stop Loop MP 1",
       "position": {
-        "x": 1520,
-        "y": 1740
+        "x": 1510,
+        "y": 1820
       },
       "data": {
         "enabled": true,
@@ -251,8 +251,8 @@
       "type": "control",
       "title": "AC Stop Heal 1",
       "position": {
-        "x": 1520,
-        "y": 1440
+        "x": 1510,
+        "y": 1520
       },
       "data": {
         "enabled": true,
@@ -269,8 +269,8 @@
       "type": "key_press",
       "title": "Buff GT 4",
       "position": {
-        "x": 2710,
-        "y": 1450
+        "x": 2700,
+        "y": 1530
       },
       "data": {
         "enabled": true,
@@ -287,8 +287,8 @@
       "type": "key_press",
       "title": "Buff BOL",
       "position": {
-        "x": 2130,
-        "y": 1430
+        "x": 2120,
+        "y": 1510
       },
       "data": {
         "enabled": true,
@@ -306,8 +306,8 @@
       "type": "control",
       "title": "AC Stop Loop MP 2",
       "position": {
-        "x": 2130,
-        "y": 1810
+        "x": 2120,
+        "y": 1890
       },
       "data": {
         "enabled": true,
@@ -323,8 +323,8 @@
       "type": "control",
       "title": "AC Stop Loop MP 4",
       "position": {
-        "x": 2710,
-        "y": 1750
+        "x": 2700,
+        "y": 1830
       },
       "data": {
         "enabled": true,
@@ -469,7 +469,7 @@
       "title": "AC Stop Heal Rain 4",
       "position": {
         "x": 2140,
-        "y": 1240
+        "y": 1170
       },
       "data": {
         "enabled": true,
@@ -520,8 +520,8 @@
       "type": "emit_event",
       "title": "EmitEvent_4564E",
       "position": {
-        "x": 1520,
-        "y": 1840
+        "x": 1510,
+        "y": 1920
       },
       "data": {
         "enabled": true,
@@ -534,8 +534,8 @@
       "type": "emit_event",
       "title": "EmitEvent_EW944DDA",
       "position": {
-        "x": 1520,
-        "y": 1340
+        "x": 1510,
+        "y": 1420
       },
       "data": {
         "enabled": true,
@@ -544,12 +544,12 @@
       }
     },
     {
-      "id": "node_1787861178664",
+      "id": "node_1787759322547",
       "type": "key_press",
-      "title": "Buff HOS",
+      "title": "Knight HOS",
       "position": {
-        "x": 1970,
-        "y": 820
+        "x": 2030,
+        "y": 720
       },
       "data": {
         "enabled": true,
@@ -557,7 +557,8 @@
         "keys": [
           "8"
         ],
-        "actionId": "1787861178664"
+        "cooldownPresetId": "skill_knight_heart-of-sacrifice",
+        "actionId": "1787759322547"
       }
     }
   ],
@@ -731,10 +732,10 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1787861183576",
+      "id": "conn_1787759325313",
       "fromNodeId": "node_1786879715668_3660",
       "fromPort": "onBeforeStart",
-      "toNodeId": "node_1787861178664",
+      "toNodeId": "node_1787759322547",
       "toPort": "exec_in"
     }
   ]

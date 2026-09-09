@@ -25,3 +25,6 @@ playwright-profiles/
 
 # Allow Hotkey Configuration Profiles
 !configs/profiles/
+
+# TTS Audio Cache
+public/sounds/tts_cache/

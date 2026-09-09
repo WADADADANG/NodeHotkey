@@ -13,6 +13,8 @@ export function initActionsModule() {
 export function normalizeMode(mode) {
   if (mode === 'action_control') return 'control';
   if (mode === 'action_condition') return 'branch';
+  if (mode === 'select_party_slot') return 'party_slot';
+  if (mode === 'tts_alert' || mode === 'text_to_speech') return 'tts';
   return mode || 'loop';
 }
 
@@ -31,7 +33,12 @@ export function getModeDescription(mode) {
     emergency_stop: TRANSLATIONS[lang]?.modeEmergencyStopDesc || '',
     sound_alert: TRANSLATIONS[lang]?.modeSoundAlertDesc || '',
     emit_event: TRANSLATIONS[lang]?.modeEmitEventDesc || '',
-    party_target_router: currentLang === 'en' ? 'Scan party and click target in game, then emit signal' : 'สแกนปาร์ตี้และคลิกเลือกเป้าหมายในเกม แล้วส่งต่อสัญญาณให้ Action Node อื่น'
+    party_scanner: currentLang === 'en' ? 'Central party vision scanner (Vision Only, no click)' : 'สแกนปาร์ตี้กลาง อัปเดตพิกัดและหลอดเลือด (มองอย่างเดียว ไม่คลิกเมาส์)',
+    party_slot: currentLang === 'en' ? 'Select specific party slot (e.g. Slot 1 Leader) and click' : 'เลือกคลิกเป้าหมายปาร์ตี้ตามลำดับช่อง (เช่น ช่อง 1 หัวตี้)',
+    party_heal: currentLang === 'en' ? 'Select member with lowest HP <= threshold and click' : 'เลือกคลิกคนเลือดต่ำสุดที่ <= เกณฑ์เพื่อฮีล',
+    party_buff: currentLang === 'en' ? 'Cycle through party members for buffing (Downward Tracking)' : 'คลิกวนแจกบัฟสมาชิกทีละคนตามลำดับ (Downward Tracking)',
+    party_target_router: currentLang === 'en' ? 'Party Target Router (Legacy)' : 'เลือกเป้าหมายปาร์ตี้ (Legacy)',
+    tts: currentLang === 'en' ? 'Text to Speech alert (Microsoft Edge Neural AI voice)' : 'อ่านข้อความเสียงแจ้งเตือน (Microsoft Edge Neural AI)'
   };
   return descMap[norm] || '';
 }
@@ -50,7 +57,12 @@ export function getModeBadgeInfo(mode) {
     emergency_stop: { label: 'STOP ALL', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.18)', border: 'rgba(239, 68, 68, 0.4)' },
     sound_alert: { label: 'SOUND', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.18)', border: 'rgba(168, 85, 247, 0.4)' },
     emit_event: { label: 'EVENT', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.18)', border: 'rgba(6, 182, 212, 0.4)' },
-    party_target_router: { label: 'PARTY TARGET', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.15)', border: 'rgba(6, 182, 212, 0.35)' }
+    party_scanner: { label: 'SCANNER', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.15)', border: 'rgba(6, 182, 212, 0.35)' },
+    party_slot: { label: 'PARTY SLOT', color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.35)' },
+    party_heal: { label: 'PARTY HEAL', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)', border: 'rgba(239, 68, 68, 0.35)' },
+    party_buff: { label: 'PARTY BUFF', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.15)', border: 'rgba(168, 85, 247, 0.35)' },
+    party_target_router: { label: 'PARTY TARGET', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.15)', border: 'rgba(6, 182, 212, 0.35)' },
+    tts: { label: 'TTS', color: '#c084fc', bg: 'rgba(192, 132, 252, 0.15)', border: 'rgba(192, 132, 252, 0.35)' }
   };
   return badgeMap[norm] || { label: (norm || '').toUpperCase(), color: 'var(--primary)', bg: 'var(--primary-dim)', border: 'rgba(99,102,241,0.2)' };
 }
@@ -188,11 +200,15 @@ export function renderActions(actions) {
               <option value="control" ${normalizeMode(act.mode) === 'control' ? 'selected' : ''}>${TRANSLATIONS[currentLang].modeControl}</option>
               <option value="branch" ${normalizeMode(act.mode) === 'branch' ? 'selected' : ''}>${TRANSLATIONS[currentLang].modeBranch || TRANSLATIONS[currentLang].modeCondition}</option>
               <option value="emit_event" ${normalizeMode(act.mode) === 'emit_event' ? 'selected' : ''}>📡 ${TRANSLATIONS[currentLang].modeEmitEvent || 'Broadcast Event'}</option>
-              <option value="party_target_router" ${normalizeMode(act.mode) === 'party_target_router' ? 'selected' : ''}>👥 ${currentLang === 'en' ? 'Party Target Router' : 'เลือกเป้าหมายปาร์ตี้ (Party Target)'}</option>
+              <option value="party_scanner" ${normalizeMode(act.mode) === 'party_scanner' ? 'selected' : ''}>👁️ ${currentLang === 'en' ? 'Party Scanner' : 'สแกนปาร์ตี้กลาง (Party Scanner)'}</option>
+              <option value="party_slot" ${normalizeMode(act.mode) === 'party_slot' ? 'selected' : ''}>🎯 ${currentLang === 'en' ? 'Select Party Slot' : 'เลือกช่องปาร์ตี้ (Select Party Slot)'}</option>
+              <option value="party_heal" ${normalizeMode(act.mode) === 'party_heal' ? 'selected' : ''}>🚑 ${currentLang === 'en' ? 'Party Heal Target' : 'เลือกเป้าหมายฮีล (Party Heal)'}</option>
+              <option value="party_buff" ${normalizeMode(act.mode) === 'party_buff' ? 'selected' : ''}>📜 ${currentLang === 'en' ? 'Party Buff Target' : 'วนเป้าหมายบัฟ (Party Buff)'}</option>
+              <option value="tts" ${normalizeMode(act.mode) === 'tts' ? 'selected' : ''}>🗣️ ${currentLang === 'en' ? 'Text to Speech (TTS)' : 'อ่านข้อความเสียง (TTS)'}</option>
             </select>
             <div class="mode-desc-hint" id="mode-desc-${act.id}" style="font-size:11px; color:var(--muted); margin-top:4px; font-style:italic;">${getModeDescription(act.mode)}</div>
           </div>
-          <div class="field client-selector-container" style="display: ${['control', 'delay_only', 'branch', 'emit_event'].includes(normalizeMode(act.mode)) ? 'none' : 'block'};">
+          <div class="field client-selector-container" style="display: ${['control', 'delay_only', 'branch', 'emit_event', 'tts'].includes(normalizeMode(act.mode)) ? 'none' : 'block'};">
             <label>${TRANSLATIONS[currentLang].targetClient}</label>
             ${renderTargetClientSelector(act)}
           </div>
@@ -520,6 +536,7 @@ export function renderModeSpecificFields(act) {
             <select class="party-target-mode" onchange="saveCurrentProfile()" style="background:#131826; border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:'Outfit'; font-size:13px; outline:none; width:100%;">
               <option value="heal_priority" ${(act.targetMode || 'heal_priority') === 'heal_priority' ? 'selected' : ''}>🚑 ${currentLang === 'en' ? 'Heal Priority (Lowest HP Member)' : 'เช็คเลือดฉุกเฉิน (คลิกคนที่เลือดน้อยสุดที่ < เกณฑ์)'}</option>
               <option value="buff_loop" ${(act.targetMode || 'heal_priority') === 'buff_loop' ? 'selected' : ''}>📜 ${currentLang === 'en' ? 'Buff Sequence Loop (Cycle all members)' : 'วนแจกบัฟทีละคน (ข้ามคนตาย/นอกระยะ)'}</option>
+              <option value="select_slot" ${(act.targetMode || 'heal_priority') === 'select_slot' ? 'selected' : ''}>🎯 ${currentLang === 'en' ? 'Select Specific Slot' : 'เลือกช่องระบุเจาะจง (เช่น ช่อง 1 หัวตี้)'}</option>
             </select>
           </div>
           <div class="field">
@@ -539,6 +556,109 @@ export function renderModeSpecificFields(act) {
             <label>⏱️ ${currentLang === 'en' ? 'Delay After Click (ms)' : 'หน่วงเวลาหลังคลิกก่อนส่งสัญญาณ (ms)'}</label>
             <input type="number" class="party-delay-after-click" value="${act.delayAfterClick ?? 80}" min="0" max="1000" step="10" placeholder="80" onchange="saveCurrentProfile()" style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:'JetBrains Mono'; font-size:13px; outline:none; width:100%;">
             <span style="font-size:10px; color:var(--muted); margin-top:2px;">${currentLang === 'en' ? 'Wait time for game to switch target' : 'รอให้เกมเปลี่ยนเป้าหมายสมบูรณ์ก่อนกดยิงสกิล'}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (normalizeMode(act.mode) === 'party_scanner') {
+    html = `
+      <div style="display:flex; flex-direction:column; gap:12px; border-top:1px dashed var(--border); padding-top:12px;">
+        <div class="field-row">
+          <div class="field">
+            <label>⚡ ${currentLang === 'en' ? 'Scan Interval (ms)' : 'รอบเวลาสแกน (มิลลิวินาที)'}</label>
+            <input type="number" class="party-scan-interval" value="${act.scanIntervalMs ?? 250}" min="50" max="3000" step="50" placeholder="250" onchange="syncActionFromDom('${act.id}'); saveCurrentProfile()" style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:'JetBrains Mono'; font-size:13px; outline:none; width:100%;">
+          </div>
+          <div class="field">
+            <label>🩸 ${currentLang === 'en' ? 'Low HP Alert Threshold (%)' : 'เกณฑ์แจ้งเตือนเลือดต่ำ (%)'}</label>
+            <input type="number" class="party-low-hp-threshold" value="${act.lowHpThreshold ?? 70}" min="1" max="99" placeholder="70" onchange="syncActionFromDom('${act.id}'); saveCurrentProfile()" style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:'JetBrains Mono'; font-size:13px; outline:none; width:100%;">
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (normalizeMode(act.mode) === 'party_slot') {
+    html = `
+      <div style="display:flex; flex-direction:column; gap:12px; border-top:1px dashed var(--border); padding-top:12px;">
+        <div class="field-row">
+          <div class="field">
+            <label style="color:var(--primary); font-weight:700;">🎯 ${currentLang === 'en' ? 'Target Party Slot' : 'เลือกช่องเป้าหมายในปาร์ตี้'}</label>
+            <select class="party-slot-target" onchange="syncActionFromDom('${act.id}'); saveCurrentProfile();" style="background:#131826; border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:'Outfit'; font-size:13px; outline:none; width:100%;">
+              <option value="1" ${(act.targetSlot || 1) === 1 ? 'selected' : ''}>Slot 1</option>
+              <option value="2" ${(act.targetSlot || 1) === 2 ? 'selected' : ''}>Slot 2</option>
+              <option value="3" ${(act.targetSlot || 1) === 3 ? 'selected' : ''}>Slot 3</option>
+              <option value="4" ${(act.targetSlot || 1) === 4 ? 'selected' : ''}>Slot 4</option>
+              <option value="5" ${(act.targetSlot || 1) === 5 ? 'selected' : ''}>Slot 5</option>
+              <option value="6" ${(act.targetSlot || 1) === 6 ? 'selected' : ''}>Slot 6</option>
+              <option value="7" ${(act.targetSlot || 1) === 7 ? 'selected' : ''}>Slot 7</option>
+              <option value="8" ${(act.targetSlot || 1) === 8 ? 'selected' : ''}>Slot 8</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>⏱️ ${currentLang === 'en' ? 'Delay After Click (ms)' : 'หน่วงเวลาหลังคลิกก่อนส่งสัญญาณ (ms)'}</label>
+            <input type="number" class="party-delay-after-click" value="${act.delayAfterClick ?? 80}" min="0" max="1000" step="10" placeholder="80" onchange="syncActionFromDom('${act.id}'); saveCurrentProfile();" style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:'JetBrains Mono'; font-size:13px; outline:none; width:100%;">
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (normalizeMode(act.mode) === 'party_heal') {
+    html = `
+      <div style="display:flex; flex-direction:column; gap:12px; border-top:1px dashed var(--border); padding-top:12px;">
+        <div class="field-row">
+          <div class="field">
+            <label>🩸 ${currentLang === 'en' ? 'Target Low HP Threshold (%)' : 'เกณฑ์เลือกคนเลือดต่ำเพื่อฮีล (%)'}</label>
+            <input type="number" class="party-low-hp-threshold" value="${act.lowHpThreshold ?? 70}" min="1" max="99" placeholder="70" onchange="syncActionFromDom('${act.id}'); saveCurrentProfile()" style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:'JetBrains Mono'; font-size:13px; outline:none; width:100%;">
+          </div>
+          <div class="field">
+            <label>⏱️ ${currentLang === 'en' ? 'Delay After Click (ms)' : 'หน่วงเวลาหลังคลิกก่อนส่งสัญญาณ (ms)'}</label>
+            <input type="number" class="party-delay-after-click" value="${act.delayAfterClick ?? 80}" min="0" max="1000" step="10" placeholder="80" onchange="syncActionFromDom('${act.id}'); saveCurrentProfile()" style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:'JetBrains Mono'; font-size:13px; outline:none; width:100%;">
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (normalizeMode(act.mode) === 'party_buff') {
+    html = `
+      <div style="display:flex; flex-direction:column; gap:12px; border-top:1px dashed var(--border); padding-top:12px;">
+        <div class="field-row">
+          <div class="field">
+            <label>⏱️ ${currentLang === 'en' ? 'Delay After Click (ms)' : 'หน่วงเวลาหลังคลิกก่อนส่งสัญญาณ (ms)'}</label>
+            <input type="number" class="party-delay-after-click" value="${act.delayAfterClick ?? 80}" min="0" max="1000" step="10" placeholder="80" onchange="syncActionFromDom('${act.id}'); saveCurrentProfile()" style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:'JetBrains Mono'; font-size:13px; outline:none; width:100%;">
+            <span style="font-size:10px; color:var(--muted); margin-top:2px;">${currentLang === 'en' ? 'Downward Tracking: cycles through all alive party members' : 'ระบบ Downward Tracking: คลิกวนสมาชิกทุกคนทีละคนตามลำดับ'}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (normalizeMode(act.mode) === 'tts') {
+    const text = act.text || act.message || '';
+    const voice = act.voice || 'th-TH-PremwadeeNeural';
+    const volume = act.volume !== undefined ? act.volume : 100;
+    html = `
+      <div style="display:flex; flex-direction:column; gap:12px; border-top:1px dashed var(--border); padding-top:12px;">
+        <div class="field-row">
+          <div class="field" style="grid-column: span 2;">
+            <label>💬 ${currentLang === 'en' ? 'TTS Message to Speak' : 'ข้อความที่ต้องการให้อ่านออกเสียง'}</label>
+            <textarea class="tts-text" rows="2" placeholder="${currentLang === 'en' ? 'e.g. Party HP is critically low!' : 'เช่น เลือดปาร์ตี้ต่ำกว่า 70%'}" oninput="syncActionFromDom('${act.id}');" onchange="syncActionFromDom('${act.id}'); saveCurrentProfile();" style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:inherit; font-size:13px; outline:none; width:100%; resize:vertical; min-height:55px;">${escapeHtml(text)}</textarea>
+            <span style="font-size:10px; color:var(--muted); margin-top:2px;">${currentLang === 'en' ? 'Powered by Microsoft Edge Neural AI (Free & Ultra Realistic)' : 'สังเคราะห์ด้วยเสียง Neural AI ของ Edge ฟรีและสมจริงเหมือนมนุษย์'}</span>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>🗣️ ${currentLang === 'en' ? 'Voice Model' : 'เสียงพากย์ (Voice)'}</label>
+            <select class="tts-voice" onchange="syncActionFromDom('${act.id}'); saveCurrentProfile();" style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-size:13px; outline:none; width:100%;">
+              <optgroup label="${currentLang === 'en' ? '🇹🇭 Thai (TH)' : '🇹🇭 ภาษาไทย'}">
+                <option value="th-TH-PremwadeeNeural" ${voice === 'th-TH-PremwadeeNeural' ? 'selected' : ''}>👩 ${currentLang === 'en' ? 'Premwadee (Female)' : 'เปรมวดี (หญิง)'}</option>
+                <option value="th-TH-NiwatNeural" ${voice === 'th-TH-NiwatNeural' ? 'selected' : ''}>👨 ${currentLang === 'en' ? 'Niwat (Male)' : 'นิวัต (ชาย)'}</option>
+              </optgroup>
+              <optgroup label="${currentLang === 'en' ? '🇺🇸 English (EN)' : '🇺🇸 ภาษาอังกฤษ'}">
+                <option value="en-US-JennyNeural" ${voice === 'en-US-JennyNeural' ? 'selected' : ''}>👩 Jenny (${currentLang === 'en' ? 'Female' : 'หญิง'})</option>
+                <option value="en-US-GuyNeural" ${voice === 'en-US-GuyNeural' ? 'selected' : ''}>👨 Guy (${currentLang === 'en' ? 'Male' : 'ชาย'})</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="field">
+            <label>🔊 ${currentLang === 'en' ? 'Volume %' : 'ระดับความดัง (%)'}</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="range" class="tts-volume" min="0" max="100" step="5" value="${volume}" oninput="this.nextElementSibling.innerText = this.value + '%'; syncActionFromDom('${act.id}');" onchange="saveCurrentProfile();" style="flex:1; accent-color:#c084fc;">
+              <span style="min-width:44px; font-weight:700; color:#c084fc; font-family:'JetBrains Mono',monospace;">${volume}%</span>
+            </div>
           </div>
         </div>
       </div>
@@ -877,6 +997,7 @@ function getChainEventsForMode(mode, act) {
   const map = {
     loop: ['onBeforeStart', 'onAfterStart', 'onEachCycle', 'onStop'],
     buff_sequence: ['onBeforeStart', 'onAfterStart', 'onComplete'],
+    sequencer: ['onStep', 'onEachCycle', 'onComplete', 'onStop'],
     single_press: ['onFired'],
     delay_only: ['onBeforeStart', 'onComplete'],
     forward: ['onKeyDown', 'onActivated', 'onKeyUp'],
@@ -885,7 +1006,12 @@ function getChainEventsForMode(mode, act) {
     emit_event: ['onFired'],
     sound_alert: ['onFired'],
     emergency_stop: ['onFired'],
-    party_target_router: ['onMemberLowHp', 'onNextMember', 'onComplete', 'onError']
+    party_scanner: ['onScanned', 'onLowHp', 'onError'],
+    party_slot: ['onSelected', 'onComplete', 'onError'],
+    party_heal: ['onHealTarget', 'onNoTarget', 'onError'],
+    party_buff: ['onNextMember', 'onComplete', 'onError'],
+    party_target_router: ['onMemberLowHp', 'onNextMember', 'onComplete', 'onError'],
+    tts: ['next', 'onError']
   };
   return map[norm] || [];
 }
@@ -1112,6 +1238,36 @@ export function syncActionFromDom(actionId) {
 
     const delayClickEl = card.querySelector('.party-delay-after-click');
     if (delayClickEl) act.delayAfterClick = parseInt(delayClickEl.value) || 80;
+  } else if (normalizeMode(act.mode) === 'party_scanner') {
+    const intervalEl = card.querySelector('.party-scan-interval');
+    if (intervalEl) act.scanIntervalMs = parseInt(intervalEl.value) || 250;
+
+    const hpEl = card.querySelector('.party-low-hp-threshold');
+    if (hpEl) act.lowHpThreshold = parseInt(hpEl.value) || 70;
+  } else if (normalizeMode(act.mode) === 'party_slot') {
+    const slotEl = card.querySelector('.party-slot-target');
+    if (slotEl) act.targetSlot = parseInt(slotEl.value) || 1;
+
+    const delayClickEl = card.querySelector('.party-delay-after-click');
+    if (delayClickEl) act.delayAfterClick = parseInt(delayClickEl.value) || 80;
+  } else if (normalizeMode(act.mode) === 'party_heal') {
+    const hpEl = card.querySelector('.party-low-hp-threshold');
+    if (hpEl) act.lowHpThreshold = parseInt(hpEl.value) || 70;
+
+    const delayClickEl = card.querySelector('.party-delay-after-click');
+    if (delayClickEl) act.delayAfterClick = parseInt(delayClickEl.value) || 80;
+  } else if (normalizeMode(act.mode) === 'party_buff') {
+    const delayClickEl = card.querySelector('.party-delay-after-click');
+    if (delayClickEl) act.delayAfterClick = parseInt(delayClickEl.value) || 80;
+  } else if (normalizeMode(act.mode) === 'tts') {
+    const textEl = card.querySelector('.tts-text');
+    if (textEl) act.text = textEl.value;
+
+    const voiceEl = card.querySelector('.tts-voice');
+    if (voiceEl) act.voice = voiceEl.value;
+
+    const volEl = card.querySelector('.tts-volume');
+    if (volEl) act.volume = parseInt(volEl.value, 10) || 100;
   }
 
   const chainEnabledEl = card.querySelector('.chain-enabled');

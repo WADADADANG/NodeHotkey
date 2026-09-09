@@ -20,6 +20,46 @@ let activeClients = [];  // Array of active client indices, e.g. [2, 4]
 global.activeClients = activeClients;
 let clientCooldowns = {}; // clientIndex -> { [presetId]: expireTimestamp, [presetId_lastCycle]: lastCycleTimestamp }
 
+let runPartyScannerAction = async (action, callStack) => {
+    try {
+        delete require.cache[require.resolve('./vision-service')];
+        delete require.cache[require.resolve('./party-target-handler')];
+        const handler = require('./party-target-handler');
+        return await handler.runPartyScannerAction(action, callStack);
+    } catch (e) {
+        console.error('⚠️ [Vision Module] PartyScanner error:', e.message);
+    }
+};
+let runSelectPartySlotAction = async (action, callStack) => {
+    try {
+        delete require.cache[require.resolve('./vision-service')];
+        delete require.cache[require.resolve('./party-target-handler')];
+        const handler = require('./party-target-handler');
+        return await handler.runSelectPartySlotAction(action, callStack);
+    } catch (e) {
+        console.error('⚠️ [Vision Module] SelectPartySlot error:', e.message);
+    }
+};
+let runPartyHealAction = async (action, callStack) => {
+    try {
+        delete require.cache[require.resolve('./vision-service')];
+        delete require.cache[require.resolve('./party-target-handler')];
+        const handler = require('./party-target-handler');
+        return await handler.runPartyHealAction(action, callStack);
+    } catch (e) {
+        console.error('⚠️ [Vision Module] PartyHeal error:', e.message);
+    }
+};
+let runPartyBuffAction = async (action, callStack) => {
+    try {
+        delete require.cache[require.resolve('./vision-service')];
+        delete require.cache[require.resolve('./party-target-handler')];
+        const handler = require('./party-target-handler');
+        return await handler.runPartyBuffAction(action, callStack);
+    } catch (e) {
+        console.error('⚠️ [Vision Module] PartyBuff error:', e.message);
+    }
+};
 let runPartyTargetRouterAction = async (action, callStack) => {
     try {
         delete require.cache[require.resolve('./vision-service')];
@@ -28,6 +68,40 @@ let runPartyTargetRouterAction = async (action, callStack) => {
         return await handler.runPartyTargetRouterAction(action, callStack);
     } catch (e) {
         console.error('⚠️ [Vision Module] PartyTargetHandler error:', e.message);
+    }
+};
+
+let runTtsAction = async (action, callStack) => {
+    try {
+        delete require.cache[require.resolve('./tts-service')];
+        const tts = require('./tts-service');
+        const text = String(action.text || action.message || '').trim();
+        if (!text) {
+            await fireChain(action, 'next', callStack);
+            return;
+        }
+        const voice = action.voice || 'th-TH-PremwadeeNeural';
+        const volume = action.volume !== undefined ? parseInt(action.volume, 10) : 100;
+
+        console.log(`🗣️ [TTS Action] Synthesizing: "${text}" (${voice}, Vol: ${volume}%)`);
+        const mp3Path = await tts.synthesize(text, voice);
+        if (mp3Path && fs.existsSync(mp3Path)) {
+            playNativeSound(null, mp3Path, null, 1, volume);
+            if (typeof broadcastToClients === 'function') {
+                broadcastToClients({
+                    type: 'tts_spoken',
+                    actionId: action.id,
+                    actionName: action.name,
+                    text,
+                    voice,
+                    audioUrl: `/sounds/tts_cache/${path.basename(mp3Path)}`
+                });
+            }
+        }
+        await fireChain(action, 'next', callStack);
+    } catch (e) {
+        console.error('⚠️ [TTS Action] Error:', e.message);
+        await fireChain(action, 'onError', callStack);
     }
 };
 global.activePartyTargetRouters = {};
@@ -426,6 +500,58 @@ function sendOverlayUpdate() {
 }
 global.sendOverlayUpdate = sendOverlayUpdate;
 
+// =================================================================
+// 🛑 Event-Driven Abort Architecture (Zero-CPU Instant Cancellation)
+// =================================================================
+let globalAbortController = new AbortController();
+const actionAbortControllers = new Map();
+
+function abortAction(actionId) {
+    const ctrl = actionAbortControllers.get(actionId);
+    if (ctrl) {
+        ctrl.abort();
+        actionAbortControllers.delete(actionId);
+    }
+}
+
+function abortableSleep(ms, actionId) {
+    if (ms <= 0) return Promise.resolve(!global.isSuspended);
+    if (global.isSuspended) return Promise.resolve(false);
+
+    const actionSignal = actionId ? actionAbortControllers.get(actionId)?.signal : null;
+    if (actionSignal?.aborted || globalAbortController.signal.aborted) {
+        return Promise.resolve(false);
+    }
+
+    return new Promise(resolve => {
+        let timer = null;
+
+        const onAbort = () => {
+            if (timer) clearTimeout(timer);
+            cleanup();
+            resolve(false);
+        };
+
+        const cleanup = () => {
+            globalAbortController.signal.removeEventListener('abort', onAbort);
+            if (actionSignal) {
+                actionSignal.removeEventListener('abort', onAbort);
+            }
+        };
+
+        timer = setTimeout(() => {
+            cleanup();
+            resolve(true);
+        }, ms);
+
+        globalAbortController.signal.addEventListener('abort', onAbort, { once: true });
+        if (actionSignal) {
+            actionSignal.addEventListener('abort', onAbort, { once: true });
+        }
+    });
+}
+global.abortableSleep = abortableSleep;
+
 global.toggleSuspendState = function (forcedState) {
     if (forcedState !== undefined) {
         global.isSuspended = forcedState;
@@ -436,6 +562,12 @@ global.toggleSuspendState = function (forcedState) {
     console.log(`\n[System Pause/Resume] Bot is now ${global.isSuspended ? '⏸️ PAUSED/SUSPENDED' : '▶️ ACTIVE/RESUMED'}`);
 
     if (global.isSuspended) {
+        // Fire global abort signal (instantly breaks all pending timers in 0ms)
+        globalAbortController.abort();
+        globalAbortController = new AbortController();
+        actionAbortControllers.forEach(ctrl => ctrl.abort());
+        actionAbortControllers.clear();
+
         // Stop all loops
         stopAllLoops();
 
@@ -2075,6 +2207,7 @@ async function startCastSequencerLoop(action, callStack) {
 // Stop a Sequencer Action (Loop or Once)
 function stopCastSequencerAction(actionId, actionName) {
     sequencerTokens[actionId] = (sequencerTokens[actionId] || 0) + 1;
+    abortAction(actionId);
     delete activeOnceSequencers[actionId];
 
     const act = activeActions.find(a => a.id === actionId);
@@ -2093,7 +2226,7 @@ function stopCastSequencerAction(actionId, actionName) {
             clearTimeout(activeSequencerLoops[actionId].timeout);
             activeSequencerLoops[actionId].timeout = null;
         }
-        if (act) fireChain(act, 'onStop');
+        if (act && !global.isSuspended) fireChain(act, 'onStop');
     }
     sendOverlayUpdate();
 }
@@ -2124,7 +2257,8 @@ async function runSequencerLoopStep(action, callStack, myToken) {
         await fireChain(action, 'onStep', callStack);
 
         if (delayMs > 0) {
-            await new Promise(res => setTimeout(res, delayMs));
+            const ok = await abortableSleep(delayMs, action.id);
+            if (!ok || !state || !state.running || global.isSuspended || sequencerTokens[action.id] !== myToken) return;
         }
     }
 
@@ -2151,6 +2285,7 @@ async function runCastSequencerOnce(action, callStack) {
 
     const myToken = (sequencerTokens[action.id] || 0) + 1;
     sequencerTokens[action.id] = myToken;
+    actionAbortControllers.set(action.id, new AbortController());
     activeOnceSequencers[action.id] = true;
 
     for (let t of targets) {
@@ -2189,7 +2324,11 @@ async function runCastSequencerOnce(action, callStack) {
                 await fireChain(action, 'onStep', callStack);
 
                 if (delayMs > 0) {
-                    await new Promise(res => setTimeout(res, delayMs));
+                    const ok = await abortableSleep(delayMs, action.id);
+                    if (!ok || global.isSuspended || sequencerTokens[action.id] !== myToken) {
+                        wasInterrupted = true;
+                        break;
+                    }
                 }
             }
         }
@@ -2197,16 +2336,22 @@ async function runCastSequencerOnce(action, callStack) {
         if (!wasInterrupted) {
             const delayAfter = action.delayAfter !== undefined ? parseInt(action.delayAfter, 10) : 0;
             if (delayAfter > 0) {
-                await new Promise(res => setTimeout(res, delayAfter));
+                const ok = await abortableSleep(delayAfter, action.id);
+                if (!ok || global.isSuspended) wasInterrupted = true;
             }
 
-            console.log(`⚔️ [Action] Cast Sequencer Finished: "${action.name}" on Client ${target}`);
-            await fireChain(action, 'onComplete', callStack);
+            if (!wasInterrupted) {
+                console.log(`⚔️ [Action] Cast Sequencer Finished: "${action.name}" on Client ${target}`);
+                await fireChain(action, 'onComplete', callStack);
+            }
         } else {
             console.log(`🔴 [Action] Cast Sequencer Cancelled / Interrupted: "${action.name}"`);
-            await fireChain(action, 'onStop', callStack);
+            if (!global.isSuspended) {
+                await fireChain(action, 'onStop', callStack);
+            }
         }
     } finally {
+        actionAbortControllers.delete(action.id);
         if (sequencerTokens[action.id] === myToken) {
             delete activeOnceSequencers[action.id];
             for (let t of targets) {
@@ -2822,9 +2967,29 @@ function handleActionTrigger(act) {
         } else {
             startLoopSchedulerAction(act).catch(err => console.error(`Error in startLoopSchedulerAction:`, err));
         }
+    } else if (act.mode === 'party_scanner') {
+        if (typeof runPartyScannerAction === 'function') {
+            runPartyScannerAction(act, []).catch(err => console.error(`Error in runPartyScannerAction:`, err));
+        }
+    } else if (act.mode === 'party_slot' || act.mode === 'select_party_slot') {
+        if (typeof runSelectPartySlotAction === 'function') {
+            runSelectPartySlotAction(act, []).catch(err => console.error(`Error in runSelectPartySlotAction:`, err));
+        }
+    } else if (act.mode === 'party_heal') {
+        if (typeof runPartyHealAction === 'function') {
+            runPartyHealAction(act, []).catch(err => console.error(`Error in runPartyHealAction:`, err));
+        }
+    } else if (act.mode === 'party_buff') {
+        if (typeof runPartyBuffAction === 'function') {
+            runPartyBuffAction(act, []).catch(err => console.error(`Error in runPartyBuffAction:`, err));
+        }
     } else if (act.mode === 'party_target_router' || act.mode === 'party_target') {
         if (typeof runPartyTargetRouterAction === 'function') {
             runPartyTargetRouterAction(act, []).catch(err => console.error(`Error in runPartyTargetRouterAction:`, err));
+        }
+    } else if (act.mode === 'tts' || act.mode === 'tts_alert' || act.mode === 'text_to_speech') {
+        if (typeof runTtsAction === 'function') {
+            runTtsAction(act, []).catch(err => console.error(`Error in runTtsAction:`, err));
         }
     }
 }
@@ -2943,9 +3108,29 @@ async function runChainedAction(action, callStack) {
         } else {
             await startLoopSchedulerAction(action, callStack).catch(err => console.error(`[Chain Error] startLoopSchedulerAction:`, err));
         }
+    } else if (action.mode === 'party_scanner') {
+        if (typeof runPartyScannerAction === 'function') {
+            await runPartyScannerAction(action, callStack).catch(err => console.error(`[Chain Error] runPartyScannerAction:`, err));
+        }
+    } else if (action.mode === 'party_slot' || action.mode === 'select_party_slot') {
+        if (typeof runSelectPartySlotAction === 'function') {
+            await runSelectPartySlotAction(action, callStack).catch(err => console.error(`[Chain Error] runSelectPartySlotAction:`, err));
+        }
+    } else if (action.mode === 'party_heal') {
+        if (typeof runPartyHealAction === 'function') {
+            await runPartyHealAction(action, callStack).catch(err => console.error(`[Chain Error] runPartyHealAction:`, err));
+        }
+    } else if (action.mode === 'party_buff') {
+        if (typeof runPartyBuffAction === 'function') {
+            await runPartyBuffAction(action, callStack).catch(err => console.error(`[Chain Error] runPartyBuffAction:`, err));
+        }
     } else if (action.mode === 'party_target_router' || action.mode === 'party_target') {
         if (typeof runPartyTargetRouterAction === 'function') {
             await runPartyTargetRouterAction(action, callStack).catch(err => console.error(`[Chain Error] runPartyTargetRouterAction:`, err));
+        }
+    } else if (action.mode === 'tts' || action.mode === 'tts_alert' || action.mode === 'text_to_speech') {
+        if (typeof runTtsAction === 'function') {
+            await runTtsAction(action, callStack).catch(err => console.error(`[Chain Error] runTtsAction:`, err));
         }
     }
 }

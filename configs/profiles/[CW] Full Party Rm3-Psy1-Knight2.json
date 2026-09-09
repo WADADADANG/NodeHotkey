@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 0.5513684346952022,
     "pan": {
-      "x": -604,
-      "y": -1780
+      "x": -691,
+      "y": -1526
     }
   },
   "nodes": [
@@ -30,7 +30,7 @@
       "title": "RM 1",
       "position": {
         "x": 2230,
-        "y": 2620
+        "y": 2580
       },
       "data": {
         "enabled": true,
@@ -79,7 +79,7 @@
       "title": "Heal Rain 1",
       "position": {
         "x": 2640,
-        "y": 2580
+        "y": 2420
       },
       "data": {
         "enabled": true,
@@ -97,13 +97,13 @@
       "title": "MoomBeam 1",
       "position": {
         "x": 2640,
-        "y": 2700
+        "y": 2600
       },
       "data": {
         "enabled": true,
         "targetClient": "1",
         "keys": [
-          "LEFT ALT + 8"
+          "CTRL + 9"
         ],
         "cooldownPresetId": "skill_assist_moon-beam",
         "actionId": "1787581198443"
@@ -115,7 +115,7 @@
       "title": "Merkaba 1",
       "position": {
         "x": 2640,
-        "y": 2820
+        "y": 2780
       },
       "data": {
         "enabled": true,
@@ -133,7 +133,7 @@
       "title": "Restore Mp 1",
       "position": {
         "x": 2640,
-        "y": 2940
+        "y": 2960
       },
       "data": {
         "enabled": true,
@@ -150,7 +150,7 @@
       "title": "Restore Mp 2",
       "position": {
         "x": 2640,
-        "y": 3530
+        "y": 3650
       },
       "data": {
         "enabled": true,
@@ -167,7 +167,7 @@
       "title": "Merkaba 2",
       "position": {
         "x": 2640,
-        "y": 3410
+        "y": 3470
       },
       "data": {
         "enabled": true,
@@ -191,7 +191,7 @@
         "enabled": true,
         "targetClient": "2",
         "keys": [
-          "LEFT ALT + 8"
+          "CTRL + 9"
         ],
         "cooldownPresetId": "skill_assist_moon-beam",
         "actionId": "1787585306026_578"
@@ -203,7 +203,7 @@
       "title": "Heal Rain 2",
       "position": {
         "x": 2640,
-        "y": 3170
+        "y": 3110
       },
       "data": {
         "enabled": true,
@@ -221,7 +221,7 @@
       "title": "RM 2",
       "position": {
         "x": 2230,
-        "y": 3210
+        "y": 3260
       },
       "data": {
         "enabled": true,
@@ -269,8 +269,8 @@
       "type": "key_press",
       "title": "Restore Mp 4",
       "position": {
-        "x": 2660,
-        "y": 4280
+        "x": 2640,
+        "y": 4320
       },
       "data": {
         "enabled": true,
@@ -286,8 +286,8 @@
       "type": "key_press",
       "title": "Merkaba 4",
       "position": {
-        "x": 2660,
-        "y": 4100
+        "x": 2640,
+        "y": 4140
       },
       "data": {
         "enabled": true,
@@ -304,14 +304,14 @@
       "type": "key_press",
       "title": "MoomBeam 4",
       "position": {
-        "x": 2660,
-        "y": 3920
+        "x": 2640,
+        "y": 3960
       },
       "data": {
         "enabled": true,
         "targetClient": "4",
         "keys": [
-          "LEFT ALT + 8"
+          "CTRL + 9"
         ],
         "cooldownPresetId": "skill_assist_moon-beam",
         "actionId": "1787585346514_5378"
@@ -322,8 +322,8 @@
       "type": "key_press",
       "title": "Heal Rain 4",
       "position": {
-        "x": 2660,
-        "y": 3740
+        "x": 2640,
+        "y": 3790
       },
       "data": {
         "enabled": true,
@@ -340,8 +340,8 @@
       "type": "loop_scheduler",
       "title": "RM 4",
       "position": {
-        "x": 2230,
-        "y": 3960
+        "x": 2190,
+        "y": 4000
       },
       "data": {
         "enabled": true,
@@ -397,8 +397,8 @@
       "type": "key_press",
       "title": "Buff GT",
       "position": {
-        "x": 2660,
-        "y": 4440
+        "x": 2640,
+        "y": 4420
       },
       "data": {
         "enabled": true,
@@ -406,6 +406,7 @@
         "keys": [
           "6"
         ],
+        "cooldownPresetId": "skill_ringmaster_gvur-tialla",
         "actionId": "1787585392867"
       }
     },
@@ -414,8 +415,8 @@
       "type": "key_hold",
       "title": "Spy  SpiritBomb",
       "position": {
-        "x": 2260,
-        "y": 4740
+        "x": 2250,
+        "y": 4650
       },
       "data": {
         "enabled": true,
@@ -429,8 +430,8 @@
       "type": "loop",
       "title": "Psy Resotre MP",
       "position": {
-        "x": 2610,
-        "y": 4740
+        "x": 2600,
+        "y": 4650
       },
       "data": {
         "enabled": true,
@@ -448,8 +449,8 @@
       "type": "control",
       "title": "AC Stop Psy Restore MP",
       "position": {
-        "x": 2610,
-        "y": 4950
+        "x": 2600,
+        "y": 4860
       },
       "data": {
         "enabled": true,

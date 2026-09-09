@@ -88,7 +88,14 @@ function convertLegacyProfileToNodeWorkflow(legacyProfile) {
       send_event: 'emit_event',
       sequencer: 'sequencer',
       cast_sequence: 'sequencer',
+      party_scanner: 'party_scanner',
+      party_slot: 'party_slot',
+      party_heal: 'party_heal',
+      party_buff: 'party_buff',
       party_target_router: 'party_target',
+      tts: 'tts',
+      tts_alert: 'tts',
+      text_to_speech: 'tts',
       webhook_out: 'webhook_out'
     };
     const nodeType = typeMap[act.mode] || act.mode || 'loop';
@@ -129,6 +136,8 @@ function convertLegacyProfileToNodeWorkflow(legacyProfile) {
       soundUrl: act.soundUrl || '',
       soundFile: act.soundFile || '',
       volume: act.volume !== undefined ? act.volume : 100,
+      text: act.text || act.message || '',
+      voice: act.voice || 'th-TH-PremwadeeNeural',
       steps: Array.isArray(act.steps) ? act.steps : [],
       repeatCount: act.repeatCount || 1,
       chaining: act.chaining || { _enabled: false }

@@ -278,13 +278,13 @@ class ClientPartyScanner {
             return cl[0].y;
         });
 
-        // 4. Longest Chain Selection: ค้นหาห่วงโซ่สล็อตต่อเนื่อง (ระยะห่าง 18-120px)
+        // 4. Longest Chain Selection: ค้นหาห่วงโซ่สล็อตต่อเนื่อง (ระยะห่าง 24-120px)
         const chains = [];
         for (let i = 0; i < rawSlots.length; i++) {
             const currentChain = [rawSlots[i]];
             for (let j = i + 1; j < rawSlots.length; j++) {
                 const diff = rawSlots[j] - currentChain[currentChain.length - 1];
-                if (diff >= 18 && diff <= 120) {
+                if (diff >= 24 && diff <= 120) {
                     currentChain.push(rawSlots[j]);
                 } else if (diff > 120) {
                     break;
@@ -534,13 +534,13 @@ class VisionService {
      * สแกน Client เป้าหมายด้วยระบบ Mutex Lock จัดคิวทีละจอ
      * 100% ZERO-FLICKER: ดึงเฟรมจาก Compositor Stream โดยตรง ไม่เรียก page.screenshot() ให้จอกระพริบ
      */
-    async scanClientPage(page, clientId) {
+    async scanClientPage(page, clientId, scanRegion = 'left') {
         const id = String(clientId || '1');
         if (!page || (typeof page.isClosed === 'function' && page.isClosed())) return null;
 
         await VisionLockManager.acquire(id);
         try {
-            // ตรวจสอบขนาดหน้าต่างเกม ถ้าขยายจอใหญ่ขึ้นให้รีเซ็ตพิกัดอัตโนมัติ
+            // ตรวจสอบขนาดหน้าต่างเกม ถ้าขยายจอใหญ่ขึ้นหรือเปลี่ยนโซนสแกนให้รีเซ็ตพิกัดอัตโนมัติ
             const winBounds = await page.evaluate(() => ({
                 w: window.innerWidth,
                 h: window.innerHeight
@@ -550,46 +550,79 @@ class VisionService {
             const currentH = winBounds.h || 720;
             const scanner = this.getScanner(id);
 
-            if (scanner.lastViewportW !== currentW || scanner.lastViewportH !== currentH) {
+            if (scanner.lastViewportW !== currentW || scanner.lastViewportH !== currentH || scanner.lastScanRegion !== scanRegion) {
                 scanner.lastViewportW = currentW;
                 scanner.lastViewportH = currentH;
+                scanner.lastScanRegion = scanRegion;
                 scanner.resetCalibration();
             }
 
-            // 🚀 ZERO-FLICKER FRAME CAPTURE:
-            // ดึงเฟรมภาพสดจาก Chrome CDP Compositor Stream ตรงๆ จอไม่กระพริบ 100%
+            // 🚀 ZERO-FLICKER FRAME CAPTURE + FRESHNESS WATCHDOG:
+            // ดึงเฟรมภาพสดจาก Chrome CDP Compositor Stream ตรงๆ
+            // หากไม่มีการเคลื่อนไหวในเกมเกิน 600ms ให้ดึงภาพสดใหม่ทันที ป้องกันอาการภาพนิ่ง/ภาพค้าง
             let frameBuffer = this.screencastManager.getLatestFrame(id);
+            const session = this.screencastManager.streams.get(id);
+            const now = Date.now();
+            const isStale = !session || !session.lastFrameTime || (now - session.lastFrameTime > 600);
 
-            if (!frameBuffer) {
-                await this.screencastManager.ensureStream(page, id);
-                frameBuffer = this.screencastManager.getLatestFrame(id);
-            }
-
-            // Fallback กรณีเปิดรอบแรกก่อนสตรีมพร้อม
-            if (!frameBuffer) {
-                frameBuffer = await page.screenshot({
-                    type: 'jpeg',
-                    quality: 85
-                });
+            if (!frameBuffer || isStale) {
+                try {
+                    frameBuffer = await page.screenshot({
+                        type: 'jpeg',
+                        quality: 85
+                    });
+                    if (session) {
+                        session.latestBuffer = frameBuffer;
+                        session.lastFrameTime = now;
+                    }
+                } catch (e) {
+                    if (!frameBuffer) {
+                        await this.screencastManager.ensureStream(page, id);
+                        frameBuffer = this.screencastManager.getLatestFrame(id);
+                    }
+                }
             }
 
             if (!frameBuffer) return null;
 
-            // ตัดเฉพาะโซนปาร์ตี้ทางซ้ายบน รองรับทั้งจอเล็กและจอใหญ่แบบยืดหยุ่น (Dynamic Bounds)
             const meta = await sharp(frameBuffer).metadata();
             const imgW = meta.width || currentW;
             const imgH = meta.height || currentH;
 
-            // ครอบคลุมโซนปาร์ตี้ทางซ้าย: จอเล็กใช้เต็มความกว้าง จอใหญ่ตัด 650px
-            const cropW = Math.min(imgW, 650);
-            const cropH = Math.min(imgH, 850);
+            // คำนวณพื้นที่ครอบภาพ (Crop Bounds) ตาม scanRegion ที่ผู้ใช้เลือก
+            let cropLeft = 0;
+            let cropTop = 0;
+            let cropW = imgW;
+            let cropH = imgH;
+
+            if (scanRegion === 'left') {
+                cropLeft = 0;
+                cropTop = 0;
+                cropW = Math.min(imgW, Math.max(300, Math.round(imgW * 0.52)));
+                cropH = Math.min(imgH, 900);
+            } else if (scanRegion === 'top_left') {
+                cropLeft = 0;
+                cropTop = 0;
+                cropW = Math.min(imgW, Math.max(300, Math.round(imgW * 0.52)));
+                cropH = Math.min(imgH, Math.max(300, Math.round(imgH * 0.65)));
+            } else if (scanRegion === 'right') {
+                cropLeft = Math.round(imgW * 0.45);
+                cropTop = 0;
+                cropW = imgW - cropLeft;
+                cropH = Math.min(imgH, 900);
+            } else { // 'full'
+                cropLeft = 0;
+                cropTop = 0;
+                cropW = imgW;
+                cropH = imgH;
+            }
 
             const croppedBuffer = await sharp(frameBuffer)
                 .extract({
-                    left: 0,
-                    top: 0,
-                    width: Math.min(cropW, imgW),
-                    height: Math.min(cropH, imgH)
+                    left: cropLeft,
+                    top: cropTop,
+                    width: Math.min(cropW, imgW - cropLeft),
+                    height: Math.min(cropH, imgH - cropTop)
                 })
                 .toBuffer();
 
@@ -602,12 +635,12 @@ class VisionService {
 
                 const scaledMembers = result.members.map(m => ({
                     ...m,
-                    barY: Math.round(m.barY * scaleY),
-                    startX: Math.round(m.startX * scaleX),
+                    barY: Math.round((m.barY + cropTop) * scaleY),
+                    startX: Math.round((m.startX + cropLeft) * scaleX),
                     barWidth: Math.round(m.barWidth * scaleX),
                     click: {
-                        x: Math.round(m.click.x * scaleX),
-                        y: Math.round(m.click.y * scaleY)
+                        x: Math.round((m.click.x + cropLeft) * scaleX),
+                        y: Math.round((m.click.y + cropTop) * scaleY)
                     }
                 }));
 
@@ -624,7 +657,7 @@ class VisionService {
                     clientId: id,
                     timestamp: Date.now(),
                     autoAnchor: {
-                        startX: Math.round((result.autoAnchor?.startX || 0) * scaleX),
+                        startX: Math.round(((result.autoAnchor?.startX || 0) + cropLeft) * scaleX),
                         detectedBarWidth: Math.round((result.autoAnchor?.detectedBarWidth || 0) * scaleX),
                         slotsFound: scaledMembers.length
                     },
@@ -649,6 +682,11 @@ class VisionService {
         } finally {
             VisionLockManager.release(id);
         }
+    }
+
+    getLatestPartyState(clientId) {
+        const id = String(clientId || '1');
+        return this.clientStates.get(id) || null;
     }
 }
 

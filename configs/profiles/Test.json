@@ -2,215 +2,381 @@
   "version": "3.1.0",
   "name": "Test",
   "canvas": {
-    "zoom": 0.7144929000000003,
+    "zoom": 0.42308709732208455,
     "pan": {
-      "x": -393,
-      "y": -18
+      "x": -23,
+      "y": 10
     }
   },
   "nodes": [
     {
-      "id": "node_1788945959254",
+      "id": "node_1788964309726",
       "type": "trigger",
-      "title": "Start Party Buff (F1)",
+      "title": "Btn First buff",
       "position": {
-        "x": 180,
-        "y": 280
+        "x": 580,
+        "y": 160
       },
       "data": {
         "enabled": true,
         "triggerType": "keyboard",
-        "triggerValue": "F1",
-        "actionId": "1788945959254"
+        "triggerValue": "NUMPAD 5",
+        "actionId": "1788964309726"
       }
     },
     {
-      "id": "node_1788945798980",
-      "type": "party_target",
-      "title": "Party Target Router",
+      "id": "node_1788964319072",
+      "type": "party_scanner",
+      "title": "party_scanner",
       "position": {
-        "x": 560,
-        "y": 280
+        "x": 1280,
+        "y": 420
       },
       "data": {
         "enabled": true,
-        "targetClient": "7",
-        "targetMode": "buff_loop",
-        "lowHpThreshold": 70,
+        "targetClient": "4",
         "scanIntervalMs": 250,
-        "delayAfterClick": 200,
-        "showOverlay": true,
-        "actionId": "1788945798980"
+        "lowHpThreshold": 70,
+        "showOverlay": false,
+        "actionId": "1788964319072"
       }
     },
     {
-      "id": "node_sound_alert_1788946200",
-      "type": "sound",
-      "title": "Buff Complete Alert",
+      "id": "node_1788965882232",
+      "type": "tts",
+      "title": "Text to Speech (TTS)",
       "position": {
-        "x": 1000,
-        "y": 810
+        "x": 1280,
+        "y": 630
       },
       "data": {
         "enabled": true,
-        "soundSource": "preset",
-        "soundPreset": "success",
+        "text": "สแกนไม่เจอปาร์ตี้",
+        "voice": "th-TH-PremwadeeNeural",
         "volume": 100,
-        "actionId": "sound_alert_1788946200"
+        "actionId": "1788965882232"
       }
     },
     {
-      "id": "node_1788954300388",
-      "type": "sequencer",
-      "title": "Full Buff",
+      "id": "node_1788966278431",
+      "type": "party_buff",
+      "title": "party_buff",
       "position": {
-        "x": 1010,
-        "y": 140
+        "x": 1610,
+        "y": 360
       },
       "data": {
         "enabled": true,
-        "modeType": "once",
-        "targetClient": "7",
+        "targetClient": "4",
+        "delayAfterClick": 80,
+        "showOverlay": true,
+        "actionId": "1788966278431"
+      }
+    },
+    {
+      "id": "node_1788966326966",
+      "type": "sequencer",
+      "title": "Cast Sequencer",
+      "position": {
+        "x": 1950,
+        "y": 360
+      },
+      "data": {
+        "enabled": true,
+        "modeType": "loop",
+        "targetClient": "4",
         "interval": 1000,
         "repeatCount": 1,
         "delayAfter": 0,
         "steps": [
           {
             "key": "F2",
-            "delay": 200,
-            "castTimeMs": 200
+            "delay": 120,
+            "castTimeMs": 120
           },
           {
             "key": "1",
-            "delay": 800,
-            "castTimeMs": 800
+            "delay": 900,
+            "castTimeMs": 900
           },
           {
             "key": "2",
-            "delay": 800,
-            "castTimeMs": 800
+            "delay": 900,
+            "castTimeMs": 900
           },
           {
             "key": "3",
-            "delay": 800,
-            "castTimeMs": 800
+            "delay": 900,
+            "castTimeMs": 900
           },
           {
             "key": "4",
-            "delay": 800,
-            "castTimeMs": 800
+            "delay": 900,
+            "castTimeMs": 900
           },
           {
             "key": "5",
-            "delay": 800,
-            "castTimeMs": 800
+            "delay": 900,
+            "castTimeMs": 900
           },
           {
             "key": "6",
-            "delay": 800,
-            "castTimeMs": 800
+            "delay": 900,
+            "castTimeMs": 900
           },
           {
             "key": "LEFT ALT + 1",
-            "delay": 800,
-            "castTimeMs": 800
+            "delay": 900,
+            "castTimeMs": 900
           },
           {
             "key": "LEFT ALT + 2",
-            "delay": 800,
-            "castTimeMs": 800
+            "delay": 900,
+            "castTimeMs": 900
           },
           {
             "key": "LEFT ALT + 3",
-            "delay": 800,
-            "castTimeMs": 800
+            "delay": 900,
+            "castTimeMs": 900
           },
           {
             "key": "LEFT ALT + 4",
-            "delay": 800,
-            "castTimeMs": 800
+            "delay": 900,
+            "castTimeMs": 900
           },
           {
             "key": "LEFT ALT + 5",
-            "delay": 800,
-            "castTimeMs": 800
+            "delay": 850,
+            "castTimeMs": 850
           },
           {
             "key": "F1",
-            "delay": 200,
-            "castTimeMs": 200
+            "delay": 150,
+            "castTimeMs": 150
           }
         ],
-        "actionId": "1788954300388"
+        "actionId": "1788966326966"
       }
     },
     {
-      "id": "node_1788954375480",
-      "type": "sound",
-      "title": "Sound Alert",
+      "id": "node_1788966352107",
+      "type": "tts",
+      "title": "Text to Speech (TTS)",
       "position": {
-        "x": 1330,
-        "y": 550
+        "x": 1620,
+        "y": 570
       },
       "data": {
         "enabled": true,
-        "soundSource": "preset",
-        "soundPreset": "ding",
-        "volume": 28,
-        "actionId": "1788954375480"
+        "text": "เกิดข้อผิดพลาด บัฟปาร์ตี้",
+        "voice": "en-US-JennyNeural",
+        "volume": 100,
+        "actionId": "1788966352107"
       }
     },
     {
-      "id": "node_1788957697659",
+      "id": "node_1788966414924",
+      "type": "tts",
+      "title": "Text to Speech (TTS)",
+      "position": {
+        "x": 2260,
+        "y": 960
+      },
+      "data": {
+        "enabled": true,
+        "text": "บัฟเสร็จแล้ว",
+        "voice": "en-US-JennyNeural",
+        "volume": 100,
+        "actionId": "1788966414924"
+      }
+    },
+    {
+      "id": "node_1788966556033",
+      "type": "sequencer",
+      "title": "First buff",
+      "position": {
+        "x": 900,
+        "y": 160
+      },
+      "data": {
+        "enabled": true,
+        "modeType": "once",
+        "targetClient": "4",
+        "interval": 1000,
+        "repeatCount": 1,
+        "delayAfter": 0,
+        "steps": [
+          {
+            "key": "ESC",
+            "delay": 150,
+            "castTimeMs": 150
+          },
+          {
+            "key": "F1",
+            "delay": 150,
+            "castTimeMs": 150
+          },
+          {
+            "key": "6",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "CTRL + 2",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "CTRL + 1",
+            "delay": 1000,
+            "castTimeMs": 1000
+          }
+        ],
+        "actionId": "1788966556033"
+      }
+    },
+    {
+      "id": "node_1788966784692",
+      "type": "trigger",
+      "title": "Btn All Buff",
+      "position": {
+        "x": 590,
+        "y": 510
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "NUMPAD 6",
+        "actionId": "1788966784692"
+      }
+    },
+    {
+      "id": "node_1788966829048",
+      "type": "party_slot",
+      "title": "party_slot",
+      "position": {
+        "x": 1950,
+        "y": 860
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "targetSlot": 1,
+        "delayAfterClick": 80,
+        "showOverlay": true,
+        "actionId": "1788966829048"
+      }
+    },
+    {
+      "id": "node_1788966841157",
       "type": "sound",
       "title": "Sound Alert",
       "position": {
-        "x": 830,
-        "y": 610
+        "x": 1960,
+        "y": 1060
       },
       "data": {
         "enabled": true,
         "soundSource": "preset",
         "soundPreset": "alarm",
-        "volume": 18,
-        "actionId": "1788957697659"
+        "volume": 100,
+        "actionId": "1788966841157"
+      }
+    },
+    {
+      "id": "node_1788967982251",
+      "type": "key_press",
+      "title": "Single Key Press",
+      "position": {
+        "x": 2560,
+        "y": 1060
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "keys": [
+          "Z"
+        ],
+        "actionId": "1788967982251"
       }
     }
   ],
   "connections": [
     {
-      "id": "conn_start_buff",
-      "fromNodeId": "node_1788945959254",
-      "fromPort": "exec_out",
-      "toNodeId": "node_1788945798980",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_party_all_complete",
-      "fromNodeId": "node_1788945798980",
-      "fromPort": "onComplete",
-      "toNodeId": "node_sound_alert_1788946200",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1788954350584",
-      "fromNodeId": "node_1788945798980",
-      "fromPort": "onNextMember",
-      "toNodeId": "node_1788954300388",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1788955655454",
-      "fromNodeId": "node_1788954300388",
-      "fromPort": "onStop",
-      "toNodeId": "node_1788954375480",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1788957703414",
-      "fromNodeId": "node_1788945798980",
+      "id": "conn_1788965904263",
+      "fromNodeId": "node_1788964319072",
       "fromPort": "onError",
-      "toNodeId": "node_1788957697659",
+      "toNodeId": "node_1788965882232",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1788966282123",
+      "fromNodeId": "node_1788964319072",
+      "fromPort": "onScanned",
+      "toNodeId": "node_1788966278431",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1788966334439",
+      "fromNodeId": "node_1788966278431",
+      "fromPort": "onNextMember",
+      "toNodeId": "node_1788966326966",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1788966356076",
+      "fromNodeId": "node_1788966278431",
+      "fromPort": "onError",
+      "toNodeId": "node_1788966352107",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1788966738698",
+      "fromNodeId": "node_1788964309726",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1788966556033",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1788966764297",
+      "fromNodeId": "node_1788966556033",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1788964319072",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1788966808255",
+      "fromNodeId": "node_1788966784692",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1788964319072",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1788966831666",
+      "fromNodeId": "node_1788966278431",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1788966829048",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1788966835768",
+      "fromNodeId": "node_1788966829048",
+      "fromPort": "next",
+      "toNodeId": "node_1788966414924",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1788966845519",
+      "fromNodeId": "node_1788966829048",
+      "fromPort": "onError",
+      "toNodeId": "node_1788966841157",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1788967985556",
+      "fromNodeId": "node_1788966414924",
+      "fromPort": "next",
+      "toNodeId": "node_1788967982251",
       "toPort": "exec_in"
     }
   ]

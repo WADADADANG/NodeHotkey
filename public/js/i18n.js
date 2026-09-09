@@ -267,6 +267,11 @@ export const TRANSLATIONS = {
     inspector_scope_all: "🛑 All Everywhere",
     inspector_scope_profile: "📁 Current Profile Only",
     inspector_scope_client: "🎯 Selected Client Only",
+    inspector_scan_region: "Scan Region (Screen Area)",
+    region_left: "Left Half (Recommended)",
+    region_full: "Full Screen (Entire Window)",
+    region_top_left: "Top-Left Corner",
+    region_right: "Right Half",
 
     // Canvas Context Menu & Toolbar
     ctx_add_node: "➕ Add Node",
@@ -348,7 +353,28 @@ export const TRANSLATIONS = {
     inspector_webhook_test_btn: "⚡ Test Webhook",
     inspector_webhook_testing: "⏳ Sending test request...",
     inspector_webhook_test_ok: "✅ Test succeeded! HTTP Status: ",
-    inspector_webhook_test_err: "❌ Test failed: "
+    inspector_webhook_test_err: "❌ Test failed: ",
+    inspector_party_show_overlay: "Visual Overlay",
+    inspector_target_slot: "Target Party Slot",
+    inspector_party_low_hp: "Low HP Threshold (%)",
+    inspector_party_scan_interval: "Scan Interval (ms)",
+    inspector_party_delay_click: "Delay After Click (ms)",
+    canvas_party_scanner: "Party Scanner (Vision)",
+    canvas_party_slot: "Select Party Slot",
+    canvas_party_heal: "Party Heal Target",
+    canvas_party_buff: "Party Buff Target",
+    canvas_party_target: "Party Target Router (Legacy)",
+    canvas_tts: "Text to Speech (TTS)",
+    node_desc_tts: "Synthesizes realistic AI voice alerts using Microsoft Edge Neural TTS",
+    inspector_tts_message: "TTS Message to Speak",
+    inspector_tts_message_hint: "Synthesized with realistic Neural AI voice",
+    inspector_tts_voice: "Voice Model",
+    inspector_tts_volume: "Volume (%)",
+    slot_leader_desc: "Slot 1 (Party Leader)",
+    cat_actions: "Actions & Macros",
+    cat_triggers: "Triggers & Events",
+    cat_flow: "Logic & Flow",
+    cat_utilities: "Safety & Utilities"
   },
   th: {
     appTitle: "ศูนย์ควบคุมบอทอัตโนมัติ",
@@ -621,6 +647,11 @@ export const TRANSLATIONS = {
     inspector_scope_all: "🛑 ทุกจอ ทุกโปรไฟล์ (All)",
     inspector_scope_profile: "📁 เฉพาะโปรไฟล์นี้ (Profile)",
     inspector_scope_client: "🎯 เฉพาะจอที่เลือก (Client)",
+    inspector_scan_region: "พื้นที่สแกนบนหน้าจอ (Scan Region)",
+    region_left: "ฝั่งซ้ายของจอ (แนะนำ - ตัดสัญญาณกวน)",
+    region_full: "ทั่วทั้งหน้าจอ (สแกนทั้งจอ)",
+    region_top_left: "มุมซ้ายบนของจอ",
+    region_right: "ฝั่งขวาของจอ",
 
     // Canvas Context Menu & Toolbar (Thai)
     ctx_add_node: "➕ เพิ่มโหนดใหม่",
@@ -702,7 +733,28 @@ export const TRANSLATIONS = {
     inspector_webhook_test_btn: "⚡ ทดสอบยิง Webhook",
     inspector_webhook_testing: "⏳ กำลังทดสอบส่ง...",
     inspector_webhook_test_ok: "✅ ทดสอบสำเร็จ! HTTP Status: ",
-    inspector_webhook_test_err: "❌ ทดสอบไม่สำเร็จ: "
+    inspector_webhook_test_err: "❌ ทดสอบไม่สำเร็จ: ",
+    inspector_party_show_overlay: "แสดง Overlay",
+    inspector_target_slot: "เลือกช่องเป้าหมาย",
+    inspector_party_low_hp: "เกณฑ์เลือดต่ำ (%)",
+    inspector_party_scan_interval: "รอบเวลาสแกน (ms)",
+    inspector_party_delay_click: "หน่วงเวลาหลังคลิก (ms)",
+    canvas_party_scanner: "สแกนปาร์ตี้กลาง (Party Scanner)",
+    canvas_party_slot: "เลือกสมาชิกปาร์ตี้ (Select Slot)",
+    canvas_party_heal: "เลือกเป้าหมายฮีล (Party Heal)",
+    canvas_party_buff: "วนเลือกเป้าหมายบัฟ (Party Buff)",
+    canvas_party_target: "เลือกเป้าหมายปาร์ตี้ (Legacy)",
+    canvas_tts: "อ่านข้อความเสียง (TTS)",
+    node_desc_tts: "แปลงข้อความเป็นเสียงพูดภาษาไทย/อังกฤษ ด้วย Microsoft Edge Neural AI",
+    inspector_tts_message: "ข้อความที่ต้องการให้พูด (TTS Message)",
+    inspector_tts_message_hint: "ข้อความจะถูกสังเคราะห์ด้วย Neural AI เสียงเหมือนคนจริง",
+    inspector_tts_voice: "เสียงพากย์ (Voice Model)",
+    inspector_tts_volume: "ระดับเสียง (Volume %)",
+    slot_leader_desc: "ช่อง 1 (หัวตี้ / เดินตาม)",
+    cat_actions: "คำสั่ง & มาโคร (Actions)",
+    cat_triggers: "ทริกเกอร์ & สัญญาณ (Triggers)",
+    cat_flow: "ตรรกะ & โฟลว์ (Logic & Flow)",
+    cat_utilities: "ความปลอดภัย & เครื่องมือ (Utilities)"
   }
 };
 

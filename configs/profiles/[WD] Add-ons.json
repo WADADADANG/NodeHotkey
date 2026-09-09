@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Add-ons",
   "canvas": {
-    "zoom": 1.0002501525301013,
+    "zoom": 0.4,
     "pan": {
-      "x": 5,
-      "y": 124
+      "x": 33,
+      "y": -173
     }
   },
   "nodes": [
@@ -78,8 +78,8 @@
       "type": "trigger",
       "title": "Btn Start Psy Knight AOE",
       "position": {
-        "x": 280,
-        "y": 820
+        "x": 100,
+        "y": 1300
       },
       "data": {
         "enabled": true,
@@ -93,8 +93,8 @@
       "type": "loop",
       "title": "Knight Loop FP 5",
       "position": {
-        "x": 1030,
-        "y": 710
+        "x": 1010,
+        "y": 1190
       },
       "data": {
         "enabled": true,
@@ -102,7 +102,7 @@
         "keys": [
           "3"
         ],
-        "interval": 8600,
+        "interval": 8000,
         "executeImmediately": true,
         "actionId": "1786880617990"
       }
@@ -112,8 +112,8 @@
       "type": "control",
       "title": "AC Stop Knight Loop FP 5",
       "position": {
-        "x": 1030,
-        "y": 920
+        "x": 1010,
+        "y": 1400
       },
       "data": {
         "enabled": true,
@@ -129,8 +129,8 @@
       "type": "key_hold",
       "title": "Psy MaximumCrisis",
       "position": {
-        "x": 700,
-        "y": 660
+        "x": 720,
+        "y": 880
       },
       "data": {
         "enabled": true,
@@ -144,8 +144,8 @@
       "type": "key_hold",
       "title": "Knight  PowerStomp 5",
       "position": {
-        "x": 700,
-        "y": 820
+        "x": 680,
+        "y": 1300
       },
       "data": {
         "enabled": true,
@@ -208,7 +208,7 @@
       "title": "Knight  PowerStomp 6",
       "position": {
         "x": 700,
-        "y": 980
+        "y": 1680
       },
       "data": {
         "enabled": true,
@@ -223,7 +223,7 @@
       "title": "Knight Loop FP 6",
       "position": {
         "x": 1030,
-        "y": 1060
+        "y": 1760
       },
       "data": {
         "enabled": true,
@@ -231,7 +231,7 @@
         "keys": [
           "3"
         ],
-        "interval": 8600,
+        "interval": 8000,
         "executeImmediately": true,
         "actionId": "1786887573634_8323"
       }
@@ -242,7 +242,7 @@
       "title": "AC Stop Knight Loop FP 6",
       "position": {
         "x": 1030,
-        "y": 1270
+        "y": 1970
       },
       "data": {
         "enabled": true,
@@ -364,6 +364,42 @@
         ],
         "actionId": "1787667577344"
       }
+    },
+    {
+      "id": "node_1788519552906",
+      "type": "loop",
+      "title": "Psy Loop MP",
+      "position": {
+        "x": 1060,
+        "y": 770
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "3",
+        "keys": [
+          "3"
+        ],
+        "interval": 17350,
+        "executeImmediately": false,
+        "actionId": "1788519552906"
+      }
+    },
+    {
+      "id": "node_1788519618159",
+      "type": "control",
+      "title": "AC Stop Psy Loop MP 3",
+      "position": {
+        "x": 1060,
+        "y": 980
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "1788519552906"
+        ],
+        "actionId": "1788519618159"
+      }
     }
   ],
   "connections": [
@@ -463,6 +499,20 @@
       "fromNodeId": "node_1787667538101",
       "fromPort": "exec_out",
       "toNodeId": "node_1787667577344",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1788519580277",
+      "fromNodeId": "node_1786882811325",
+      "fromPort": "onEnable",
+      "toNodeId": "node_1788519552906",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1788519635862",
+      "fromNodeId": "node_1786882811325",
+      "fromPort": "onDisable",
+      "toNodeId": "node_1788519618159",
       "toPort": "exec_in"
     }
   ]

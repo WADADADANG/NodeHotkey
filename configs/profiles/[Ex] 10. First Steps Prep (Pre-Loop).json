@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 1,
     "pan": {
-      "x": 734,
-      "y": 514
+      "x": 401,
+      "y": 418
     }
   },
   "nodes": [
@@ -43,6 +43,25 @@
         "executeImmediately": true,
         "actionId": "act_1786227388244"
       }
+    },
+    {
+      "id": "node_1787864224364",
+      "type": "key_press",
+      "title": "Buff GT",
+      "position": {
+        "x": 800,
+        "y": 230
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "6"
+        ],
+        "delayAfter": 800,
+        "cooldownPresetId": "skill_ringmaster_geburah-tiphreth",
+        "actionId": "1787864224364"
+      }
     }
   ],
   "connections": [
@@ -51,6 +70,13 @@
       "fromNodeId": "trig_act_1786227388244",
       "fromPort": "exec_out",
       "toNodeId": "node_act_1786227388244",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1787864227331",
+      "fromNodeId": "node_act_1786227388244",
+      "fromPort": "onBeforeStart",
+      "toNodeId": "node_1787864224364",
       "toPort": "exec_in"
     }
   ]

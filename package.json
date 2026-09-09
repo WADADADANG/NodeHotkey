@@ -11,6 +11,7 @@
     "test": "node test/converter.test.js"
   },
   "dependencies": {
+    "@andresaya/edge-tts": "^1.8.0",
     "global-mouse-events": "^1.2.0",
     "node-global-key-listener": "^0.1.1",
     "playwright": "^1.45.0",

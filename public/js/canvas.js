@@ -93,7 +93,12 @@ class NodeCanvasEditor {
       sequencer: canvasT('canvas_sequencer', isEn ? 'Cast Sequencer' : 'จัดคิวสกิล (Sequencer)'),
       loop_scheduler: canvasT('canvas_loop_scheduler', isEn ? 'Loop Scheduler' : 'ตารางลูปกันชน (Scheduler)'),
       variable: canvasT('canvas_variable', isEn ? 'Variable / State' : 'ตัวแปร / สถานะ (Variable)'),
-      party_target: canvasT('canvas_party_target', isEn ? 'Party Target Router' : 'เลือกเป้าหมายปาร์ตี้ (Party Target)'),
+      party_scanner: canvasT('canvas_party_scanner', isEn ? 'Party Scanner' : 'สแกนปาร์ตี้กลาง (Party Scanner)'),
+      party_slot: canvasT('canvas_party_slot', isEn ? 'Select Party Slot' : 'เลือกสมาชิกปาร์ตี้ (Select Slot)'),
+      party_heal: canvasT('canvas_party_heal', isEn ? 'Party Heal Target' : 'เลือกเป้าหมายฮีล (Party Heal)'),
+      party_buff: canvasT('canvas_party_buff', isEn ? 'Party Buff Target' : 'วนเลือกเป้าหมายบัฟ (Party Buff)'),
+      party_target: canvasT('canvas_party_target', isEn ? 'Party Target Router (Legacy)' : 'เลือกเป้าหมายปาร์ตี้ (Legacy)'),
+      tts: canvasT('canvas_tts', isEn ? 'Text to Speech (TTS)' : 'อ่านข้อความเสียง (TTS)'),
       webhook_out: canvasT('canvas_webhook_out', isEn ? 'HTTP Webhook' : 'ส่ง Webhook / HTTP')
     };
     return map[type] || canvasT(`canvas_${type}`, (type || '').toUpperCase());
@@ -627,7 +632,12 @@ class NodeCanvasEditor {
         sequencer: '⚔️',
         loop_scheduler: '⏱️',
         variable: '📦',
+        party_scanner: '👁️',
+        party_slot: '🎯',
+        party_heal: '🚑',
+        party_buff: '📜',
         party_target: '👥',
+        tts: '🗣️',
         webhook_out: '🌐'
       };
 
@@ -827,6 +837,61 @@ class NodeCanvasEditor {
             <span>Rule:</span> <span class="node-info-value">${ruleLabel}</span>
           </div>
         `;
+      } else if (node.type === 'party_scanner') {
+        const interval = node.data?.scanIntervalMs || 250;
+        const hpThresh = node.data?.lowHpThreshold || 70;
+        bodyHTML = `
+          <div class="node-info-row">
+            <span>Client:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Interval:</span> <span class="node-info-value" style="color:#06b6d4; font-weight:700;">${interval}ms</span>
+          </div>
+          <div class="node-info-row">
+            <span>Low HP Alert:</span> <span class="node-info-value" style="color:#ef4444; font-weight:700;">&le; ${hpThresh}%</span>
+          </div>
+        `;
+      } else if (node.type === 'party_slot') {
+        const slotNum = node.data?.targetSlot || 1;
+        const delay = node.data?.delayAfterClick || 80;
+        bodyHTML = `
+          <div class="node-info-row">
+            <span>Client:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Slot:</span> <span class="node-info-value" style="color:#10b981; font-weight:700;">Slot ${slotNum}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Delay:</span> <span class="node-info-value">${delay}ms</span>
+          </div>
+        `;
+      } else if (node.type === 'party_heal') {
+        const hpThresh = node.data?.lowHpThreshold || 70;
+        const delay = node.data?.delayAfterClick || 80;
+        bodyHTML = `
+          <div class="node-info-row">
+            <span>Client:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Target HP:</span> <span class="node-info-value" style="color:#ef4444; font-weight:700;">&le; ${hpThresh}% (Lowest)</span>
+          </div>
+          <div class="node-info-row">
+            <span>Delay:</span> <span class="node-info-value">${delay}ms</span>
+          </div>
+        `;
+      } else if (node.type === 'party_buff') {
+        const delay = node.data?.delayAfterClick || 80;
+        bodyHTML = `
+          <div class="node-info-row">
+            <span>Client:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Sequence:</span> <span class="node-info-value" style="color:#a855f7; font-weight:700;">Downward Cycle</span>
+          </div>
+          <div class="node-info-row">
+            <span>Delay:</span> <span class="node-info-value">${delay}ms</span>
+          </div>
+        `;
       } else if (node.type === 'party_target') {
         const mode = node.data?.targetMode || 'heal_priority';
         const modeLabel = mode === 'buff_loop' ? '📜 Buff Loop' : '🚑 Heal Priority';
@@ -846,6 +911,23 @@ class NodeCanvasEditor {
           <div class="node-info-row">
             <span>HP Limit:</span> <span class="node-info-value" style="color:#ef4444; font-weight:700;">&lt; ${hpThresh}%</span>
           </div>` : ''}
+        `;
+      } else if (node.type === 'tts') {
+        const isEn = window.currentLang === 'en';
+        const text = node.data?.text || (isEn ? 'Voice alert message...' : 'ข้อความเสียง...');
+        const v = node.data?.voice || 'th-TH-PremwadeeNeural';
+        const vLabel = v.includes('Niwat') ? (isEn ? 'Niwat (Male)' : 'นิวัต (ชาย)') : (v.includes('Jenny') ? 'Jenny' : (v.includes('Guy') ? 'Guy' : (isEn ? 'Premwadee (Female)' : 'เปรมวดี (หญิง)')));
+        const vol = node.data?.volume !== undefined ? node.data.volume : 100;
+        bodyHTML = `
+          <div class="node-info-row">
+            <span>Voice:</span> <span class="node-info-value" style="color:#c084fc; font-weight:700;">${vLabel}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Text:</span> <span class="node-info-value" style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">"${text}"</span>
+          </div>
+          <div class="node-info-row">
+            <span>Vol:</span> <span class="node-info-value">${vol}%</span>
+          </div>
         `;
       } else if (node.type === 'control') {
         bodyHTML = `
@@ -1041,20 +1123,28 @@ class NodeCanvasEditor {
           </div>
         `;
       } else if (node.type === 'sequencer') {
+        const isOnce = (node.data?.modeType === 'once');
         pinsHTML = `
           <div class="node-pins-section">
             <div class="node-pin-row">
               <span class="node-pin-label onStep">${canvasT('port_onStep', 'onStep')} ▶</span>
               <div class="node-port port-out port-onStep" data-node="${node.id}" data-port="onStep" title="${canvasT('port_onStep', 'onStep')}"></div>
             </div>
+            ${isOnce ? `
+            <div class="node-pin-row">
+              <span class="node-pin-label onComplete" style="color:#10b981;">🏁 ${canvasT('port_onComplete', 'onComplete')} ▶</span>
+              <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="onComplete" title="${canvasT('port_onComplete', 'onComplete')}"></div>
+            </div>
+            ` : `
             <div class="node-pin-row">
               <span class="node-pin-label onEachCycle">${canvasT('port_onEachCycle', 'onEachCycle')} ▶</span>
               <div class="node-port port-out port-onEachCycle" data-node="${node.id}" data-port="onEachCycle" title="${canvasT('port_onEachCycle', 'onEachCycle')}"></div>
             </div>
             <div class="node-pin-row">
-              <span class="node-pin-label onStop">${canvasT('port_onStop', 'onStop / onComplete')} ▶</span>
+              <span class="node-pin-label onStop">${canvasT('port_onStop', 'onStop')} ▶</span>
               <div class="node-port port-out port-onStop" data-node="${node.id}" data-port="onStop" title="${canvasT('port_onStop', 'onStop')}"></div>
             </div>
+            `}
             ${cooldownPinRowHTML}
           </div>
         `;
@@ -1072,6 +1162,70 @@ class NodeCanvasEditor {
         } else {
           portsHTML += `<div class="node-port port-out" data-node="${node.id}" data-port="next" title="Output (next)"></div>`;
         }
+      } else if (node.type === 'party_scanner') {
+        pinsHTML = `
+          <div class="node-pins-section">
+            <div class="node-pin-row">
+              <span class="node-pin-label onComplete" style="color:#06b6d4;">👁️ On Scanned ▶</span>
+              <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="onScanned" title="Triggered every scan cycle with fresh party data"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label onStop" style="color:#ef4444;">🚨 On Low HP ▶</span>
+              <div class="node-port port-out port-onStop" data-node="${node.id}" data-port="onLowHp" title="Triggered when any member HP <= threshold"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label" style="color:#f59e0b;">⚠️ Error ▶</span>
+              <div class="node-port port-out" data-node="${node.id}" data-port="onError" title="Error / Window not found"></div>
+            </div>
+          </div>
+        `;
+      } else if (node.type === 'party_slot') {
+        pinsHTML = `
+          <div class="node-pins-section">
+            <div class="node-pin-row">
+              <span class="node-pin-label onComplete" style="color:#10b981;">🏁 Selected (next) ▶</span>
+              <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="next" title="Triggered when member slot is clicked (e.g. Slot 1 Leader -> Follow)"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label" style="color:#f59e0b;">⚠️ Error ▶</span>
+              <div class="node-port port-out" data-node="${node.id}" data-port="onError" title="Error / Party not found"></div>
+            </div>
+          </div>
+        `;
+      } else if (node.type === 'party_heal') {
+        pinsHTML = `
+          <div class="node-pins-section">
+            <div class="node-pin-row">
+              <span class="node-pin-label onStop" style="color:#ef4444;">🚑 On Target Selected ▶</span>
+              <div class="node-port port-out port-onStop" data-node="${node.id}" data-port="onHealTarget" title="Triggered when damaged member is selected for heal"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label onComplete" style="color:#38bdf8;">🛡️ Everyone Healthy ▶</span>
+              <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="onNoTarget" title="Triggered when no member has low HP"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label" style="color:#f59e0b;">⚠️ Error ▶</span>
+              <div class="node-port port-out" data-node="${node.id}" data-port="onError" title="Error / Party not found"></div>
+            </div>
+          </div>
+        `;
+      } else if (node.type === 'party_buff') {
+        pinsHTML = `
+          <div class="node-pins-section">
+            <div class="node-pin-row">
+              <span class="node-pin-label onComplete" style="color:#a855f7;">📜 Next Member ▶</span>
+              <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="onNextMember" title="Triggered for each member in party buff sequence"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label onAfterStart" style="color:#38bdf8;">🏁 All Complete ▶</span>
+              <div class="node-port port-out port-onAfterStart" data-node="${node.id}" data-port="onComplete" title="Triggered when all party members have been buffed"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label" style="color:#f59e0b;">⚠️ Error ▶</span>
+              <div class="node-port port-out" data-node="${node.id}" data-port="onError" title="Error / Party not found"></div>
+            </div>
+          </div>
+        `;
       } else if (node.type === 'party_target') {
         pinsHTML = `
           <div class="node-pins-section">
@@ -1090,6 +1244,20 @@ class NodeCanvasEditor {
             <div class="node-pin-row">
               <span class="node-pin-label" style="color:#f59e0b;">⚠️ Error ▶</span>
               <div class="node-port port-out" data-node="${node.id}" data-port="onError" title="Error / Party not found"></div>
+            </div>
+          </div>
+        `;
+      } else if (node.type === 'tts') {
+        const isEn = window.currentLang === 'en';
+        pinsHTML = `
+          <div class="node-pins-section">
+            <div class="node-pin-row">
+              <span class="node-pin-label onComplete" style="color:#c084fc;">🏁 ${isEn ? 'Spoken (next)' : 'พูดสำเร็จ (next)'} ▶</span>
+              <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="next" title="${isEn ? 'Triggered when voice alert begins' : 'ส่งสัญญาณเมื่อเริ่มเล่นเสียงแจ้งเตือน'}"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label" style="color:#f59e0b;">⚠️ ${isEn ? 'Error' : 'ผิดพลาด'} ▶</span>
+              <div class="node-port port-out" data-node="${node.id}" data-port="onError" title="${isEn ? 'Synthesis or audio error' : 'สังเคราะห์หรือเล่นเสียงไม่สำเร็จ'}"></div>
             </div>
           </div>
         `;
@@ -1975,6 +2143,7 @@ class NodeCanvasEditor {
       sequencer: 'Cast Sequencer',
       loop_scheduler: 'Loop Scheduler',
       variable: 'isBuffActive',
+      tts: 'Text to Speech (TTS)',
       webhook_out: 'Discord / HTTP Webhook'
     };
 
@@ -2027,6 +2196,37 @@ class NodeCanvasEditor {
         ],
         enabled: true
       };
+    } else if (type === 'party_scanner') {
+      initialData = {
+        targetClient: '1',
+        scanIntervalMs: 250,
+        lowHpThreshold: 70,
+        showOverlay: true,
+        enabled: true
+      };
+    } else if (type === 'party_slot') {
+      initialData = {
+        targetClient: '1',
+        targetSlot: 1,
+        delayAfterClick: 80,
+        showOverlay: true,
+        enabled: true
+      };
+    } else if (type === 'party_heal') {
+      initialData = {
+        targetClient: '1',
+        lowHpThreshold: 70,
+        delayAfterClick: 80,
+        showOverlay: true,
+        enabled: true
+      };
+    } else if (type === 'party_buff') {
+      initialData = {
+        targetClient: '1',
+        delayAfterClick: 80,
+        showOverlay: true,
+        enabled: true
+      };
     } else if (type === 'party_target') {
       initialData = {
         targetClient: '1',
@@ -2034,6 +2234,14 @@ class NodeCanvasEditor {
         lowHpThreshold: 70,
         scanIntervalMs: 250,
         delayAfterClick: 250,
+        enabled: true
+      };
+    } else if (type === 'tts') {
+      const isEn = window.currentLang === 'en';
+      initialData = {
+        text: isEn ? 'Party HP alert from bot' : 'เกิดการแจ้งเตือนจากบอท',
+        voice: isEn ? 'en-US-JennyNeural' : 'th-TH-PremwadeeNeural',
+        volume: 100,
         enabled: true
       };
     } else if (type === 'buff_sequence') {
@@ -2688,8 +2896,18 @@ class NodeCanvasEditor {
       fieldsHTML += this.renderVariableHelper(node);
     } else if (node.type === 'macro_group') {
       fieldsHTML += this.renderMacroGroupHelper(node);
+    } else if (node.type === 'party_scanner') {
+      fieldsHTML += this.renderPartyScannerHelper(node);
+    } else if (node.type === 'party_slot') {
+      fieldsHTML += this.renderPartySlotHelper(node);
+    } else if (node.type === 'party_heal') {
+      fieldsHTML += this.renderPartyHealHelper(node);
+    } else if (node.type === 'party_buff') {
+      fieldsHTML += this.renderPartyBuffHelper(node);
     } else if (node.type === 'party_target') {
       fieldsHTML += this.renderPartyTargetHelper(node);
+    } else if (node.type === 'tts') {
+      fieldsHTML += this.renderTtsHelper(node);
     } else {
       fieldsHTML += `
         <div class="inspector-field-group">
@@ -2819,10 +3037,12 @@ class NodeCanvasEditor {
   }
 
   renderPartyTargetHelper(node) {
+    const isEn = window.currentLang === 'en';
     const targetMode = node.data?.targetMode || 'heal_priority';
     const lowHpThreshold = node.data?.lowHpThreshold ?? 70;
     const scanIntervalMs = node.data?.scanIntervalMs ?? 250;
     const delayAfterClick = node.data?.delayAfterClick ?? 250;
+    const scanRegion = node.data?.scanRegion || 'left';
 
     return `
       <div class="inspector-field-group">
@@ -2830,12 +3050,37 @@ class NodeCanvasEditor {
         ${this.renderClientButtonSelector(node)}
       </div>
       <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_scan_region', isEn ? 'Scan Region (Screen Area)' : 'พื้นที่สแกนบนหน้าจอ')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'scanRegion', this.value);">
+          <option value="left" ${scanRegion === 'left' ? 'selected' : ''}>👈 ${canvasT('region_left', isEn ? 'Left Half (Recommended)' : 'ฝั่งซ้ายของจอ (แนะนำ - ตัดสัญญาณกวน)')}</option>
+          <option value="full" ${scanRegion === 'full' ? 'selected' : ''}>🖥️ ${canvasT('region_full', isEn ? 'Full Screen (Entire Window)' : 'ทั่วทั้งหน้าจอ (สแกนทั้งจอ)')}</option>
+          <option value="top_left" ${scanRegion === 'top_left' ? 'selected' : ''}>↖️ ${canvasT('region_top_left', isEn ? 'Top-Left Corner' : 'มุมซ้ายบนของจอ')}</option>
+          <option value="right" ${scanRegion === 'right' ? 'selected' : ''}>👉 ${canvasT('region_right', isEn ? 'Right Half' : 'ฝั่งขวาของจอ')}</option>
+        </select>
+      </div>
+      <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_party_mode', 'Party Target Mode')}</label>
         <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'targetMode', this.value); window.nodeCanvas.openInspector('${node.id}');">
           <option value="heal_priority" ${targetMode === 'heal_priority' ? 'selected' : ''}>🚑 Auto Heal Priority (Click lowest HP &lt;= Threshold)</option>
           <option value="buff_loop" ${targetMode === 'buff_loop' ? 'selected' : ''}>📜 Buff Loop (Cycle click alive members 1 by 1)</option>
+          <option value="select_slot" ${targetMode === 'select_slot' ? 'selected' : ''}>🎯 Select Specific Slot (e.g. Slot 1 Leader)</option>
         </select>
       </div>
+      ${targetMode === 'select_slot' ? `
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_target_slot', 'Target Party Member Slot')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'targetSlot', parseInt(this.value, 10));">
+          <option value="1" ${(node.data?.targetSlot || 1) == 1 ? 'selected' : ''}>👑 Slot 1 (หัวตี้ / Leader)</option>
+          <option value="2" ${(node.data?.targetSlot || 1) == 2 ? 'selected' : ''}>Slot 2</option>
+          <option value="3" ${(node.data?.targetSlot || 1) == 3 ? 'selected' : ''}>Slot 3</option>
+          <option value="4" ${(node.data?.targetSlot || 1) == 4 ? 'selected' : ''}>Slot 4</option>
+          <option value="5" ${(node.data?.targetSlot || 1) == 5 ? 'selected' : ''}>Slot 5</option>
+          <option value="6" ${(node.data?.targetSlot || 1) == 6 ? 'selected' : ''}>Slot 6</option>
+          <option value="7" ${(node.data?.targetSlot || 1) == 7 ? 'selected' : ''}>Slot 7</option>
+          <option value="8" ${(node.data?.targetSlot || 1) == 8 ? 'selected' : ''}>Slot 8</option>
+        </select>
+      </div>
+      ` : ''}
       ${targetMode === 'heal_priority' ? `
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_party_low_hp', 'Low HP Threshold (%)')}</label>
@@ -2859,8 +3104,172 @@ class NodeCanvasEditor {
       <div class="inspector-field-group" style="margin-top:6px;">
         <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
           <input type="checkbox" ${node.data?.showOverlay !== false ? 'checked' : ''} onchange="window.nodeCanvas.updateNodeData('${node.id}', 'showOverlay', this.checked)" style="accent-color:#06b6d4; cursor:pointer;" />
-          <span>👁️ ${canvasT('inspector_party_show_overlay', 'แสดงเส้น HUD บนหน้าจอเกม (Visual Overlay)')}</span>
+          <span>👁️ ${canvasT('inspector_party_show_overlay', 'Visual Overlay')}</span>
         </label>
+      </div>
+    `;
+  }
+
+  renderPartyScannerHelper(node) {
+    const isEn = window.currentLang === 'en';
+    const scanIntervalMs = node.data?.scanIntervalMs ?? 250;
+    const lowHpThreshold = node.data?.lowHpThreshold ?? 70;
+    const scanRegion = node.data?.scanRegion || 'left';
+
+    return `
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen (Vision)')}</label>
+        ${this.renderClientButtonSelector(node)}
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_scan_region', isEn ? 'Scan Region (Screen Area)' : 'พื้นที่สแกนบนหน้าจอ')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'scanRegion', this.value);">
+          <option value="left" ${scanRegion === 'left' ? 'selected' : ''}>👈 ${canvasT('region_left', isEn ? 'Left Half (Recommended)' : 'ฝั่งซ้ายของจอ (แนะนำ - ตัดสัญญาณกวน)')}</option>
+          <option value="full" ${scanRegion === 'full' ? 'selected' : ''}>🖥️ ${canvasT('region_full', isEn ? 'Full Screen (Entire Window)' : 'ทั่วทั้งหน้าจอ (สแกนทั้งจอ)')}</option>
+          <option value="top_left" ${scanRegion === 'top_left' ? 'selected' : ''}>↖️ ${canvasT('region_top_left', isEn ? 'Top-Left Corner' : 'มุมซ้ายบนของจอ')}</option>
+          <option value="right" ${scanRegion === 'right' ? 'selected' : ''}>👉 ${canvasT('region_right', isEn ? 'Right Half' : 'ฝั่งขวาของจอ')}</option>
+        </select>
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_party_scan_interval', 'Scan Interval (ms)')}</label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="number" class="inspector-input" value="${scanIntervalMs}" min="50" max="3000" step="50" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'scanIntervalMs', parseInt(this.value, 10))" style="flex:1;" />
+          <span style="font-size:11px; opacity:0.6;">(50 - 2000 ms)</span>
+        </div>
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_party_low_hp', 'Low HP Alert Threshold (%)')}</label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="range" min="10" max="95" step="5" value="${lowHpThreshold}" style="flex:1; accent-color:#ef4444;" oninput="this.nextElementSibling.innerText = this.value + '%'; window.nodeCanvas.updateNodeData('${node.id}', 'lowHpThreshold', parseInt(this.value, 10));" />
+          <span style="min-width:44px; font-weight:700; color:#ef4444; font-family:'JetBrains Mono',monospace;">${lowHpThreshold}%</span>
+        </div>
+      </div>
+      <div class="inspector-field-group" style="margin-top:6px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+          <input type="checkbox" ${node.data?.showOverlay !== false ? 'checked' : ''} onchange="window.nodeCanvas.updateNodeData('${node.id}', 'showOverlay', this.checked)" style="accent-color:#06b6d4; cursor:pointer;" />
+          <span>👁️ ${canvasT('inspector_party_show_overlay', 'Visual Overlay')}</span>
+        </label>
+      </div>
+    `;
+  }
+
+  renderPartySlotHelper(node) {
+    const isEn = window.currentLang === 'en';
+    const targetSlot = node.data?.targetSlot ?? 1;
+    const delayAfterClick = node.data?.delayAfterClick ?? 80;
+
+    return `
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_target_clients', isEn ? 'Target Client Screen (Vision)' : 'เลือกหน้าจอเป้าหมาย (Client)')}</label>
+        ${this.renderClientButtonSelector(node)}
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_target_slot', isEn ? 'Target Party Member Slot' : 'ช่องสมาชิกปาร์ตี้เป้าหมาย')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'targetSlot', parseInt(this.value, 10));">
+          <option value="1" ${targetSlot == 1 ? 'selected' : ''}>${canvasT('slot_leader_desc', isEn ? 'Slot 1 (Party Leader)' : 'ช่อง 1 (หัวตี้ / เดินตาม)')}</option>
+          <option value="2" ${targetSlot == 2 ? 'selected' : ''}>Slot 2</option>
+          <option value="3" ${targetSlot == 3 ? 'selected' : ''}>Slot 3</option>
+          <option value="4" ${targetSlot == 4 ? 'selected' : ''}>Slot 4</option>
+          <option value="5" ${targetSlot == 5 ? 'selected' : ''}>Slot 5</option>
+          <option value="6" ${targetSlot == 6 ? 'selected' : ''}>Slot 6</option>
+          <option value="7" ${targetSlot == 7 ? 'selected' : ''}>Slot 7</option>
+          <option value="8" ${targetSlot == 8 ? 'selected' : ''}>Slot 8</option>
+        </select>
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_party_delay_click', isEn ? 'Delay After Click (ms)' : 'หน่วงเวลาหลังคลิก (ms)')}</label>
+        <input type="number" class="inspector-input" value="${delayAfterClick}" min="0" max="2000" step="20" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'delayAfterClick', parseInt(this.value, 10))" />
+      </div>
+      <div class="inspector-field-group" style="margin-top:6px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+          <input type="checkbox" ${node.data?.showOverlay !== false ? 'checked' : ''} onchange="window.nodeCanvas.updateNodeData('${node.id}', 'showOverlay', this.checked)" style="accent-color:#06b6d4; cursor:pointer;" />
+          <span>👁️ ${canvasT('inspector_party_show_overlay', isEn ? 'Visual Overlay' : 'แสดง Overlay บนจอ')}</span>
+        </label>
+      </div>
+    `;
+  }
+
+  renderPartyHealHelper(node) {
+    const lowHpThreshold = node.data?.lowHpThreshold ?? 70;
+    const delayAfterClick = node.data?.delayAfterClick ?? 80;
+
+    return `
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen (Vision)')}</label>
+        ${this.renderClientButtonSelector(node)}
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_party_low_hp', 'Low HP Threshold (%)')}</label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="range" min="10" max="95" step="5" value="${lowHpThreshold}" style="flex:1; accent-color:#ef4444;" oninput="this.nextElementSibling.innerText = this.value + '%'; window.nodeCanvas.updateNodeData('${node.id}', 'lowHpThreshold', parseInt(this.value, 10));" />
+          <span style="min-width:44px; font-weight:700; color:#ef4444; font-family:'JetBrains Mono',monospace;">${lowHpThreshold}%</span>
+        </div>
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_party_delay_click', 'Delay After Click (ms)')}</label>
+        <input type="number" class="inspector-input" value="${delayAfterClick}" min="0" max="2000" step="20" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'delayAfterClick', parseInt(this.value, 10))" />
+      </div>
+      <div class="inspector-field-group" style="margin-top:6px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+          <input type="checkbox" ${node.data?.showOverlay !== false ? 'checked' : ''} onchange="window.nodeCanvas.updateNodeData('${node.id}', 'showOverlay', this.checked)" style="accent-color:#06b6d4; cursor:pointer;" />
+          <span>👁️ ${canvasT('inspector_party_show_overlay', 'Visual Overlay')}</span>
+        </label>
+      </div>
+    `;
+  }
+
+  renderPartyBuffHelper(node) {
+    const delayAfterClick = node.data?.delayAfterClick ?? 80;
+
+    return `
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen (Vision)')}</label>
+        ${this.renderClientButtonSelector(node)}
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_party_delay_click', 'Delay After Click (ms)')}</label>
+        <input type="number" class="inspector-input" value="${delayAfterClick}" min="0" max="2000" step="20" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'delayAfterClick', parseInt(this.value, 10))" />
+      </div>
+      <div class="inspector-field-group" style="margin-top:6px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+          <input type="checkbox" ${node.data?.showOverlay !== false ? 'checked' : ''} onchange="window.nodeCanvas.updateNodeData('${node.id}', 'showOverlay', this.checked)" style="accent-color:#06b6d4; cursor:pointer;" />
+          <span>👁️ ${canvasT('inspector_party_show_overlay', 'Visual Overlay')}</span>
+        </label>
+      </div>
+    `;
+  }
+
+  renderTtsHelper(node) {
+    const isEn = window.currentLang === 'en';
+    const text = node.data?.text || '';
+    const voice = node.data?.voice || 'th-TH-PremwadeeNeural';
+    const volume = node.data?.volume !== undefined ? node.data.volume : 100;
+
+    return `
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_tts_message', isEn ? 'TTS Message to Speak' : 'ข้อความที่ต้องการให้พูด (TTS Message)')}</label>
+        <textarea class="inspector-input" rows="3" placeholder="${isEn ? 'e.g. Party HP is critically low!' : 'เช่น เลือดในตี้ต่ำกว่าเกณฑ์'}" oninput="window.nodeCanvas.updateNodeData('${node.id}', 'text', this.value)" style="resize:vertical; min-height:65px; font-family:inherit; padding:8px 10px; line-height:1.4;">${text}</textarea>
+        <span style="font-size:10px; color:var(--muted); margin-top:2px;">${canvasT('inspector_tts_message_hint', isEn ? 'Synthesized with realistic Neural AI voice' : 'ข้อความจะถูกสังเคราะห์ด้วย Neural AI เสียงเหมือนคนจริง')}</span>
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_tts_voice', isEn ? 'Voice Model' : 'เสียงพูด (Voice Model)')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'voice', this.value);">
+          <optgroup label="${isEn ? '🇹🇭 Thai (TH)' : '🇹🇭 ภาษาไทย'}">
+            <option value="th-TH-PremwadeeNeural" ${voice === 'th-TH-PremwadeeNeural' ? 'selected' : ''}>👩 ${isEn ? 'Premwadee (Female)' : 'เปรมวดี (หญิง)'}</option>
+            <option value="th-TH-NiwatNeural" ${voice === 'th-TH-NiwatNeural' ? 'selected' : ''}>👨 ${isEn ? 'Niwat (Male)' : 'นิวัต (ชาย)'}</option>
+          </optgroup>
+          <optgroup label="${isEn ? '🇺🇸 English (EN)' : '🇺🇸 ภาษาอังกฤษ'}">
+            <option value="en-US-JennyNeural" ${voice === 'en-US-JennyNeural' ? 'selected' : ''}>👩 Jenny (${isEn ? 'Female' : 'หญิง'})</option>
+            <option value="en-US-GuyNeural" ${voice === 'en-US-GuyNeural' ? 'selected' : ''}>👨 Guy (${isEn ? 'Male' : 'ชาย'})</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_tts_volume', isEn ? 'Volume (%)' : 'ระดับเสียง (Volume %)')}</label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="range" min="0" max="100" step="5" value="${volume}" style="flex:1; accent-color:#c084fc;" oninput="this.nextElementSibling.innerText = this.value + '%'; window.nodeCanvas.updateNodeData('${node.id}', 'volume', parseInt(this.value, 10));" />
+          <span style="min-width:44px; font-weight:700; color:#c084fc; font-family:'JetBrains Mono',monospace;">${volume}%</span>
+        </div>
       </div>
     `;
   }
@@ -4483,13 +4892,37 @@ class NodeCanvasEditor {
           executeImmediately: it.executeImmediately !== false,
           enabled: it.enabled !== false
         })) : [];
+      } else if (type === 'party_scanner') {
+        cleanData.targetClient = d.targetClient || '1';
+        cleanData.scanIntervalMs = d.scanIntervalMs !== undefined ? parseInt(d.scanIntervalMs, 10) : 250;
+        cleanData.lowHpThreshold = d.lowHpThreshold !== undefined ? parseInt(d.lowHpThreshold, 10) : 70;
+        cleanData.showOverlay = d.showOverlay !== false;
+      } else if (type === 'party_slot') {
+        cleanData.targetClient = d.targetClient || '1';
+        cleanData.targetSlot = d.targetSlot !== undefined ? parseInt(d.targetSlot, 10) : 1;
+        cleanData.delayAfterClick = d.delayAfterClick !== undefined ? parseInt(d.delayAfterClick, 10) : 80;
+        cleanData.showOverlay = d.showOverlay !== false;
+      } else if (type === 'party_heal') {
+        cleanData.targetClient = d.targetClient || '1';
+        cleanData.lowHpThreshold = d.lowHpThreshold !== undefined ? parseInt(d.lowHpThreshold, 10) : 70;
+        cleanData.delayAfterClick = d.delayAfterClick !== undefined ? parseInt(d.delayAfterClick, 10) : 80;
+        cleanData.showOverlay = d.showOverlay !== false;
+      } else if (type === 'party_buff') {
+        cleanData.targetClient = d.targetClient || '1';
+        cleanData.delayAfterClick = d.delayAfterClick !== undefined ? parseInt(d.delayAfterClick, 10) : 80;
+        cleanData.showOverlay = d.showOverlay !== false;
       } else if (type === 'party_target') {
         cleanData.targetClient = d.targetClient || '1';
         cleanData.targetMode = d.targetMode || 'heal_priority';
+        cleanData.targetSlot = d.targetSlot !== undefined ? parseInt(d.targetSlot, 10) : 1;
         cleanData.lowHpThreshold = d.lowHpThreshold !== undefined ? parseInt(d.lowHpThreshold, 10) : 70;
         cleanData.scanIntervalMs = d.scanIntervalMs !== undefined ? parseInt(d.scanIntervalMs, 10) : 250;
         cleanData.delayAfterClick = d.delayAfterClick !== undefined ? parseInt(d.delayAfterClick, 10) : 200;
         cleanData.showOverlay = d.showOverlay !== false;
+      } else if (type === 'tts') {
+        cleanData.text = d.text || '';
+        cleanData.voice = d.voice || 'th-TH-PremwadeeNeural';
+        cleanData.volume = d.volume !== undefined ? parseInt(d.volume, 10) : 100;
       }
 
       let actionId = d.actionId || (node.id.startsWith('node_') ? node.id.replace('node_', '') : node.id);
@@ -4759,7 +5192,10 @@ class NodeCanvasEditor {
           { type: 'key_hold', icon: '⚓', name: this.getNodeTypeLabel('key_hold') },
           { type: 'key_press', icon: '⌨️', name: this.getNodeTypeLabel('key_press') },
           { type: 'forwarder', icon: '🔗', name: this.getNodeTypeLabel('forwarder') },
-          { type: 'party_target', icon: '👥', name: this.getNodeTypeLabel('party_target') },
+          { type: 'party_scanner', icon: '👁️', name: this.getNodeTypeLabel('party_scanner') },
+          { type: 'party_slot', icon: '🎯', name: this.getNodeTypeLabel('party_slot') },
+          { type: 'party_heal', icon: '🚑', name: this.getNodeTypeLabel('party_heal') },
+          { type: 'party_buff', icon: '📜', name: this.getNodeTypeLabel('party_buff') },
           { type: 'macro_group', icon: '🔀', name: this.getNodeTypeLabel('macro_group') }
         ]
       },
@@ -4780,6 +5216,7 @@ class NodeCanvasEditor {
         name: canvasT('cat_utilities', 'Safety & Utilities'),
         items: [
           { type: 'emergency_stop', icon: '🛑', name: this.getNodeTypeLabel('emergency_stop') },
+          { type: 'tts', icon: '🗣️', name: this.getNodeTypeLabel('tts') },
           { type: 'sound', icon: '🔊', name: this.getNodeTypeLabel('sound') }
         ]
       }
