@@ -8,6 +8,7 @@
     "targetUrlKeyword": "universe.flyff.com/play",
     "enableOverlay": true,
     "suspendHotkey": "END",
+    "webPort": 3092,
     "ghostMouseJitter": {
       "enabled": false,
       "intervalMin": 8000,

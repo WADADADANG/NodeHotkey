@@ -11,6 +11,10 @@ contextBridge.exposeInMainWorld('launcherAPI', {
   openLogFolder: () => ipcRenderer.invoke('logs:open-folder'),
   getLogPath: () => ipcRenderer.invoke('logs:get-path'),
 
+  // Global Config Disk Persistence
+  getGlobalConfig: () => ipcRenderer.invoke('config:get-global'),
+  saveGlobalSettings: (settings) => ipcRenderer.invoke('config:save-global-settings', settings),
+
   // Updater (Step-by-Step Wizard & Multi-Tier Control)
   checkUpdate: () => ipcRenderer.invoke('update:check'),
   downloadUpdate: () => ipcRenderer.invoke('update:download'),

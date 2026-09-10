@@ -108,6 +108,7 @@ function readConfig() {
     targetUrlKeyword: "universe.flyff.com/play",
     enableOverlay: true,
     suspendHotkey: "END",
+    webPort: 3088,
     ghostMouseJitter: { enabled: false, intervalMin: 8000, intervalMax: 25000, maxOffset: 12 },
     clientAliases: {},
     clientUserAgents: {},

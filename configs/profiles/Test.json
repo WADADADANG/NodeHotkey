@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "Test",
   "canvas": {
-    "zoom": 0.42308709732208455,
+    "zoom": 0.6813860011081907,
     "pan": {
-      "x": -23,
-      "y": 10
+      "x": -1232,
+      "y": -377
     }
   },
   "nodes": [
@@ -29,7 +29,7 @@
       "type": "party_scanner",
       "title": "party_scanner",
       "position": {
-        "x": 1280,
+        "x": 1300,
         "y": 420
       },
       "data": {
@@ -46,7 +46,7 @@
       "type": "tts",
       "title": "Text to Speech (TTS)",
       "position": {
-        "x": 1280,
+        "x": 1300,
         "y": 630
       },
       "data": {
@@ -163,8 +163,8 @@
       "type": "tts",
       "title": "Text to Speech (TTS)",
       "position": {
-        "x": 1620,
-        "y": 570
+        "x": 1610,
+        "y": 590
       },
       "data": {
         "enabled": true,
@@ -179,7 +179,7 @@
       "type": "tts",
       "title": "Text to Speech (TTS)",
       "position": {
-        "x": 2260,
+        "x": 2270,
         "y": 960
       },
       "data": {
@@ -272,7 +272,7 @@
       "type": "sound",
       "title": "Sound Alert",
       "position": {
-        "x": 1960,
+        "x": 1950,
         "y": 1060
       },
       "data": {
@@ -288,7 +288,7 @@
       "type": "key_press",
       "title": "Single Key Press",
       "position": {
-        "x": 2560,
+        "x": 2600,
         "y": 1060
       },
       "data": {

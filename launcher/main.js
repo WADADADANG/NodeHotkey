@@ -317,17 +317,36 @@ function syncOverlayOnEngineState(running) {
   }
 }
 
+function getWebPortFromConfig() {
+  try {
+    const globalJsonPath = path.join(PROJECT_DIR, 'configs', 'global.json');
+    if (fs.existsSync(globalJsonPath)) {
+      const parsed = JSON.parse(fs.readFileSync(globalJsonPath, 'utf8'));
+      if (parsed && parsed.globalSettings && parsed.globalSettings.webPort) {
+        const p = parseInt(parsed.globalSettings.webPort, 10);
+        if (!isNaN(p) && p > 0) return p;
+      }
+    }
+  } catch (e) {}
+  return 3088;
+}
+
+let activeWebPort = getWebPortFromConfig();
+
 function checkBotHealth() {
-  const req = http.get('http://localhost:3000/api/config', { timeout: 1500 }, (res) => {
+  const currentPort = activeWebPort || getWebPortFromConfig();
+  const req = http.get(`http://localhost:${currentPort}/api/config`, { timeout: 1500 }, (res) => {
     let data = '';
     res.on('data', chunk => data += chunk);
     res.on('end', () => {
       try {
         const json = JSON.parse(data);
+        const resolvedPort = json.serverPort || json.port || currentPort;
+        activeWebPort = resolvedPort;
         if (mainWindow && !mainWindow.isDestroyed()) {
           mainWindow.webContents.send('bot:diagnostics', {
             serverOnline: true,
-            port: 3000,
+            port: resolvedPort,
             activeProfiles: json.activeProfiles || [json.activeProfile || 'Default'],
             activeClientsCount: json.activeClients ? json.activeClients.length : 0
           });
@@ -359,6 +378,7 @@ function checkBotHealth() {
           if (overlayWindow && !overlayWindow.isDestroyed()) {
             if (!overlayWindow.isVisible()) overlayWindow.show();
             overlayWindow.webContents.send('overlay:update', {
+              port: resolvedPort,
               activeClients: json.activeClients || [],
               clientStatuses: json.clientStatuses || {},
               clientAliases: gs.clientAliases || {},
@@ -373,7 +393,7 @@ function checkBotHealth() {
         }
       } catch (e) {
         if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('bot:diagnostics', { serverOnline: true, port: 3000 });
+          mainWindow.webContents.send('bot:diagnostics', { serverOnline: true, port: currentPort });
         }
       }
     });
@@ -386,7 +406,7 @@ function checkBotHealth() {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('bot:diagnostics', {
         serverOnline: false,
-        port: 3000,
+        port: currentPort,
         error: isBotRunning ? 'Server is starting or port unreachable' : 'Stopped'
       });
     }
@@ -399,6 +419,7 @@ function checkBotHealth() {
 function startBotProcess() {
   if (isBotRunning || botProcess) return { success: true, alreadyRunning: true };
 
+  activeWebPort = getWebPortFromConfig();
   broadcastLog('🚀 Starting NodeHotkey Core Engine (node bot.js)...', 'info');
   const botJs = path.join(PROJECT_DIR, 'bot.js');
 
@@ -523,7 +544,8 @@ async function restartBotProcess() {
 }
 
 function openWebDashboard() {
-  shell.openExternal('http://localhost:3000/');
+  const currentPort = activeWebPort || getWebPortFromConfig();
+  shell.openExternal(`http://localhost:${currentPort}/`);
 }
 
 function openLogFolder() {
@@ -541,6 +563,41 @@ ipcMain.handle('bot:get-status', () => ({
   restarting: isRestarting,
   logPath: logManager.getLogFilePath()
 }));
+
+// Global Settings Direct Disk Persistence IPC
+ipcMain.handle('config:get-global', async () => {
+  try {
+    const globalJsonPath = path.join(PROJECT_DIR, 'configs', 'global.json');
+    if (fs.existsSync(globalJsonPath)) {
+      return JSON.parse(fs.readFileSync(globalJsonPath, 'utf8'));
+    }
+  } catch (e) {
+    console.error('Failed to read global.json:', e);
+  }
+  return null;
+});
+
+ipcMain.handle('config:save-global-settings', async (event, newGlobalSettings) => {
+  try {
+    const globalJsonPath = path.join(PROJECT_DIR, 'configs', 'global.json');
+    let data = { activeProfile: 'Default', activeProfiles: ['Default'], disabledClients: [], globalSettings: {} };
+    if (fs.existsSync(globalJsonPath)) {
+      try {
+        data = JSON.parse(fs.readFileSync(globalJsonPath, 'utf8'));
+      } catch (err) {}
+    }
+    data.globalSettings = { ...(data.globalSettings || {}), ...newGlobalSettings };
+    fs.writeFileSync(globalJsonPath, JSON.stringify(data, null, 2), 'utf8');
+
+    if (newGlobalSettings.webPort) {
+      activeWebPort = parseInt(newGlobalSettings.webPort, 10);
+    }
+    return { success: true };
+  } catch (e) {
+    console.error('Failed to save global settings to disk:', e);
+    return { success: false, error: e.message };
+  }
+});
 
 ipcMain.handle('logs:open-folder', () => openLogFolder());
 ipcMain.handle('logs:get-path', () => logManager.getLogFilePath());
@@ -642,12 +699,23 @@ ipcMain.on('overlay:close', () => {
     overlayWindow.hide();
   }
 
-  // Persist disable to backend config
+  // 1. Persist directly to configs/global.json
   try {
-    const postData = JSON.stringify({ action: 'disable-overlay' });
+    const globalJsonPath = path.join(PROJECT_DIR, 'configs', 'global.json');
+    if (fs.existsSync(globalJsonPath)) {
+      const parsed = JSON.parse(fs.readFileSync(globalJsonPath, 'utf8'));
+      if (!parsed.globalSettings) parsed.globalSettings = {};
+      parsed.globalSettings.enableOverlay = false;
+      fs.writeFileSync(globalJsonPath, JSON.stringify(parsed, null, 2), 'utf8');
+    }
+  } catch (e) {}
+
+  // 2. Also notify running backend HTTP endpoint if available
+  const currentPort = activeWebPort || getWebPortFromConfig();
+  try {
     const req = http.request({
       hostname: 'localhost',
-      port: 3000,
+      port: currentPort,
       path: '/api/config',
       method: 'GET'
     }, (res) => {
@@ -664,7 +732,7 @@ ipcMain.on('overlay:close', () => {
 
           const saveReq = http.request({
             hostname: 'localhost',
-            port: 3000,
+            port: currentPort,
             path: '/api/config',
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }

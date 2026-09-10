@@ -18,6 +18,10 @@ export let activeClients = [];
 
 let renderActionsCallback = null;
 export let isDirty = false;
+export function clearDirty() {
+  isDirty = false;
+  updateUnsavedBadge();
+}
 export const undoStack = [];
 export const redoStack = [];
 const MAX_HISTORY = 30;
@@ -50,6 +54,18 @@ export function updateUnsavedBadge() {
     }
   }
   updateUndoRedoButtons();
+
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'NODEHOTKEY_DIRTY_STATE', isDirty: !!isDirty }, '*');
+    }
+  } catch (e) {}
+
+  try {
+    if (window.nodeCanvas && typeof window.nodeCanvas.renderHistory === 'function') {
+      window.nodeCanvas.renderHistory();
+    }
+  } catch (e) {}
 }
 
 export function updateUndoRedoButtons() {

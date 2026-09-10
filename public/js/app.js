@@ -37,7 +37,8 @@ import {
   triggerUndo,
   triggerRedo,
   toggleCanvasFullscreen,
-  isDirty
+  isDirty,
+  clearDirty
 } from './state.js';
 import {
   startRecordingKey,
@@ -409,6 +410,9 @@ async function initApp() {
           if (window.nodeCanvas.inspectorPanel && window.nodeCanvas.inspectorPanel.classList.contains('open')) {
             window.nodeCanvas.openInspector(node.id);
           }
+          if (typeof window.nodeCanvas.addHistory === 'function') {
+            window.nodeCanvas.addHistory('⌨️', `แก้ไขคีย์ของ "${node.title || node.type}"`, true, `คีย์ใหม่: [${value}]`);
+          }
           window.nodeCanvas.onProfileChanged();
         }
       }
@@ -491,6 +495,22 @@ async function initApp() {
     if (isDirty) {
       e.preventDefault();
       e.returnValue = '';
+    }
+  });
+
+  // Handle Parent Launcher message commands
+  window.addEventListener('message', (e) => {
+    if (!e.data) return;
+    if (e.data.type === 'NODEHOTKEY_CHECK_DIRTY') {
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'NODEHOTKEY_DIRTY_STATE', isDirty: !!isDirty }, '*');
+        }
+      } catch (err) {}
+    }
+    if (e.data.type === 'NODEHOTKEY_FORCE_RELOAD') {
+      clearDirty();
+      window.location.reload();
     }
   });
 

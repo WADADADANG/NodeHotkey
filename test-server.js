@@ -2,7 +2,27 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 3000;
+const { readConfig, writeConfig } = require('./config-store');
+const { checkForUpdates, getUpdateStatus } = require('./update-checker');
+
+function getInitialPort() {
+  if (process.env.PORT) {
+    const p = parseInt(process.env.PORT, 10);
+    if (!isNaN(p) && p > 0) return p;
+  }
+  try {
+    const cfg = readConfig();
+    if (cfg && cfg.globalSettings && cfg.globalSettings.webPort) {
+      const p = parseInt(cfg.globalSettings.webPort, 10);
+      if (!isNaN(p) && p > 0) return p;
+    }
+  } catch (e) {}
+  return 3088;
+}
+
+let PORT = getInitialPort();
+global.activeServerPort = PORT;
+
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
 const MIME_TYPES = {
@@ -19,9 +39,6 @@ const MIME_TYPES = {
   '.wav': 'audio/wav',
   '.ogg': 'audio/ogg'
 };
-
-const { readConfig, writeConfig } = require('./config-store');
-const { checkForUpdates, getUpdateStatus } = require('./update-checker');
 
 function sendJSON(res, status, data) {
   res.writeHead(status, {
@@ -160,6 +177,8 @@ function getClientStatusesPayload() {
     if (!config) return sendJSON(res, 500, { error: 'Failed to read config' });
     return sendJSON(res, 200, {
       ...config,
+      port: PORT,
+      serverPort: PORT,
       activeClients: global.activeClients || [],
       clientStatuses: getClientStatusesPayload(),
       isSuspended: !!global.isSuspended,
@@ -175,6 +194,8 @@ function getClientStatusesPayload() {
     const gs = cfg.globalSettings || {};
 
     return sendJSON(res, 200, {
+      port: PORT,
+      serverPort: PORT,
       activeClients: activeList,
       clientStatuses: clientStatuses,
       clientAliases: global.clientAliases || {},
@@ -628,22 +649,24 @@ function getClientStatusesPayload() {
 
 server.on('error', (e) => {
   if (e.code === 'EADDRINUSE') {
-    console.error(`\n⚠️ [Server Error] Port ${PORT} is currently in use by a previous Node session!`);
-    console.error(`👉 Retrying automatically after clearing Port ${PORT}...`);
-    try {
-      require('child_process').execSync(`npx --yes kill-port ${PORT}`);
-      setTimeout(() => {
-        server.listen(PORT, () => {
-          console.log(`[Server] Running at http://localhost:${PORT}/`);
-        });
-      }, 1000);
-    } catch (err) {
-      console.error(`❌ Could not auto-clear port. Please run 'npm start' again.`);
-    }
+    console.warn(`\n⚠️ [Server Warning] Port ${PORT} is currently in use!`);
+    const nextPort = PORT + 1;
+    console.log(`👉 Trying next available port: ${nextPort}...`);
+    PORT = nextPort;
+    global.activeServerPort = PORT;
+    setTimeout(() => {
+      server.listen(PORT, () => {
+        global.activeServerPort = PORT;
+        console.log(`[Server] Running at http://localhost:${PORT}/`);
+      });
+    }, 500);
+  } else {
+    console.error(`❌ [Server Error]:`, e.message);
   }
 });
 
 server.listen(PORT, () => {
+  global.activeServerPort = PORT;
   console.log(`[Server] Running at http://localhost:${PORT}/`);
   setTimeout(() => checkForUpdates(), 1500);
 });

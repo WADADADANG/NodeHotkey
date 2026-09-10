@@ -6,6 +6,39 @@
     return;
   }
 
+  // Dynamic Web Server Port
+  let currentServerPort = 3088;
+  function getServerUrl(path = '') {
+    return `http://localhost:${currentServerPort}${path}`;
+  }
+
+  // Load global settings directly from disk via IPC on boot
+  async function initGlobalSettingsFromDisk() {
+    if (api && typeof api.getGlobalConfig === 'function') {
+      try {
+        const cfg = await api.getGlobalConfig();
+        if (cfg) {
+          if (!cachedConfig) cachedConfig = cfg;
+          else {
+            cachedConfig.globalSettings = cfg.globalSettings;
+            if (cfg.activeProfile) cachedConfig.activeProfile = cfg.activeProfile;
+            if (cfg.activeProfiles) cachedConfig.activeProfiles = cfg.activeProfiles;
+          }
+          if (cfg.globalSettings && cfg.globalSettings.webPort) {
+            const p = parseInt(cfg.globalSettings.webPort, 10);
+            if (!isNaN(p) && p > 0 && !isServerOnline) {
+              currentServerPort = p;
+            }
+          }
+          loadSettingsToUI(cfg);
+        }
+      } catch (e) {
+        console.warn('initGlobalSettingsFromDisk error:', e);
+      }
+    }
+  }
+  initGlobalSettingsFromDisk();
+
   // Navigation Tabs & Views
   const tabNavDashboard = document.getElementById('tab-nav-dashboard') || document.getElementById('tab-nav-launcher');
   const tabNavEditor = document.getElementById('tab-nav-editor');
@@ -115,8 +148,9 @@
         if (offlinePlaceholder) offlinePlaceholder.style.display = 'flex';
       } else {
         if (offlinePlaceholder) offlinePlaceholder.style.display = 'none';
-        if (editorFrame && (editorFrame.src === 'about:blank' || !editorFrame.src)) {
-          editorFrame.src = 'http://localhost:3000/';
+        const currentOrigin = `http://localhost:${currentServerPort}`;
+        if (editorFrame && (!editorFrame.src || editorFrame.src === 'about:blank' || !editorFrame.src.startsWith(currentOrigin))) {
+          window.reloadEditorFrame();
         }
       }
     } else if (viewName === 'settings') {
@@ -127,17 +161,53 @@
     }
   }
 
-  window.reloadEditorFrame = function() {
-    if (editorFrame && isServerOnline) {
-      editorFrame.src = 'http://localhost:3000/?t=' + Date.now();
+  // Action Node Unsaved State & Safe Reload Controls
+  let isStudioDirty = false;
+  window.addEventListener('message', (e) => {
+    if (!e.data) return;
+    if (e.data.type === 'NODEHOTKEY_DIRTY_STATE') {
+      isStudioDirty = !!e.data.isDirty;
     }
+  });
+
+  window.closeUnsavedReloadModal = function() {
+    const modal = document.getElementById('unsaved-reload-modal');
+    if (modal) modal.style.display = 'none';
+  };
+
+  window.forceDiscardAndReload = function() {
+    window.closeUnsavedReloadModal();
+    isStudioDirty = false;
+    if (editorFrame && editorFrame.contentWindow) {
+      try {
+        editorFrame.contentWindow.postMessage({ type: 'NODEHOTKEY_FORCE_RELOAD' }, '*');
+        return;
+      } catch (e) {}
+    }
+    if (editorFrame && isServerOnline) {
+      editorFrame.src = getServerUrl('/?t=' + Date.now());
+    }
+  };
+
+  window.reloadEditorFrame = function(bypassDirtyCheck = false) {
+    if (!editorFrame || !isServerOnline) return;
+
+    if (!bypassDirtyCheck && isStudioDirty) {
+      const modal = document.getElementById('unsaved-reload-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+        return;
+      }
+    }
+
+    editorFrame.src = getServerUrl('/?t=' + Date.now());
   };
 
   window.openEditorInBrowser = function() {
     if (api && api.openExternal) {
-      api.openExternal('http://localhost:3000/');
+      api.openExternal(getServerUrl('/'));
     } else {
-      window.open('http://localhost:3000/', '_blank');
+      window.open(getServerUrl('/'), '_blank');
     }
   };
 
@@ -248,6 +318,10 @@
       settingUrlHead: "🌐 Target Game URL Filter",
       settingUrlTitle: "คีย์เวิร์ด URL สำหรับตรวจจับจอเกม",
       settingUrlDesc: "ระบบจะค้นหาแท็บเบราว์เซอร์ที่มีคำนี้เพื่อเชื่อมต่อ CDP อัตโนมัติ",
+      settingPortHead: "🔌 Web Server & Dashboard Port",
+      settingPortTitle: "พอร์ตสำหรับ Web Dashboard & Studio",
+      settingPortDesc: "หมายเลข Port สำหรับ Web Server (ค่าเริ่มต้น: 3088 ป้องกันการชนกับพอร์ต 3000 ของโปรเจกต์อื่น)",
+      settingPortNote: "⚡ มีผลเมื่อ Stop แล้ว Start ใหม่ หรือกด Restart Bot Engine",
       btnReloadStudio: "รีโหลด",
       btnBrowserStudio: "เปิดในเบราว์เซอร์",
       lblOfflineHead: "Bot Engine กำลังปิดอยู่ (Server Offline)",
@@ -258,7 +332,13 @@
       modalProxyLabel: "HTTP / SOCKS5 Proxy",
       modalProxyHint: "ใช้แยก IP สำหรับแต่ละจอเพื่อป้องกันการตรวจจับ (IP Detection)",
       modalSaveBtn: "💾 บันทึกการตั้งค่า",
-      modalCancelBtn: "ยกเลิก"
+      modalCancelBtn: "ยกเลิก",
+      unsavedModalTitle: "ตรวจพบการแก้ไขที่ยังไม่ได้บันทึก",
+      unsavedModalDesc: "คุณมีการแก้ไขผังในหน้า <strong>Action Node Studio</strong> ที่ยังไม่ได้กดบันทึก!<br/>หากทำการรีโหลดในตอนนี้ ข้อมูลที่คุณเพิ่งแก้ไขจะสูญหายทันที",
+      unsavedModalHintTitle: "คำแนะนำ:",
+      unsavedModalHintDesc: "กดปุ่ม <strong>\"ปิด เพื่อกลับไปบันทึกเอง\"</strong> ด้านล่าง แล้วกดปุ่ม 💾 บันทึก (หรือ Ctrl+S) ในหน้า Action Node ก่อนที่จะรีโหลดครับ",
+      unsavedModalDiscardBtn: "🔄 ละทิ้งและรีโหลด",
+      unsavedModalBackBtn: "✕ ปิด เพื่อกลับไปบันทึกเอง"
     },
     en: {
       menuMain: "Main Workspace",
@@ -324,6 +404,10 @@
       settingUrlHead: "🌐 Target Game URL Filter",
       settingUrlTitle: "Target URL Keyword for Game Screen Detection",
       settingUrlDesc: "CDP scanner will search for tabs matching this keyword to bind automatically",
+      settingPortHead: "🔌 Web Server & Dashboard Port",
+      settingPortTitle: "Web Dashboard & Studio Port",
+      settingPortDesc: "Port number for the internal web server (Default: 3088 to avoid port 3000 collisions with other dev projects)",
+      settingPortNote: "⚡ Takes effect after Restarting or Stopping & Starting the Bot Engine",
       btnReloadStudio: "Reload",
       btnBrowserStudio: "Browser",
       lblOfflineHead: "Bot Engine is Offline",
@@ -334,7 +418,13 @@
       modalProxyLabel: "HTTP / SOCKS5 Proxy",
       modalProxyHint: "Separate independent IP per client screen to prevent IP Detection",
       modalSaveBtn: "💾 Save Settings",
-      modalCancelBtn: "Cancel"
+      modalCancelBtn: "Cancel",
+      unsavedModalTitle: "Unsaved Changes Detected",
+      unsavedModalDesc: "You have unsaved changes in <strong>Action Node Studio</strong>!<br/>Reloading right now will discard all your pending changes.",
+      unsavedModalHintTitle: "Recommendation:",
+      unsavedModalHintDesc: "Click <strong>\"Close to Save Manually\"</strong> below, then click 💾 Save Profile (or press Ctrl+S) in Action Node before reloading.",
+      unsavedModalDiscardBtn: "🔄 Discard & Reload",
+      unsavedModalBackBtn: "✕ Close to Save Manually"
     }
   };
 
@@ -435,6 +525,28 @@
     if (lblHeadUrl) lblHeadUrl.textContent = t.settingUrlHead;
     if (lblUrlTitle) lblUrlTitle.textContent = t.settingUrlTitle;
     if (lblUrlDesc) lblUrlDesc.textContent = t.settingUrlDesc;
+    const lblHeadPort = document.getElementById('lbl-setting-head-port');
+    const lblPortTitle = document.getElementById('lbl-setting-port-title');
+    const lblPortDesc = document.getElementById('lbl-setting-port-desc');
+    const lblPortNote = document.getElementById('lbl-setting-port-restart-note');
+    if (lblHeadPort) lblHeadPort.textContent = t.settingPortHead;
+    if (lblPortTitle) lblPortTitle.textContent = t.settingPortTitle;
+    if (lblPortDesc) lblPortDesc.textContent = t.settingPortDesc;
+    if (lblPortNote) lblPortNote.textContent = t.settingPortNote;
+
+    // Update Unsaved Changes Modal text
+    const lblUnsavedTitle = document.getElementById('lbl-unsaved-modal-title');
+    const lblUnsavedDesc = document.getElementById('lbl-unsaved-modal-desc');
+    const lblUnsavedHintTitle = document.getElementById('lbl-unsaved-modal-hint-title');
+    const lblUnsavedHintDesc = document.getElementById('lbl-unsaved-modal-hint-desc');
+    const btnUnsavedDiscard = document.getElementById('btn-unsaved-discard');
+    const btnUnsavedBack = document.getElementById('btn-unsaved-back');
+    if (lblUnsavedTitle) lblUnsavedTitle.textContent = t.unsavedModalTitle;
+    if (lblUnsavedDesc) lblUnsavedDesc.innerHTML = t.unsavedModalDesc;
+    if (lblUnsavedHintTitle) lblUnsavedHintTitle.textContent = t.unsavedModalHintTitle;
+    if (lblUnsavedHintDesc) lblUnsavedHintDesc.innerHTML = t.unsavedModalHintDesc;
+    if (btnUnsavedDiscard) btnUnsavedDiscard.textContent = t.unsavedModalDiscardBtn;
+    if (btnUnsavedBack) btnUnsavedBack.textContent = t.unsavedModalBackBtn;
 
     // Update Filter Pills
     filterPills.forEach(pill => {
@@ -463,6 +575,7 @@
 
   if (editorFrame) {
     editorFrame.addEventListener('load', () => {
+      isStudioDirty = false;
       try {
         editorFrame.contentWindow.postMessage({ type: 'NODEHOTKEY_CHANGE_LANG', lang: currentLang }, '*');
       } catch (e) {}
@@ -519,17 +632,14 @@
     if (targetUrlInput && document.activeElement !== targetUrlInput) {
       targetUrlInput.value = gs.targetUrlKeyword || 'universe.flyff.com';
     }
+    const portInput = document.getElementById('setting-web-port');
+    if (portInput && document.activeElement !== portInput) {
+      portInput.value = gs.webPort || 3088;
+    }
   }
 
   window.saveSettingsFromUI = async function() {
     try {
-      if (!cachedConfig) {
-        const res = await fetch('http://localhost:3000/api/config');
-        cachedConfig = await res.json();
-      }
-      if (!cachedConfig.globalSettings) cachedConfig.globalSettings = {};
-      const gs = cachedConfig.globalSettings;
-
       const suspendKeyInput = document.getElementById('setting-suspend-key');
       const overlayCb = document.getElementById('setting-enable-overlay');
       const jitterCb = document.getElementById('setting-enable-jitter');
@@ -537,24 +647,49 @@
       const jitterMax = document.getElementById('setting-jitter-max');
       const jitterOffset = document.getElementById('setting-jitter-offset');
       const targetUrlInput = document.getElementById('setting-target-url');
+      const portInput = document.getElementById('setting-web-port');
 
-      if (suspendKeyInput) gs.suspendHotkey = suspendKeyInput.value.trim() || 'END';
-      if (overlayCb) gs.enableOverlay = overlayCb.checked;
+      const newSettings = {};
+      if (suspendKeyInput) newSettings.suspendHotkey = suspendKeyInput.value.trim() || 'END';
+      if (overlayCb) newSettings.enableOverlay = overlayCb.checked;
       if (jitterCb) {
-        if (!gs.ghostMouseJitter) gs.ghostMouseJitter = {};
-        gs.ghostMouseJitter.enabled = jitterCb.checked;
-        if (jitterMin) gs.ghostMouseJitter.intervalMin = parseInt(jitterMin.value, 10) || 8000;
-        if (jitterMax) gs.ghostMouseJitter.intervalMax = parseInt(jitterMax.value, 10) || 25000;
-        if (jitterOffset) gs.ghostMouseJitter.maxOffset = parseInt(jitterOffset.value, 10) || 12;
+        newSettings.ghostMouseJitter = {
+          enabled: jitterCb.checked,
+          intervalMin: parseInt(jitterMin ? jitterMin.value : 8000, 10) || 8000,
+          intervalMax: parseInt(jitterMax ? jitterMax.value : 25000, 10) || 25000,
+          maxOffset: parseInt(jitterOffset ? jitterOffset.value : 12, 10) || 12
+        };
       }
-      if (targetUrlInput) gs.targetUrlKeyword = targetUrlInput.value.trim() || 'universe.flyff.com';
+      if (targetUrlInput) newSettings.targetUrlKeyword = targetUrlInput.value.trim() || 'universe.flyff.com';
+      if (portInput) {
+        const p = parseInt(portInput.value, 10);
+        if (!isNaN(p) && p >= 1024 && p <= 65535) {
+          newSettings.webPort = p;
+        }
+      }
 
-      await fetch('http://localhost:3000/api/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cachedConfig)
-      });
-      syncBackendStatus();
+      // 1. Persist directly to configs/global.json via IPC (works even when bot is stopped!)
+      if (api && typeof api.saveGlobalSettings === 'function') {
+        await api.saveGlobalSettings(newSettings);
+      }
+
+      // Update local memory cache
+      if (!cachedConfig) cachedConfig = { globalSettings: {} };
+      if (!cachedConfig.globalSettings) cachedConfig.globalSettings = {};
+      Object.assign(cachedConfig.globalSettings, newSettings);
+
+      // 2. If server is actively running, sync changes to running process via HTTP
+      if (isServerOnline) {
+        try {
+          await fetch(getServerUrl('/api/config'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(cachedConfig)
+          });
+        } catch (postErr) {
+          console.warn('Could not post to active server HTTP endpoint:', postErr);
+        }
+      }
     } catch (e) {
       console.warn('Failed to save global settings:', e);
     }
@@ -733,7 +868,7 @@
       const browsers = gs.clientBrowsers || {};
       const browserChoice = browsers[String(clientIdx)] || '1';
 
-      await fetch('http://localhost:3000/api/client/launch', {
+      await fetch(getServerUrl('/api/client/launch'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clientIndex: clientIdx, browserChoice })
@@ -751,7 +886,7 @@
 
   window.closeClient = async function(clientIdx) {
     try {
-      await fetch('http://localhost:3000/api/client/close', {
+      await fetch(getServerUrl('/api/client/close'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clientIndex: clientIdx })
@@ -764,7 +899,7 @@
 
   window.toggleClientPause = async function(clientIdx) {
     try {
-      await fetch('http://localhost:3000/api/client/toggle-enable', {
+      await fetch(getServerUrl('/api/client/toggle-enable'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clientIndex: clientIdx })
@@ -778,14 +913,14 @@
   window.saveClientAlias = async function(clientIdx, newAlias) {
     try {
       if (!cachedConfig) {
-        const res = await fetch('http://localhost:3000/api/config');
+        const res = await fetch(getServerUrl('/api/config'));
         cachedConfig = await res.json();
       }
       if (!cachedConfig.globalSettings) cachedConfig.globalSettings = {};
       if (!cachedConfig.globalSettings.clientAliases) cachedConfig.globalSettings.clientAliases = {};
       cachedConfig.globalSettings.clientAliases[String(clientIdx)] = (newAlias || '').trim();
 
-      await fetch('http://localhost:3000/api/config', {
+      await fetch(getServerUrl('/api/config'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(cachedConfig)
@@ -870,7 +1005,7 @@
     const clientIdx = String(idxInput.value);
     try {
       if (!cachedConfig) {
-        const res = await fetch('http://localhost:3000/api/config');
+        const res = await fetch(getServerUrl('/api/config'));
         cachedConfig = await res.json();
       }
       if (!cachedConfig.globalSettings) cachedConfig.globalSettings = {};
@@ -883,7 +1018,7 @@
       if (proxyInput) gs.clientProxies[clientIdx] = proxyInput.value.trim();
       if (uaInput) gs.clientUserAgents[clientIdx] = uaInput.value.trim();
 
-      await fetch('http://localhost:3000/api/config', {
+      await fetch(getServerUrl('/api/config'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(cachedConfig)
@@ -918,7 +1053,7 @@
         const browsers = gs.clientBrowsers || {};
         const browserChoice = browsers[String(i)] || '1';
 
-        fetch('http://localhost:3000/api/client/launch', {
+        fetch(getServerUrl('/api/client/launch'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ clientIndex: i, browserChoice })
@@ -942,7 +1077,7 @@
   window.stopAllClients = async function() {
     for (let i = 1; i <= 8; i++) {
       try {
-        fetch('http://localhost:3000/api/client/close', {
+        fetch(getServerUrl('/api/client/close'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ clientIndex: i })
@@ -1023,8 +1158,8 @@
   async function syncBackendStatus() {
     try {
       const [statusRes, configRes] = await Promise.all([
-        fetch('http://localhost:3000/api/status').catch(() => null),
-        fetch('http://localhost:3000/api/config').catch(() => null)
+        fetch(getServerUrl('/api/status')).catch(() => null),
+        fetch(getServerUrl('/api/config')).catch(() => null)
       ]);
 
       if (configRes && configRes.ok) {
@@ -1038,15 +1173,21 @@
         const data = await statusRes.json();
         cachedStatus = data;
         const wasOffline = !isServerOnline;
+        const previousPort = currentServerPort;
+        if (data.port || data.serverPort) currentServerPort = data.port || data.serverPort;
         isServerOnline = true;
         dotServer.className = 'diag-indicator-dot online';
-        valServerStatus.textContent = 'Port 3000';
+        valServerStatus.textContent = `Port ${currentServerPort}`;
         subServerInfo.textContent = '🟢 Server Online';
 
-        // Auto-refresh/Load Studio iframe when Server comes Online
+        // Auto-refresh/Load Studio iframe when Server comes Online or Port changes
         if (offlinePlaceholder) offlinePlaceholder.style.display = 'none';
-        if (editorFrame && (wasOffline || editorFrame.src === 'about:blank' || !editorFrame.src)) {
-          editorFrame.src = 'http://localhost:3000/';
+        const currentOrigin = `http://localhost:${currentServerPort}`;
+        const needsReload = wasOffline || (previousPort !== currentServerPort) || !editorFrame.src || editorFrame.src === 'about:blank' || !editorFrame.src.startsWith(currentOrigin);
+        if (editorFrame && needsReload) {
+          if (!isStudioDirty) {
+            window.reloadEditorFrame();
+          }
         }
 
         // Render Client Matrix cards
@@ -1073,6 +1214,9 @@
       isServerOnline = false;
       dotServer.className = 'diag-indicator-dot offline';
       subServerInfo.textContent = 'Server Offline';
+      if (cachedConfig && cachedConfig.globalSettings && cachedConfig.globalSettings.webPort) {
+        currentServerPort = cachedConfig.globalSettings.webPort;
+      }
       const offlinePlaceholder = document.getElementById('editor-offline-placeholder');
       if (offlinePlaceholder && currentView === 'editor') {
         offlinePlaceholder.style.display = 'flex';
@@ -1147,6 +1291,11 @@
       if (uptimeInterval) {
         clearInterval(uptimeInterval);
         uptimeInterval = null;
+      }
+      isServerOnline = false;
+      const offlinePlaceholder = document.getElementById('editor-offline-placeholder');
+      if (offlinePlaceholder && currentView === 'editor') {
+        offlinePlaceholder.style.display = 'flex';
       }
     }
   }
@@ -1258,23 +1407,34 @@
 
   // 7. Diagnostics Data Listener
   api.onDiagnosticsUpdate((diag) => {
+    const wasOffline = !isServerOnline;
+    const previousPort = currentServerPort;
     isServerOnline = diag.serverOnline;
 
     if (diag.serverOnline) {
+      if (diag.port) currentServerPort = diag.port;
       dotServer.className = 'diag-indicator-dot online';
-      valServerStatus.textContent = `Port ${diag.port || 3000}`;
+      valServerStatus.textContent = `Port ${currentServerPort}`;
       subServerInfo.textContent = '🟢 Server Online';
       if (tabEditorDot) tabEditorDot.className = 'tab-live-dot online';
 
-      // If editor frame is still blank and user is in editor view, load it
-      if (editorFrame && (editorFrame.src === 'about:blank' || !editorFrame.src)) {
-        editorFrame.src = 'http://localhost:3000/';
+      // Auto-reload Action Node Studio if server came online, port changed, or url mismatched
+      const currentOrigin = `http://localhost:${currentServerPort}`;
+      const needsReload = wasOffline || (diag.port && diag.port !== previousPort) || !editorFrame.src || editorFrame.src === 'about:blank' || !editorFrame.src.startsWith(currentOrigin);
+      if (editorFrame && needsReload) {
+        if (!isStudioDirty) {
+          window.reloadEditorFrame();
+        }
       }
     } else {
       dotServer.className = 'diag-indicator-dot offline';
       valServerStatus.textContent = `Offline`;
       subServerInfo.textContent = diag.error || 'Server not responding';
       if (tabEditorDot) tabEditorDot.className = 'tab-live-dot';
+      const offlinePlaceholder = document.getElementById('editor-offline-placeholder');
+      if (offlinePlaceholder && currentView === 'editor') {
+        offlinePlaceholder.style.display = 'flex';
+      }
     }
 
     if (diag.activeProfiles && diag.activeProfiles.length > 0) {
@@ -1524,7 +1684,7 @@
         btnPerformUpdate.onclick = async () => {
           btnPerformUpdate.disabled = true;
           await api.restartEngine();
-          if (editorFrame) editorFrame.src = 'http://localhost:3000/?t=' + Date.now();
+          if (editorFrame) editorFrame.src = getServerUrl('/?t=' + Date.now());
           updateModal.style.display = 'none';
         };
 
@@ -1533,7 +1693,7 @@
       } else {
         // Level 1: UI Only Hot-Reload (ZERO bot & game disruption)
         await api.hotReloadUi();
-        if (editorFrame) editorFrame.src = 'http://localhost:3000/?t=' + Date.now();
+        if (editorFrame) editorFrame.src = getServerUrl('/?t=' + Date.now());
 
         updateModalBody.innerHTML = `
           ${renderWizardSteps(3)}
@@ -1564,7 +1724,7 @@
   if (api.onHotReload) {
     api.onHotReload(() => {
       if (editorFrame) {
-        editorFrame.src = 'http://localhost:3000/?t=' + Date.now();
+        editorFrame.src = getServerUrl('/?t=' + Date.now());
       }
       setTimeout(() => {
         window.location.reload();

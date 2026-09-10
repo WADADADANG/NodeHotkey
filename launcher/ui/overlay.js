@@ -186,15 +186,18 @@
     recalculateHeight();
   }
 
+  let overlayPort = 3088;
+
   // Listen to real-time IPC updates from Main Process
   if (api && typeof api.onOverlayUpdate === 'function') {
     api.onOverlayUpdate((data) => {
+      if (data && data.port) overlayPort = data.port;
       renderClients(data);
     });
   }
 
   // Initial fetch on startup
-  fetch('http://localhost:3000/api/config', { cache: 'no-store' })
+  fetch(`http://localhost:${overlayPort}/api/config`, { cache: 'no-store' })
     .then(res => res.json())
     .then(json => renderClients(json))
     .catch(() => {});

@@ -705,8 +705,9 @@ function askClientsAndBrowser() {
             }
 
             if (parsedClients.length === 0) {
+                const activePort = global.activeServerPort || (globalSettings && globalSettings.webPort) || 3088;
                 console.log("\n📌 [System] Skipping initial browser launch.");
-                console.log("👉 Open Web Dashboard at http://localhost:3000/ to configure Proxy/Settings & launch clients!");
+                console.log(`👉 Open Web Dashboard at http://localhost:${activePort}/ to configure Proxy/Settings & launch clients!`);
                 rl.close();
                 return resolve({ activeClientsList: [], choice: '1' });
             }
@@ -1041,9 +1042,11 @@ async function launchBrowser(activeClientsList, choice) {
             handleClientContextClosed(clientIndex);
         });
 
+        const activePort = global.activeServerPort || (globalSettings && globalSettings.webPort) || 3088;
+        const controlPanelUrl = `http://localhost:${activePort}/`;
         const pages = browserCtx.pages();
         const targetPage = pages.find(p => p.url().includes(targetUrlKeyword));
-        const controlPanelPage = pages.find(p => p.url().includes('localhost:3000'));
+        const controlPanelPage = pages.find(p => p.url().includes(`localhost:${activePort}`) || (p.url().includes('localhost:') && !p.url().includes(targetUrlKeyword)));
         const blankPages = pages.filter(p => isBlankPage(p));
 
         let usedPages = [];
@@ -1068,7 +1071,7 @@ async function launchBrowser(activeClientsList, choice) {
         }
 
         // 2. Open control panel tab on Client 1 only
-        if (clientIndex === 1 && !startUrl.includes('localhost:3000') && !controlPanelPage) {
+        if (clientIndex === 1 && !startUrl.includes(`localhost:${activePort}`) && !controlPanelPage) {
             const availableBlank = blankPages.find(p => !usedPages.includes(p));
             if (availableBlank) {
                 console.log(`[System] Client 1: Reusing existing blank tab for control panel`);
@@ -1406,10 +1409,11 @@ async function findAndAttachTabForClient(clientIndex, browserCtx) {
             const pages = browserCtx.pages();
             const foundPage = pages.find(p => {
                 const url = p.url();
-                if (url.includes(targetUrlKeyword) || (url.includes('game') && !url.includes('localhost:3000'))) {
+                const activePort = global.activeServerPort || (globalSettings && globalSettings.webPort) || 3088;
+                if (url.includes(targetUrlKeyword) || (url.includes('game') && !url.includes(`localhost:${activePort}`))) {
                     return true;
                 }
-                if (targetUrlKeyword.includes('localhost:3000') && url.includes('localhost:3000')) {
+                if (targetUrlKeyword.includes(`localhost:${activePort}`) && url.includes(`localhost:${activePort}`)) {
                     return true;
                 }
                 return false;
@@ -1531,8 +1535,9 @@ async function initSystem() {
         migrateProfilesDirectory();
 
         console.log("\n=================================================================");
-        console.log("🚀 NodeHotkey v2.2.4 Control Center Ready!");
-        console.log("👉 Open Web Dashboard at: http://localhost:3000/");
+        const activePort = global.activeServerPort || (globalSettings && globalSettings.webPort) || 3088;
+        console.log("🚀 NodeHotkey Control Center Ready!");
+        console.log(`👉 Open Web Dashboard at: http://localhost:${activePort}/`);
         console.log("👉 Configure Proxy / User-Agent & launch your clients (1-8) directly from the Web UI!");
         console.log("=================================================================\n");
 

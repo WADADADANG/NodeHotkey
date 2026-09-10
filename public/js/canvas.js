@@ -366,7 +366,8 @@ class NodeCanvasEditor {
         const dx = worldPos.x - this.dragStartMouse.x;
         const dy = worldPos.y - this.dragStartMouse.y;
 
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        // Threshold of 8px to prevent micro-drags during click
+        if (Math.hypot(dx, dy) > 8) {
           this.hasActuallyDraggedNodes = true;
         }
 
@@ -446,9 +447,40 @@ class NodeCanvasEditor {
         this.isDraggingNodes = false;
         const didMove = this.hasActuallyDraggedNodes;
         this.hasActuallyDraggedNodes = false;
-        this.dragInitialPositions.clear();
+
+        let anyNodeReallyMoved = false;
         if (didMove) {
+          this.selectedNodeIds.forEach(nodeId => {
+            const node = this.nodes.find(n => n.id === nodeId);
+            const initial = this.dragInitialPositions.get(nodeId);
+            if (node && initial) {
+              if (Math.abs(node.position.x - initial.x) >= 10 || Math.abs(node.position.y - initial.y) >= 10) {
+                anyNodeReallyMoved = true;
+              } else {
+                // Snap back tiny micro-movement
+                node.position.x = initial.x;
+                node.position.y = initial.y;
+                const nodeEl = this.nodesLayer.querySelector(`.canvas-node[data-id="${nodeId}"]`);
+                if (nodeEl) {
+                  nodeEl.style.left = `${node.position.x}px`;
+                  nodeEl.style.top = `${node.position.y}px`;
+                }
+              }
+            }
+          });
+        }
+
+        this.dragInitialPositions.clear();
+        if (anyNodeReallyMoved) {
           this.renderWires();
+          const count = this.selectedNodeIds.size;
+          if (count === 1) {
+            const singleNode = this.nodes.find(n => this.selectedNodeIds.has(n.id));
+            const name = singleNode ? (singleNode.title || singleNode.type) : 'โหนด';
+            this.addHistory('📍', `ย้ายตำแหน่งโหนด "${name}"`, true, `พิกัดใหม่ (x: ${singleNode?.position.x}, y: ${singleNode?.position.y})`);
+          } else {
+            this.addHistory('📍', `ย้ายตำแหน่งกลุ่ม ${count} โหนดพร้อมกัน`, true);
+          }
           this.onProfileChanged();
         }
       }
@@ -2422,7 +2454,7 @@ class NodeCanvasEditor {
     this.togglePanel('outliner', forceState);
   }
 
-  addHistory(icon, desc, saveSnapshot = true) {
+  addHistory(icon, desc, saveSnapshot = true, details = '') {
     const now = new Date();
     const timeStr = now.toTimeString().slice(0, 8);
     const id = `hist_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -2432,6 +2464,7 @@ class NodeCanvasEditor {
       time: timeStr,
       icon: icon || '📝',
       desc: desc || 'แก้ไขข้อมูล',
+      details: details || '',
       snapshot: saveSnapshot ? JSON.parse(JSON.stringify({
         nodes: this.nodes,
         connections: this.connections,
@@ -2487,24 +2520,55 @@ class NodeCanvasEditor {
       this.historyEntryCount.textContent = `${this.historyTimeline.length}`;
     }
 
+    let isDirtyNow = false;
+    try {
+      if (typeof window.isDirty !== 'undefined') isDirtyNow = window.isDirty;
+    } catch (e) {}
+
+    const isEn = window.currentLang === 'en';
+
+    let statusHeader = '';
+    if (isDirtyNow) {
+      statusHeader = `
+        <div style="background:rgba(245, 158, 11, 0.12); border:1px solid rgba(245, 158, 11, 0.35); border-radius:8px; padding:9px 12px; margin-bottom:12px; font-size:11.5px; display:flex; align-items:center; justify-content:space-between; color:#fde68a;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span>⚠️</span>
+            <span style="font-weight:700;">${isEn ? 'Unsaved Changes Pending' : 'มีการแก้ไขที่ยังไม่ได้บันทึก'}</span>
+          </div>
+          <button type="button" onclick="if(window.onManualSaveProfile) window.onManualSaveProfile()" style="background:#eab308; color:#000; border:none; border-radius:5px; padding:4px 9px; font-size:10.5px; font-weight:800; cursor:pointer; display:flex; align-items:center; gap:4px;" title="Save (Ctrl+S)">
+            💾 ${isEn ? 'Save' : 'บันทึก'}
+          </button>
+        </div>
+      `;
+    } else {
+      statusHeader = `
+        <div style="background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.25); border-radius:8px; padding:7px 12px; margin-bottom:12px; font-size:11px; display:flex; align-items:center; gap:6px; color:#6ee7b7;">
+          <span>✅</span>
+          <span style="font-weight:600;">${isEn ? 'All changes saved to backend' : 'ข้อมูลล่าสุดถูกบันทึกแล้ว (ไม่มีงานค้าง)'}</span>
+        </div>
+      `;
+    }
+
     if (this.historyTimeline.length === 0) {
       this.historyTimelineList.innerHTML = `
+        ${statusHeader}
         <div style="font-size:12px; color:var(--muted); text-align:center; padding:24px 0;">
-          ยังไม่มีประวัติการแก้ไขในเซสชันนี้
+          ${isEn ? 'No edits recorded in this session yet.' : 'ยังไม่มีประวัติการแก้ไขในเซสชันนี้'}
         </div>
       `;
       return;
     }
 
-    let html = '';
+    let html = statusHeader;
     this.historyTimeline.forEach((item, index) => {
       const isCurrent = (!this.currentHistoryId && index === 0) || item.id === this.currentHistoryId;
       html += `
         <div class="history-item ${isCurrent ? 'active' : ''}" onclick="window.nodeCanvas.jumpToHistory('${item.id}')" title="คลิกเพื่อย้อนเวลากลับไปยังจุดนี้ (${item.time})">
           <span class="history-item-icon">${item.icon}</span>
-          <div class="history-item-content">
-            <div class="history-item-desc">${item.desc}</div>
-            <span class="history-item-time">${item.time}</span>
+          <div class="history-item-content" style="flex:1; min-width:0;">
+            <div class="history-item-desc" style="font-weight:600; word-break:break-word; color:#f1f5f9;">${item.desc}</div>
+            ${item.details ? `<div style="font-size:10px; color:#94a3b8; font-family:'JetBrains Mono',monospace; margin-top:2px;">${item.details}</div>` : ''}
+            <span class="history-item-time" style="font-size:10px; color:var(--muted); margin-top:3px; display:block;">🕒 ${item.time}</span>
           </div>
           ${isCurrent ? '<span class="history-current-pill">Current</span>' : ''}
         </div>
@@ -2686,7 +2750,7 @@ class NodeCanvasEditor {
           <input type="text" class="inspector-input" value="${node.data?.triggerValue || ''}" placeholder="e.g. start_farm, heal_now" oninput="window.nodeCanvas.updateWebhookTriggerVal('${node.id}', this.value.trim())" style="font-family:'JetBrains Mono'; font-weight:700; color:#38bdf8;" />
           <div style="background:rgba(14, 165, 233, 0.1); border:1px solid rgba(14, 165, 233, 0.3); border-radius:6px; padding:8px 10px; margin-top:8px;">
             <div style="font-size:11px; font-weight:700; color:#38bdf8; margin-bottom:4px;">🌐 Inbound Webhook URL:</div>
-            <code id="webhook-trigger-url-${node.id}" style="font-size:11px; color:#e0f2fe; word-break:break-all; user-select:all; display:block; font-family:'JetBrains Mono',monospace;">http://localhost:3000/api/trigger/${currentVal || '{eventName}'}</code>
+            <code id="webhook-trigger-url-${node.id}" style="font-size:11px; color:#e0f2fe; word-break:break-all; user-select:all; display:block; font-family:'JetBrains Mono',monospace;">${(typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'http://localhost:3088'}/api/trigger/${currentVal || '{eventName}'}</code>
             <div style="font-size:10px; color:var(--muted); margin-top:4px;">${canvasT('inspector_webhook_event_hint', 'Send HTTP POST or GET to this URL to trigger this flow.')}</div>
           </div>
         `;
@@ -3425,7 +3489,8 @@ class NodeCanvasEditor {
     this.updateNodeData(nodeId, 'triggerValue', val);
     const codeEl = document.getElementById(`webhook-trigger-url-${nodeId}`);
     if (codeEl) {
-      codeEl.textContent = `http://localhost:3000/api/trigger/${val || '{eventName}'}`;
+      const baseUrl = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'http://localhost:3088';
+      codeEl.textContent = `${baseUrl}/api/trigger/${val || '{eventName}'}`;
     }
   }
 
@@ -3441,7 +3506,7 @@ class NodeCanvasEditor {
     }
     if (btn) btn.disabled = true;
 
-    fetch('http://localhost:3000/api/webhook/test', {
+    fetch('/api/webhook/test', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -3749,7 +3814,7 @@ class NodeCanvasEditor {
     }
 
     this.renderNodes();
-    this.addHistory('🎯', `อัปเดตเป้าหมายควบคุมของ "${node.title || node.type}"`);
+    this.addHistory('🎯', `อัปเดตเป้าหมายควบคุมของ "${node.title || node.type}"`, true, `เลือกแล้ว ${selected}/${availableNodes.length} เป้าหมาย`);
     this.onProfileChanged();
   }
 
@@ -3783,7 +3848,7 @@ class NodeCanvasEditor {
     }
 
     this.renderNodes();
-    this.addHistory('🎯', `${selectAll ? 'เลือกเป้าหมายทั้งหมด' : 'ยกเลิกเป้าหมายทั้งหมด'} ของ "${node.title || node.type}"`);
+    this.addHistory('🎯', `${selectAll ? 'เลือกเป้าหมายทั้งหมด' : 'ยกเลิกเป้าหมายทั้งหมด'} ของ "${node.title || node.type}"`, true, `${selectAll ? 'เลือกครบทุกโหนด' : 'เคลียร์เป็น 0'}`);
     this.onProfileChanged();
   }
 
@@ -4602,6 +4667,7 @@ class NodeCanvasEditor {
   updateNodeData(nodeId, key, value) {
     const node = this.nodes.find(n => n.id === nodeId);
     if (!node) return;
+    const oldVal = (key === 'title') ? node.title : (node.data ? node.data[key] : undefined);
     if (key === 'title') {
       node.title = value;
     } else {
@@ -4616,7 +4682,10 @@ class NodeCanvasEditor {
     }
 
     this.renderNodes();
-    this.addHistory('⚙️', `แก้ไข ${key} ของโหนด "${node.title || node.type}"`);
+    const oldStr = typeof oldVal === 'object' ? JSON.stringify(oldVal) : String(oldVal ?? '');
+    const newStr = typeof value === 'object' ? JSON.stringify(value) : String(value ?? '');
+    const detail = (oldVal !== undefined && oldStr !== newStr) ? `${key}: "${oldStr}" ➔ "${newStr}"` : `${key}: "${newStr}"`;
+    this.addHistory('⚙️', `แก้ไข ${key} ของโหนด "${node.title || node.type}"`, true, detail);
     this.onProfileChanged();
   }
 
@@ -4626,7 +4695,7 @@ class NodeCanvasEditor {
     if (!node.data) node.data = {};
     node.data.keys = valStr.split(',').map(s => s.trim()).filter(Boolean);
     this.renderNodes();
-    this.addHistory('⌨️', `แก้ไขคีย์ [${valStr}] ของโหนด "${node.title || node.type}"`);
+    this.addHistory('⌨️', `แก้ไขคีย์ของโหนด "${node.title || node.type}"`, true, `คีย์ใหม่: [${valStr}]`);
     this.onProfileChanged();
   }
 
@@ -4638,7 +4707,7 @@ class NodeCanvasEditor {
     node.data.steps.push({ key: '1', delay: 300, holdMs: 0 });
     this.renderNodes();
     this.openInspector(nodeId);
-    this.addHistory('🔀', `เพิ่ม Step ใน Macro "${node.title || node.type}"`);
+    this.addHistory('🔀', `เพิ่ม Step ใน Macro "${node.title || node.type}"`, true, `ขั้นตอนที่ ${node.data.steps.length}`);
     this.onProfileChanged();
   }
 
@@ -4648,6 +4717,7 @@ class NodeCanvasEditor {
     if (node.data.steps[stepIndex]) {
       node.data.steps[stepIndex][field] = value;
       this.renderNodes();
+      this.addHistory('🔀', `แก้ไขขั้นตอน #${stepIndex + 1} ใน "${node.title || node.type}"`, true, `${field}: ${value}`);
       this.onProfileChanged();
     }
   }

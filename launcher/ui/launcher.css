@@ -415,6 +415,9 @@ body.app-root-body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1;
+  min-height: 100%;
+  box-sizing: border-box;
 }
 
 /* Diagnostics 4 Cards */
@@ -655,7 +658,8 @@ body.app-root-body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  height: 280px;
+  flex: 1;
+  min-height: 320px;
 }
 
 .terminal-header {

@@ -27,6 +27,9 @@ export function startRecordingKey(input, actionId, type) {
   recordingHeldModifiers = [];
   recordingNonModifierPressed = false;
 
+  input.dataset.prevValue = input.value;
+  input.dataset.hasRecorded = 'false';
+
   input.value = '';
   input.placeholder = type === 'comma_keys' ? 'Press keys sequentially...' : 'Press any key...';
   input.style.borderColor = 'var(--primary)';
@@ -54,6 +57,20 @@ export function stopRecordingKey(input) {
     input.style.borderColor = 'var(--border)';
     input.style.boxShadow = 'none';
 
+    const hasRecorded = input.dataset.hasRecorded === 'true';
+    const prevVal = input.dataset.prevValue;
+    delete input.dataset.hasRecorded;
+    delete input.dataset.prevValue;
+
+    if (!hasRecorded) {
+      // User just focused and blurred without recording any key, restore previous value!
+      if (prevVal !== undefined) input.value = prevVal;
+      activeRecordingInput = null;
+      activeRecordingActionId = null;
+      activeRecordingType = null;
+      return;
+    }
+
     if (typeof onRecordSaveCallback === 'function') {
       onRecordSaveCallback(activeRecordingActionId, activeRecordingType, input.value.trim());
     }
@@ -73,6 +90,9 @@ export function startRecordingSuspendHotkey(input) {
   activeRecordingType = 'suspend_hotkey';
   recordingHeldModifiers = [];
   recordingNonModifierPressed = false;
+
+  input.dataset.prevValue = input.value;
+  input.dataset.hasRecorded = 'false';
 
   input.value = '';
   input.placeholder = 'Press any key...';
@@ -115,6 +135,7 @@ function handleRecordingKeyDown(e) {
   }
 
   if (activeRecordingType === 'comma_keys') {
+    activeRecordingInput.dataset.hasRecorded = 'true';
     const currentVal = activeRecordingInput.value.trim();
     if (currentVal === '') {
       activeRecordingInput.value = cleanKey;
@@ -157,6 +178,7 @@ function handleRecordingKeyUp(e) {
 }
 
 function applyRecordedKey(keyCombo) {
+  activeRecordingInput.dataset.hasRecorded = 'true';
   activeRecordingInput.value = keyCombo;
   activeRecordingInput.blur();
 }
