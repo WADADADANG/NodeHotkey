@@ -86,9 +86,9 @@ class NodeRegistry {
     }
 
     if (failedNodes.length === 0) {
-      console.log(`[NodeRegistry] โหลดโหนดสำเร็จ ${loadedCount} โหนดเรียบร้อย`);
+      console.log(`[NodeRegistry] Successfully loaded ${loadedCount} modular nodes.`);
     } else {
-      console.warn(`[NodeRegistry] โหลดสำเร็จ ${loadedCount} โหนด, พบปัญหา ${failedNodes.length} โหนด:`);
+      console.warn(`[NodeRegistry] Loaded ${loadedCount} nodes (${failedNodes.length} failed):`);
       failedNodes.forEach(f => console.error(`   ❌ [${f.file}] ${f.error}`));
     }
   }
