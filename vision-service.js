@@ -13,7 +13,12 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 const EventEmitter = require('events');
-const { createWorker } = require('tesseract.js');
+let tesseractModule = null;
+try {
+    tesseractModule = require('tesseract.js');
+} catch (e) {
+    // Optional dependency fallback
+}
 
 class VisionOCRManager {
     static worker = null;
@@ -25,7 +30,14 @@ class VisionOCRManager {
 
         this.initPromise = (async () => {
             try {
-                const w = await createWorker('eng');
+                if (!tesseractModule) {
+                    try { tesseractModule = require('tesseract.js'); } catch (err) {}
+                }
+                if (!tesseractModule || typeof tesseractModule.createWorker !== 'function') {
+                    console.warn('⚠️ [Vision OCR] tesseract.js is not installed. OCR text recognition is disabled.');
+                    return null;
+                }
+                const w = await tesseractModule.createWorker('eng');
                 this.worker = w;
                 return w;
             } catch (e) {

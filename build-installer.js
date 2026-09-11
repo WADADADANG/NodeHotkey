@@ -65,12 +65,29 @@ rootEntries.forEach(entry => {
   if (name === 'build-installer.js' || name.endsWith('.bak') || name.endsWith('.log') || name.endsWith('.exe')) return;
 
   const ext = path.extname(name).toLowerCase();
-  if (['.js', '.json', '.ico', '.png'].includes(ext)) {
+  if (['.js', '.json', '.ico', '.png', '.traineddata'].includes(ext)) {
     const src = path.join(rootDir, name);
     fs.copyFileSync(src, path.join(appDistDir, name));
     console.log(`      ✓ Copied ${name}`);
   }
 });
+
+console.log('      ⏳ Copying nodes/ directory (Modular Action Nodes)...');
+if (fs.existsSync(path.join(rootDir, 'nodes'))) {
+  copyFolderSync(
+    path.join(rootDir, 'nodes'),
+    path.join(appDistDir, 'nodes'),
+    (fullPath, name) => name.toLowerCase().endsWith('.md')
+  );
+}
+
+console.log('      ⏳ Copying prebuilt/ directory (Native Fallbacks)...');
+if (fs.existsSync(path.join(rootDir, 'prebuilt'))) {
+  copyFolderSync(
+    path.join(rootDir, 'prebuilt'),
+    path.join(appDistDir, 'prebuilt')
+  );
+}
 
 console.log('      ⏳ Copying public/ directory...');
 copyFolderSync(
