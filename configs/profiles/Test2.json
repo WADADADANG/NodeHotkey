@@ -2,17 +2,17 @@
   "version": "3.1.0",
   "name": "Test2",
   "canvas": {
-    "zoom": 0.85,
+    "zoom": 0.8,
     "pan": {
-      "x": -50,
-      "y": -50
+      "x": -40,
+      "y": -40
     }
   },
   "nodes": [
     {
-      "id": "node_trig_1",
+      "id": "node_trig_party",
       "type": "trigger",
-      "title": "Trigger Key (1)",
+      "title": "Trigger (NUMPAD 1)",
       "position": {
         "x": 100,
         "y": 200
@@ -20,193 +20,257 @@
       "data": {
         "enabled": true,
         "triggerType": "keyboard",
-        "triggerValue": "1",
-        "actionId": "trig_1"
+        "triggerValue": "NUMPAD 1",
+        "actionId": "trig_party_1"
       }
     },
     {
-      "id": "node_var_toggle",
-      "type": "variable",
-      "title": "Variable: IsActive",
+      "id": "node_party_scanner",
+      "type": "party_scanner",
+      "title": "Party Scanner (Client 4)",
       "position": {
-        "x": 420,
+        "x": 460,
         "y": 200
       },
       "data": {
         "enabled": true,
-        "actionId": "var_toggle_1",
-        "name": "IsActiveVar",
-        "varType": "boolean",
-        "scope": "global",
-        "initialValue": "false",
-        "operation": "toggle",
-        "opValue": "1"
+        "actionId": "party_scanner_1",
+        "name": "PartyScannerClient4",
+        "targetClient": "4",
+        "scanRegion": "auto",
+        "scanIntervalMs": 250,
+        "readNames": true,
+        "showOverlay": true
       }
     },
     {
-      "id": "node_branch_check",
-      "type": "branch",
-      "title": "Branch: Check If Active",
+      "id": "node_party_buff",
+      "type": "party_buff",
+      "title": "Party Buff (Cycle Members)",
       "position": {
-        "x": 750,
+        "x": 820,
         "y": 200
       },
       "data": {
         "enabled": true,
-        "actionId": "branch_check_1",
-        "name": "CheckActiveStatus",
-        "conditionTargetId": "var_toggle_1",
-        "conditionRule": "is_true",
-        "conditionValue": ""
+        "actionId": "party_buff_1",
+        "name": "PartyBuffClient4",
+        "targetClient": "4",
+        "scanRegion": "auto",
+        "delayAfterClick": 80,
+        "showOverlay": true
       }
     },
     {
-      "id": "node_tts_on_true",
-      "type": "tts",
-      "title": "TTS: สถานะเปิด",
+      "id": "node_cast_buff",
+      "type": "sequencer",
+      "title": "Cast Buff Sequencer",
       "position": {
-        "x": 1100,
+        "x": 1180,
         "y": 120
       },
       "data": {
         "enabled": true,
-        "actionId": "tts_true_1",
-        "name": "TTS_ActiveTrue",
-        "text": "สถานะเปิด ระบบเริ่มทำงานค่ะ",
-        "voice": "th-TH-PremwadeeNeural",
-        "volume": 100
+        "actionId": "cast_buff_1",
+        "name": "CastBuffSkills",
+        "targetClient": "4",
+        "modeType": "once",
+        "repeatCount": 1,
+        "delayAfter": 0,
+        "steps": [
+          {
+            "key": "F2",
+            "delay": 150,
+            "castTimeMs": 150
+          },
+          {
+            "key": "1",
+            "delay": 800,
+            "castTimeMs": 800
+          }
+        ]
       }
     },
     {
-      "id": "node_tts_on_false",
+      "id": "node_tts_complete",
       "type": "tts",
-      "title": "TTS: สถานะปิด",
+      "title": "TTS: บัฟเสร็จสิ้น",
       "position": {
-        "x": 1100,
-        "y": 300
+        "x": 1180,
+        "y": 280
       },
       "data": {
         "enabled": true,
-        "actionId": "tts_false_1",
-        "name": "TTS_ActiveFalse",
-        "text": "สถานะปิด หยุดการทำงานแล้วค่ะ",
+        "actionId": "tts_complete_1",
+        "name": "TTS_BuffComplete",
+        "text": "แจกบัฟปาร์ตี้ครบทุกคนเรียบร้อยแล้วค่ะ",
         "voice": "th-TH-PremwadeeNeural",
         "volume": 100
       }
     },
     {
-      "id": "node_trig_2",
+      "id": "node_tts_error",
+      "type": "tts",
+      "title": "TTS: ไม่พบปาร์ตี้",
+      "position": {
+        "x": 820,
+        "y": 420
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "tts_error_1",
+        "name": "TTS_ScannerError",
+        "text": "สแกนไม่พบหน้าต่างปาร์ตี้ค่ะ",
+        "voice": "th-TH-PremwadeeNeural",
+        "volume": 100
+      }
+    },
+    {
+      "id": "node_snap_error",
+      "type": "screenshot",
+      "title": "Screenshot: Diagnostic",
+      "position": {
+        "x": 1180,
+        "y": 420
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "snap_error_1",
+        "name": "SnapScannerError",
+        "targetClient": "4",
+        "captureRegion": "full",
+        "prefix": "scan_fail",
+        "subfolder": "diagnostics",
+        "annotate": true
+      }
+    },
+    {
+      "id": "node_trig_keys",
       "type": "trigger",
-      "title": "Trigger Key (2)",
+      "title": "Trigger (NUMPAD 2)",
       "position": {
         "x": 100,
-        "y": 550
+        "y": 620
       },
       "data": {
         "enabled": true,
         "triggerType": "keyboard",
-        "triggerValue": "2",
-        "actionId": "trig_2"
+        "triggerValue": "NUMPAD 2",
+        "actionId": "trig_keys_2"
       }
     },
     {
-      "id": "node_delay_wait",
+      "id": "node_key_press",
+      "type": "key_press",
+      "title": "Key Press: โจมตี/เก็บของ",
+      "position": {
+        "x": 460,
+        "y": 620
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "key_press_1",
+        "name": "AttackAndLoot",
+        "targetClient": "4",
+        "keys": ["1", "2"],
+        "delayAfter": 100
+      }
+    },
+    {
+      "id": "node_delay",
       "type": "delay",
-      "title": "Delay: รอ 1 วินาที",
+      "title": "Delay: รอ 800ms",
       "position": {
-        "x": 420,
-        "y": 550
+        "x": 820,
+        "y": 620
       },
       "data": {
         "enabled": true,
-        "actionId": "delay_wait_1",
-        "name": "Delay1000ms",
-        "delayMs": 1000
+        "actionId": "delay_1",
+        "name": "WaitAfterAttack",
+        "delayMs": 800
       }
     },
     {
-      "id": "node_sound_alert",
+      "id": "node_sound",
       "type": "sound",
-      "title": "Sound: เสียง Ding",
+      "title": "Sound: แจ้งเตือนเสร็จ",
       "position": {
-        "x": 750,
-        "y": 550
+        "x": 1180,
+        "y": 620
       },
       "data": {
         "enabled": true,
-        "actionId": "sound_alert_1",
-        "name": "PlayDingAlert",
+        "actionId": "sound_1",
+        "name": "AttackDoneAlert",
         "soundSource": "preset",
         "soundPreset": "ding",
-        "volume": 100
-      }
-    },
-    {
-      "id": "node_tts_delayed",
-      "type": "tts",
-      "title": "TTS: แจ้งเตือนเสร็จสิ้น",
-      "position": {
-        "x": 1100,
-        "y": 550
-      },
-      "data": {
-        "enabled": true,
-        "actionId": "tts_delayed_1",
-        "name": "TTS_DelayDone",
-        "text": "หน่วงเวลา 1 วินาที และเล่นเสียงแจ้งเตือนเสร็จสิ้น",
-        "voice": "th-TH-PremwadeeNeural",
         "volume": 100
       }
     }
   ],
   "connections": [
     {
-      "id": "conn_trig1_to_var",
-      "fromNodeId": "node_trig_1",
+      "id": "conn_trig1_scanner",
+      "fromNodeId": "node_trig_party",
       "fromPort": "exec_out",
-      "toNodeId": "node_var_toggle",
+      "toNodeId": "node_party_scanner",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_var_to_branch",
-      "fromNodeId": "node_var_toggle",
+      "id": "conn_scanner_buff",
+      "fromNodeId": "node_party_scanner",
+      "fromPort": "onScanned",
+      "toNodeId": "node_party_buff",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_scanner_err_tts",
+      "fromNodeId": "node_party_scanner",
+      "fromPort": "onError",
+      "toNodeId": "node_tts_error",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_scanner_err_snap",
+      "fromNodeId": "node_party_scanner",
+      "fromPort": "onError",
+      "toNodeId": "node_snap_error",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_buff_cast",
+      "fromNodeId": "node_party_buff",
+      "fromPort": "onNextMember",
+      "toNodeId": "node_cast_buff",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_buff_complete",
+      "fromNodeId": "node_party_buff",
       "fromPort": "onComplete",
-      "toNodeId": "node_branch_check",
+      "toNodeId": "node_tts_complete",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_branch_to_tts_true",
-      "fromNodeId": "node_branch_check",
-      "fromPort": "onTrue",
-      "toNodeId": "node_tts_on_true",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_branch_to_tts_false",
-      "fromNodeId": "node_branch_check",
-      "fromPort": "onFalse",
-      "toNodeId": "node_tts_on_false",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_trig2_to_delay",
-      "fromNodeId": "node_trig_2",
+      "id": "conn_trig2_press",
+      "fromNodeId": "node_trig_keys",
       "fromPort": "exec_out",
-      "toNodeId": "node_delay_wait",
+      "toNodeId": "node_key_press",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_delay_to_sound",
-      "fromNodeId": "node_delay_wait",
+      "id": "conn_press_delay",
+      "fromNodeId": "node_key_press",
       "fromPort": "onComplete",
-      "toNodeId": "node_sound_alert",
+      "toNodeId": "node_delay",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_sound_to_tts",
-      "fromNodeId": "node_sound_alert",
+      "id": "conn_delay_sound",
+      "fromNodeId": "node_delay",
       "fromPort": "onComplete",
-      "toNodeId": "node_tts_delayed",
+      "toNodeId": "node_sound",
       "toPort": "exec_in"
     }
   ]
