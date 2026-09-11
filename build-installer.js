@@ -108,19 +108,25 @@ copyFolderSync(
 // 5. Create Standalone Launchers & Auto-Sync Version Info
 console.log('[4/5] 🛠️ Creating Standalone Launchers & Version Metadata...');
 
+let appVersion = '3.1.0';
+try {
+  const pkgJson = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8'));
+  if (pkgJson.version) appVersion = pkgJson.version;
+} catch (err) {}
+
 let currentCommit = 'unknown';
 try {
   currentCommit = execSync('git rev-parse --short HEAD', { cwd: rootDir, encoding: 'utf8' }).trim();
 } catch (e) {
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(rootDir, 'version.json'), 'utf8'));
-    currentCommit = pkg.commit || '3.0.0';
+    currentCommit = pkg.commit || 'unknown';
   } catch (err) {}
 }
 
 // Write version.json with latest git commit hash
 const versionData = {
-  version: "3.0.0",
+  version: appVersion,
   commit: currentCommit,
   buildTime: new Date().toISOString()
 };
