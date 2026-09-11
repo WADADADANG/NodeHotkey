@@ -522,7 +522,9 @@ function getClientStatusesPayload() {
   if (urlPath === '/api/nodes' && req.method === 'GET') {
     try {
       const { nodeRegistry } = require('./node-registry');
-      nodeRegistry.loadAll();
+      if (!nodeRegistry.isLoaded) {
+        nodeRegistry.loadAll();
+      }
       const list = nodeRegistry.getAll().map(def => ({
         type: def.type,
         aliases: def.aliases || [],

@@ -10,6 +10,7 @@ const path = require('path');
 class NodeRegistry {
   constructor() {
     this.nodes = new Map();
+    this.isLoaded = false;
   }
 
   /**
@@ -55,8 +56,12 @@ class NodeRegistry {
   /**
    * Automatically load all *.node.js files from the specified directory
    * @param {string} [dirPath] - Defaults to path.join(__dirname, 'nodes')
+   * @param {boolean} [force=false] - Force reload even if already loaded
    */
-  loadAll(dirPath) {
+  loadAll(dirPath, force = false) {
+    if (this.isLoaded && !force) {
+      return;
+    }
     const targetDir = dirPath || path.join(__dirname, 'nodes');
     if (!fs.existsSync(targetDir)) {
       fs.mkdirSync(targetDir, { recursive: true });
@@ -84,6 +89,8 @@ class NodeRegistry {
         }
       }
     }
+
+    this.isLoaded = true;
 
     if (failedNodes.length === 0) {
       console.log(`[NodeRegistry] Successfully loaded ${loadedCount} modular nodes.`);
