@@ -70,6 +70,16 @@ let runPartyTargetRouterAction = async (action, callStack) => {
         console.error('⚠️ [Vision Module] PartyTargetHandler error:', e.message);
     }
 };
+let runScreenshotAction = async (action, callStack) => {
+    try {
+        delete require.cache[require.resolve('./vision-service')];
+        delete require.cache[require.resolve('./party-target-handler')];
+        const handler = require('./party-target-handler');
+        return await handler.runScreenshotAction(action, callStack);
+    } catch (e) {
+        console.error('⚠️ [Vision Module] Screenshot error:', e.message);
+    }
+};
 
 let runTtsAction = async (action, callStack) => {
     try {
@@ -2996,6 +3006,10 @@ function handleActionTrigger(act) {
         if (typeof runTtsAction === 'function') {
             runTtsAction(act, []).catch(err => console.error(`Error in runTtsAction:`, err));
         }
+    } else if (act.mode === 'screenshot' || act.mode === 'capture_screen') {
+        if (typeof runScreenshotAction === 'function') {
+            runScreenshotAction(act, []).catch(err => console.error(`Error in runScreenshotAction:`, err));
+        }
     }
 }
 
@@ -3136,6 +3150,10 @@ async function runChainedAction(action, callStack) {
     } else if (action.mode === 'tts' || action.mode === 'tts_alert' || action.mode === 'text_to_speech') {
         if (typeof runTtsAction === 'function') {
             await runTtsAction(action, callStack).catch(err => console.error(`[Chain Error] runTtsAction:`, err));
+        }
+    } else if (action.mode === 'screenshot' || action.mode === 'capture_screen') {
+        if (typeof runScreenshotAction === 'function') {
+            await runScreenshotAction(action, callStack).catch(err => console.error(`[Chain Error] runScreenshotAction:`, err));
         }
     }
 }

@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 0.6813860011081907,
     "pan": {
-      "x": -1232,
-      "y": -377
+      "x": -433,
+      "y": 61
     }
   },
   "nodes": [
@@ -15,12 +15,12 @@
       "title": "Btn First buff",
       "position": {
         "x": 580,
-        "y": 160
+        "y": 190
       },
       "data": {
         "enabled": true,
         "triggerType": "keyboard",
-        "triggerValue": "NUMPAD 5",
+        "triggerValue": "NUMPAD 1",
         "actionId": "1788964309726"
       }
     },
@@ -47,7 +47,7 @@
       "title": "Text to Speech (TTS)",
       "position": {
         "x": 1300,
-        "y": 630
+        "y": 860
       },
       "data": {
         "enabled": true,
@@ -164,7 +164,7 @@
       "title": "Text to Speech (TTS)",
       "position": {
         "x": 1610,
-        "y": 590
+        "y": 570
       },
       "data": {
         "enabled": true,
@@ -196,7 +196,7 @@
       "title": "First buff",
       "position": {
         "x": 900,
-        "y": 160
+        "y": 190
       },
       "data": {
         "enabled": true,
@@ -240,13 +240,13 @@
       "type": "trigger",
       "title": "Btn All Buff",
       "position": {
-        "x": 590,
-        "y": 510
+        "x": 900,
+        "y": 540
       },
       "data": {
         "enabled": true,
         "triggerType": "keyboard",
-        "triggerValue": "NUMPAD 6",
+        "triggerValue": "NUMPAD 2",
         "actionId": "1788966784692"
       }
     },
@@ -260,7 +260,7 @@
       },
       "data": {
         "enabled": true,
-        "targetClient": "1",
+        "targetClient": "4",
         "targetSlot": 1,
         "delayAfterClick": 80,
         "showOverlay": true,
@@ -298,6 +298,19 @@
           "Z"
         ],
         "actionId": "1788967982251"
+      }
+    },
+    {
+      "id": "node_1789094472486",
+      "type": "screenshot",
+      "title": "screenshot",
+      "position": {
+        "x": 1300,
+        "y": 640
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1789094472486"
       }
     }
   ],
@@ -377,6 +390,13 @@
       "fromNodeId": "node_1788966414924",
       "fromPort": "next",
       "toNodeId": "node_1788967982251",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789094475570",
+      "fromNodeId": "node_1788964319072",
+      "fromPort": "onError",
+      "toNodeId": "node_1789094472486",
       "toPort": "exec_in"
     }
   ]

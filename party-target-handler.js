@@ -9,6 +9,8 @@
  * 5. `runPartyTargetRouterAction`: ฟังก์ชันรองรับย้อนหลังสำหรับ Profile เดิม
  */
 
+const fs = require('fs');
+const path = require('path');
 const visionService = require('./vision-service');
 
 const buffLoopIndices = new Map(); // actionId -> current member index
@@ -47,10 +49,12 @@ async function runPartyScannerAction(action, callStack) {
 
     try {
         // สแกนหน้าจอสด 1 รอบผ่าน VisionService และเก็บแคชไว้ส่วนกลาง
-        const partyState = await visionService.scanClientPage(page, targetClientId, action.scanRegion);
+        const readNames = action.readNames !== false;
+        const partyState = await visionService.scanClientPage(page, targetClientId, action.scanRegion, { readNames });
 
         if (!partyState || !Array.isArray(partyState.members) || partyState.members.length === 0) {
             console.warn(`⚠️ [PartyScanner] Client ${targetClientId}: ไม่พบหน้าต่างปาร์ตี้บนจอ`);
+            visionService.saveVisionDebugDump(targetClientId, 'party_not_found').catch(() => {});
             if (showOverlay && visionService.VisualOverlay) {
                 await visionService.VisualOverlay.clear(page).catch(() => {});
             }
@@ -242,6 +246,11 @@ async function runPartyHealAction(action, callStack) {
  * 4. runPartyBuffAction (Consumer Action)
  * วนคลิกแจกบัฟสมาชิกทุกคนทีละคน (Downward Tracking + Tooltip Evasion)
  */
+/**
+ * 4. runPartyBuffAction (Name-Based Party Buffing Engine)
+ * วนคลิกแจกบัฟสมาชิกทุกคนโดยอ้างอิงจากชื่อตัวละครจริง (Name-Based Tracking)
+ * แก้ปัญหาไอคอนบัฟดันหลอดเลื่อน และข้ามคนนอกระยะ/ออฟไลน์ทันที 0ms ไม่บัฟตัวเอง
+ */
 async function runPartyBuffAction(action, callStack) {
     if (global.isSuspended) return;
 
@@ -258,12 +267,12 @@ async function runPartyBuffAction(action, callStack) {
     }
 
     const delayAfterClick = parseInt(action.delayAfterClick, 10) || 80;
+    const scanRegion = action.scanRegion || 'auto';
 
-    // สแกนเพื่อหาตำแหน่งเริ่มต้น
-    visionService.resetClientCalibration(targetClientId);
-    const partyState = await visionService.scanClientPage(page, targetClientId, action.scanRegion);
+    // สแกนรอบแรกเพื่อค้นหาหน้าต่างปาร์ตี้และอ่านรายชื่อสมาชิก (เปิด OCR รอบแรกเพื่อให้ได้ชื่อจริง)
+    const initialScan = await visionService.scanClientPage(page, targetClientId, scanRegion, { readNames: true });
 
-    if (!partyState || !Array.isArray(partyState.members) || partyState.members.length === 0) {
+    if (!initialScan || !Array.isArray(initialScan.members) || initialScan.members.length === 0) {
         console.warn(`⚠️ [PartyBuff] Client ${targetClientId}: ไม่พบหน้าต่างปาร์ตี้`);
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
@@ -271,67 +280,78 @@ async function runPartyBuffAction(action, callStack) {
         return;
     }
 
-    const totalMembers = partyState.members.length;
-    console.log(`🚀 [PartyBuff] Client ${targetClientId}: เริ่มต้นวนแจกบัฟสมาชิกปาร์ตี้ทั้งหมด ${totalMembers} คน...`);
+    // จัดเก็บชื่อและสถานะเริ่มต้นของแต่ละ Slot
+    const slotNames = new Map();
+    const slotIsLeader = new Map();
+    initialScan.members.forEach(m => {
+        slotNames.set(m.slot, m.name || `Slot_${m.slot}`);
+        if (m.isLeader) slotIsLeader.set(m.slot, true);
+    });
 
-    let lastTargetY = 0;
-    let lastTargetX = Math.round((partyState.members[0].startX || 25) + (partyState.members[0].barWidth || 70) / 2);
+    // กรองเฉพาะ Slot ที่เป็นสมาชิกที่อยู่ในระยะและพร้อมรับบัฟ (active)
+    const activeSlots = initialScan.members
+        .filter(m => m.isAlive && m.statusCode === 'active')
+        .map(m => m.slot);
+    const totalToBuff = activeSlots.length;
 
-    for (let i = 0; i < totalMembers; i++) {
+    console.log(`🚀 [PartyBuff] Client ${targetClientId}: เริ่มต้นวนแจกบัฟสมาชิกปาร์ตี้ (พบในระยะพร้อมบัฟ ${totalToBuff} คน จากทั้งหมด ${initialScan.members.length} คน: ${activeSlots.map(s => slotNames.get(s)).join(', ')})...`);
+
+    if (totalToBuff === 0) {
+        console.warn(`⚠️ [PartyBuff] Client ${targetClientId}: ไม่มีสมาชิกที่พร้อมรับบัฟ (ทั้งหมดไม่อยู่ในระยะหรือ Offline)`);
+        if (typeof global.fireChain === 'function') {
+            await global.fireChain(action, 'onComplete', callStack);
+        }
+        return;
+    }
+
+    const buffedSlots = new Set();
+    const buffedMemberSummaries = [];
+    let currentPartyState = initialScan;
+
+    for (let i = 0; i < activeSlots.length; i++) {
         if (global.isSuspended) {
             console.log(`⏸️ [PartyBuff] Client ${targetClientId}: ระบบถูกสั่งหยุดชั่วคราว`);
             break;
         }
 
-        let target = null;
-        let currentPartyState = partyState;
+        const targetSlot = activeSlots[i];
+        const memberName = slotNames.get(targetSlot) || `Slot_${targetSlot}`;
+        const isLeader = slotIsLeader.get(targetSlot) || false;
 
-        if (i === 0) {
-            target = partyState.members[0];
-        } else {
-            // หลบเมาส์ก่อนสแกนป้องกัน Tooltip บัง
+        // ถ้าไม่ใช่คนแรก (i > 0) ให้สแกนตำแหน่งสดใหม่เพื่ออัปเดตแกน Y (เพราะไอคอนบัฟของคนก่อนหน้าจะดันหลอดเลือดคนล่างๆ เลื่อนลง)
+        // ใช้ readNames: false เพื่อความรวดเร็วระดับมิลลิวินาที ไม่ต้องรอ Tesseract OCR และป้องกันชื่อเพี้ยน
+        if (i > 0) {
             try {
-                await page.mouse.move(350, 250);
+                const safeX = (currentPartyState?.startX && currentPartyState.startX > 500) ? currentPartyState.startX - 220 : 350;
+                await page.mouse.move(safeX, 250);
             } catch (e) {}
             await new Promise(r => setTimeout(r, 60));
 
-            // สแกนสดใหม่เพื่อให้ได้พิกัด Y ที่แท้จริง (หลังไอคอนบัฟของคนก่อนหน้าขยาย)
-            const freshState = await visionService.scanClientPage(page, targetClientId, action.scanRegion);
+            const freshState = await visionService.scanClientPage(page, targetClientId, scanRegion, { readNames: false });
             if (freshState && Array.isArray(freshState.members) && freshState.members.length > 0) {
                 currentPartyState = freshState;
-                const candidatesBelow = freshState.members.filter(m => m.barY > lastTargetY + 20);
-                if (candidatesBelow.length > 0) {
-                    target = candidatesBelow[0];
-                } else if (freshState.members[i]) {
-                    target = freshState.members[i];
-                } else {
-                    target = freshState.members[freshState.members.length - 1];
-                }
-            }
-
-            // Fallback
-            if (!target || !target.click) {
-                const estimatedY = lastTargetY + 50;
-                target = {
-                    slot: i + 1,
-                    barY: estimatedY,
-                    click: { x: lastTargetX, y: estimatedY }
-                };
             }
         }
 
-        if (!target || !target.click) continue;
+        // ค้นหาพิกัดของ slot เป้าหมายใน state ปัจจุบัน
+        let target = currentPartyState.members.find(m => m.slot === targetSlot);
+        if (!target) {
+            // Fallback ใช้พิกัดเดิมจาก initialScan
+            target = initialScan.members.find(m => m.slot === targetSlot);
+        }
 
-        lastTargetY = target.barY || target.click.y;
-        lastTargetX = target.click.x;
-
-        // 🛡️ ข้ามสมาชิกที่อยู่นอกระยะ (out_of_range), คนตาย (dead), หรือออฟไลน์ (offline)
-        if (!target.isAlive || target.statusCode === 'out_of_range' || target.statusCode === 'dead' || target.statusCode === 'offline') {
-            console.log(`⏩ [PartyBuff] Client ${targetClientId}: [คนที่ ${i + 1}/${totalMembers}] ข้าม Slot ${target.slot || i + 1} เนื่องจากอยู่นอกระยะ/ไม่อยู่ (${target.statusCode || 'inactive'})`);
+        if (!target) {
+            console.warn(`⚠️ [PartyBuff] Client ${targetClientId}: ไม่พบพิกัดของ Slot ${targetSlot} ("${memberName}") ข้ามไปยังคนถัดไป`);
             continue;
         }
 
-        console.log(`🎯 [PartyBuff] Client ${targetClientId}: [บัฟคนที่ ${i + 1}/${totalMembers}] คลิก Slot ${target.slot || i + 1} ที่ (${target.click.x}, ${target.click.y})`);
+        // ตรวจสอบว่าสมาชิกยัง active อยู่หรือไม่
+        if (target.statusCode && target.statusCode !== 'active') {
+            console.log(`⏩ [PartyBuff] Client ${targetClientId}: ข้าม Slot ${targetSlot} ("${memberName}") เนื่องจากสถานะเป็น ${target.statusCode}`);
+            continue;
+        }
+
+        console.log(`🎯 [PartyBuff] Client ${targetClientId}: [บัฟคนที่ ${i + 1}/${totalToBuff}] เลือก "${memberName}" ${isLeader ? '👑 (หัวตี้)' : ''} ที่ (${target.click.x}, ${target.click.y})`);
 
         // วาด HUD Overlay
         if (showOverlay && visionService.VisualOverlay) {
@@ -341,12 +361,13 @@ async function runPartyBuffAction(action, callStack) {
             });
         }
 
-        // คลิกเลือกเป้าหมายคนนี้
+        // คลิกเลือกสมาชิกคนนี้
         await simulateRealisticClick(page, target.click.x, target.click.y);
 
-        // สะบัดเมาส์หลบออกไปทางขวา 250px
+        // สะบัดเมาส์หลบออกไปด้านข้าง 220px ทันทีเพื่อป้องกัน Tooltip บัง
         try {
-            await page.mouse.move(target.click.x + 250, target.click.y);
+            const awayX = target.click.x > 500 ? target.click.x - 220 : target.click.x + 220;
+            await page.mouse.move(awayX, target.click.y);
         } catch (e) {}
 
         if (delayAfterClick > 0) {
@@ -359,6 +380,10 @@ async function runPartyBuffAction(action, callStack) {
             await global.fireChain(action, 'onNextMember', new Set());
         }
 
+        // บันทึกว่าสล็อตนี้บัฟสำเร็จแล้ว
+        buffedSlots.add(targetSlot);
+        buffedMemberSummaries.push(memberName);
+
         if (global.isSuspended) break;
 
         // หน่วงเวลาระหว่างสมาชิกเล็กน้อย
@@ -366,7 +391,7 @@ async function runPartyBuffAction(action, callStack) {
         if (!ok || global.isSuspended) break;
     }
 
-    console.log(`🏁 [PartyBuff] Client ${targetClientId}: วนแจกบัฟครบสมาชิกทุกคนแล้ว!`);
+    console.log(`🏁 [PartyBuff] Client ${targetClientId}: วนแจกบัฟครบทุกคนแล้ว! (บัฟสำเร็จทั้งหมด ${buffedSlots.size}/${totalToBuff} คน: ${buffedMemberSummaries.join(', ')})`);
     if (typeof global.fireChain === 'function') {
         await global.fireChain(action, 'onComplete', callStack);
     }
@@ -386,10 +411,63 @@ async function runPartyTargetRouterAction(action, callStack) {
     }
 }
 
+/**
+ * 6. runScreenshotAction (Utility / Vision Diagnostic)
+ * ถ่ายภาพหน้าจอตามโซนที่กำหนด (full, party, right, left, target, custom) และบันทึกลง ./screenshots/
+ */
+async function runScreenshotAction(action, callStack) {
+    if (global.isSuspended) return;
+
+    const targetClientId = String(action.targetClient || '1');
+    const region = action.captureRegion || action.region || 'full';
+    const annotate = action.annotate !== false;
+    const prefix = (action.prefix || 'screenshot').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const rawSubfolder = (action.subfolder !== undefined && action.subfolder !== '') ? action.subfolder : (action.folder || `client_${targetClientId}`);
+    const subfolder = String(rawSubfolder).trim().replace(/[\\/:*?"<>|]/g, '_');
+
+    try {
+        const dir = path.join(__dirname, 'screenshots', subfolder);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+        const buffer = await visionService.captureScreenshot(targetClientId, {
+            region,
+            annotate,
+            customRect: action.customRect
+        });
+
+        if (!buffer) {
+            console.warn(`⚠️ [Screenshot] Client ${targetClientId}: ไม่สามารถดึงภาพหน้าจอได้`);
+            if (typeof global.fireChain === 'function') {
+                await global.fireChain(action, 'onError', callStack);
+            }
+            return;
+        }
+
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+        const filename = `screenshot_c${targetClientId}_${prefix}_${timestamp}.jpg`;
+        const filepath = path.join(dir, filename);
+        fs.writeFileSync(filepath, buffer);
+
+        console.log(`📸 [Screenshot] Client ${targetClientId}: บันทึกภาพเรียบร้อย (${region}) ➔ ./screenshots/${subfolder}/${filename}`);
+
+        if (typeof global.fireChain === 'function') {
+            await global.fireChain(action, 'onComplete', callStack);
+        }
+    } catch (err) {
+        console.error(`❌ [Screenshot Error] Client ${targetClientId}:`, err.message);
+        if (typeof global.fireChain === 'function') {
+            await global.fireChain(action, 'onError', callStack);
+        }
+    }
+}
+
 module.exports = {
     runPartyScannerAction,
     runSelectPartySlotAction,
     runPartyHealAction,
     runPartyBuffAction,
-    runPartyTargetRouterAction
+    runPartyTargetRouterAction,
+    runScreenshotAction
 };

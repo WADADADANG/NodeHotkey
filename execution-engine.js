@@ -208,7 +208,9 @@ class NodeExecutionEngine {
       tts: 'tts',
       tts_alert: 'tts',
       text_to_speech: 'tts',
-      webhook_out: 'webhook_out'
+      webhook_out: 'webhook_out',
+      screenshot: 'screenshot',
+      capture_screen: 'screenshot'
     };
 
     const actions = [];
@@ -235,8 +237,13 @@ class NodeExecutionEngine {
         lowHpThreshold: d.lowHpThreshold !== undefined ? parseInt(d.lowHpThreshold, 10) : 70,
         scanIntervalMs: d.scanIntervalMs !== undefined ? parseInt(d.scanIntervalMs, 10) : 250,
         delayAfterClick: d.delayAfterClick !== undefined ? parseInt(d.delayAfterClick, 10) : 80,
-        scanRegion: d.scanRegion || 'left',
+        scanRegion: d.scanRegion || 'auto',
         showOverlay: d.showOverlay !== false,
+        captureRegion: d.captureRegion || 'full',
+        annotate: d.annotate !== false,
+        prefix: d.prefix || 'error_snap',
+        subfolder: (d.subfolder !== undefined && d.subfolder !== '') ? d.subfolder : (d.folder || `client_${d.targetClient || '1'}`),
+        customRect: d.customRect || null,
         url: d.url || '',
         method: d.method || 'POST',
         headers: d.headers || '',

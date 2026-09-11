@@ -96,7 +96,9 @@ function convertLegacyProfileToNodeWorkflow(legacyProfile) {
       tts: 'tts',
       tts_alert: 'tts',
       text_to_speech: 'tts',
-      webhook_out: 'webhook_out'
+      webhook_out: 'webhook_out',
+      screenshot: 'screenshot',
+      capture_screen: 'screenshot'
     };
     const nodeType = typeMap[act.mode] || act.mode || 'loop';
     const mainNodeX = hasTrigger ? 450 : 100;

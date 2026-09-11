@@ -616,6 +616,65 @@ function getClientStatusesPayload() {
     return;
   }
 
+  // --- POST /api/open-folder → open folder in Windows Explorer ---
+  if (urlPath === '/api/open-folder' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', () => {
+      try {
+        const { subfolder } = JSON.parse(body || '{}');
+        const rawSub = subfolder ? String(subfolder).trim().replace(/[\\/:*?"<>|]/g, '_') : '';
+        const targetDir = path.join(__dirname, 'screenshots', rawSub);
+        if (!fs.existsSync(targetDir)) {
+          fs.mkdirSync(targetDir, { recursive: true });
+        }
+        const { exec } = require('child_process');
+        if (process.platform === 'win32') {
+          exec(`explorer "${targetDir.replace(/\//g, '\\')}"`);
+        } else if (process.platform === 'darwin') {
+          exec(`open "${targetDir}"`);
+        } else {
+          exec(`xdg-open "${targetDir}"`);
+        }
+        console.log(`[Server] Opened folder in explorer: ${targetDir}`);
+        sendJSON(res, 200, { success: true, path: targetDir });
+      } catch (e) {
+        console.error('[Server] Failed to open folder:', e.message);
+        sendJSON(res, 500, { error: e.message });
+      }
+    });
+    return;
+  }
+
+  // --- Static serving for screenshots (including subfolders) ---
+  if (urlPath.startsWith('/screenshots/')) {
+    const SCREENSHOTS_DIR = path.join(__dirname, 'screenshots');
+    const relPath = decodeURIComponent(urlPath.replace(/^\/screenshots\//, ''));
+    const fullPath = path.join(SCREENSHOTS_DIR, relPath);
+
+    if (!fullPath.startsWith(SCREENSHOTS_DIR)) {
+      res.writeHead(403, { 'Content-Type': 'text/plain' });
+      res.end('403 Forbidden');
+      return;
+    }
+
+    fs.stat(fullPath, (err, stats) => {
+      if (err || !stats.isFile()) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('404 Not Found');
+        return;
+      }
+      const ext = path.extname(fullPath).toLowerCase();
+      const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+      res.writeHead(200, {
+        'Content-Type': contentType,
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
+      });
+      fs.createReadStream(fullPath).pipe(res);
+    });
+    return;
+  }
+
   // --- Static file serving ---
   let filePath = urlPath === '/' ? '/index.html' : urlPath;
   let fullPath = path.join(PUBLIC_DIR, filePath);

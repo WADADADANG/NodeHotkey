@@ -9,6 +9,7 @@ innosetup*.exe
 # Logs & Debug Output
 logs/
 *.log
+screenshots/
 
 # Backup Files
 *.bak

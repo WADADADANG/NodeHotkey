@@ -38,7 +38,8 @@ export function getModeDescription(mode) {
     party_heal: currentLang === 'en' ? 'Select member with lowest HP <= threshold and click' : 'เลือกคลิกคนเลือดต่ำสุดที่ <= เกณฑ์เพื่อฮีล',
     party_buff: currentLang === 'en' ? 'Cycle through party members for buffing (Downward Tracking)' : 'คลิกวนแจกบัฟสมาชิกทีละคนตามลำดับ (Downward Tracking)',
     party_target_router: currentLang === 'en' ? 'Party Target Router (Legacy)' : 'เลือกเป้าหมายปาร์ตี้ (Legacy)',
-    tts: currentLang === 'en' ? 'Text to Speech alert (Microsoft Edge Neural AI voice)' : 'อ่านข้อความเสียงแจ้งเตือน (Microsoft Edge Neural AI)'
+    tts: currentLang === 'en' ? 'Text to Speech alert (Microsoft Edge Neural AI voice)' : 'อ่านข้อความเสียงแจ้งเตือน (Microsoft Edge Neural AI)',
+    screenshot: currentLang === 'en' ? 'Capture game screenshot with diagnostic annotations' : 'ถ่ายภาพหน้าจอเกมแบบ Zero-Flicker พร้อมวิเคราะห์ปัญหา'
   };
   return descMap[norm] || '';
 }
@@ -62,7 +63,8 @@ export function getModeBadgeInfo(mode) {
     party_heal: { label: 'PARTY HEAL', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)', border: 'rgba(239, 68, 68, 0.35)' },
     party_buff: { label: 'PARTY BUFF', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.15)', border: 'rgba(168, 85, 247, 0.35)' },
     party_target_router: { label: 'PARTY TARGET', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.15)', border: 'rgba(6, 182, 212, 0.35)' },
-    tts: { label: 'TTS', color: '#c084fc', bg: 'rgba(192, 132, 252, 0.15)', border: 'rgba(192, 132, 252, 0.35)' }
+    tts: { label: 'TTS', color: '#c084fc', bg: 'rgba(192, 132, 252, 0.15)', border: 'rgba(192, 132, 252, 0.35)' },
+    screenshot: { label: 'SCREENSHOT', color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.35)' }
   };
   return badgeMap[norm] || { label: (norm || '').toUpperCase(), color: 'var(--primary)', bg: 'var(--primary-dim)', border: 'rgba(99,102,241,0.2)' };
 }
@@ -1011,7 +1013,8 @@ function getChainEventsForMode(mode, act) {
     party_heal: ['onHealTarget', 'onNoTarget', 'onError'],
     party_buff: ['onNextMember', 'onComplete', 'onError'],
     party_target_router: ['onMemberLowHp', 'onNextMember', 'onComplete', 'onError'],
-    tts: ['next', 'onError']
+    tts: ['next', 'onError'],
+    screenshot: ['onComplete', 'onError']
   };
   return map[norm] || [];
 }

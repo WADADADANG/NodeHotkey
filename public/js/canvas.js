@@ -99,6 +99,7 @@ class NodeCanvasEditor {
       party_buff: canvasT('canvas_party_buff', isEn ? 'Party Buff Target' : 'วนเลือกเป้าหมายบัฟ (Party Buff)'),
       party_target: canvasT('canvas_party_target', isEn ? 'Party Target Router (Legacy)' : 'เลือกเป้าหมายปาร์ตี้ (Legacy)'),
       tts: canvasT('canvas_tts', isEn ? 'Text to Speech (TTS)' : 'อ่านข้อความเสียง (TTS)'),
+      screenshot: canvasT('canvas_screenshot', isEn ? 'Screenshot' : 'ถ่ายภาพหน้าจอ (Screenshot)'),
       webhook_out: canvasT('canvas_webhook_out', isEn ? 'HTTP Webhook' : 'ส่ง Webhook / HTTP')
     };
     return map[type] || canvasT(`canvas_${type}`, (type || '').toUpperCase());
@@ -670,6 +671,7 @@ class NodeCanvasEditor {
         party_buff: '📜',
         party_target: '👥',
         tts: '🗣️',
+        screenshot: '📸',
         webhook_out: '🌐'
       };
 
@@ -959,6 +961,24 @@ class NodeCanvasEditor {
           </div>
           <div class="node-info-row">
             <span>Vol:</span> <span class="node-info-value">${vol}%</span>
+          </div>
+        `;
+      } else if (node.type === 'screenshot') {
+        const region = node.data?.captureRegion || 'full';
+        const prefix = node.data?.prefix || 'error_snap';
+        const annotate = node.data?.annotate !== false;
+        bodyHTML = `
+          <div class="node-info-row">
+            <span>Client:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Region:</span> <span class="node-info-value" style="color:#10b981; font-weight:700;">${region}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Prefix:</span> <span class="node-info-value" style="max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${prefix}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Annotate:</span> <span class="node-info-value" style="color:${annotate ? '#10b981' : '#94a3b8'}; font-weight:600;">${annotate ? '✅ ON' : 'OFF'}</span>
           </div>
         `;
       } else if (node.type === 'control') {
@@ -1290,6 +1310,20 @@ class NodeCanvasEditor {
             <div class="node-pin-row">
               <span class="node-pin-label" style="color:#f59e0b;">⚠️ ${isEn ? 'Error' : 'ผิดพลาด'} ▶</span>
               <div class="node-port port-out" data-node="${node.id}" data-port="onError" title="${isEn ? 'Synthesis or audio error' : 'สังเคราะห์หรือเล่นเสียงไม่สำเร็จ'}"></div>
+            </div>
+          </div>
+        `;
+      } else if (node.type === 'screenshot') {
+        const isEn = window.currentLang === 'en';
+        pinsHTML = `
+          <div class="node-pins-section">
+            <div class="node-pin-row">
+              <span class="node-pin-label onComplete" style="color:#10b981;">🏁 ${isEn ? 'Captured' : 'บันทึกสำเร็จ'} ▶</span>
+              <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="onComplete" title="${isEn ? 'Triggered when screenshot is saved' : 'ส่งสัญญาณเมื่อถ่ายและบันทึกภาพสำเร็จ'}"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label" style="color:#f59e0b;">⚠️ ${isEn ? 'Error' : 'ผิดพลาด'} ▶</span>
+              <div class="node-port port-out" data-node="${node.id}" data-port="onError" title="${isEn ? 'Capture or write error' : 'ดึงภาพหรือบันทึกไฟล์ไม่สำเร็จ'}"></div>
             </div>
           </div>
         `;
@@ -2233,6 +2267,7 @@ class NodeCanvasEditor {
         targetClient: '1',
         scanIntervalMs: 250,
         lowHpThreshold: 70,
+        scanRegion: 'auto',
         showOverlay: true,
         enabled: true
       };
@@ -2304,6 +2339,15 @@ class NodeCanvasEditor {
       };
     } else if (type === 'key_hold') {
       initialData = { targetKey: '1', targetClient: '1', enabled: true };
+    } else if (type === 'screenshot') {
+      initialData = {
+        targetClient: '1',
+        captureRegion: 'full',
+        subfolder: 'client_1',
+        prefix: 'error_snap',
+        annotate: true,
+        enabled: true
+      };
     }
 
     const newNode = {
@@ -2972,6 +3016,8 @@ class NodeCanvasEditor {
       fieldsHTML += this.renderPartyTargetHelper(node);
     } else if (node.type === 'tts') {
       fieldsHTML += this.renderTtsHelper(node);
+    } else if (node.type === 'screenshot') {
+      fieldsHTML += this.renderScreenshotHelper(node);
     } else {
       fieldsHTML += `
         <div class="inspector-field-group">
@@ -3116,10 +3162,10 @@ class NodeCanvasEditor {
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_scan_region', isEn ? 'Scan Region (Screen Area)' : 'พื้นที่สแกนบนหน้าจอ')}</label>
         <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'scanRegion', this.value);">
-          <option value="left" ${scanRegion === 'left' ? 'selected' : ''}>👈 ${canvasT('region_left', isEn ? 'Left Half (Recommended)' : 'ฝั่งซ้ายของจอ (แนะนำ - ตัดสัญญาณกวน)')}</option>
-          <option value="full" ${scanRegion === 'full' ? 'selected' : ''}>🖥️ ${canvasT('region_full', isEn ? 'Full Screen (Entire Window)' : 'ทั่วทั้งหน้าจอ (สแกนทั้งจอ)')}</option>
-          <option value="top_left" ${scanRegion === 'top_left' ? 'selected' : ''}>↖️ ${canvasT('region_top_left', isEn ? 'Top-Left Corner' : 'มุมซ้ายบนของจอ')}</option>
+          <option value="auto" ${scanRegion === 'auto' || !scanRegion ? 'selected' : ''}>🔍 ${canvasT('region_auto', isEn ? 'Auto (Detect Left/Right)' : 'อัตโนมัติ (ตรวจจับซ้าย/ขวา Auto)')}</option>
           <option value="right" ${scanRegion === 'right' ? 'selected' : ''}>👉 ${canvasT('region_right', isEn ? 'Right Half' : 'ฝั่งขวาของจอ')}</option>
+          <option value="left" ${scanRegion === 'left' ? 'selected' : ''}>👈 ${canvasT('region_left', isEn ? 'Left Half' : 'ฝั่งซ้ายของจอ')}</option>
+          <option value="full" ${scanRegion === 'full' ? 'selected' : ''}>🖥️ ${canvasT('region_full', isEn ? 'Full Screen (Entire Window)' : 'ทั่วทั้งหน้าจอ (สแกนทั้งจอ)')}</option>
         </select>
       </div>
       <div class="inspector-field-group">
@@ -3283,12 +3329,23 @@ class NodeCanvasEditor {
   }
 
   renderPartyBuffHelper(node) {
+    const isEn = window.currentLang === 'en';
     const delayAfterClick = node.data?.delayAfterClick ?? 80;
+    const scanRegion = node.data?.scanRegion || 'auto';
 
     return `
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen (Vision)')}</label>
         ${this.renderClientButtonSelector(node)}
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_party_scan_region', isEn ? 'Party Window Position' : 'ตำแหน่งหน้าต่างปาร์ตี้บนจอ')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'scanRegion', this.value);">
+          <option value="auto" ${scanRegion === 'auto' ? 'selected' : ''}>🔍 ${canvasT('region_auto', isEn ? 'Auto (Detect Left/Right)' : 'อัตโนมัติ (ตรวจจับซ้าย/ขวา Auto)')}</option>
+          <option value="right" ${scanRegion === 'right' ? 'selected' : ''}>👉 ${canvasT('region_right', isEn ? 'Right Half' : 'ฝั่งขวาของจอ')}</option>
+          <option value="left" ${scanRegion === 'left' ? 'selected' : ''}>👈 ${canvasT('region_left', isEn ? 'Left Half' : 'ฝั่งซ้ายของจอ')}</option>
+          <option value="full" ${scanRegion === 'full' ? 'selected' : ''}>🖥️ ${canvasT('region_full', isEn ? 'Full Screen' : 'ทั่วทั้งหน้าจอ')}</option>
+        </select>
       </div>
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_party_delay_click', 'Delay After Click (ms)')}</label>
@@ -3334,6 +3391,63 @@ class NodeCanvasEditor {
           <input type="range" min="0" max="100" step="5" value="${volume}" style="flex:1; accent-color:#c084fc;" oninput="this.nextElementSibling.innerText = this.value + '%'; window.nodeCanvas.updateNodeData('${node.id}', 'volume', parseInt(this.value, 10));" />
           <span style="min-width:44px; font-weight:700; color:#c084fc; font-family:'JetBrains Mono',monospace;">${volume}%</span>
         </div>
+      </div>
+    `;
+  }
+
+  renderScreenshotHelper(node) {
+    const isEn = window.currentLang === 'en';
+    const targetClient = String(node.data?.targetClient || '1');
+    const captureRegion = node.data?.captureRegion || 'full';
+    const annotate = node.data?.annotate !== false;
+    const prefix = node.data?.prefix || 'error_snap';
+    const subfolder = node.data?.subfolder !== undefined ? node.data.subfolder : `client_${targetClient}`;
+
+    return `
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_target_clients', isEn ? 'Target Client Screen' : 'จอเป้าหมาย')}</label>
+        ${this.renderClientButtonSelector(node)}
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_screenshot_region', isEn ? 'Capture Area' : 'พื้นที่ถ่ายภาพ')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'captureRegion', this.value);">
+          <option value="full" ${captureRegion === 'full' ? 'selected' : ''}>🖥️ ${canvasT('region_full', isEn ? 'Full Viewport' : 'เต็มหน้าจอเกม')}</option>
+          <option value="party" ${captureRegion === 'party' ? 'selected' : ''}>👥 ${canvasT('region_party', isEn ? 'Party Area' : 'โซนหน้าต่างปาร์ตี้')}</option>
+          <option value="right" ${captureRegion === 'right' ? 'selected' : ''}>👉 ${canvasT('region_right', isEn ? 'Right Half' : 'ฝั่งขวาของจอ')}</option>
+          <option value="left" ${captureRegion === 'left' ? 'selected' : ''}>👈 ${canvasT('region_left', isEn ? 'Left Half' : 'ฝั่งซ้ายของจอ')}</option>
+        </select>
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_screenshot_folder', isEn ? 'Storage Subfolder' : 'โฟลเดอร์จัดเก็บภาพ')}</label>
+        <input type="text" class="inspector-input" value="${subfolder}" placeholder="เช่น client_${targetClient} หรือ party_errors" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'subfolder', this.value.trim());" />
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_screenshot_prefix', isEn ? 'File Prefix' : 'คำนำหน้าชื่อไฟล์')}</label>
+        <input type="text" class="inspector-input" value="${prefix}" placeholder="error_snap" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'prefix', this.value.trim());" />
+        <div style="margin-top:8px; padding:10px; background:rgba(15,23,42,0.6); border:1px solid rgba(56,189,248,0.2); border-radius:6px; font-size:11px; line-height:1.45;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:5px;">
+            <div style="display:flex; align-items:center; gap:6px; color:#38bdf8; font-weight:600; font-size:11px;">
+              <span>📁</span>
+              <span>${isEn ? 'Save Location:' : 'ตำแหน่งบันทึกไฟล์:'}</span>
+            </div>
+            <button type="button" onclick="window.nodeCanvas.openScreenshotFolder('${node.id}');" style="display:inline-flex; align-items:center; gap:5px; padding:3px 9px; font-size:11px; border-radius:4px; background:rgba(56,189,248,0.2); border:1px solid rgba(56,189,248,0.4); color:#38bdf8; cursor:pointer; font-weight:600; transition:all 0.15s;" onmouseover="this.style.background='rgba(56,189,248,0.35)'" onmouseout="this.style.background='rgba(56,189,248,0.2)'">
+              <span>📂</span>
+              <span>${isEn ? 'Open Folder' : 'เปิดโฟลเดอร์'}</span>
+            </button>
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace; color:#f1f5f9; font-size:11px; word-break:break-all;">
+            ./screenshots/<span style="color:#38bdf8; font-weight:700;">${subfolder || ('client_' + targetClient)}</span>/
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace; color:#94a3b8; font-size:10.5px; margin-top:3px; word-break:break-all;">
+            screenshot_c${targetClient}_${prefix}_[date].jpg
+          </div>
+        </div>
+      </div>
+      <div class="inspector-field-group" style="margin-top:6px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+          <input type="checkbox" ${annotate ? 'checked' : ''} onchange="window.nodeCanvas.updateNodeData('${node.id}', 'annotate', this.checked)" style="accent-color:#10b981; cursor:pointer;" />
+          <span>🔬 ${canvasT('inspector_screenshot_annotate', isEn ? 'Annotate Vision Diagnostics (Bounding boxes & Pixel marks)' : 'วาดตีกรอบพิกเซลวิเคราะห์ปัญหา (Diagnostics)')}</span>
+        </label>
       </div>
     `;
   }
@@ -3534,6 +3648,40 @@ class NodeCanvasEditor {
       if (statusBox) {
         statusBox.style.color = '#ef4444';
         statusBox.textContent = `${canvasT('inspector_webhook_test_err', '❌ Test failed: ')} ${err.message}`;
+      }
+    });
+  }
+
+  openScreenshotFolder(nodeId) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    const targetClient = String(node?.data?.targetClient || '1');
+    const rawSub = (node?.data?.subfolder !== undefined && node.data.subfolder !== '') ? node.data.subfolder : (node?.data?.folder || `client_${targetClient}`);
+    const subfolder = String(rawSub).trim();
+
+    if (typeof window.toast === 'function') {
+      window.toast(`📂 กำลังเปิดโฟลเดอร์ screenshots/${subfolder}...`, 'info');
+    }
+
+    fetch('/api/open-folder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subfolder })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        if (typeof window.toast === 'function') {
+          window.toast(`✅ เปิดโฟลเดอร์เรียบร้อยแล้ว`, 'success');
+        }
+      } else {
+        if (typeof window.toast === 'function') {
+          window.toast(`❌ ไม่สามารถเปิดโฟลเดอร์ได้: ${data.error}`, 'error');
+        }
+      }
+    })
+    .catch(err => {
+      if (typeof window.toast === 'function') {
+        window.toast(`❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์: ${err.message}`, 'error');
       }
     });
   }
@@ -5287,6 +5435,7 @@ class NodeCanvasEditor {
         items: [
           { type: 'emergency_stop', icon: '🛑', name: this.getNodeTypeLabel('emergency_stop') },
           { type: 'tts', icon: '🗣️', name: this.getNodeTypeLabel('tts') },
+          { type: 'screenshot', icon: '📸', name: this.getNodeTypeLabel('screenshot') },
           { type: 'sound', icon: '🔊', name: this.getNodeTypeLabel('sound') }
         ]
       }

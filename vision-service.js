@@ -9,8 +9,37 @@
  * 5. Anti-Corruption Visual Overlay: วาดกรอบ [ ] ไม่ทับหลอดเลือด ป้องกันรบกวนเฟรมสแกน
  */
 
+const fs = require('fs');
+const path = require('path');
 const sharp = require('sharp');
 const EventEmitter = require('events');
+const { createWorker } = require('tesseract.js');
+
+class VisionOCRManager {
+    static worker = null;
+    static initPromise = null;
+
+    static async getWorker() {
+        if (this.worker) return this.worker;
+        if (this.initPromise) return this.initPromise;
+
+        this.initPromise = (async () => {
+            try {
+                const w = await createWorker('eng');
+                this.worker = w;
+                return w;
+            } catch (e) {
+                console.error('❌ [Vision OCR] Failed to initialize Tesseract worker:', e.message);
+                this.worker = null;
+                return null;
+            } finally {
+                this.initPromise = null;
+            }
+        })();
+
+        return this.initPromise;
+    }
+}
 
 class VisionLockManager {
     static activeLock = null;
@@ -160,7 +189,7 @@ class ClientPartyScanner {
         return false;
     }
 
-    findPartyColumn(data, w, h, ch) {
+    findPartyColumns(data, w, h, ch) {
         const segments = [];
         for (let y = 15; y < h - 15; y += 2) {
             let inSeg = false, startX = 0, count = 0;
@@ -189,7 +218,7 @@ class ClientPartyScanner {
             }
         }
 
-        if (segments.length === 0) return null;
+        if (segments.length === 0) return [];
 
         const xBuckets = {};
         segments.forEach(s => {
@@ -197,19 +226,41 @@ class ClientPartyScanner {
             xBuckets[k] = (xBuckets[k] || 0) + 1;
         });
 
-        const bestBucket = Number(Object.keys(xBuckets).sort((a, b) => xBuckets[b] - xBuckets[a])[0]);
-        const colSegments = segments.filter(s => Math.abs(s.startX - bestBucket) <= 10);
-        if (colSegments.length === 0) return null;
+        // Party window in Flyff is placed on the left side or right side (never dead center over player character)
+        const edgeKeys = Object.keys(xBuckets).map(Number).filter(k => k <= w * 0.38 || k >= w * 0.62);
+        const candidateKeys = (edgeKeys.length > 0) ? edgeKeys : Object.keys(xBuckets).map(Number);
+        const sortedBuckets = candidateKeys.sort((a, b) => xBuckets[b] - xBuckets[a]).slice(0, 4);
 
-        const startXs = colSegments.map(s => s.startX).sort((a, b) => a - b);
-        const colStartX = startXs[Math.floor(startXs.length / 2)];
+        const results = [];
+        for (const bucket of sortedBuckets) {
+            const colSegments = segments.filter(s => Math.abs(s.startX - bucket) <= 10);
+            if (colSegments.length < 2) continue;
 
-        const lengths = colSegments.map(s => s.len).sort((a, b) => a - b);
-        const maxLen = lengths[lengths.length - 1];
-        const topLengths = lengths.filter(l => l >= maxLen - 15);
-        const effectiveWidth = (topLengths.length >= 2) ? topLengths[Math.floor(topLengths.length / 2)] : lengths[Math.floor(lengths.length / 2)];
+            const startXs = colSegments.map(s => s.startX).sort((a, b) => a - b);
+            const colStartX = startXs[Math.floor(startXs.length / 2)];
 
-        return { startX: colStartX, barWidth: effectiveWidth };
+            const lengths = colSegments.map(s => s.len).sort((a, b) => a - b);
+            const maxLen = lengths[lengths.length - 1];
+            const topLengths = lengths.filter(l => l >= maxLen - 15);
+            const effectiveWidth = (topLengths.length >= 2) ? topLengths[Math.floor(topLengths.length / 2)] : lengths[Math.floor(lengths.length / 2)];
+
+            results.push({ startX: colStartX, barWidth: effectiveWidth });
+        }
+
+        // จัดอันดับคอลัมน์: จัดให้ความกว้างมาตรฐานของหลอดเลือดปาร์ตี้ Flyff (~90 - 165px) มาเป็นอันดับแรก
+        results.sort((a, b) => {
+            const aIsStd = (a.barWidth >= 90 && a.barWidth <= 165) ? 100 : 0;
+            const bIsStd = (b.barWidth >= 90 && b.barWidth <= 165) ? 100 : 0;
+            if (aIsStd !== bIsStd) return bIsStd - aIsStd;
+            return a.barWidth - b.barWidth;
+        });
+
+        return results;
+    }
+
+    findPartyColumn(data, w, h, ch) {
+        const cols = this.findPartyColumns(data, w, h, ch);
+        return cols.length > 0 ? cols[0] : null;
     }
 
     detectPartySlots(data, w, h, ch, startX, barWidth) {
@@ -305,6 +356,109 @@ class ClientPartyScanner {
         }));
     }
 
+    async extractMemberNames(imageBuffer, members, startX, barWidth, w, h) {
+        let worker = null;
+        try {
+            worker = await VisionOCRManager.getWorker();
+        } catch (e) {}
+
+        if (!worker) return;
+
+        for (const m of members) {
+            if (!m.hasRed && m.statusCode !== 'active') {
+                m.name = `Slot_${m.slot}`;
+                continue;
+            }
+
+            try {
+                const textTop = Math.max(0, m.barY - 18);
+                const textLeft = Math.max(0, startX - 2);
+                const textW = Math.min(w - textLeft, Math.max(140, barWidth + 10));
+                const textH = 16;
+
+                if (textW < 20 || textH < 10) continue;
+
+                const crop = await sharp(imageBuffer)
+                    .extract({ left: textLeft, top: textTop, width: textW, height: textH })
+                    .resize(textW * 3, textH * 3, { kernel: 'nearest' })
+                    .raw()
+                    .toBuffer({ resolveWithObject: true });
+
+                const cData = crop.data;
+                const cW = crop.info.width;
+                const cH = crop.info.height;
+                const binBuf = Buffer.alloc(cW * cH * 3);
+
+                let redCount = 0;
+                let textPixelCount = 0;
+
+                for (let p = 0, q = 0; p < cData.length; p += crop.info.channels, q += 3) {
+                    const r = cData[p], g = cData[p + 1], b = cData[p + 2];
+                    const isWhite = (r > 170 && g > 170 && b > 170);
+                    const isLeaderRed = (r > 160 && r > g * 1.4 && r > b * 1.4);
+
+                    if (isLeaderRed) redCount++;
+                    if (isWhite || isLeaderRed) {
+                        textPixelCount++;
+                        binBuf[q] = 0;
+                        binBuf[q + 1] = 0;
+                        binBuf[q + 2] = 0;
+                    } else {
+                        binBuf[q] = 255;
+                        binBuf[q + 1] = 255;
+                        binBuf[q + 2] = 255;
+                    }
+                }
+
+                // ในเกม Flyff Universe หัวหน้าปาร์ตี้ (Leader) คือ Slot 1 (แถวบนสุด) เท่านั้น ส่วน Slot อื่นเป็นลูกตี้ทั้งหมด
+                m.isLeader = (m.slot === 1);
+
+                if (textPixelCount < 40) {
+                    m.name = `Slot_${m.slot}`;
+                    continue;
+                }
+
+                const binImageBuffer = await sharp(binBuf, { raw: { width: cW, height: cH, channels: 3 } })
+                    .withMetadata({ density: 300 })
+                    .png()
+                    .toBuffer();
+
+                const res = await worker.recognize(binImageBuffer);
+                const raw = (res.data && res.data.text) ? res.data.text.trim().replace(/\n/g, ' ') : '';
+
+                if (raw) {
+                    m.rawName = raw;
+                    const clean = raw.replace(/[\.]{2,}/g, ' ').replace(/\s+/g, ' ').trim();
+                    const tokens = clean.split(/[\s\.]+/).filter(Boolean);
+
+                    let foundLevel = null;
+                    let nameTokens = [];
+
+                    for (const t of tokens) {
+                        const sanitized = t.replace(/[^A-Za-z0-9_]/g, '');
+                        if (!sanitized) continue;
+                        if (!foundLevel && /^\d{1,3}$/.test(sanitized)) {
+                            foundLevel = parseInt(sanitized, 10);
+                        } else {
+                            nameTokens.push(sanitized);
+                        }
+                    }
+
+                    if (foundLevel) m.level = foundLevel;
+                    if (nameTokens.length > 0) {
+                        m.name = nameTokens.join('_');
+                    } else {
+                        m.name = `Slot_${m.slot}`;
+                    }
+                } else {
+                    m.name = `Slot_${m.slot}`;
+                }
+            } catch (err) {
+                m.name = `Slot_${m.slot}`;
+            }
+        }
+    }
+
     async scan(imageBuffer, options = {}) {
         if (!imageBuffer) return { success: false, reason: 'No image buffer', members: [] };
 
@@ -317,40 +471,68 @@ class ClientPartyScanner {
             const h = info.height;
             const ch = info.channels;
 
-            // 1. ตรวจจับตำแหน่งแกน X และความกว้างหลอดเลือดสดๆ (Dynamic with Jitter Filter)
-            let col = this.findPartyColumn(data, w, h, ch);
-            if (col) {
-                // หากตำแหน่ง startX หรือ barWidth ขยับเกิน 4px หรือยังไม่มี ให้ปรับตามตำแหน่งใหม่ทันที
-                if (!this.lockedCol || Math.abs(this.lockedCol.startX - col.startX) > 4 || Math.abs(this.lockedCol.barWidth - col.barWidth) > 4) {
-                    this.lockedCol = col;
+            // 1. ตรวจจับตำแหน่งแกน X และความกว้างหลอดเลือดสดๆ (Multi-Candidate Evaluation)
+            const candidates = this.findPartyColumns(data, w, h, ch);
+            let chosenCol = null;
+            let chosenSlots = null;
+
+            // ก. ตรวจสอบ lockedCol ก่อนเป็นอันดับแรกเพื่อความเร็วและความนิ่ง
+            if (this.lockedCol) {
+                const isStd = (this.lockedCol.barWidth >= 90 && this.lockedCol.barWidth <= 165);
+                if (isStd) {
+                    const slots = this.detectPartySlots(data, w, h, ch, this.lockedCol.startX, this.lockedCol.barWidth);
+                    if (slots && slots.length >= 2) {
+                        chosenCol = this.lockedCol;
+                        chosenSlots = slots;
+                    }
                 } else {
-                    col = this.lockedCol; // ล็อกนิ่งสนิทหากขยับเพียง 1-3px เพื่อกันกรอบสั่น
+                    this.lockedCol = null; // คอลัมน์ที่เคยล็อกไว้กว้างผิดปกติ ให้รีเซ็ตใหม่
                 }
-            } else if (this.lockedCol) {
-                col = this.lockedCol; // Fallback สำรองเฉพาะกรณีเฟรมมีเอฟเฟกต์กวนชั่วขณะ
             }
 
-            if (!col) {
-                this.consecutiveMisses++;
-                return { success: false, reason: 'Party column not found', members: [] };
+            // ข. หากยังไม่มี lockedCol หรือ lockedCol ตรวจไม่เจอ ให้ทดสอบจาก candidates ทั้งหมด
+            if (!chosenSlots && candidates && candidates.length > 0) {
+                for (const col of candidates) {
+                    const slots = this.detectPartySlots(data, w, h, ch, col.startX, col.barWidth);
+                    if (slots && slots.length >= 1) {
+                        const isStdWidth = (col.barWidth >= 90 && col.barWidth <= 165);
+                        const chosenIsStd = chosenCol ? (chosenCol.barWidth >= 90 && chosenCol.barWidth <= 165) : false;
+
+                        if (!chosenSlots || 
+                            (isStdWidth && !chosenIsStd) || 
+                            (slots.length > chosenSlots.length && (!chosenIsStd || isStdWidth)) ||
+                            (slots.length === chosenSlots.length && isStdWidth && !chosenIsStd)) {
+                            chosenSlots = slots;
+                            chosenCol = col;
+                            if (slots.length >= 4 && isStdWidth) break; // พบ 4 สล็อตขึ้นไปและขนาดหลอดเลือดถูกต้องเป๊ะ ค่อย break!
+                        }
+                    }
+                }
             }
 
-            // 2. ตรวจจับตำแหน่งแถวของสล็อตสดๆ ทุกครั้ง (Dynamic Slot Detection รองรับการถูกไอคอนบัฟดันเลื่อนลง)
-            let slots = this.detectPartySlots(data, w, h, ch, col.startX, col.barWidth);
-            if (slots && slots.length >= 1) {
-                this.lastSlots = slots;
+            if (chosenCol && chosenSlots) {
+                // อัปเดต lockedCol พร้อม Jitter Filter
+                if (!this.lockedCol || Math.abs(this.lockedCol.startX - chosenCol.startX) > 4 || Math.abs(this.lockedCol.barWidth - chosenCol.barWidth) > 4) {
+                    this.lockedCol = chosenCol;
+                }
+                this.lastSlots = chosenSlots;
                 this.consecutiveMisses = 0;
-            } else if (this.lastSlots && this.lastSlots.length >= 1) {
-                slots = this.lastSlots; // Fallback หากรอบนี้พลาด
+            } else if (this.lockedCol && this.lastSlots) {
+                // Fallback ชั่วคราวกรณีเฟรมมีเอฟเฟกต์บดบังทั้งจอ
+                chosenCol = this.lockedCol;
+                chosenSlots = this.lastSlots;
             }
 
-            if (!slots || slots.length === 0) {
+            if (!chosenCol || !chosenSlots || chosenSlots.length === 0) {
                 this.consecutiveMisses++;
                 if (this.consecutiveMisses >= 2) {
                     this.resetCalibration();
                 }
-                return { success: false, reason: 'No slots found in column', members: [] };
+                return { success: false, reason: 'Party column or slots not found', members: [] };
             }
+
+            const col = chosenCol;
+            const slots = chosenSlots;
 
             const { startX, barWidth } = col;
             let validMemberCount = 0;
@@ -449,6 +631,9 @@ class ClientPartyScanner {
 
                 members.push({
                     slot: s.slot,
+                    name: `Slot_${s.slot}`,
+                    level: null,
+                    isLeader: false,
                     barY,
                     startX,
                     barWidth,
@@ -464,6 +649,11 @@ class ClientPartyScanner {
                     deadNamePixels: deadPixels,
                     click: { x: clickX, y: clickY }
                 });
+            }
+
+            // 6. อ่านชื่อสมาชิกด้วย OCR หากมีการร้องขอ (readNames === true)
+            if (options.readNames && members.length > 0) {
+                await this.extractMemberNames(imageBuffer, members, startX, barWidth, w, h);
             }
 
             if (validMemberCount === 0) {
@@ -534,7 +724,7 @@ class VisionService {
      * สแกน Client เป้าหมายด้วยระบบ Mutex Lock จัดคิวทีละจอ
      * 100% ZERO-FLICKER: ดึงเฟรมจาก Compositor Stream โดยตรง ไม่เรียก page.screenshot() ให้จอกระพริบ
      */
-    async scanClientPage(page, clientId, scanRegion = 'left') {
+    async scanClientPage(page, clientId, scanRegion = 'auto', options = {}) {
         const id = String(clientId || '1');
         if (!page || (typeof page.isClosed === 'function' && page.isClosed())) return null;
 
@@ -626,7 +816,7 @@ class VisionService {
                 })
                 .toBuffer();
 
-            const result = await scanner.scan(croppedBuffer);
+            const result = await scanner.scan(croppedBuffer, options);
 
             if (result && result.success && Array.isArray(result.members)) {
                 // คำนวณ Scale Factor หากขนาดเฟรมภาพกับขนาด Browser DOM ไม่เท่ากัน (เช่น High-DPI Display)
@@ -654,6 +844,7 @@ class VisionService {
                 }
 
                 const state = {
+                    success: true,
                     clientId: id,
                     timestamp: Date.now(),
                     autoAnchor: {
@@ -687,6 +878,150 @@ class VisionService {
     getLatestPartyState(clientId) {
         const id = String(clientId || '1');
         return this.clientStates.get(id) || null;
+    }
+
+    /**
+     * ถ่ายภาพหน้าจอ Zero-Flicker จาก GPU Compositor Stream หรือ Screenshot
+     * รองรับการครอปตามโซน (full, party, right, left, target, custom)
+     * รองรับการวาดเส้นตีกรอบ Diagnostic Annotation (Bounding Box, HP, Status)
+     */
+    async captureScreenshot(clientId, options = {}) {
+        const id = String(clientId || '1');
+        const page = global.clientPages ? global.clientPages[id] : null;
+        if (!page || (typeof page.isClosed === 'function' && page.isClosed())) {
+            return null;
+        }
+
+        // 1. ดึงภาพสดจาก GPU Compositor Stream ก่อน หากไม่มีให้ Fallback page.screenshot()
+        let frameBuffer = this.screencastManager.getLatestFrame(id);
+        if (!frameBuffer) {
+            try {
+                frameBuffer = await page.screenshot({ type: 'jpeg', quality: 90 });
+            } catch (e) {}
+        }
+        if (!frameBuffer) return null;
+
+        const region = options.region || options.captureRegion || 'full';
+        const meta = await sharp(frameBuffer).metadata();
+        const imgW = meta.width;
+        const imgH = meta.height;
+
+        let extractLeft = 0;
+        let extractTop = 0;
+        let extractW = imgW;
+        let extractH = imgH;
+
+        if (region === 'right') {
+            extractLeft = Math.round(imgW * 0.45);
+            extractW = imgW - extractLeft;
+        } else if (region === 'left') {
+            extractW = Math.round(imgW * 0.52);
+        } else if (region === 'party') {
+            const scanner = this.getScanner(id);
+            if (scanner && scanner.lockedCol) {
+                extractLeft = Math.max(0, scanner.lockedCol.startX - 40);
+                extractW = Math.min(imgW - extractLeft, scanner.lockedCol.barWidth + 140);
+                extractH = Math.min(imgH, 650);
+            } else {
+                extractLeft = Math.round(imgW * 0.55);
+                extractW = imgW - extractLeft;
+                extractH = Math.min(imgH, 650);
+            }
+        } else if (region === 'target') {
+            extractLeft = Math.round(imgW * 0.35);
+            extractTop = 0;
+            extractW = Math.round(imgW * 0.30);
+            extractH = Math.round(imgH * 0.20);
+        } else if (region === 'custom' && options.customRect) {
+            extractLeft = Math.max(0, options.customRect.x || 0);
+            extractTop = Math.max(0, options.customRect.y || 0);
+            extractW = Math.min(imgW - extractLeft, options.customRect.w || imgW);
+            extractH = Math.min(imgH - extractTop, options.customRect.h || imgH);
+        }
+
+        let pipeline = sharp(frameBuffer);
+        if (extractLeft > 0 || extractTop > 0 || extractW < imgW || extractH < imgH) {
+            pipeline = pipeline.extract({
+                left: extractLeft,
+                top: extractTop,
+                width: extractW,
+                height: extractH
+            });
+        }
+
+        // 2. วาด Diagnostic Annotation บนภาพ หากเปิด annotate: true
+        if (options.annotate) {
+            const clientState = this.clientStates.get(id);
+            if (clientState && Array.isArray(clientState.members) && clientState.members.length > 0) {
+                const svgElements = [];
+                clientState.members.forEach((m, idx) => {
+                    const boxX = m.startX - extractLeft;
+                    const boxY = m.barY - 14 - extractTop;
+                    const boxW = m.barWidth + 10;
+                    const boxH = 22;
+
+                    if (boxX >= -60 && boxX < extractW && boxY >= -20 && boxY < extractH) {
+                        const color = m.isAlive ? '#10b981' : (m.isDead ? '#ef4444' : '#f59e0b');
+                        const statusLabel = `${m.name || 'Slot ' + (idx + 1)} (${m.hpPercent}% - ${m.statusCode})`;
+                        svgElements.push(`
+                            <rect x="${boxX}" y="${boxY}" width="${boxW}" height="${boxH}" fill="rgba(0,0,0,0.4)" stroke="${color}" stroke-width="2" rx="3" />
+                            <circle cx="${m.click.x - extractLeft}" cy="${m.click.y - extractTop}" r="4" fill="#38bdf8" stroke="#ffffff" stroke-width="1.5" />
+                            <text x="${boxX + 4}" y="${Math.max(12, boxY - 3)}" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="${color}">${statusLabel}</text>
+                        `);
+                    }
+                });
+
+                if (svgElements.length > 0) {
+                    const overlaySvg = Buffer.from(`
+                        <svg width="${extractW}" height="${extractH}" xmlns="http://www.w3.org/2000/svg">
+                            ${svgElements.join('\n')}
+                        </svg>
+                    `);
+                    pipeline = pipeline.composite([{ input: overlaySvg, top: 0, left: 0 }]);
+                }
+            }
+        }
+
+        return await pipeline.jpeg({ quality: 90 }).toBuffer();
+    }
+
+    /**
+     * บันทึกไฟล์ภาพ Diagnostic Dump พร้อมไฟล์ JSON ลง ./screenshots/
+     */
+    async saveVisionDebugDump(clientId, reason = 'error', metadata = {}) {
+        try {
+            const rawSubfolder = metadata.subfolder || `client_${clientId}`;
+            const subfolder = String(rawSubfolder).trim().replace(/[\\/:*?"<>|]/g, '_');
+            const dir = path.join(__dirname, 'screenshots', subfolder);
+            if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+            const buffer = await this.captureScreenshot(clientId, { region: 'full', annotate: true });
+            if (!buffer) return null;
+
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+            const filename = `debug_c${clientId}_${reason}_${timestamp}.jpg`;
+            const filepath = path.join(dir, filename);
+            fs.writeFileSync(filepath, buffer);
+
+            const jsonFilename = `debug_c${clientId}_${reason}_${timestamp}.json`;
+            const jsonPath = path.join(dir, jsonFilename);
+            const state = this.clientStates.get(String(clientId)) || null;
+            fs.writeFileSync(jsonPath, JSON.stringify({
+                clientId,
+                reason,
+                timestamp: Date.now(),
+                metadata,
+                cachedPartyState: state
+            }, null, 2));
+
+            console.log(`📸 [Vision Debug] Saved diagnostic dump: ./screenshots/${subfolder}/${filename}`);
+            return filepath;
+        } catch (e) {
+            console.error('⚠️ [Vision Debug] Failed to save dump:', e.message);
+            return null;
+        }
     }
 }
 
@@ -840,7 +1175,9 @@ class VisualOverlay {
                             // 2. ข้อความระบุ Slot และสถานะเลือด ด้านขวาของหลอด
                             ctx.fillStyle = strokeColor;
                             ctx.font = 'bold 11px sans-serif';
-                            ctx.fillText(`Slot ${m.slot || idx + 1}: [${statusText}]`, startX + barWidth + 6, y + 4);
+                            const leaderPrefix = m.isLeader ? '👑 ' : '';
+                            const displayName = m.name ? `${leaderPrefix}${m.name} [${statusText}]` : `Slot ${m.slot || idx + 1}: [${statusText}]`;
+                            ctx.fillText(displayName, startX + barWidth + 6, y + 4);
                         });
                     }
 
