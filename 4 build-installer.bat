@@ -32,6 +32,17 @@ if %errorlevel% equ 0 if not defined ISCC_EXE set "ISCC_EXE=iscc"
 if defined ISCC_EXE (
     echo [INFO] Found Inno Setup Compiler! Compiling installer.iss...
     "%ISCC_EXE%" installer.iss
+    if %errorlevel% neq 0 (
+        echo.
+        echo ========================================================
+        echo  [ERROR] Inno Setup compilation failed!
+        echo  Tip: If caused by Error 110, close any open Explorer 
+        echo  windows showing "dist" or temporarily exclude "dist" 
+        echo  from Antivirus scanning, then retry.
+        echo ========================================================
+        pause
+        exit /b %errorlevel%
+    )
     echo.
     if exist "dist\NodeHotkey-Setup-v3.1.0.exe" (
         echo ========================================================
