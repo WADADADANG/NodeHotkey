@@ -64,6 +64,38 @@
   
   const btnOpenLogs = document.getElementById('btn-open-logs');
   const btnCheckUpdate = document.getElementById('btn-check-update');
+  const lblCheckUpdateText = document.getElementById('lbl-check-update-text');
+  const badgeUpdateCount = document.getElementById('badge-update-count');
+  const dotUpdatePulse = document.getElementById('dot-update-pulse');
+
+  let detectedUpdateInfo = null;
+  let currentUpdateCheck = null;
+  let currentDownloadResult = null;
+
+  function renderUpdateToolButton(hasUpdate, updateData) {
+    if (!btnCheckUpdate) return;
+    const t = i18nDict[currentLang] || i18nDict.th;
+
+    if (hasUpdate && updateData) {
+      btnCheckUpdate.classList.add('has-update');
+      if (lblCheckUpdateText) lblCheckUpdateText.textContent = t.btnUpdateHasNew || 'มีอัปเดตใหม่!';
+      if (badgeUpdateCount) {
+        const count = updateData.commitCount || (updateData.commitsList ? updateData.commitsList.length : 1);
+        badgeUpdateCount.textContent = count > 1 ? `${count} Commits` : 'New';
+        badgeUpdateCount.style.display = 'inline-flex';
+      }
+      if (dotUpdatePulse) dotUpdatePulse.style.display = 'inline-block';
+      btnCheckUpdate.title = t.btnUpdateTooltip || 'มีอัปเดตใหม่พร้อมใช้งาน! คลิกเพื่อดูรายละเอียดและติดตั้ง';
+      document.title = currentLang === 'en' ? '(✨ Update Available) NodeHotkey Studio Pro' : '(✨ มีอัปเดต) NodeHotkey Studio Pro';
+    } else {
+      btnCheckUpdate.classList.remove('has-update');
+      if (lblCheckUpdateText) lblCheckUpdateText.textContent = t.btnUpdate || 'Update';
+      if (badgeUpdateCount) badgeUpdateCount.style.display = 'none';
+      if (dotUpdatePulse) dotUpdatePulse.style.display = 'none';
+      btnCheckUpdate.title = currentLang === 'en' ? 'Check for system updates from GitHub' : 'ตรวจสอบการอัปเดตระบบจาก GitHub';
+      document.title = 'NodeHotkey Studio Pro';
+    }
+  }
   
   // Window Controls
   const btnWinMin = document.getElementById('btn-win-min');
@@ -263,6 +295,8 @@
       breadcrumbSettings: "ตั้งค่าระบบ & HUD",
       btnLogs: "Logs",
       btnUpdate: "อัปเดต",
+      btnUpdateHasNew: "มีอัปเดตใหม่!",
+      btnUpdateTooltip: "มีอัปเดตใหม่พร้อมใช้งาน! คลิกเพื่อดูรายละเอียดและติดตั้ง",
       diagEngineTitle: "สถานะโปรแกรม",
       diagServerTitle: "Web Server",
       diagProfileTitle: "โปรไฟล์ที่เปิดใช้งาน",
@@ -351,6 +385,8 @@
       breadcrumbSettings: "System Settings & HUD",
       btnLogs: "Logs",
       btnUpdate: "Update",
+      btnUpdateHasNew: "Update Available!",
+      btnUpdateTooltip: "New update available! Click to inspect and install",
       diagEngineTitle: "SYSTEM STATUS",
       diagServerTitle: "WEB SERVER",
       diagProfileTitle: "ACTIVE PROFILES",
@@ -447,6 +483,11 @@
     const lblBrowser = document.getElementById('lbl-browser-studio');
     if (lblReload) lblReload.textContent = t.btnReloadStudio;
     if (lblBrowser) lblBrowser.textContent = t.btnBrowserStudio;
+
+    // Update Quick Action Tools (Logs & Update Pill)
+    const lblLogs = document.querySelector('#btn-open-logs span:last-child');
+    if (lblLogs) lblLogs.textContent = t.btnLogs || 'Logs';
+    renderUpdateToolButton(!!detectedUpdateInfo, detectedUpdateInfo);
 
     // Update Offline Placeholder
     const lblOffHead = document.getElementById('lbl-offline-head');
@@ -1450,9 +1491,6 @@
   });
 
   // 8. Smart 3-Step Update Wizard Logic
-  let currentUpdateCheck = null;
-  let currentDownloadResult = null;
-
   function renderWizardSteps(activeStep) {
     const isEn = currentLang === 'en';
     const s1 = isEn ? 'Check' : 'ตรวจสอบ';
@@ -1499,6 +1537,95 @@
     `;
   }
 
+  function renderStep1CheckResult(result) {
+    if (result.error) {
+      updateModalBody.innerHTML = `
+        ${renderWizardSteps(1)}
+        <div style="color:#ef4444; font-weight:700; margin-bottom:6px;">⚠️ ไม่สามารถตรวจสอบอัปเดตได้</div>
+        <div style="font-size:11px; opacity:0.8;">${result.error}</div>
+      `;
+    } else if (result.hasUpdate) {
+      const impact = result.impact || { badge: 'Update Available', badgeClass: 'level-ui', description: 'New updates available' };
+      const hasMultipleCommits = result.commitsList && result.commitsList.length > 1;
+      updateModalBody.innerHTML = `
+        ${renderWizardSteps(1)}
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <div style="color:#10b981; font-weight:700; font-size:13px;">🎉 มีอัปเดตใหม่พร้อมใช้งาน!</div>
+          <span class="impact-badge ${impact.badgeClass}">${impact.badge}</span>
+        </div>
+        <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:8px 10px; margin:6px 0; font-family:'JetBrains Mono'; font-size:11px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>Local: <strong>${result.localHash}</strong> ➔ Remote: <strong>${result.remoteHash}</strong></div>
+            ${result.commitCount > 1 ? `<span style="background:rgba(96,165,250,0.15); color:#60a5fa; border:1px solid rgba(96,165,250,0.3); padding:1px 6px; border-radius:4px; font-size:10px; font-weight:600;">${result.commitCount} Commits</span>` : ''}
+          </div>
+          ${hasMultipleCommits ? `
+            <div style="margin-top:6px; max-height:85px; overflow-y:auto; display:flex; flex-direction:column; gap:3px; padding-right:4px;">
+              ${result.commitsList.map(c => `
+                <div style="font-size:10.5px; display:flex; gap:6px; align-items:baseline;">
+                  <span style="color:#f59e0b; font-weight:600; flex-shrink:0;">${c.sha}</span>
+                  <span style="color:#93c5fd; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${c.message}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : `
+            <div style="color:#60a5fa; margin-top:4px;">"${result.commitMessage || 'New features & improvements'}"</div>
+          `}
+        </div>
+        ${impact.hasDependencyChanges ? `
+          <div style="background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239, 68, 68, 0.4); border-radius:6px; padding:10px; margin:8px 0; color:#fca5a5; font-size:11.5px; line-height:1.45;">
+            <div style="font-weight:700; display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+              <span>⚠️ มีการเพิ่ม Library ระบบใหม่ (package.json)</span>
+            </div>
+            <div>เวอร์ชันนี้มีการเพิ่มโมดูลระบบใหม่ (เช่น Vision สแกนภาพ) หากอัปเดตแบบอัตโนมัติอาจยังไม่มีโมดูลนี้ในเครื่อง แนะนำให้ดาวน์โหลด <strong>ตัวติดตั้งใหม่ (Full Setup)</strong> จาก GitHub เพื่อการทำงานที่สมบูรณ์ 100%</div>
+            <div style="margin-top:8px;">
+              <button id="btnOpenReleases" type="button" style="background:#dc2626; color:#fff; border:none; border-radius:4px; padding:5px 12px; font-size:11px; cursor:pointer; font-weight:600;">
+                🌐 ไปยังหน้า GitHub Releases (ดาวน์โหลดตัวเต็ม)
+              </button>
+            </div>
+          </div>
+        ` : ''}
+        <div style="font-size:11px; color:#cbd5e1; margin-top:6px;">💡 <strong>ผลกระทบ:</strong> ${impact.description}</div>
+        ${renderFileList(result.changedFiles)}
+      `;
+      const btnReleases = document.getElementById('btnOpenReleases');
+      if (btnReleases) {
+        btnReleases.onclick = () => {
+          if (api && typeof api.openExternal === 'function') {
+            api.openExternal('https://github.com/WADADADANG/NodeHotkey/releases');
+          } else {
+            window.open('https://github.com/WADADADANG/NodeHotkey/releases', '_blank');
+          }
+        };
+      }
+      btnPerformUpdate.style.display = 'block';
+      btnPerformUpdate.disabled = false;
+      btnPerformUpdate.textContent = '📥 Step 1: ดาวน์โหลดแพ็คเกจ';
+      btnPerformUpdate.onclick = () => handleStep1Download();
+    } else {
+      updateModalBody.innerHTML = `
+        ${renderWizardSteps(1)}
+        <div style="color:#10b981; font-weight:700; font-size:13px; margin-bottom:4px;">✅ ระบบเป็นเวอร์ชันล่าสุดแล้ว!</div>
+        <div style="font-size:11px; opacity:0.8;">Current Commit: <code>${result.localHash}</code> (Up to date)</div>
+      `;
+      btnCancelUpdate.textContent = 'ปิด';
+    }
+  }
+
+  async function checkUpdateSilentlyOnStartup() {
+    try {
+      if (!api || typeof api.checkUpdate !== 'function') return;
+      const result = await api.checkUpdate();
+      if (result && !result.error && result.hasUpdate) {
+        detectedUpdateInfo = result;
+        currentUpdateCheck = result;
+        renderUpdateToolButton(true, result);
+        console.log(`[Updater] Silent startup check: ${result.commitCount || 1} new commit(s) detected.`);
+      }
+    } catch (err) {
+      console.warn('[Updater] Silent startup check failed/offline:', err && err.message);
+    }
+  }
+
   if (btnCheckUpdate) {
     btnCheckUpdate.onclick = async () => {
       updateModal.style.display = 'flex';
@@ -1506,6 +1633,11 @@
       btnPerformUpdate.disabled = false;
       btnCancelUpdate.disabled = false;
       btnCancelUpdate.textContent = 'ยกเลิก';
+
+      if (currentUpdateCheck && currentUpdateCheck.hasUpdate) {
+        renderStep1CheckResult(currentUpdateCheck);
+        return;
+      }
 
       updateModalBody.innerHTML = `
         ${renderWizardSteps(1)}
@@ -1518,78 +1650,14 @@
       try {
         const result = await api.checkUpdate();
         currentUpdateCheck = result;
-
-        if (result.error) {
-          updateModalBody.innerHTML = `
-            ${renderWizardSteps(1)}
-            <div style="color:#ef4444; font-weight:700; margin-bottom:6px;">⚠️ ไม่สามารถตรวจสอบอัปเดตได้</div>
-            <div style="font-size:11px; opacity:0.8;">${result.error}</div>
-          `;
-        } else if (result.hasUpdate) {
-          const impact = result.impact || { badge: 'Update Available', badgeClass: 'level-ui', description: 'New updates available' };
-          const hasMultipleCommits = result.commitsList && result.commitsList.length > 1;
-          updateModalBody.innerHTML = `
-            ${renderWizardSteps(1)}
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-              <div style="color:#10b981; font-weight:700; font-size:13px;">🎉 มีอัปเดตใหม่พร้อมใช้งาน!</div>
-              <span class="impact-badge ${impact.badgeClass}">${impact.badge}</span>
-            </div>
-            <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:8px 10px; margin:6px 0; font-family:'JetBrains Mono'; font-size:11px;">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div>Local: <strong>${result.localHash}</strong> ➔ Remote: <strong>${result.remoteHash}</strong></div>
-                ${result.commitCount > 1 ? `<span style="background:rgba(96,165,250,0.15); color:#60a5fa; border:1px solid rgba(96,165,250,0.3); padding:1px 6px; border-radius:4px; font-size:10px; font-weight:600;">${result.commitCount} Commits</span>` : ''}
-              </div>
-              ${hasMultipleCommits ? `
-                <div style="margin-top:6px; max-height:85px; overflow-y:auto; display:flex; flex-direction:column; gap:3px; padding-right:4px;">
-                  ${result.commitsList.map(c => `
-                    <div style="font-size:10.5px; display:flex; gap:6px; align-items:baseline;">
-                      <span style="color:#f59e0b; font-weight:600; flex-shrink:0;">${c.sha}</span>
-                      <span style="color:#93c5fd; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${c.message}</span>
-                    </div>
-                  `).join('')}
-                </div>
-              ` : `
-                <div style="color:#60a5fa; margin-top:4px;">"${result.commitMessage || 'New features & improvements'}"</div>
-              `}
-            </div>
-            ${impact.hasDependencyChanges ? `
-              <div style="background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239, 68, 68, 0.4); border-radius:6px; padding:10px; margin:8px 0; color:#fca5a5; font-size:11.5px; line-height:1.45;">
-                <div style="font-weight:700; display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-                  <span>⚠️ มีการเพิ่ม Library ระบบใหม่ (package.json)</span>
-                </div>
-                <div>เวอร์ชันนี้มีการเพิ่มโมดูลระบบใหม่ (เช่น Vision สแกนภาพ) หากอัปเดตแบบอัตโนมัติอาจยังไม่มีโมดูลนี้ในเครื่อง แนะนำให้ดาวน์โหลด <strong>ตัวติดตั้งใหม่ (Full Setup)</strong> จาก GitHub เพื่อการทำงานที่สมบูรณ์ 100%</div>
-                <div style="margin-top:8px;">
-                  <button id="btnOpenReleases" type="button" style="background:#dc2626; color:#fff; border:none; border-radius:4px; padding:5px 12px; font-size:11px; cursor:pointer; font-weight:600;">
-                    🌐 ไปยังหน้า GitHub Releases (ดาวน์โหลดตัวเต็ม)
-                  </button>
-                </div>
-              </div>
-            ` : ''}
-            <div style="font-size:11px; color:#cbd5e1; margin-top:6px;">💡 <strong>ผลกระทบ:</strong> ${impact.description}</div>
-            ${renderFileList(result.changedFiles)}
-          `;
-          const btnReleases = document.getElementById('btnOpenReleases');
-          if (btnReleases) {
-            btnReleases.onclick = () => {
-              if (api && typeof api.openExternal === 'function') {
-                api.openExternal('https://github.com/WADADADANG/NodeHotkey/releases');
-              } else {
-                window.open('https://github.com/WADADADANG/NodeHotkey/releases', '_blank');
-              }
-            };
-          }
-          btnPerformUpdate.style.display = 'block';
-          btnPerformUpdate.disabled = false;
-          btnPerformUpdate.textContent = '📥 Step 1: ดาวน์โหลดแพ็คเกจ';
-          btnPerformUpdate.onclick = () => handleStep1Download();
+        if (result && !result.error && result.hasUpdate) {
+          detectedUpdateInfo = result;
+          renderUpdateToolButton(true, result);
         } else {
-          updateModalBody.innerHTML = `
-            ${renderWizardSteps(1)}
-            <div style="color:#10b981; font-weight:700; font-size:13px; margin-bottom:4px;">✅ ระบบเป็นเวอร์ชันล่าสุดแล้ว!</div>
-            <div style="font-size:11px; opacity:0.8;">Current Commit: <code>${result.localHash}</code> (Up to date)</div>
-          `;
-          btnCancelUpdate.textContent = 'ปิด';
+          detectedUpdateInfo = null;
+          renderUpdateToolButton(false);
         }
+        renderStep1CheckResult(result);
       } catch (err) {
         updateModalBody.innerHTML = `
           ${renderWizardSteps(1)}
@@ -1663,6 +1731,9 @@
     try {
       const res = await api.applyUpdate();
       const impact = res.impact || (currentDownloadResult && currentDownloadResult.impact) || { level: 1 };
+      detectedUpdateInfo = null;
+      currentUpdateCheck = null;
+      renderUpdateToolButton(false);
 
       // Render Step 3 according to impact level
       if (impact.level === 3) {
@@ -1772,6 +1843,11 @@
   api.getLogPath().then(path => {
     if (footerLogPath && path) footerLogPath.textContent = path;
   });
+
+  // Silent Background Update Check on Startup (Delayed 2.5s to prevent boot race)
+  setTimeout(() => {
+    checkUpdateSilentlyOnStartup();
+  }, 2500);
 
   // Prevent Mouse Button 4 & 5 (Back/Forward) from reloading/navigating the Launcher Shell
   window.addEventListener('mouseup', (e) => {

@@ -304,6 +304,70 @@ body.app-root-body {
   color: #fff;
 }
 
+/* Has Update Notification on Titlebar (Beside Logs) */
+.btn-topbar-tool.has-update {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.3));
+  border: 1px solid rgba(52, 211, 153, 0.55);
+  color: #6ee7b7;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+  animation: updateButtonGlow 2.5s infinite ease-in-out;
+}
+
+.btn-topbar-tool.has-update:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.35), rgba(5, 150, 105, 0.5));
+  border-color: #34d399;
+  color: #fff;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.45);
+}
+
+.topbar-update-count-badge {
+  font-size: 9.5px;
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(52, 211, 153, 0.5);
+  color: #a7f3d0;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.topbar-update-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 6px #10b981;
+  animation: updatePulseDot 1.6s infinite ease-in-out;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+@keyframes updatePulseDot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 4px #10b981;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.6;
+    box-shadow: 0 0 10px #34d399;
+  }
+}
+
+@keyframes updateButtonGlow {
+  0%, 100% {
+    border-color: rgba(52, 211, 153, 0.45);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
+  }
+  50% {
+    border-color: rgba(52, 211, 153, 0.9);
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+  }
+}
+
 .btn-util-pill {
   display: flex;
   align-items: center;
