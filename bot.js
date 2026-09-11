@@ -2480,6 +2480,25 @@ function stopLoopSchedulerAction(actionId, actionName) {
     sendOverlayUpdate();
 }
 
+global.startLoopAction = startLoopAction;
+global.stopLoopAction = stopLoopAction;
+global.activeLoopStates = activeLoopStates;
+
+global.runSinglePressAction = runSinglePressAction;
+global.toggleKeyHoldAction = toggleKeyHoldAction;
+global.activeHoldStates = activeHoldStates;
+
+global.runBuffSequenceAction = runBuffSequenceAction;
+
+global.startCastSequencerLoop = startCastSequencerLoop;
+global.runCastSequencerOnce = runCastSequencerOnce;
+global.stopCastSequencerAction = stopCastSequencerAction;
+global.activeSequencerLoops = activeSequencerLoops;
+
+global.startLoopSchedulerAction = startLoopSchedulerAction;
+global.stopLoopSchedulerAction = stopLoopSchedulerAction;
+global.activeSchedulerStates = activeSchedulerStates;
+
 let nativeAudioWorker = null;
 
 function initNativeAudioWorker() {
