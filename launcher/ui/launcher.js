@@ -1480,15 +1480,19 @@
 
   function renderFileList(files = []) {
     if (!files || files.length === 0) return '';
-    const fileItems = files.slice(0, 15).map(f => `
+    const fileItems = files.slice(0, 30).map(f => `
       <div class="changed-file-item">
         <span class="changed-file-icon">📄</span>
         <span>${f}</span>
       </div>
     `).join('');
-    const extraCount = files.length > 15 ? `<div style="font-size:10px; opacity:0.6; padding-top:2px;">... และอีก ${files.length - 15} ไฟล์</div>` : '';
+    const extraCount = files.length > 30 ? `<div style="font-size:10px; opacity:0.6; padding-top:2px;">... และอีก ${files.length - 30} ไฟล์</div>` : '';
     return `
-      <div class="changed-files-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; margin-bottom:4px; font-size:11px;">
+        <span style="color:#94a3b8; font-weight:600;">📁 ไฟล์ที่เปลี่ยนแปลงทั้งหมด:</span>
+        <span style="color:#64748b; font-size:10px;">${files.length} ไฟล์</span>
+      </div>
+      <div class="changed-files-box" style="max-height:120px; overflow-y:auto;">
         ${fileItems}
         ${extraCount}
       </div>
@@ -1523,6 +1527,7 @@
           `;
         } else if (result.hasUpdate) {
           const impact = result.impact || { badge: 'Update Available', badgeClass: 'level-ui', description: 'New updates available' };
+          const hasMultipleCommits = result.commitsList && result.commitsList.length > 1;
           updateModalBody.innerHTML = `
             ${renderWizardSteps(1)}
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
@@ -1530,8 +1535,22 @@
               <span class="impact-badge ${impact.badgeClass}">${impact.badge}</span>
             </div>
             <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:8px 10px; margin:6px 0; font-family:'JetBrains Mono'; font-size:11px;">
-              <div>Local: <strong>${result.localHash}</strong> ➔ Remote: <strong>${result.remoteHash}</strong></div>
-              <div style="color:#60a5fa; margin-top:4px;">"${result.commitMessage || 'New features & improvements'}"</div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>Local: <strong>${result.localHash}</strong> ➔ Remote: <strong>${result.remoteHash}</strong></div>
+                ${result.commitCount > 1 ? `<span style="background:rgba(96,165,250,0.15); color:#60a5fa; border:1px solid rgba(96,165,250,0.3); padding:1px 6px; border-radius:4px; font-size:10px; font-weight:600;">${result.commitCount} Commits</span>` : ''}
+              </div>
+              ${hasMultipleCommits ? `
+                <div style="margin-top:6px; max-height:85px; overflow-y:auto; display:flex; flex-direction:column; gap:3px; padding-right:4px;">
+                  ${result.commitsList.map(c => `
+                    <div style="font-size:10.5px; display:flex; gap:6px; align-items:baseline;">
+                      <span style="color:#f59e0b; font-weight:600; flex-shrink:0;">${c.sha}</span>
+                      <span style="color:#93c5fd; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${c.message}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : `
+                <div style="color:#60a5fa; margin-top:4px;">"${result.commitMessage || 'New features & improvements'}"</div>
+              `}
             </div>
             ${impact.hasDependencyChanges ? `
               <div style="background:rgba(239, 68, 68, 0.15); border:1px solid rgba(239, 68, 68, 0.4); border-radius:6px; padding:10px; margin:8px 0; color:#fca5a5; font-size:11.5px; line-height:1.45;">

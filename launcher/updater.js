@@ -70,26 +70,130 @@ class SystemUpdater {
     });
   }
 
+  fetchGitHubDiff(localCommit) {
+    return new Promise((resolve, reject) => {
+      if (!localCommit || localCommit === 'unknown') {
+        return this.fetchGitHubCommit().then(single => {
+          resolve({
+            hasUpdate: true,
+            status: 'ahead',
+            remoteHash: single.shortSha,
+            remoteSha: single.sha,
+            commitCount: 1,
+            commitsList: [{ sha: single.shortSha, message: single.message.split('\n')[0] }],
+            commitMessage: single.message,
+            changedFiles: single.changedFiles
+          });
+        }).catch(reject);
+      }
+
+      const options = {
+        hostname: 'api.github.com',
+        path: `/repos/${GITHUB_REPO}/compare/${encodeURIComponent(localCommit)}...main`,
+        method: 'GET',
+        headers: {
+          'User-Agent': 'NodeHotkey-Launcher-Updater',
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      };
+
+      const req = https.request(options, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try {
+            if (res.statusCode === 200) {
+              const json = JSON.parse(data);
+              const totalCommits = json.total_commits || (Array.isArray(json.commits) ? json.commits.length : 0);
+              const commits = Array.isArray(json.commits) ? json.commits : [];
+              const changedFiles = Array.isArray(json.files) ? json.files.map(f => f.filename) : [];
+              
+              const headSha = (commits.length > 0 ? commits[commits.length - 1].sha : (json.base_commit ? json.base_commit.sha : '')).trim();
+              const shortSha = headSha ? headSha.slice(0, 7) : 'main';
+
+              const commitsList = commits.map(c => ({
+                sha: c.sha ? c.sha.slice(0, 7) : '',
+                message: c.commit && c.commit.message ? c.commit.message.trim().split('\n')[0] : ''
+              }));
+
+              let commitMessage = '';
+              if (commitsList.length > 1) {
+                commitMessage = `${commitsList.length} commits:\n` + commitsList.map(c => `• ${c.sha}: ${c.message}`).join('\n');
+              } else if (commitsList.length === 1) {
+                commitMessage = commits[0].commit && commits[0].commit.message ? commits[0].commit.message.trim() : 'Latest release update';
+              } else {
+                commitMessage = 'Up to date with latest release';
+              }
+
+              resolve({
+                hasUpdate: totalCommits > 0 && json.status !== 'identical',
+                status: json.status,
+                remoteHash: shortSha,
+                remoteSha: headSha,
+                commitCount: totalCommits,
+                commitsList,
+                commitMessage,
+                changedFiles
+              });
+            } else if (res.statusCode === 404) {
+              // Local commit not found on remote (e.g. rebased or modified history), fallback to latest commit
+              this.fetchGitHubCommit().then(single => {
+                resolve({
+                  hasUpdate: true,
+                  status: 'ahead',
+                  remoteHash: single.shortSha,
+                  remoteSha: single.sha,
+                  commitCount: 1,
+                  commitsList: [{ sha: single.shortSha, message: single.message.split('\n')[0] }],
+                  commitMessage: single.message,
+                  changedFiles: single.changedFiles
+                });
+              }).catch(reject);
+            } else {
+              reject(new Error(`GitHub API HTTP ${res.statusCode}: ${data}`));
+            }
+          } catch (e) {
+            reject(new Error(`JSON Parse Error: ${e.message}`));
+          }
+        });
+      });
+
+      req.on('error', (err) => reject(err));
+      req.setTimeout(8000, () => {
+        req.destroy();
+        reject(new Error('Connection timeout to GitHub API'));
+      });
+      req.end();
+    });
+  }
+
   getLocalVersion() {
     const versionFilePath = path.join(this.projectDir, 'version.json');
     if (fs.existsSync(versionFilePath)) {
       try {
         const data = JSON.parse(fs.readFileSync(versionFilePath, 'utf8'));
         return {
-          version: data.version || '3.0.0',
+          version: data.version || '3.1.0',
           commit: data.commit || 'unknown'
         };
       } catch (e) {}
     }
-    return { version: '3.0.0', commit: '77bd53a' };
+    return { version: '3.1.0', commit: 'unknown' };
   }
 
-  saveLocalVersion(sha, version = '3.0.0') {
+  saveLocalVersion(sha, version) {
     const versionFilePath = path.join(this.projectDir, 'version.json');
     try {
+      let currentVersion = version;
+      if (!currentVersion && fs.existsSync(versionFilePath)) {
+        try {
+          const currentData = JSON.parse(fs.readFileSync(versionFilePath, 'utf8'));
+          currentVersion = currentData.version;
+        } catch (e) {}
+      }
       fs.writeFileSync(versionFilePath, JSON.stringify({
-        version,
-        commit: sha.slice(0, 7),
+        version: currentVersion || '3.1.0',
+        commit: (sha || '').slice(0, 7),
         updatedAt: new Date().toISOString()
       }, null, 2), 'utf8');
     } catch (e) {}
@@ -198,8 +302,19 @@ class SystemUpdater {
         
         let commitMessage = '';
         let changedFiles = [];
+        let commitCount = 0;
+        let commitsList = [];
         if (hasUpdate) {
-          commitMessage = await this.runCommand('git log -1 --pretty=%B @{u}');
+          const logOutput = await this.runCommand(`git log --pretty=format:"%h|||%s" ${localHash}..${remoteHash}`);
+          commitsList = logOutput.split('\n').map(s => s.trim()).filter(Boolean).map(line => {
+            const [sha, ...rest] = line.split('|||');
+            return { sha, message: rest.join('|||') };
+          });
+          commitCount = commitsList.length;
+          commitMessage = commitCount > 1 
+            ? `${commitCount} commits:\n` + commitsList.map(c => `• ${c.sha}: ${c.message}`).join('\n')
+            : (commitsList[0] ? commitsList[0].message : await this.runCommand('git log -1 --pretty=%B @{u}'));
+
           const diffOutput = await this.runCommand(`git diff --name-only ${localHash} ${remoteHash}`);
           changedFiles = diffOutput.split('\n').map(s => s.trim()).filter(Boolean);
         }
@@ -211,6 +326,8 @@ class SystemUpdater {
           localHash: localHash.slice(0, 7),
           remoteHash: remoteHash.slice(0, 7),
           commitMessage: commitMessage.trim(),
+          commitsList,
+          commitCount,
           changedFiles,
           impact
         };
@@ -221,18 +338,18 @@ class SystemUpdater {
 
     // 2. Direct GitHub API Check (Works on installed versions & PC without Git)
     try {
-      const remoteInfo = await this.fetchGitHubCommit();
       const localInfo = this.getLocalVersion();
-      const hasUpdate = localInfo.commit.toLowerCase() !== remoteInfo.shortSha.toLowerCase() && localInfo.commit.toLowerCase() !== remoteInfo.sha.toLowerCase();
-
-      const impact = this.analyzeImpact(remoteInfo.changedFiles);
+      const diffInfo = await this.fetchGitHubDiff(localInfo.commit);
+      const impact = this.analyzeImpact(diffInfo.changedFiles);
 
       return {
-        hasUpdate,
+        hasUpdate: diffInfo.hasUpdate,
         localHash: localInfo.commit,
-        remoteHash: remoteInfo.shortSha,
-        commitMessage: remoteInfo.message,
-        changedFiles: remoteInfo.changedFiles,
+        remoteHash: diffInfo.remoteHash,
+        commitMessage: diffInfo.commitMessage,
+        commitsList: diffInfo.commitsList || [],
+        commitCount: diffInfo.commitCount || 0,
+        changedFiles: diffInfo.changedFiles || [],
         impact
       };
     } catch (apiErr) {
@@ -306,22 +423,41 @@ class SystemUpdater {
         throw new Error('Invalid update package structure');
       }
 
-      // Fetch remote commit info for changed files diff
-      const remoteInfo = await this.fetchGitHubCommit();
-      const impact = this.analyzeImpact(remoteInfo.changedFiles);
+      // Fetch remote commit/diff info for all changed files across intermediate commits
+      const localInfo = this.getLocalVersion();
+      let diffInfo;
+      try {
+        diffInfo = await this.fetchGitHubDiff(localInfo.commit);
+      } catch (e) {
+        diffInfo = await this.fetchGitHubCommit();
+      }
+      const changedFiles = diffInfo.changedFiles || [];
+      const impact = this.analyzeImpact(changedFiles);
 
       this.cachedExtractInfo = {
         hasGit: false,
         extractedRoot,
         tempZipPath,
         tempExtractDir,
-        remoteInfo,
+        remoteInfo: {
+          sha: diffInfo.remoteSha || diffInfo.sha || 'main',
+          shortSha: diffInfo.remoteHash || diffInfo.shortSha || 'main',
+          message: diffInfo.commitMessage || diffInfo.message || 'Latest release update',
+          changedFiles: changedFiles
+        },
         impact
       };
 
       this.isDownloaded = true;
       this.isUpdating = false;
-      return { success: true, impact, changedFiles: remoteInfo.changedFiles, remoteHash: remoteInfo.shortSha };
+      return { 
+        success: true, 
+        impact, 
+        changedFiles, 
+        remoteHash: diffInfo.remoteHash || diffInfo.shortSha || 'main',
+        commitsList: diffInfo.commitsList || [],
+        commitCount: diffInfo.commitCount || 0
+      };
     } catch (err) {
       this.isUpdating = false;
       this.isDownloaded = false;
