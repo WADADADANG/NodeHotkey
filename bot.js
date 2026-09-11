@@ -86,6 +86,13 @@ let runScreenshotAction = async (action, callStack) => {
     }
 };
 
+global.runPartyScannerAction = runPartyScannerAction;
+global.runSelectPartySlotAction = runSelectPartySlotAction;
+global.runPartyHealAction = runPartyHealAction;
+global.runPartyBuffAction = runPartyBuffAction;
+global.runPartyTargetRouterAction = runPartyTargetRouterAction;
+global.runScreenshotAction = runScreenshotAction;
+
 let runTtsAction = async (action, callStack) => {
     try {
         delete require.cache[require.resolve('./tts-service')];
