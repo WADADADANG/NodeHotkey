@@ -1,6 +1,6 @@
 {
   "name": "node-hotkey",
-  "version": "3.0.0",
+  "version": "3.1.0-dev",
   "description": "Node-based Visual Workflow & Background WebGL Multi-Client Automation Suite",
   "main": "bot.js",
   "scripts": {

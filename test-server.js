@@ -518,6 +518,29 @@ function getClientStatusesPayload() {
     return;
   }
 
+  // --- GET /api/nodes → list all modular registered nodes ---
+  if (urlPath === '/api/nodes' && req.method === 'GET') {
+    try {
+      const { nodeRegistry } = require('./node-registry');
+      nodeRegistry.loadAll();
+      const list = nodeRegistry.getAll().map(def => ({
+        type: def.type,
+        aliases: def.aliases || [],
+        title: def.title || def.type,
+        category: def.category || 'Custom',
+        icon: def.icon || '🧩',
+        color: def.color || '#3b82f6',
+        inputs: def.inputs || ['in'],
+        outputs: def.outputs || ['onComplete', 'onError'],
+        defaultData: def.defaultData || {}
+      }));
+      sendJSON(res, 200, { success: true, nodes: list });
+    } catch (e) {
+      sendJSON(res, 500, { error: e.message });
+    }
+    return;
+  }
+
   // --- POST /api/profile/activate → switch active profile (single active) ---
   if (urlPath === '/api/profile/activate' && req.method === 'POST') {
     let body = '';

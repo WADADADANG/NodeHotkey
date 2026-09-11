@@ -5441,6 +5441,30 @@ class NodeCanvasEditor {
       }
     ];
 
+    // [v3.1 Dynamic Modular Nodes Injection]
+    if (typeof window.clientNodeRegistry !== 'undefined') {
+      const modularNodes = window.clientNodeRegistry.getAll();
+      const existingTypes = new Set();
+      categories.forEach(c => c.items.forEach(i => existingTypes.add(i.type)));
+
+      const customItems = modularNodes
+        .filter(n => !existingTypes.has(n.type))
+        .map(n => ({
+          type: n.type,
+          icon: n.icon || '🧩',
+          name: n.title || n.type
+        }));
+
+      if (customItems.length > 0) {
+        categories.push({
+          id: 'modular_nodes',
+          icon: '🧩',
+          name: window.currentLang === 'en' ? 'Modular Nodes (v3.1)' : 'โหนดโมดูลเสริม (v3.1)',
+          items: customItems
+        });
+      }
+    }
+
     let html = '';
 
     if (!q) {

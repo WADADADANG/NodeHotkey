@@ -12,6 +12,11 @@ const NodeExecutionEngine = require('./execution-engine');
 let activeWorkflowEngine = new NodeExecutionEngine();
 global.activeWorkflowEngine = activeWorkflowEngine;
 
+// [v3.1 Node Registry Initialization]
+const { nodeRegistry } = require('./node-registry');
+nodeRegistry.loadAll();
+global.nodeRegistry = nodeRegistry;
+
 let keyboard, mouseEvents;
 let clientPages = {};    // clientIndex -> page
 global.clientPages = clientPages;
@@ -2921,6 +2926,15 @@ global.triggerWebhookEvent = triggerWebhookEvent;
 function handleActionTrigger(act) {
     if (global.isSuspended) return;
     emitSignal(act.id, 'trigger');
+
+    // [v3.1 Modular Node Registry Dispatcher]
+    if (global.nodeRegistry && global.nodeRegistry.has(act.mode)) {
+        global.nodeRegistry.execute(act.mode, { clientPages, activeClients }, act, []).catch(err => {
+            console.error(`[NodeRegistry Trigger Error] "${act.mode}":`, err.message);
+        });
+        return;
+    }
+
     if (act.mode === 'loop') {
         const state = activeLoopStates[act.id];
         if (state && state.running) {
@@ -3075,6 +3089,15 @@ global.fireChain = fireChain;
 // Run a target action directly (bypasses hotkey requirement).
 async function runChainedAction(action, callStack) {
     if (global.isSuspended) return;
+
+    // [v3.1 Modular Node Registry Dispatcher]
+    if (global.nodeRegistry && global.nodeRegistry.has(action.mode)) {
+        await global.nodeRegistry.execute(action.mode, { clientPages, activeClients }, action, callStack).catch(err => {
+            console.error(`[NodeRegistry Chain Error] "${action.mode}":`, err.message);
+        });
+        return;
+    }
+
     if (action.mode === 'loop') {
         const state = activeLoopStates[action.id];
         if (state && state.running) {
