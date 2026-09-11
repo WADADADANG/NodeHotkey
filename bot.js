@@ -876,6 +876,146 @@ function getBrowserLaunchParams(choiceStr) {
     return { baseChoice, isApp: isApp && baseChoice !== '3', browserName, browserType, channelVal };
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// 🛡️ BROWSER CONTEXT INITIALIZATION SCRIPTS & ROOT-CAUSE ANTI-STUCK ENGINE
+// ═════════════════════════════════════════════════════════════════════════════
+async function injectClientInitScripts(browserCtx, clientIndex) {
+    const initialPrefix = clientAliases[String(clientIndex)] ? `[${clientAliases[String(clientIndex)]}] ` : `[Client ${clientIndex}] `;
+
+    await browserCtx.addInitScript(({ index, initialPrefix }) => {
+        // 1. Webdriver evasion
+        try {
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+        } catch (e) { }
+
+        // 2. Prevent mouse back/forward buttons (Mouse 4 and Mouse 5) from navigating away from the page
+        const preventMouseNav = (e) => {
+            if (e.button === 3 || e.button === 4) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        };
+        window.addEventListener('mousedown', preventMouseNav, true);
+        window.addEventListener('mouseup', preventMouseNav, true);
+        window.addEventListener('click', preventMouseNav, true);
+
+        // 3. Dynamic title observer with client prefix
+        window.__clientPrefix = initialPrefix;
+        const updateTitle = () => {
+            const prefix = window.__clientPrefix || `[Client ${index}] `;
+            const title = document.title;
+            if (title && !title.startsWith(prefix)) {
+                let cleanTitle = title;
+                if (title.includes('] ')) {
+                    const parts = title.split('] ');
+                    if (parts[0].startsWith('[')) {
+                        cleanTitle = parts.slice(1).join('] ');
+                    }
+                }
+                document.title = prefix + cleanTitle;
+            }
+        };
+
+        const observer = new MutationObserver(updateTitle);
+        observer.observe(document.querySelector('title') || document.documentElement, {
+            subtree: true,
+            characterData: true,
+            childList: true
+        });
+        updateTitle();
+
+        // 4. 🛡️ ROOT-CAUSE ANTI-STUCK ENGINE (Auto-release physical keys and mouse buttons on window blur)
+        const heldPhysicalKeys = new Map();     // code -> { key, code, keyCode, which }
+        const heldPhysicalButtons = new Set();  // mouse button numbers (0: left, 1: middle, 2: right)
+        let lastMousePos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+
+        // 4.1 Track physical keyboard down/up (only e.isTrusted === true, ignores bot-injected synthetic events)
+        window.addEventListener('keydown', (e) => {
+            if (e.isTrusted) {
+                heldPhysicalKeys.set(e.code, {
+                    key: e.key,
+                    code: e.code,
+                    keyCode: e.keyCode,
+                    which: e.which
+                });
+            }
+        }, true);
+
+        window.addEventListener('keyup', (e) => {
+            if (e.isTrusted) {
+                heldPhysicalKeys.delete(e.code);
+            }
+        }, true);
+
+        // 4.2 Track physical mouse down/up & position
+        window.addEventListener('mousemove', (e) => {
+            lastMousePos = { x: e.clientX, y: e.clientY };
+        }, true);
+
+        window.addEventListener('mousedown', (e) => {
+            if (e.isTrusted) {
+                heldPhysicalButtons.add(e.button);
+            }
+        }, true);
+
+        window.addEventListener('mouseup', (e) => {
+            if (e.isTrusted) {
+                heldPhysicalButtons.delete(e.button);
+            }
+        }, true);
+
+        // 4.3 Auto-release all held inputs on window blur / focus lost
+        const releaseAllStuckPhysicalInputs = () => {
+            const target = document.activeElement || document.querySelector('canvas') || document.body || window;
+
+            // Release physical keys
+            if (heldPhysicalKeys.size > 0) {
+                for (const [code, info] of heldPhysicalKeys.entries()) {
+                    const keyUpEvent = new KeyboardEvent('keyup', {
+                        key: info.key,
+                        code: info.code,
+                        keyCode: info.keyCode,
+                        which: info.which,
+                        bubbles: true,
+                        cancelable: true,
+                        composed: true
+                    });
+                    try { target.dispatchEvent(keyUpEvent); } catch (e) { }
+                    try { window.dispatchEvent(keyUpEvent); } catch (e) { }
+                }
+                heldPhysicalKeys.clear();
+            }
+
+            // Release physical mouse buttons (and exit pointer lock if any)
+            if (heldPhysicalButtons.size > 0) {
+                if (document.pointerLockElement) {
+                    try { document.exitPointerLock?.(); } catch (e) { }
+                }
+                for (const button of heldPhysicalButtons) {
+                    const mouseUpEvent = new MouseEvent('mouseup', {
+                        bubbles: true,
+                        cancelable: true,
+                        composed: true,
+                        button: button,
+                        buttons: 0,
+                        clientX: lastMousePos.x,
+                        clientY: lastMousePos.y
+                    });
+                    try { target.dispatchEvent(mouseUpEvent); } catch (e) { }
+                    try { window.dispatchEvent(mouseUpEvent); } catch (e) { }
+                }
+                heldPhysicalButtons.clear();
+            }
+        };
+
+        window.addEventListener('blur', releaseAllStuckPhysicalInputs, true);
+        window.addEventListener('focusout', releaseAllStuckPhysicalInputs, true);
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) releaseAllStuckPhysicalInputs();
+        }, true);
+    }, { index: clientIndex, initialPrefix });
+}
+
 async function launchBrowser(activeClientsList, choice) {
     activeClients = activeClientsList;
     global.activeClients = activeClients; // Share with test-server.js
@@ -1117,46 +1257,8 @@ async function launchBrowser(activeClientsList, choice) {
             console.log(`[System] Client 1 already has control panel open: "${controlPanelPage.url()}"`);
         }
 
-        // 3. Add Webdriver evasion and dynamic title observer
-        await browserCtx.addInitScript(({ index, initialPrefix }) => {
-            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-
-            // Prevent mouse back/forward buttons (Mouse 4 and Mouse 5) from navigating away from the page
-            const preventMouseNav = (e) => {
-                if (e.button === 3 || e.button === 4) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            };
-            window.addEventListener('mousedown', preventMouseNav, true);
-            window.addEventListener('mouseup', preventMouseNav, true);
-            window.addEventListener('click', preventMouseNav, true);
-
-            window.__clientPrefix = initialPrefix;
-
-            const updateTitle = () => {
-                const prefix = window.__clientPrefix || `[Client ${index}] `;
-                const title = document.title;
-                if (title && !title.startsWith(prefix)) {
-                    let cleanTitle = title;
-                    if (title.includes('] ')) {
-                        const parts = title.split('] ');
-                        if (parts[0].startsWith('[')) {
-                            cleanTitle = parts.slice(1).join('] ');
-                        }
-                    }
-                    document.title = prefix + cleanTitle;
-                }
-            };
-
-            const observer = new MutationObserver(updateTitle);
-            observer.observe(document.querySelector('title') || document.documentElement, {
-                subtree: true,
-                characterData: true,
-                childList: true
-            });
-            updateTitle();
-        }, { index: clientIndex, initialPrefix: clientAliases[String(clientIndex)] ? `[${clientAliases[String(clientIndex)]}] ` : `[Client ${clientIndex}] ` });
+        // 3. Add Webdriver evasion, dynamic title observer & Root-Cause Anti-Stuck Engine
+        await injectClientInitScripts(browserCtx, clientIndex);
     }
 
     console.log(`[System] ${browserName} launcher completed successfully!`);
@@ -1404,10 +1506,7 @@ async function launchSingleClient(clientIndexInput, choiceParam) {
         }
     }
 
-    await browserCtx.addInitScript(({ index, initialPrefix }) => {
-        Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-        window.__clientPrefix = initialPrefix;
-    }, { index: clientIndex, initialPrefix: clientAliases[String(clientIndex)] ? `[${clientAliases[String(clientIndex)]}] ` : `[Client ${clientIndex}] ` });
+    await injectClientInitScripts(browserCtx, clientIndex);
 
     if (!activeClients.includes(clientIndex)) {
         activeClients.push(clientIndex);
