@@ -25,7 +25,7 @@ class NodeRegistry {
    * @param {Object} [nodeDef.defaultData] - Default configuration data
    * @param {Function} [nodeDef.execute] - Async execution handler: async (context, action, callStack) => {}
    */
-  register(nodeDef) {
+  register(nodeDef, silent = true) {
     if (!nodeDef || !nodeDef.type) {
       throw new Error('[NodeRegistry] Node definition must specify a "type" string.');
     }
@@ -35,7 +35,9 @@ class NodeRegistry {
         this.nodes.set(alias, nodeDef);
       }
     }
-    console.log(`[NodeRegistry] Registered node: "${nodeDef.type}" (${nodeDef.title || nodeDef.type})`);
+    if (!silent) {
+      console.log(`[NodeRegistry] Registered node: "${nodeDef.type}" (${nodeDef.title || nodeDef.type})`);
+    }
   }
 
   get(type) {
@@ -63,6 +65,7 @@ class NodeRegistry {
 
     const files = fs.readdirSync(targetDir);
     let loadedCount = 0;
+    const failedNodes = [];
 
     for (const file of files) {
       if (file.endsWith('.node.js') || (file.endsWith('.js') && !file.startsWith('_'))) {
@@ -73,16 +76,21 @@ class NodeRegistry {
           const nodeModule = require(fullPath);
           const nodeDef = typeof nodeModule === 'function' ? nodeModule() : nodeModule;
           if (nodeDef && nodeDef.type) {
-            this.register(nodeDef);
+            this.register(nodeDef, true);
             loadedCount++;
           }
         } catch (err) {
-          console.error(`[NodeRegistry] Failed to load node from "${file}":`, err.message);
+          failedNodes.push({ file, error: err.message });
         }
       }
     }
 
-    console.log(`[NodeRegistry] Loaded ${loadedCount} modular nodes from "${targetDir}".`);
+    if (failedNodes.length === 0) {
+      console.log(`[NodeRegistry] โหลดโหนดสำเร็จ ${loadedCount} โหนดเรียบร้อย`);
+    } else {
+      console.warn(`[NodeRegistry] โหลดสำเร็จ ${loadedCount} โหนด, พบปัญหา ${failedNodes.length} โหนด:`);
+      failedNodes.forEach(f => console.error(`   ❌ [${f.file}] ${f.error}`));
+    }
   }
 
   /**
