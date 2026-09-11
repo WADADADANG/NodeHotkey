@@ -71,3 +71,7 @@
 - **สาเหตุ:** ในระบบปฏิบัติการ Windows การดาวน์โหลดไฟล์แพ็กเกจ `.zip` ผ่าน Stream เดิม ยังไม่ทันคลาย File Handle ปิดสนิท ทำให้คำสั่งแตกไฟล์ของ PowerShell ติด Error *"The process cannot access the file because it is being used by another process"* ส่งผลให้แตกไฟล์ไม่สำเร็จ และโค้ดเดิมมีข้อผิดพลาดที่ข้ามการก๊อปปี้ไฟล์ไปเงียบๆ แล้วบันทึกว่าอัปเดตสำเร็จ
 - **วิธีแก้ไข:** ปรับปรุง [launcher/updater.js](launcher/updater.js) ให้ดาวน์โหลดไฟล์เข้า In-Memory Buffer เต็มก้อนแล้วเขียนลงดิสก์แบบ Synchronous (ไร้ปัญหา File Lock 100%) พร้อมเปลี่ยนมาใช้ **Windows .NET `ZipFile::ExtractToDirectory` Engine** แตกไฟล์ความเร็วสูง และเพิ่มระบบ **Error Guard & File Counter** ตรวจนับไฟล์ที่อัปเดตจริงก่อนบันทึกเวอร์ชัน พร้อมแสดง Log ทุกขั้นตอนอย่างโปร่งใส
 
+### 3. 🧩 สถาปัตยกรรม Action Nodes แบบแยกโมดูล (Modular Node Registry)
+- **โครงสร้าง:** ขยายความสามารถของ Action Node ได้อย่างอิสระผ่านโฟลเดอร์ `nodes/*.node.js` โดยไม่ต้องแก้ไขโค้ดแกนกลาง
+- **ความเสถียร:** รองรับ Dynamic Hot-Reload และระบบ Safe Lazy-Loading ช่วยป้องกัน Node ล้มเหลวแม้ในสภาพแวดล้อมที่ไม่มีโมดูลเสริมติดตั้งไว้
+
