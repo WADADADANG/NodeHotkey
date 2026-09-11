@@ -51,15 +51,26 @@ function createWindow() {
     }
   });
 
-  // Enable Ctrl+R / F5 for fast UI reloading & Ctrl+Shift+I for DevTools
+  // Shortcut Guard: Enable Ctrl+R, F5, and Ctrl+Shift+I in Dev Mode (npm start) ONLY.
+  // In Production / Installed mode: Block them completely to prevent accidental UI resets.
+  const isDev = !app.isPackaged || process.env.NODE_ENV === 'development' || process.argv.includes('--dev');
   mainWindow.webContents.on('before-input-event', (event, input) => {
     if (input.type === 'keyDown') {
-      if ((input.control && input.key.toLowerCase() === 'r') || input.key === 'F5') {
-        mainWindow.webContents.reload();
-        event.preventDefault();
-      } else if (input.control && input.shift && input.key.toLowerCase() === 'i') {
-        mainWindow.webContents.toggleDevTools();
-        event.preventDefault();
+      const isReload = (input.control && input.key.toLowerCase() === 'r') || input.key === 'F5';
+      const isDevTools = input.control && input.shift && input.key.toLowerCase() === 'i';
+
+      if (isDev) {
+        if (isReload) {
+          mainWindow.webContents.reload();
+          event.preventDefault();
+        } else if (isDevTools) {
+          mainWindow.webContents.toggleDevTools();
+          event.preventDefault();
+        }
+      } else {
+        if (isReload || isDevTools) {
+          event.preventDefault(); // Block in Production/Installed mode
+        }
       }
     }
   });

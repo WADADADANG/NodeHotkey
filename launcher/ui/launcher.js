@@ -1775,11 +1775,4 @@
       e.stopPropagation();
     }
   }, true);
-
-  // Keyboard shortcut: Ctrl+R or F5 to reload launcher UI
-  window.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey && e.key.toLowerCase() === 'r') || e.key === 'F5') {
-      window.location.reload();
-    }
-  });
 })();
