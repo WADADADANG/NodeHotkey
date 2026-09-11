@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "Test2",
   "canvas": {
-    "zoom": 0.8,
+    "zoom": 0.7013024636219192,
     "pan": {
-      "x": -40,
-      "y": -40
+      "x": 338,
+      "y": -591
     }
   },
   "nodes": [
@@ -14,8 +14,8 @@
       "type": "trigger",
       "title": "Trigger (NUMPAD 1)",
       "position": {
-        "x": 100,
-        "y": 200
+        "x": 120,
+        "y": 990
       },
       "data": {
         "enabled": true,
@@ -29,18 +29,16 @@
       "type": "party_scanner",
       "title": "Party Scanner (Client 4)",
       "position": {
-        "x": 460,
-        "y": 200
+        "x": 850,
+        "y": 1220
       },
       "data": {
         "enabled": true,
-        "actionId": "party_scanner_1",
-        "name": "PartyScannerClient4",
         "targetClient": "4",
-        "scanRegion": "auto",
         "scanIntervalMs": 250,
-        "readNames": true,
-        "showOverlay": true
+        "lowHpThreshold": 70,
+        "showOverlay": true,
+        "actionId": "party_scanner_1"
       }
     },
     {
@@ -48,17 +46,15 @@
       "type": "party_buff",
       "title": "Party Buff (Cycle Members)",
       "position": {
-        "x": 820,
-        "y": 200
+        "x": 1230,
+        "y": 1330
       },
       "data": {
         "enabled": true,
-        "actionId": "party_buff_1",
-        "name": "PartyBuffClient4",
         "targetClient": "4",
-        "scanRegion": "auto",
         "delayAfterClick": 80,
-        "showOverlay": true
+        "showOverlay": true,
+        "actionId": "party_buff_1"
       }
     },
     {
@@ -66,15 +62,14 @@
       "type": "sequencer",
       "title": "Cast Buff Sequencer",
       "position": {
-        "x": 1180,
-        "y": 120
+        "x": 1540,
+        "y": 1300
       },
       "data": {
         "enabled": true,
-        "actionId": "cast_buff_1",
-        "name": "CastBuffSkills",
-        "targetClient": "4",
         "modeType": "once",
+        "targetClient": "4",
+        "interval": 1000,
         "repeatCount": 1,
         "delayAfter": 0,
         "steps": [
@@ -85,10 +80,66 @@
           },
           {
             "key": "1",
-            "delay": 800,
-            "castTimeMs": 800
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "2",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "3",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "4",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "5",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "6",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "LEFT ALT + 1",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "LEFT ALT + 2",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "LEFT ALT + 3",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "LEFT ALT + 4",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "LEFT ALT + X",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "F1",
+            "delay": 200,
+            "castTimeMs": 200
           }
-        ]
+        ],
+        "actionId": "cast_buff_1"
       }
     },
     {
@@ -96,16 +147,15 @@
       "type": "tts",
       "title": "TTS: บัฟเสร็จสิ้น",
       "position": {
-        "x": 1180,
-        "y": 280
+        "x": 1530,
+        "y": 2150
       },
       "data": {
         "enabled": true,
-        "actionId": "tts_complete_1",
-        "name": "TTS_BuffComplete",
-        "text": "แจกบัฟปาร์ตี้ครบทุกคนเรียบร้อยแล้วค่ะ",
+        "text": "แจกบัฟปาร์ตี้ครบทุกคนเรียบร้อยแล้ว",
         "voice": "th-TH-PremwadeeNeural",
-        "volume": 100
+        "volume": 100,
+        "actionId": "tts_complete_1"
       }
     },
     {
@@ -113,16 +163,15 @@
       "type": "tts",
       "title": "TTS: ไม่พบปาร์ตี้",
       "position": {
-        "x": 820,
-        "y": 420
+        "x": 850,
+        "y": 1700
       },
       "data": {
         "enabled": true,
-        "actionId": "tts_error_1",
-        "name": "TTS_ScannerError",
         "text": "สแกนไม่พบหน้าต่างปาร์ตี้ค่ะ",
         "voice": "th-TH-PremwadeeNeural",
-        "volume": 100
+        "volume": 100,
+        "actionId": "tts_error_1"
       }
     },
     {
@@ -130,93 +179,111 @@
       "type": "screenshot",
       "title": "Screenshot: Diagnostic",
       "position": {
-        "x": 1180,
-        "y": 420
+        "x": 850,
+        "y": 1470
       },
       "data": {
         "enabled": true,
-        "actionId": "snap_error_1",
-        "name": "SnapScannerError",
+        "actionId": "snap_error_1"
+      }
+    },
+    {
+      "id": "node_1789137824548",
+      "type": "sequencer",
+      "title": "Cast Sequencer",
+      "position": {
+        "x": 510,
+        "y": 990
+      },
+      "data": {
+        "enabled": true,
+        "modeType": "once",
         "targetClient": "4",
-        "captureRegion": "full",
-        "prefix": "scan_fail",
-        "subfolder": "diagnostics",
-        "annotate": true
+        "interval": 1000,
+        "repeatCount": 1,
+        "delayAfter": 0,
+        "steps": [
+          {
+            "key": "ESC",
+            "delay": 150,
+            "castTimeMs": 150
+          },
+          {
+            "key": "F1",
+            "delay": 150,
+            "castTimeMs": 150
+          },
+          {
+            "key": "6",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "LEFT CTRL + 2",
+            "delay": 1000,
+            "castTimeMs": 1000
+          },
+          {
+            "key": "LEFT CTRL + 1",
+            "delay": 900,
+            "castTimeMs": 900
+          }
+        ],
+        "actionId": "1789137824548"
       }
     },
     {
-      "id": "node_trig_keys",
-      "type": "trigger",
-      "title": "Trigger (NUMPAD 2)",
-      "position": {
-        "x": 100,
-        "y": 620
-      },
-      "data": {
-        "enabled": true,
-        "triggerType": "keyboard",
-        "triggerValue": "NUMPAD 2",
-        "actionId": "trig_keys_2"
-      }
-    },
-    {
-      "id": "node_key_press",
-      "type": "key_press",
-      "title": "Key Press: โจมตี/เก็บของ",
-      "position": {
-        "x": 460,
-        "y": 620
-      },
-      "data": {
-        "enabled": true,
-        "actionId": "key_press_1",
-        "name": "AttackAndLoot",
-        "targetClient": "4",
-        "keys": ["1", "2"],
-        "delayAfter": 100
-      }
-    },
-    {
-      "id": "node_delay",
-      "type": "delay",
-      "title": "Delay: รอ 800ms",
-      "position": {
-        "x": 820,
-        "y": 620
-      },
-      "data": {
-        "enabled": true,
-        "actionId": "delay_1",
-        "name": "WaitAfterAttack",
-        "delayMs": 800
-      }
-    },
-    {
-      "id": "node_sound",
+      "id": "node_1789137894350",
       "type": "sound",
-      "title": "Sound: แจ้งเตือนเสร็จ",
+      "title": "Sound Alert",
       "position": {
-        "x": 1180,
-        "y": 620
+        "x": 1920,
+        "y": 1690
       },
       "data": {
         "enabled": true,
-        "actionId": "sound_1",
-        "name": "AttackDoneAlert",
         "soundSource": "preset",
         "soundPreset": "ding",
-        "volume": 100
+        "volume": 47,
+        "actionId": "1789137894350"
+      }
+    },
+    {
+      "id": "node_1789137923937",
+      "type": "party_slot",
+      "title": "party_slot",
+      "position": {
+        "x": 1540,
+        "y": 1870
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "targetSlot": 1,
+        "delayAfterClick": 150,
+        "showOverlay": true,
+        "actionId": "1789137923937"
+      }
+    },
+    {
+      "id": "node_1789137946476",
+      "type": "key_press",
+      "title": "Single Key Press",
+      "position": {
+        "x": 1880,
+        "y": 1970
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "keys": [
+          "Z"
+        ],
+        "actionId": "1789137946476"
       }
     }
   ],
   "connections": [
-    {
-      "id": "conn_trig1_scanner",
-      "fromNodeId": "node_trig_party",
-      "fromPort": "exec_out",
-      "toNodeId": "node_party_scanner",
-      "toPort": "exec_in"
-    },
     {
       "id": "conn_scanner_buff",
       "fromNodeId": "node_party_scanner",
@@ -253,24 +320,38 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_trig2_press",
-      "fromNodeId": "node_trig_keys",
+      "id": "conn_1789137877817",
+      "fromNodeId": "node_trig_party",
       "fromPort": "exec_out",
-      "toNodeId": "node_key_press",
+      "toNodeId": "node_1789137824548",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_press_delay",
-      "fromNodeId": "node_key_press",
-      "fromPort": "onComplete",
-      "toNodeId": "node_delay",
+      "id": "conn_1789137884874",
+      "fromNodeId": "node_1789137824548",
+      "fromPort": "onStop",
+      "toNodeId": "node_party_scanner",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_delay_sound",
-      "fromNodeId": "node_delay",
+      "id": "conn_1789137897609",
+      "fromNodeId": "node_cast_buff",
       "fromPort": "onComplete",
-      "toNodeId": "node_sound",
+      "toNodeId": "node_1789137894350",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789137927761",
+      "fromNodeId": "node_party_buff",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1789137923937",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789137948917",
+      "fromNodeId": "node_1789137923937",
+      "fromPort": "next",
+      "toNodeId": "node_1789137946476",
       "toPort": "exec_in"
     }
   ]

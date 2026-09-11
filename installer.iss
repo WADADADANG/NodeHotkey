@@ -1,8 +1,8 @@
-; Inno Setup Script for NodeHotkey v3.0.0
+; Inno Setup Script for NodeHotkey v3.1.0
 ; Free Inno Setup Compiler available at: https://jrsoftware.org/isdl.php
 
 #define MyAppName "NodeHotkey"
-#define MyAppVersion "3.0.0"
+#define MyAppVersion "3.1.0"
 #define MyAppPublisher "NodeHotkey Team"
 #define MyAppURL "https://github.com/WADADADANG/NodeHotkey"
 #define MyAppExeName "NodeHotkey.bat"

@@ -33,10 +33,10 @@ if defined ISCC_EXE (
     echo [INFO] Found Inno Setup Compiler! Compiling installer.iss...
     "%ISCC_EXE%" installer.iss
     echo.
-    if exist "dist\NodeHotkey-Setup-v3.0.0.exe" (
+    if exist "dist\NodeHotkey-Setup-v3.1.0.exe" (
         echo ========================================================
         echo  SUCCESS! Standalone Installer Generated:
-        echo  dist\NodeHotkey-Setup-v3.0.0.exe
+        echo  dist\NodeHotkey-Setup-v3.1.0.exe
         echo ========================================================
         echo.
         explorer dist
