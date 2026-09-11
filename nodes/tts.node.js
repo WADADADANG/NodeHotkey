@@ -35,11 +35,21 @@ module.exports = {
       const voice = action.voice || 'th-TH-PremwadeeNeural';
       const volume = action.volume !== undefined ? parseInt(action.volume, 10) : 100;
 
+      // Debounce rapid identical triggers (250ms window)
+      const now = Date.now();
+      if (now - (tts._lastTime || 0) < 250 && tts._lastText === text) {
+        return true;
+      }
+      tts._lastTime = now;
+      tts._lastText = text;
+
       console.log(`🗣️ [TTS Node] Synthesizing: "${text}" (${voice}, Vol: ${volume}%)`);
       const mp3Path = await tts.synthesize(text, voice);
       if (mp3Path && fs.existsSync(mp3Path)) {
         if (typeof global.playNativeSound === 'function') {
-          global.playNativeSound(null, mp3Path, null, 1, volume);
+          global.playNativeSound(null, mp3Path, null, 1, volume, 'tts', action.interrupt !== false);
+        } else {
+          console.warn('⚠️ [TTS Node] global.playNativeSound is not initialized.');
         }
         if (typeof global.broadcastToClients === 'function') {
           global.broadcastToClients({

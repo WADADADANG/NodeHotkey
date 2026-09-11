@@ -1,0 +1,213 @@
+{
+  "version": "3.1.0",
+  "name": "Test2",
+  "canvas": {
+    "zoom": 0.85,
+    "pan": {
+      "x": -50,
+      "y": -50
+    }
+  },
+  "nodes": [
+    {
+      "id": "node_trig_1",
+      "type": "trigger",
+      "title": "Trigger Key (1)",
+      "position": {
+        "x": 100,
+        "y": 200
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "1",
+        "actionId": "trig_1"
+      }
+    },
+    {
+      "id": "node_var_toggle",
+      "type": "variable",
+      "title": "Variable: IsActive",
+      "position": {
+        "x": 420,
+        "y": 200
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "var_toggle_1",
+        "name": "IsActiveVar",
+        "varType": "boolean",
+        "scope": "global",
+        "initialValue": "false",
+        "operation": "toggle",
+        "opValue": "1"
+      }
+    },
+    {
+      "id": "node_branch_check",
+      "type": "branch",
+      "title": "Branch: Check If Active",
+      "position": {
+        "x": 750,
+        "y": 200
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "branch_check_1",
+        "name": "CheckActiveStatus",
+        "conditionTargetId": "var_toggle_1",
+        "conditionRule": "is_true",
+        "conditionValue": ""
+      }
+    },
+    {
+      "id": "node_tts_on_true",
+      "type": "tts",
+      "title": "TTS: สถานะเปิด",
+      "position": {
+        "x": 1100,
+        "y": 120
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "tts_true_1",
+        "name": "TTS_ActiveTrue",
+        "text": "สถานะเปิด ระบบเริ่มทำงานค่ะ",
+        "voice": "th-TH-PremwadeeNeural",
+        "volume": 100
+      }
+    },
+    {
+      "id": "node_tts_on_false",
+      "type": "tts",
+      "title": "TTS: สถานะปิด",
+      "position": {
+        "x": 1100,
+        "y": 300
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "tts_false_1",
+        "name": "TTS_ActiveFalse",
+        "text": "สถานะปิด หยุดการทำงานแล้วค่ะ",
+        "voice": "th-TH-PremwadeeNeural",
+        "volume": 100
+      }
+    },
+    {
+      "id": "node_trig_2",
+      "type": "trigger",
+      "title": "Trigger Key (2)",
+      "position": {
+        "x": 100,
+        "y": 550
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "2",
+        "actionId": "trig_2"
+      }
+    },
+    {
+      "id": "node_delay_wait",
+      "type": "delay",
+      "title": "Delay: รอ 1 วินาที",
+      "position": {
+        "x": 420,
+        "y": 550
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "delay_wait_1",
+        "name": "Delay1000ms",
+        "delayMs": 1000
+      }
+    },
+    {
+      "id": "node_sound_alert",
+      "type": "sound",
+      "title": "Sound: เสียง Ding",
+      "position": {
+        "x": 750,
+        "y": 550
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "sound_alert_1",
+        "name": "PlayDingAlert",
+        "soundSource": "preset",
+        "soundPreset": "ding",
+        "volume": 100
+      }
+    },
+    {
+      "id": "node_tts_delayed",
+      "type": "tts",
+      "title": "TTS: แจ้งเตือนเสร็จสิ้น",
+      "position": {
+        "x": 1100,
+        "y": 550
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "tts_delayed_1",
+        "name": "TTS_DelayDone",
+        "text": "หน่วงเวลา 1 วินาที และเล่นเสียงแจ้งเตือนเสร็จสิ้น",
+        "voice": "th-TH-PremwadeeNeural",
+        "volume": 100
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_trig1_to_var",
+      "fromNodeId": "node_trig_1",
+      "fromPort": "exec_out",
+      "toNodeId": "node_var_toggle",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_var_to_branch",
+      "fromNodeId": "node_var_toggle",
+      "fromPort": "onComplete",
+      "toNodeId": "node_branch_check",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_branch_to_tts_true",
+      "fromNodeId": "node_branch_check",
+      "fromPort": "onTrue",
+      "toNodeId": "node_tts_on_true",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_branch_to_tts_false",
+      "fromNodeId": "node_branch_check",
+      "fromPort": "onFalse",
+      "toNodeId": "node_tts_on_false",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_trig2_to_delay",
+      "fromNodeId": "node_trig_2",
+      "fromPort": "exec_out",
+      "toNodeId": "node_delay_wait",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_delay_to_sound",
+      "fromNodeId": "node_delay_wait",
+      "fromPort": "onComplete",
+      "toNodeId": "node_sound_alert",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_sound_to_tts",
+      "fromNodeId": "node_sound_alert",
+      "fromPort": "onComplete",
+      "toNodeId": "node_tts_delayed",
+      "toPort": "exec_in"
+    }
+  ]
+}

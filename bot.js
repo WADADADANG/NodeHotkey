@@ -2486,60 +2486,48 @@ function initNativeAudioWorker() {
     if (nativeAudioWorker) return;
     try {
         const psScript = `
-$ErrorActionPreference = 'SilentlyContinue'
+Add-Type -AssemblyName presentationCore
 
-$code = @"
-using System;
-using System.IO;
-using System.Windows.Media;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
-
-public class AsyncAudioPlayer {
-    private static ConcurrentBag<MediaPlayer> activePlayers = new ConcurrentBag<MediaPlayer>();
-
-    public static void Play(string filePath, int repeats, int volPercent) {
-        if (volPercent <= 0 || !File.Exists(filePath)) return;
-        double vol = Math.Max(0.0, Math.Min(1.0, (double)volPercent / 100.0));
-        
-        Task.Run(async () => {
-            try {
-                for (int i = 0; i < repeats; i++) {
-                    var player = new MediaPlayer();
-                    activePlayers.Add(player);
-                    player.Open(new Uri(filePath));
-                    player.Volume = vol;
-                    player.Play();
-                    
-                    if (repeats > 1 && i < repeats - 1) {
-                        await Task.Delay(450);
-                    }
-                }
-                
-                await Task.Delay(2500);
-                
-                while (!activePlayers.IsEmpty) {
-                    MediaPlayer p;
-                    if (activePlayers.TryTake(out p)) {
-                        try { p.Close(); } catch {}
-                    }
-                }
-            } catch {}
-        });
-    }
-}
-"@
-
-Add-Type -TypeDefinition $code -ReferencedAssemblies 'presentationCore', 'System.Windows.Presentation', 'WindowsBase'
+$ttsPlayer = New-Object System.Windows.Media.MediaPlayer
+$sfxPlayer = New-Object System.Windows.Media.MediaPlayer
 
 while ($line = [Console]::In.ReadLine()) {
     if ([string]::IsNullOrWhiteSpace($line)) { continue }
+    if ($line -eq 'STOP') {
+        try { $ttsPlayer.Stop(); $sfxPlayer.Stop() } catch {}
+        continue
+    }
+
     $parts = $line.Split('|')
-    $filePath = $parts[0]
-    $repeats = if ($parts.Length -gt 1) { [int]$parts[1] } else { 1 }
+    $channel = if ($parts.Length -gt 0) { $parts[0].ToLower() } else { 'sfx' }
+    $filePath = if ($parts.Length -gt 1) { $parts[1] } else { '' }
     $volPercent = if ($parts.Length -gt 2) { [int]$parts[2] } else { 100 }
-    
-    [AsyncAudioPlayer]::Play($filePath, $repeats, $volPercent)
+    $repeats = if ($parts.Length -gt 3) { [int]$parts[3] } else { 1 }
+    $interrupt = if ($parts.Length -gt 4) { [int]$parts[4] } else { 1 }
+
+    if (-not (Test-Path $filePath)) { continue }
+
+    $targetPlayer = if ($channel -eq 'tts') { $ttsPlayer } else { $sfxPlayer }
+
+    try {
+        if ($interrupt -eq 1) {
+            try { $targetPlayer.Stop() } catch {}
+        }
+        $uri = New-Object System.Uri($filePath)
+        $targetPlayer.Open($uri)
+        $normVol = [double]$volPercent / 100.0
+        if ($normVol -lt 0.0) { $normVol = 0.0 }
+        if ($normVol -gt 1.0) { $normVol = 1.0 }
+        $targetPlayer.Volume = $normVol
+
+        $timeout = 0
+        while (-not $targetPlayer.NaturalDuration.HasTimeSpan -and $timeout -lt 25) {
+            Start-Sleep -Milliseconds 20
+            $timeout++
+        }
+
+        $targetPlayer.Play()
+    } catch {}
 }
 `;
         nativeAudioWorker = spawn('powershell', ['-NoProfile', '-NonInteractive', '-Command', psScript], {
@@ -2555,7 +2543,7 @@ while ($line = [Console]::In.ReadLine()) {
 // Pre-warm the audio worker immediately at startup
 initNativeAudioWorker();
 
-function playNativeSound(preset, url, file, repeatCount = 1, volume = 100) {
+function playNativeSound(preset, url, file, repeatCount = 1, volume = 100, channel = 'sfx', interrupt = true) {
     const vol = volume !== undefined ? parseInt(volume, 10) : 100;
     if (vol <= 0) return;
 
@@ -2575,9 +2563,17 @@ function playNativeSound(preset, url, file, repeatCount = 1, volume = 100) {
     }
 
     if (nativeAudioWorker && nativeAudioWorker.stdin && nativeAudioWorker.stdin.writable) {
-        nativeAudioWorker.stdin.write(`${audioPath}|${repeats}|${vol}\n`);
+        nativeAudioWorker.stdin.write(`${channel}|${audioPath}|${vol}|${repeats}|${interrupt ? 1 : 0}\n`);
     }
 }
+global.playNativeSound = playNativeSound;
+
+function stopAllAudio() {
+    if (nativeAudioWorker && nativeAudioWorker.stdin && nativeAudioWorker.stdin.writable) {
+        nativeAudioWorker.stdin.write('STOP\n');
+    }
+}
+global.stopAllAudio = stopAllAudio;
 
 async function runSoundAlertAction(action, callStack) {
     if (global.isSuspended) return;
@@ -2595,11 +2591,13 @@ async function runSoundAlertAction(action, callStack) {
     }
 
     console.log(`🔊 [Action] Playing Sound Alert: "${action.name}" (Type: ${source}, Preset: ${preset}, Vol: ${volume}%)`);
-    playNativeSound(preset, url, file, repeat, volume);
+    playNativeSound(preset, url, file, repeat, volume, 'sfx', true);
     await fireChain(action, 'onFired', callStack);
 }
 
 async function runEmergencyStopAction(action, callStack) {
+    global.runEmergencyStopAction = runEmergencyStopAction;
+    stopAllAudio();
     const scope = action.stopScope || 'all';
     console.log(`🛑 [Action] Emergency Stop Triggered: "${action.name}" (Scope: ${scope})`);
 
@@ -2706,6 +2704,7 @@ async function runEmergencyStopAction(action, callStack) {
     sendOverlayUpdate();
     await fireChain(action, 'onFired', callStack);
 }
+global.runEmergencyStopAction = runEmergencyStopAction;
 
 async function runEmitEventAction(action, callStack) {
     if (global.isSuspended) return;
@@ -2731,7 +2730,7 @@ async function runEmitEventAction(action, callStack) {
 
     // Prevent recursive event loop within callStack
     const stackKey = `event:${cleanEventName}`;
-    const resolvedStack = callStack || new Set();
+    const resolvedStack = (callStack instanceof Set) ? callStack : new Set(Array.isArray(callStack) ? callStack : []);
     if (resolvedStack.has(stackKey)) {
         console.warn(`📡 [Event Bus] ⚠️ Circular event broadcast loop detected for "${cleanEventName}" — stopping cascade.`);
         await fireChain(action, 'onFired', callStack);
@@ -2747,6 +2746,9 @@ async function runEmitEventAction(action, callStack) {
 
     await fireChain(action, 'onFired', resolvedStack);
 }
+global.runEmitEventAction = runEmitEventAction;
+
+global.profileVariables = global.profileVariables || {};
 
 function getVariableKey(action, clientOverride = null) {
     const scope = action.scope || 'client';
@@ -2818,6 +2820,9 @@ async function runVariableAction(action, callStack) {
     emitSignal(action.id, 'onComplete');
     await fireChain(action, 'onComplete', callStack);
 }
+global.runVariableAction = runVariableAction;
+global.getVariableValue = getVariableValue;
+global.setVariableValue = setVariableValue;
 
 // Outbound HTTP Webhook Execution
 async function runHttpRequestAction(act, callStack) {
@@ -3188,7 +3193,7 @@ async function runActionControl(act, callStack) {
 
     // Prevent circular execution stacks within the control command chain
     const stackKey = `${act.id}:control`;
-    const resolvedStack = callStack || new Set();
+    const resolvedStack = (callStack instanceof Set) ? callStack : new Set(Array.isArray(callStack) ? callStack : []);
     if (resolvedStack.has(stackKey)) {
         console.warn(`[Action Control] ⚠️ Circular control loop detected: "${act.name}" control stack — skipping.`);
         return;
@@ -3361,6 +3366,7 @@ async function runActionControl(act, callStack) {
     emitSignal(act.id, 'onComplete');
     await fireChain(act, 'onComplete', resolvedStack);
 }
+global.runActionControl = runActionControl;
 
 function isActionRunning(actionId) {
     const act = activeActions.find(a => a.id === actionId || a.id === `node_${actionId}` || (a.nodeId && a.nodeId === actionId));
@@ -3393,7 +3399,7 @@ async function runActionCondition(act, callStack) {
     }
 
     const stackKey = `${act.id}:condition`;
-    const resolvedStack = callStack || new Set();
+    const resolvedStack = (callStack instanceof Set) ? callStack : new Set(Array.isArray(callStack) ? callStack : []);
     if (resolvedStack.has(stackKey)) {
         console.warn(`[Condition Check] ⚠️ Circular condition stack detected: "${act.name}" — skipping.`);
         return;
@@ -3446,6 +3452,7 @@ async function runActionCondition(act, callStack) {
         await fireChain(act, 'onFalse', resolvedStack);
     }
 }
+global.runActionCondition = runActionCondition;
 
 // ============================================================================
 // GLOBAL HOTKEYS LISTENER (Native OS level hooks)
