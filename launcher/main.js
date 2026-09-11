@@ -51,6 +51,19 @@ function createWindow() {
     }
   });
 
+  // Enable Ctrl+R / F5 for fast UI reloading & Ctrl+Shift+I for DevTools
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.type === 'keyDown') {
+      if ((input.control && input.key.toLowerCase() === 'r') || input.key === 'F5') {
+        mainWindow.webContents.reload();
+        event.preventDefault();
+      } else if (input.control && input.shift && input.key.toLowerCase() === 'i') {
+        mainWindow.webContents.toggleDevTools();
+        event.preventDefault();
+      }
+    }
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
