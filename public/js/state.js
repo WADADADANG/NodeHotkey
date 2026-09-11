@@ -59,13 +59,13 @@ export function updateUnsavedBadge() {
     if (window.parent && window.parent !== window) {
       window.parent.postMessage({ type: 'NODEHOTKEY_DIRTY_STATE', isDirty: !!isDirty }, '*');
     }
-  } catch (e) {}
+  } catch (e) { }
 
   try {
     if (window.nodeCanvas && typeof window.nodeCanvas.renderHistory === 'function') {
       window.nodeCanvas.renderHistory();
     }
-  } catch (e) {}
+  } catch (e) { }
 }
 
 export function updateUndoRedoButtons() {
@@ -153,7 +153,7 @@ export function toggleCanvasFullscreen() {
   if (!canvasWrapper) return;
 
   if (document.fullscreenElement) {
-    document.exitFullscreen().catch(() => {});
+    document.exitFullscreen().catch(() => { });
     canvasWrapper.classList.remove('fullscreen-mode');
     if (btn) btn.innerHTML = '⛶ เต็มจอ';
     if (canvasBtn) canvasBtn.innerHTML = '⛶';
@@ -213,6 +213,7 @@ export function loadConfig() {
         undoStack.length = 0;
         redoStack.length = 0;
         updateUnsavedBadge();
+        initProfileEventsWatcher();
       }
     })
     .catch(err => {
@@ -341,8 +342,8 @@ export function onManualSaveProfile() {
   syncGlobalSettingsFromDOM();
 
   commitConfigToBackend(() => {
-    const msg = currentLang === 'en' 
-      ? `💾 Profile "${currentEditProfile}" saved to file successfully!` 
+    const msg = currentLang === 'en'
+      ? `💾 Profile "${currentEditProfile}" saved to file successfully!`
       : `💾 บันทึกโปรไฟล์ "${currentEditProfile}" ลงไฟล์เรียบร้อยแล้ว!`;
     if (typeof window.toast === 'function') {
       window.toast(msg, 'success');
@@ -417,7 +418,7 @@ export function switchToEditProfile(name) {
   currentEditProfile = name;
   try {
     localStorage.setItem('nodehotkey_last_viewed_profile', currentEditProfile);
-  } catch (e) {}
+  } catch (e) { }
   populateProfileDropdowns();
   loadProfileToUI(fullConfig.profiles[currentEditProfile]);
   const menu = document.getElementById('active-profiles-menu');
@@ -453,8 +454,8 @@ export function renderActiveProfilesPills() {
 
   const displayNames = activeList.slice(0, 2).join(', ');
   const moreText = activeList.length > 2 ? ` +${activeList.length - 2}` : '';
-  const activeStatusHtml = activeList.length > 0 
-    ? `<span style="color:#34d399; font-weight:700;">🟢 ${displayNames}${moreText}</span>` 
+  const activeStatusHtml = activeList.length > 0
+    ? `<span style="color:#34d399; font-weight:700;">🟢 ${displayNames}${moreText}</span>`
     : `<span style="color:var(--muted); font-weight:500;">${tNone}</span>`;
 
   summaryEl.innerHTML = `
@@ -889,7 +890,7 @@ export function onProfileSelectChange() {
     currentEditProfile = selectEl.value;
     try {
       localStorage.setItem('nodehotkey_last_viewed_profile', currentEditProfile);
-    } catch (e) {}
+    } catch (e) { }
     populateProfileDropdowns();
     loadProfileToUI(fullConfig.profiles[currentEditProfile]);
   }
@@ -897,7 +898,7 @@ export function onProfileSelectChange() {
 
 export function loadGlobalSettingsToUI() {
   const gs = fullConfig.globalSettings || {};
-  
+
   const targetUrlInput = document.getElementById('target-url-keyword');
   if (targetUrlInput) targetUrlInput.value = gs.targetUrlKeyword || 'universe.flyff.com';
 
@@ -941,7 +942,7 @@ export function bindGlobalSettingsAutoSave() {
 
   const triggerAutoSave = () => {
     syncGlobalSettingsFromDOM();
-    commitConfigToBackend().catch(() => {});
+    commitConfigToBackend().catch(() => { });
   };
 
   let debounceTimer = null;
@@ -1104,13 +1105,13 @@ export function confirmNewProfile() {
 
   fullConfig.profiles[name] = newProfileData;
   currentEditProfile = name;
-  try { localStorage.setItem('nodehotkey_last_viewed_profile', currentEditProfile); } catch (e) {}
+  try { localStorage.setItem('nodehotkey_last_viewed_profile', currentEditProfile); } catch (e) { }
   if (!Array.isArray(fullConfig.activeProfiles)) fullConfig.activeProfiles = ['Default'];
-  
+
   document.getElementById('new-profile-modal').classList.remove('show');
   populateProfileDropdowns();
   loadProfileToUI(fullConfig.profiles[name]);
-  
+
   // Auto-commit to backend disk immediately
   commitConfigToBackend(() => {
     if (typeof window.toast === 'function') window.toast(t('toastProfileCreated').replace('{name}', name), 'success');
@@ -1151,7 +1152,7 @@ export function confirmRenameProfile() {
     fullConfig.activeProfiles = fullConfig.activeProfiles.map(p => p === currentEditProfile ? newName : p);
   }
   currentEditProfile = newName;
-  try { localStorage.setItem('nodehotkey_last_viewed_profile', currentEditProfile); } catch (e) {}
+  try { localStorage.setItem('nodehotkey_last_viewed_profile', currentEditProfile); } catch (e) { }
   document.getElementById('rename-profile-modal').classList.remove('show');
   populateProfileDropdowns();
   loadProfileToUI(fullConfig.profiles[newName]);
@@ -1179,7 +1180,7 @@ export function deleteProfile() {
     }
     const remaining = Object.keys(fullConfig.profiles);
     currentEditProfile = remaining.includes('Default') ? 'Default' : remaining[0];
-    try { localStorage.setItem('nodehotkey_last_viewed_profile', currentEditProfile); } catch (e) {}
+    try { localStorage.setItem('nodehotkey_last_viewed_profile', currentEditProfile); } catch (e) { }
     populateProfileDropdowns();
     loadProfileToUI(fullConfig.profiles[currentEditProfile]);
 
@@ -1333,7 +1334,7 @@ export function toggleClientEnable(clientIdx) {
         renderClientToggles(activeClients, disabledClients);
         if (typeof window.toast === 'function') {
           const isDisabled = disabledClients.includes(String(clientIdx)) || disabledClients.includes(clientIdx);
-          const msg = isDisabled 
+          const msg = isDisabled
             ? (currentLang === 'en' ? `Paused Client ${clientIdx} (Skipped from hotkeys)` : `ปิดพัก Client ${clientIdx} (ข้ามการกดปุ่ม)`)
             : (currentLang === 'en' ? `Activated Client ${clientIdx}` : `เปิดใช้งาน Client ${clientIdx}`);
           window.toast(msg, isDisabled ? 'warning' : 'success');
@@ -1377,7 +1378,7 @@ export function pollActiveClients() {
         renderClientToggles(activeClients, disabledClients);
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -1544,7 +1545,7 @@ export function handleImportProfileFile(event) {
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = function (e) {
     try {
       const content = e.target.result;
       let parsed = null;
@@ -1580,7 +1581,7 @@ export function handleImportProfileFile(event) {
       if (!fullConfig.profiles) fullConfig.profiles = {};
       fullConfig.profiles[targetName] = sanitizedData;
       currentEditProfile = targetName;
-      try { localStorage.setItem('nodehotkey_last_viewed_profile', currentEditProfile); } catch (e) {}
+      try { localStorage.setItem('nodehotkey_last_viewed_profile', currentEditProfile); } catch (e) { }
       if (!Array.isArray(fullConfig.activeProfiles)) fullConfig.activeProfiles = ['Default'];
 
       commitConfigToBackend(() => {
@@ -1608,4 +1609,255 @@ export function handleImportProfileFile(event) {
 window.exportCurrentProfile = exportCurrentProfile;
 window.triggerImportProfile = triggerImportProfile;
 window.handleImportProfileFile = handleImportProfileFile;
+
+// ═════════════════════════════════════════════════════════════════════════════
+// EXTERNAL PROFILE FILE WATCHER & UNITY-STYLE CONFLICT RESOLUTION
+// ═════════════════════════════════════════════════════════════════════════════
+let profileEventsSource = null;
+let pendingExternalChangeEvent = null;
+let profileEventsReconnectTimer = null;
+
+export function initProfileEventsWatcher() {
+  if (profileEventsSource) return; // Already connected
+  if (typeof EventSource === 'undefined') return;
+
+  try {
+    profileEventsSource = new EventSource('/api/profile-events/stream');
+
+    profileEventsSource.onmessage = (e) => {
+      if (!e.data || e.data.trim() === '') return;
+      try {
+        const event = JSON.parse(e.data);
+        if (event.type === 'PROFILE_EXTERNAL_CHANGE') {
+          handleExternalProfileChange(event);
+        }
+      } catch (err) {
+        console.error('[Profile Watcher] Failed to parse event:', err);
+      }
+    };
+
+    profileEventsSource.onerror = () => {
+      if (profileEventsSource) {
+        try { profileEventsSource.close(); } catch (e) { }
+        profileEventsSource = null;
+      }
+      if (!profileEventsReconnectTimer) {
+        profileEventsReconnectTimer = setTimeout(() => {
+          profileEventsReconnectTimer = null;
+          initProfileEventsWatcher();
+        }, 4000);
+      }
+    };
+  } catch (err) {
+    console.warn('[Profile Watcher] Could not connect to SSE stream:', err);
+  }
+}
+
+export function handleExternalProfileChange(event) {
+  console.log(`[Profile Watcher] 🔔 External change detected on "${event.profileName}":`, event.action);
+
+  if (event.action === 'deleted') {
+    const isCurrent = (event.profileName === currentEditProfile);
+    if (isCurrent) {
+      if (typeof window.toast === 'function') {
+        window.toast(`⚠️ โปรไฟล์ "${event.profileName}" ที่กำลังเปิดอยู่ถูกลบออกจากดิสก์!`, 'error');
+      }
+    } else {
+      if (typeof window.toast === 'function') {
+        window.toast(`🗑️ โปรไฟล์ "${event.profileName}" ถูกลบออกจากดิสก์`, 'warning');
+      }
+    }
+    // Refresh dropdowns
+    fetch('/api/config', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(cfg => {
+        if (cfg && cfg.profiles) {
+          fullConfig.profiles = cfg.profiles;
+          populateProfileDropdowns();
+        }
+      }).catch(() => { });
+    return;
+  }
+
+  if (event.action === 'created') {
+    if (typeof window.toast === 'function') {
+      window.toast(`✨ ตรวจพบโปรไฟล์ใหม่ "${event.profileName}" บนดิสก์`, 'info');
+    }
+    // Refresh dropdowns
+    fetch('/api/config', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(cfg => {
+        if (cfg && cfg.profiles) {
+          fullConfig.profiles = cfg.profiles;
+          populateProfileDropdowns();
+        }
+      }).catch(() => { });
+    return;
+  }
+
+  if (event.action === 'modified') {
+    // Notify every time as requested!
+    openExternalChangeModal(event);
+  }
+}
+
+export function openExternalChangeModal(event) {
+  pendingExternalChangeEvent = event;
+  const modal = document.getElementById('external-change-modal');
+  if (!modal) return;
+
+  const profileNameEl = document.getElementById('external-change-profile-name');
+  const fileNameEl = document.getElementById('external-change-file-name');
+  const timestampEl = document.getElementById('external-change-timestamp');
+  const conflictWarningEl = document.getElementById('external-change-conflict-warning');
+  const cleanDescEl = document.getElementById('external-change-clean-desc');
+  const footerEl = document.getElementById('external-change-footer');
+
+  if (profileNameEl) profileNameEl.textContent = event.profileName || '-';
+  if (fileNameEl) fileNameEl.textContent = `configs/profiles/${event.filename || (event.profileName + '.json')}`;
+  if (timestampEl) timestampEl.textContent = new Date(event.timestamp || Date.now()).toLocaleTimeString();
+
+  const isCurrent = (event.profileName === currentEditProfile);
+  const isEn = (typeof currentLang !== 'undefined' ? currentLang : 'th') === 'en';
+
+  if (isCurrent) {
+    if (isDirty) {
+      // Conflict State: Unsaved changes on Canvas!
+      if (conflictWarningEl) conflictWarningEl.style.display = 'block';
+      if (cleanDescEl) cleanDescEl.style.display = 'none';
+
+      if (footerEl) {
+        footerEl.innerHTML = `
+          <button type="button" class="btn btn-ghost" onclick="window.closeExternalChangeModal()" style="padding:8px 16px; font-size:13px; cursor:pointer;">
+            ${isEn ? '✖️ Cancel' : '✖️ ยกเลิก'}
+          </button>
+          <button type="button" class="btn" onclick="window.resolveExternalChangeOverwrite()" style="padding:8px 18px; font-size:13px; font-weight:700; background:linear-gradient(135deg, #3b82f6, #1d4ed8); color:#fff; border-radius:8px; border:1px solid rgba(59,130,246,0.4); cursor:pointer;">
+            ${isEn ? '💾 Overwrite Disk (Keep Screen)' : '💾 เซฟทับดิสก์ (คงหน้าจอไว้)'}
+          </button>
+          <button type="button" class="btn btn-danger" onclick="window.resolveExternalChangeReload()" style="padding:8px 18px; font-size:13px; font-weight:700; border-radius:8px; cursor:pointer;">
+            ${isEn ? '📥 Discard Changes & Reload' : '📥 โหลดจากดิสก์ (ทิ้งการแก้ไข)'}
+          </button>
+        `;
+      }
+    } else {
+      // Clean State: No unsaved changes
+      if (conflictWarningEl) conflictWarningEl.style.display = 'none';
+      if (cleanDescEl) {
+        cleanDescEl.style.display = 'block';
+        cleanDescEl.textContent = isEn
+          ? `Profile "${event.profileName}" was modified on disk by an external program. Would you like to reload latest contents from disk?`
+          : `ไฟล์โปรไฟล์ "${event.profileName}" บนดิสก์ถูกแก้ไขจากภายนอก คุณต้องการโหลดข้อมูลใหม่จากไฟล์หรือไม่?`;
+      }
+
+      if (footerEl) {
+        footerEl.innerHTML = `
+          <button type="button" class="btn btn-ghost" onclick="window.closeExternalChangeModal()" style="padding:8px 16px; font-size:13px; cursor:pointer;">
+            ${isEn ? '✖️ Ignore' : '✖️ ละเว้น'}
+          </button>
+          <button type="button" class="btn btn-activate" onclick="window.resolveExternalChangeReload()" style="padding:8px 22px; font-size:13px; font-weight:700; cursor:pointer;">
+            ${isEn ? '📥 Reload from Disk' : '📥 โหลดข้อมูลใหม่ (Reload)'}
+          </button>
+        `;
+      }
+    }
+  } else {
+    // Another profile modified outside
+    if (conflictWarningEl) conflictWarningEl.style.display = 'none';
+    if (cleanDescEl) {
+      cleanDescEl.style.display = 'block';
+      cleanDescEl.textContent = isEn
+        ? `Profile "${event.profileName}" (not currently opened) was modified on disk.`
+        : `ตรวจพบการแก้ไขโปรไฟล์ "${event.profileName}" บนดิสก์ (ขณะนี้คุณกำลังเปิดดู "${currentEditProfile}")`;
+    }
+
+    if (footerEl) {
+      footerEl.innerHTML = `
+        <button type="button" class="btn btn-ghost" onclick="window.closeExternalChangeModal()" style="padding:8px 16px; font-size:13px; cursor:pointer;">
+          ${isEn ? '✖️ Ignore' : '✖️ ละเว้น'}
+        </button>
+        <button type="button" class="btn" onclick="window.resolveExternalChangeBackgroundUpdate('${event.profileName}')" style="padding:8px 16px; font-size:13px; background:rgba(255,255,255,0.08); color:var(--text-color); border:1px solid var(--border); cursor:pointer;">
+          ${isEn ? '🔄 Update in Background' : '🔄 อัปเดตข้อมูลเบื้องหลัง'}
+        </button>
+        <button type="button" class="btn btn-primary" onclick="window.resolveExternalChangeSwitchAndReload('${event.profileName}')" style="padding:8px 18px; font-size:13px; font-weight:700; cursor:pointer;">
+          ${isEn ? '📥 Switch & Reload' : '📥 สลับไปดูและโหลด'}
+        </button>
+      `;
+    }
+  }
+
+  modal.classList.add('show');
+}
+
+export function closeExternalChangeModal() {
+  const modal = document.getElementById('external-change-modal');
+  if (modal) modal.classList.remove('show');
+  pendingExternalChangeEvent = null;
+}
+
+export async function resolveExternalChangeReload() {
+  const pName = pendingExternalChangeEvent?.profileName || currentEditProfile;
+  closeExternalChangeModal();
+
+  try {
+    const res = await fetch(`/api/profile-data?name=${encodeURIComponent(pName)}`, { cache: 'no-store' });
+    const data = await res.json();
+    if (data.success && data.profile) {
+      fullConfig.profiles[pName] = data.profile;
+      if (pName === currentEditProfile) {
+        loadProfileToUI(data.profile);
+        clearDirty();
+      }
+      const msg = (typeof currentLang !== 'undefined' && currentLang === 'en')
+        ? `📥 Reloaded profile "${pName}" from disk successfully!`
+        : `📥 โหลดข้อมูลโปรไฟล์ "${pName}" จากดิสก์เรียบร้อยแล้ว!`;
+      if (typeof window.toast === 'function') window.toast(msg, 'success');
+    } else {
+      throw new Error(data.error || 'Failed to fetch profile data');
+    }
+  } catch (err) {
+    console.error('Failed to reload profile from disk:', err);
+    if (typeof window.toast === 'function') {
+      window.toast(`❌ โหลดไฟล์ล้มเหลว: ${err.message}`, 'error');
+    }
+  }
+}
+
+export function resolveExternalChangeOverwrite() {
+  const pName = pendingExternalChangeEvent?.profileName || currentEditProfile;
+  closeExternalChangeModal();
+
+  onManualSaveProfile();
+  const msg = (typeof currentLang !== 'undefined' && currentLang === 'en')
+    ? `💾 Overwrote disk file with current screen changes for "${pName}"!`
+    : `💾 บันทึกทับไฟล์บนดิสก์ด้วยข้อมูลปัจจุบันของโปรไฟล์ "${pName}" เรียบร้อยแล้ว!`;
+  if (typeof window.toast === 'function') window.toast(msg, 'success');
+}
+
+export async function resolveExternalChangeBackgroundUpdate(profileName) {
+  closeExternalChangeModal();
+  try {
+    const res = await fetch(`/api/profile-data?name=${encodeURIComponent(profileName)}`, { cache: 'no-store' });
+    const data = await res.json();
+    if (data.success && data.profile) {
+      fullConfig.profiles[profileName] = data.profile;
+      if (typeof window.toast === 'function') {
+        window.toast(`🔄 อัปเดตข้อมูลโปรไฟล์ "${profileName}" ในระบบเรียบร้อยแล้ว`, 'info');
+      }
+    }
+  } catch (err) {
+    console.error('Failed background update of profile:', err);
+  }
+}
+
+export async function resolveExternalChangeSwitchAndReload(profileName) {
+  closeExternalChangeModal();
+  switchToEditProfile(profileName);
+  await resolveExternalChangeReload();
+}
+
+window.closeExternalChangeModal = closeExternalChangeModal;
+window.resolveExternalChangeReload = resolveExternalChangeReload;
+window.resolveExternalChangeOverwrite = resolveExternalChangeOverwrite;
+window.resolveExternalChangeBackgroundUpdate = resolveExternalChangeBackgroundUpdate;
+window.resolveExternalChangeSwitchAndReload = resolveExternalChangeSwitchAndReload;
 

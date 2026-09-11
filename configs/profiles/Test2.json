@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 0.7013024636219192,
     "pan": {
-      "x": 338,
-      "y": -591
+      "x": -73,
+      "y": -744
     }
   },
   "nodes": [
@@ -30,7 +30,7 @@
       "title": "Party Scanner (Client 4)",
       "position": {
         "x": 850,
-        "y": 1220
+        "y": 1210
       },
       "data": {
         "enabled": true,
@@ -46,8 +46,8 @@
       "type": "party_buff",
       "title": "Party Buff (Cycle Members)",
       "position": {
-        "x": 1230,
-        "y": 1330
+        "x": 1220,
+        "y": 1320
       },
       "data": {
         "enabled": true,
@@ -164,7 +164,7 @@
       "title": "TTS: ไม่พบปาร์ตี้",
       "position": {
         "x": 850,
-        "y": 1700
+        "y": 1720
       },
       "data": {
         "enabled": true,

@@ -2,8 +2,21 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const { readConfig, writeConfig } = require('./config-store');
+const { readConfig, writeConfig, readSingleProfile, writeSingleProfile, initProfileWatcher } = require('./config-store');
 const { checkForUpdates, getUpdateStatus } = require('./update-checker');
+
+// Profile External Event Stream (SSE)
+const profileSseClients = new Set();
+function broadcastProfileEvent(eventData) {
+  const payload = `data: ${JSON.stringify(eventData)}\n\n`;
+  for (const client of profileSseClients) {
+    try {
+      client.write(payload);
+    } catch (e) {
+      profileSseClients.delete(client);
+    }
+  }
+}
 
 function getInitialPort() {
   if (process.env.PORT) {
@@ -16,7 +29,7 @@ function getInitialPort() {
       const p = parseInt(cfg.globalSettings.webPort, 10);
       if (!isNaN(p) && p > 0) return p;
     }
-  } catch (e) {}
+  } catch (e) { }
   return 3088;
 }
 
@@ -87,6 +100,23 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- SSE /api/profile-events/stream → Real-time Profile External File Modification Stream ---
+  if (urlPath === '/api/profile-events/stream') {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*'
+    });
+    res.write(`data: ${JSON.stringify({ type: 'CONNECTED', timestamp: Date.now() })}\n\n`);
+    profileSseClients.add(res);
+
+    req.on('close', () => {
+      profileSseClients.delete(res);
+    });
+    return;
+  }
+
   // --- GET /api/update-check → returns GitHub update status ---
   if (urlPath === '/api/update-check' && req.method === 'GET') {
     return sendJSON(res, 200, { success: true, ...getUpdateStatus() });
@@ -98,78 +128,78 @@ const server = http.createServer((req, res) => {
     return sendJSON(res, 200, { success: true, presets, presetsById: getCooldownPresetsById(), classIcons: getClassIcons() });
   }
 
-function getClientStatusesPayload() {
-  if (typeof global.getClientStatuses === 'function') {
-    return global.getClientStatuses();
-  }
-  const activeList = global.activeClients || [];
-  const clientStatuses = {};
+  function getClientStatusesPayload() {
+    if (typeof global.getClientStatuses === 'function') {
+      return global.getClientStatuses();
+    }
+    const activeList = global.activeClients || [];
+    const clientStatuses = {};
 
-  activeList.forEach(clientIdx => {
-    const clientStr = String(clientIdx);
-    const activeActions = global.activeActions || [];
-    const activeLoopStates = global.activeLoopStates || {};
-    const activeHoldStates = global.activeHoldStates || {};
-    const pressedRemapKeys = global.pressedRemapKeys || {};
+    activeList.forEach(clientIdx => {
+      const clientStr = String(clientIdx);
+      const activeActions = global.activeActions || [];
+      const activeLoopStates = global.activeLoopStates || {};
+      const activeHoldStates = global.activeHoldStates || {};
+      const pressedRemapKeys = global.pressedRemapKeys || {};
 
-    // 1. Buff sequence running?
-    if (global.isBuffSequenceRunning && global.isBuffSequenceRunning[clientStr]) {
-      const buffAct = activeActions.find(a => a.mode === 'buff_sequence' && (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all'));
-      clientStatuses[clientStr] = {
-        status: buffAct ? buffAct.name : "Buffing",
-        type: "buff"
-      };
-    // 2. Loop running?
-    } else if (activeActions.find(a =>
-      a.mode === 'loop' && a.enabled &&
-      activeLoopStates[a.id] && activeLoopStates[a.id].running &&
-      (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all')
-    )) {
-      const activeLoop = activeActions.find(a =>
+      // 1. Buff sequence running?
+      if (global.isBuffSequenceRunning && global.isBuffSequenceRunning[clientStr]) {
+        const buffAct = activeActions.find(a => a.mode === 'buff_sequence' && (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all'));
+        clientStatuses[clientStr] = {
+          status: buffAct ? buffAct.name : "Buffing",
+          type: "buff"
+        };
+        // 2. Loop running?
+      } else if (activeActions.find(a =>
         a.mode === 'loop' && a.enabled &&
         activeLoopStates[a.id] && activeLoopStates[a.id].running &&
         (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all')
-      );
-      clientStatuses[clientStr] = {
-        status: activeLoop.name,
-        type: "loop"
-      };
-    // 3. Key Hold active?
-    } else if (activeActions.find(a =>
-      a.mode === 'key_hold' && a.enabled && activeHoldStates[a.id] &&
-      (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all')
-    )) {
-      const activeHold = activeActions.find(a =>
+      )) {
+        const activeLoop = activeActions.find(a =>
+          a.mode === 'loop' && a.enabled &&
+          activeLoopStates[a.id] && activeLoopStates[a.id].running &&
+          (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all')
+        );
+        clientStatuses[clientStr] = {
+          status: activeLoop.name,
+          type: "loop"
+        };
+        // 3. Key Hold active?
+      } else if (activeActions.find(a =>
         a.mode === 'key_hold' && a.enabled && activeHoldStates[a.id] &&
         (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all')
-      );
-      clientStatuses[clientStr] = {
-        status: activeHold.name || `Hold: ${activeHold.targetKey}`,
-        type: "hold"
-      };
-    // 4. Key Forward active?
-    } else if (activeActions.find(a =>
-      a.mode === 'forward' && a.enabled && pressedRemapKeys[`${a.id}-${clientStr}`] &&
-      (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all')
-    )) {
-      const activeForward = activeActions.find(a =>
+      )) {
+        const activeHold = activeActions.find(a =>
+          a.mode === 'key_hold' && a.enabled && activeHoldStates[a.id] &&
+          (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all')
+        );
+        clientStatuses[clientStr] = {
+          status: activeHold.name || `Hold: ${activeHold.targetKey}`,
+          type: "hold"
+        };
+        // 4. Key Forward active?
+      } else if (activeActions.find(a =>
         a.mode === 'forward' && a.enabled && pressedRemapKeys[`${a.id}-${clientStr}`] &&
         (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all')
-      );
-      clientStatuses[clientStr] = {
-        status: activeForward.name || `${activeForward.trigger.value} ➜ ${activeForward.targetKey}`,
-        type: "forward"
-      };
-    } else {
-      clientStatuses[clientStr] = {
-        status: "Standby",
-        type: "standby"
-      };
-    }
-  });
+      )) {
+        const activeForward = activeActions.find(a =>
+          a.mode === 'forward' && a.enabled && pressedRemapKeys[`${a.id}-${clientStr}`] &&
+          (a.targetClient === clientStr || a.targetClient === 'both' || a.targetClient === 'all')
+        );
+        clientStatuses[clientStr] = {
+          status: activeForward.name || `${activeForward.trigger.value} ➜ ${activeForward.targetKey}`,
+          type: "forward"
+        };
+      } else {
+        clientStatuses[clientStr] = {
+          status: "Standby",
+          type: "standby"
+        };
+      }
+    });
 
-  return clientStatuses;
-}
+    return clientStatuses;
+  }
 
   // --- GET /api/config → full config + active runtime state ---
   if (urlPath === '/api/config' && req.method === 'GET') {
@@ -222,7 +252,7 @@ function getClientStatusesPayload() {
           global.disabledClients.push(clientStr);
           console.log(`[Server] 🔴 Disabled Client ${clientStr}`);
         }
-        
+
         // Sync to config
         const config = readConfig();
         if (config) {
@@ -333,7 +363,7 @@ function getClientStatusesPayload() {
 
         let parsedHeaders = {};
         if (typeof headers === 'string') {
-          try { parsedHeaders = JSON.parse(headers); } catch (e) {}
+          try { parsedHeaders = JSON.parse(headers); } catch (e) { }
         } else if (typeof headers === 'object' && headers !== null) {
           parsedHeaders = headers;
         }
@@ -354,7 +384,7 @@ function getClientStatusesPayload() {
         clearTimeout(timeoutId);
 
         let responseText = '';
-        try { responseText = await response.text(); } catch (e) {}
+        try { responseText = await response.text(); } catch (e) { }
 
         sendJSON(res, 200, {
           success: response.ok,
@@ -518,6 +548,38 @@ function getClientStatusesPayload() {
     return;
   }
 
+  // --- GET /api/profile-data → get single profile fresh from disk ---
+  if (urlPath === '/api/profile-data' && req.method === 'GET') {
+    try {
+      const urlObj = new URL(req.url, `http://localhost:${PORT}`);
+      const profileName = urlObj.searchParams.get('name');
+      if (!profileName) return sendJSON(res, 400, { error: 'Profile name required' });
+      const profile = readSingleProfile(profileName);
+      if (!profile) return sendJSON(res, 404, { error: 'Profile not found on disk' });
+      return sendJSON(res, 200, { success: true, profile });
+    } catch (e) {
+      return sendJSON(res, 500, { error: e.message });
+    }
+  }
+
+  // --- POST /api/profile/overwrite → force overwrite a profile with UI data (Conflict resolution) ---
+  if (urlPath === '/api/profile/overwrite' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', () => {
+      try {
+        const { name, profileData } = JSON.parse(body);
+        if (!name || !profileData) return sendJSON(res, 400, { error: 'Missing name or profileData' });
+        writeSingleProfile(name, profileData);
+        console.log(`[Server] 💾 Overwrote profile on disk: "${name}"`);
+        return sendJSON(res, 200, { success: true });
+      } catch (e) {
+        return sendJSON(res, 400, { error: 'Invalid JSON payload' });
+      }
+    });
+    return;
+  }
+
   // --- GET /api/nodes → list all modular registered nodes ---
   if (urlPath === '/api/nodes' && req.method === 'GET') {
     try {
@@ -594,10 +656,10 @@ function getClientStatusesPayload() {
         const config = readConfig();
         if (!config.profiles[name]) return sendJSON(res, 404, { error: 'Profile not found' });
         if (!Array.isArray(config.activeProfiles)) config.activeProfiles = [config.activeProfile || 'Default'];
-        
+
         const isCurrentlyActive = config.activeProfiles.includes(name);
         const shouldBeActive = (active !== undefined) ? !!active : !isCurrentlyActive;
-        
+
         if (shouldBeActive) {
           if (!config.activeProfiles.includes(name)) config.activeProfiles.push(name);
         } else {
@@ -753,4 +815,28 @@ server.listen(PORT, () => {
   global.activeServerPort = PORT;
   console.log(`[Server] Running at http://localhost:${PORT}/`);
   setTimeout(() => checkForUpdates(), 1500);
+
+  // Initialize Profile File Watcher & External Change Broadcast
+  initProfileWatcher((change) => {
+    broadcastProfileEvent({
+      type: 'PROFILE_EXTERNAL_CHANGE',
+      ...change
+    });
+
+    // Hot-reload in bot engine if active profile
+    try {
+      const cfg = readConfig();
+      if (cfg && Array.isArray(cfg.activeProfiles) && cfg.activeProfiles.includes(change.profileName)) {
+        if (global.activeWorkflowEngine && typeof global.activeWorkflowEngine.loadProfile === 'function') {
+          const fresh = readSingleProfile(change.profileName);
+          if (fresh) {
+            global.activeWorkflowEngine.loadProfile(fresh);
+            console.log(`[Server] ⚡ Hot-reloaded active profile into Engine: "${change.profileName}"`);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[Server] Error during engine profile hot-reload:', e.message);
+    }
+  });
 });

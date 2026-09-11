@@ -25,8 +25,8 @@ class NodeCanvasEditor {
       return;
     }
 
-    this.onProfileChanged = options.onProfileChanged || function() {};
-    
+    this.onProfileChanged = options.onProfileChanged || function () { };
+
     this.zoom = 1.0;
     this.pan = { x: 0, y: 0 };
     this.nodes = [];
@@ -45,7 +45,7 @@ class NodeCanvasEditor {
     this.panStart = { x: 0, y: 0 };
     this.rightClickStartPos = { x: 0, y: 0 };
     this.rightClickMoved = false;
-    
+
     // Multi-Node Dragging state (Left-Click on Nodes)
     this.isDraggingNodes = false;
     this.hasActuallyDraggedNodes = false;
@@ -1792,7 +1792,7 @@ class NodeCanvasEditor {
         }
 
         if (typeof onCompleteCallback === 'function') {
-          try { onCompleteCallback(); } catch(e) { console.error(e); }
+          try { onCompleteCallback(); } catch (e) { console.error(e); }
         }
 
         // Smooth fade out after landing at the port
@@ -1810,7 +1810,7 @@ class NodeCanvasEditor {
   connectRealtimeSignalStream() {
     if (typeof EventSource === 'undefined') return;
     if (this.signalEventSource) {
-      try { this.signalEventSource.close(); } catch(e) {}
+      try { this.signalEventSource.close(); } catch (e) { }
     }
 
     try {
@@ -2567,7 +2567,7 @@ class NodeCanvasEditor {
     let isDirtyNow = false;
     try {
       if (typeof window.isDirty !== 'undefined') isDirtyNow = window.isDirty;
-    } catch (e) {}
+    } catch (e) { }
 
     const isEn = window.currentLang === 'en';
 
@@ -2669,7 +2669,7 @@ class NodeCanvasEditor {
     filteredNodes.forEach(node => {
       const isSelected = this.selectedNodeIds.has(node.id);
       const icon = iconMap[node.type] || '📦';
-      
+
       let metaText = '';
       if (node.type === 'trigger') {
         metaText = `Key: <strong>${node.data?.triggerValue || '-'}</strong>`;
@@ -3480,9 +3480,9 @@ class NodeCanvasEditor {
         <input type="range" id="inspector-interval-slider-${node.id}" min="100" max="60000" step="50" value="${Math.min(curVal, 60000)}" style="width:100%; accent-color:#3b82f6; cursor:pointer; margin-top:4px;" oninput="window.nodeCanvas.onIntervalInput('${node.id}', this.value)" onchange="window.nodeCanvas.onIntervalChange('${node.id}', this.value)" />
         <div id="interval-presets-${node.id}" style="display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;">
           ${presets.map(p => {
-            const isCur = curVal === p.ms;
-            return `<button type="button" onclick="window.nodeCanvas.setPresetInterval('${node.id}', ${p.ms})" style="background:${isCur ? '#3b82f6' : 'rgba(255,255,255,0.06)'}; border:1px solid ${isCur ? '#60a5fa' : 'rgba(255,255,255,0.1)'}; color:${isCur ? '#fff' : 'var(--muted)'}; font-size:10px; font-weight:600; padding:3px 7px; border-radius:6px; cursor:pointer; transition:all 0.15s;">${p.label}</button>`;
-          }).join('')}
+      const isCur = curVal === p.ms;
+      return `<button type="button" onclick="window.nodeCanvas.setPresetInterval('${node.id}', ${p.ms})" style="background:${isCur ? '#3b82f6' : 'rgba(255,255,255,0.06)'}; border:1px solid ${isCur ? '#60a5fa' : 'rgba(255,255,255,0.1)'}; color:${isCur ? '#fff' : 'var(--muted)'}; font-size:10px; font-weight:600; padding:3px 7px; border-radius:6px; cursor:pointer; transition:all 0.15s;">${p.label}</button>`;
+    }).join('')}
         </div>
       </div>
     `;
@@ -3517,9 +3517,9 @@ class NodeCanvasEditor {
         <input type="range" id="inspector-delay-slider-${node.id}" min="100" max="60000" step="50" value="${Math.min(curVal, 60000)}" style="width:100%; accent-color:#3b82f6; cursor:pointer; margin-top:4px;" oninput="window.nodeCanvas.onDelayInput('${node.id}', this.value)" onchange="window.nodeCanvas.onDelayChange('${node.id}', this.value)" />
         <div id="delay-presets-${node.id}" style="display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;">
           ${presets.map(p => {
-            const isCur = curVal === p.ms;
-            return `<button type="button" onclick="window.nodeCanvas.setPresetDelay('${node.id}', ${p.ms})" style="background:${isCur ? '#3b82f6' : 'rgba(255,255,255,0.06)'}; border:1px solid ${isCur ? '#60a5fa' : 'rgba(255,255,255,0.1)'}; color:${isCur ? '#fff' : 'var(--muted)'}; font-size:10px; font-weight:600; padding:3px 7px; border-radius:6px; cursor:pointer; transition:all 0.15s;">${p.label}</button>`;
-          }).join('')}
+      const isCur = curVal === p.ms;
+      return `<button type="button" onclick="window.nodeCanvas.setPresetDelay('${node.id}', ${p.ms})" style="background:${isCur ? '#3b82f6' : 'rgba(255,255,255,0.06)'}; border:1px solid ${isCur ? '#60a5fa' : 'rgba(255,255,255,0.1)'}; color:${isCur ? '#fff' : 'var(--muted)'}; font-size:10px; font-weight:600; padding:3px 7px; border-radius:6px; cursor:pointer; transition:all 0.15s;">${p.label}</button>`;
+    }).join('')}
         </div>
       </div>
     `;
@@ -3631,25 +3631,25 @@ class NodeCanvasEditor {
         timeoutMs: node.data?.timeoutMs || 5000
       })
     })
-    .then(res => res.json())
-    .then(data => {
-      if (btn) btn.disabled = false;
-      if (!statusBox) return;
-      if (data.success) {
-        statusBox.style.color = '#34d399';
-        statusBox.textContent = `${canvasT('inspector_webhook_test_ok', '✅ Test succeeded! HTTP Status: ')} ${data.status} ${data.statusText || ''}`;
-      } else {
-        statusBox.style.color = '#ef4444';
-        statusBox.textContent = `${canvasT('inspector_webhook_test_err', '❌ Test failed: ')} ${data.error || ('Status ' + data.status)}`;
-      }
-    })
-    .catch(err => {
-      if (btn) btn.disabled = false;
-      if (statusBox) {
-        statusBox.style.color = '#ef4444';
-        statusBox.textContent = `${canvasT('inspector_webhook_test_err', '❌ Test failed: ')} ${err.message}`;
-      }
-    });
+      .then(res => res.json())
+      .then(data => {
+        if (btn) btn.disabled = false;
+        if (!statusBox) return;
+        if (data.success) {
+          statusBox.style.color = '#34d399';
+          statusBox.textContent = `${canvasT('inspector_webhook_test_ok', '✅ Test succeeded! HTTP Status: ')} ${data.status} ${data.statusText || ''}`;
+        } else {
+          statusBox.style.color = '#ef4444';
+          statusBox.textContent = `${canvasT('inspector_webhook_test_err', '❌ Test failed: ')} ${data.error || ('Status ' + data.status)}`;
+        }
+      })
+      .catch(err => {
+        if (btn) btn.disabled = false;
+        if (statusBox) {
+          statusBox.style.color = '#ef4444';
+          statusBox.textContent = `${canvasT('inspector_webhook_test_err', '❌ Test failed: ')} ${err.message}`;
+        }
+      });
   }
 
   openScreenshotFolder(nodeId) {
@@ -3667,23 +3667,23 @@ class NodeCanvasEditor {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ subfolder })
     })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        if (typeof window.toast === 'function') {
-          window.toast(`✅ เปิดโฟลเดอร์เรียบร้อยแล้ว`, 'success');
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          if (typeof window.toast === 'function') {
+            window.toast(`✅ เปิดโฟลเดอร์เรียบร้อยแล้ว`, 'success');
+          }
+        } else {
+          if (typeof window.toast === 'function') {
+            window.toast(`❌ ไม่สามารถเปิดโฟลเดอร์ได้: ${data.error}`, 'error');
+          }
         }
-      } else {
+      })
+      .catch(err => {
         if (typeof window.toast === 'function') {
-          window.toast(`❌ ไม่สามารถเปิดโฟลเดอร์ได้: ${data.error}`, 'error');
+          window.toast(`❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์: ${err.message}`, 'error');
         }
-      }
-    })
-    .catch(err => {
-      if (typeof window.toast === 'function') {
-        window.toast(`❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์: ${err.message}`, 'error');
-      }
-    });
+      });
   }
 
   renderEmitEventHelper(node) {
@@ -4505,10 +4505,10 @@ class NodeCanvasEditor {
           ${checkableNodes.length === 0 ? `
             <option value="" disabled>(${canvasT('inspector_no_other_actions', 'No other actions on canvas')})</option>
           ` : checkableNodes.map(n => {
-            let actId = n.data?.actionId || (n.id.startsWith('node_') ? n.id.replace('node_', '') : n.id);
-            if (actId.startsWith('node_')) actId = actId.replace('node_', '');
-            return `<option value="${actId}" ${actId === canonicalTargetId || n.id === rawTargetId ? 'selected' : ''}>${n.title || n.type} (${this.getNodeTypeLabel(n.type)})</option>`;
-          }).join('')}
+      let actId = n.data?.actionId || (n.id.startsWith('node_') ? n.id.replace('node_', '') : n.id);
+      if (actId.startsWith('node_')) actId = actId.replace('node_', '');
+      return `<option value="${actId}" ${actId === canonicalTargetId || n.id === rawTargetId ? 'selected' : ''}>${n.title || n.type} (${this.getNodeTypeLabel(n.type)})</option>`;
+    }).join('')}
         </select>
       </div>
       <div class="inspector-field-group">

@@ -1,11 +1,26 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { convertLegacyProfileToNodeWorkflow, isNodeWorkflowProfile } = require('./converter');
 
 const CONFIGS_DIR = path.join(__dirname, 'configs');
 const PROFILES_DIR = path.join(CONFIGS_DIR, 'profiles');
 const GLOBAL_CONFIG_PATH = path.join(CONFIGS_DIR, 'global.json');
 const LEGACY_CONFIG_PATH = path.join(__dirname, 'config.json');
+
+// File Hash & Internal Save Lock Tracking
+const lastKnownProfileHashes = new Map(); // filename -> sha1
+const internalWriteLocks = new Map(); // filename -> timestamp
+
+function computeFileHash(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) return null;
+    const content = fs.readFileSync(filePath);
+    return crypto.createHash('sha1').update(content).digest('hex');
+  } catch (e) {
+    return null;
+  }
+}
 
 // Ensure directory structure exists
 function ensureDirs() {
@@ -142,7 +157,7 @@ function readConfig() {
         const pRaw = fs.readFileSync(fPath, 'utf8');
         const pData = JSON.parse(pRaw);
         const name = pData.name || path.basename(f, '.json');
-        
+
         // Auto convert to Node Workflow v3.0.0 schema
         const converted = convertLegacyProfileToNodeWorkflow(pData);
         profiles[name] = sanitizeProfileIds(converted);
@@ -226,9 +241,12 @@ function writeConfig(fullConfig) {
         if (existingContent === newContent) {
           continue; // Skip writing if content is unchanged
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     fs.writeFileSync(pFile, newContent, 'utf8');
+    const newHash = crypto.createHash('sha1').update(newContent).digest('hex');
+    lastKnownProfileHashes.set(filename, newHash);
+    internalWriteLocks.set(filename, Date.now());
   }
 
   // Remove files for deleted profiles
@@ -236,8 +254,177 @@ function writeConfig(fullConfig) {
     if (f.endsWith('.json') && !validFilenames.has(f)) {
       try {
         fs.unlinkSync(path.join(PROFILES_DIR, f));
+        internalWriteLocks.set(f, Date.now());
+        lastKnownProfileHashes.delete(f);
         console.log(`[Config Store] 🗑️ Deleted removed profile file: ${f}`);
-      } catch (e) {}
+      } catch (e) { }
+    }
+  }
+}
+
+// Write a single profile file directly with hash & internal lock update
+function writeSingleProfile(profileName, pData) {
+  ensureDirs();
+  const sanitizedName = profileName.replace(/[/\\?%*:|"<>]/g, '_');
+  const filename = `${sanitizedName}.json`;
+  const pFile = path.join(PROFILES_DIR, filename);
+
+  const profileData = {
+    version: pData.version || '3.1.0',
+    name: profileName,
+    canvas: pData.canvas || { zoom: 1.0, pan: { x: 0, y: 0 } },
+    nodes: pData.nodes || [],
+    connections: pData.connections || []
+  };
+
+  const newContent = JSON.stringify(profileData, null, 2);
+  fs.writeFileSync(pFile, newContent, 'utf8');
+  const newHash = crypto.createHash('sha1').update(newContent).digest('hex');
+  lastKnownProfileHashes.set(filename, newHash);
+  internalWriteLocks.set(filename, Date.now());
+  return true;
+}
+
+// Read a single profile directly from disk
+function readSingleProfile(profileName) {
+  ensureDirs();
+  const sanitizedName = profileName.replace(/[/\\?%*:|"<>]/g, '_');
+  const filename = `${sanitizedName}.json`;
+  let targetFile = path.join(PROFILES_DIR, filename);
+
+  if (!fs.existsSync(targetFile)) {
+    if (fs.existsSync(PROFILES_DIR)) {
+      const files = fs.readdirSync(PROFILES_DIR);
+      for (const f of files) {
+        if (!f.endsWith('.json')) continue;
+        try {
+          const raw = fs.readFileSync(path.join(PROFILES_DIR, f), 'utf8');
+          const data = JSON.parse(raw);
+          if (data.name === profileName) {
+            targetFile = path.join(PROFILES_DIR, f);
+            break;
+          }
+        } catch (e) { }
+      }
+    }
+  }
+
+  if (!fs.existsSync(targetFile)) return null;
+
+  try {
+    const pRaw = fs.readFileSync(targetFile, 'utf8');
+    const pData = JSON.parse(pRaw);
+    const converted = convertLegacyProfileToNodeWorkflow(pData);
+    return sanitizeProfileIds(converted);
+  } catch (e) {
+    console.error(`[Config Store Error] Failed to read single profile ${profileName}:`, e.message);
+    return null;
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// PROFILE FILE WATCHER & EXTERNAL CHANGE DETECTION
+// ═════════════════════════════════════════════════════════════════════════════
+let profileWatcher = null;
+const debounceTimers = new Map();
+
+function initProfileWatcher(onExternalChange) {
+  ensureDirs();
+
+  // Populate initial hashes of all existing profile files
+  if (fs.existsSync(PROFILES_DIR)) {
+    const files = fs.readdirSync(PROFILES_DIR);
+    for (const f of files) {
+      if (f.endsWith('.json')) {
+        const hash = computeFileHash(path.join(PROFILES_DIR, f));
+        if (hash) lastKnownProfileHashes.set(f, hash);
+      }
+    }
+  }
+
+  if (profileWatcher) {
+    try { profileWatcher.close(); } catch (e) { }
+  }
+
+  try {
+    profileWatcher = fs.watch(PROFILES_DIR, (eventType, filename) => {
+      if (!filename || !filename.endsWith('.json')) return;
+
+      if (debounceTimers.has(filename)) {
+        clearTimeout(debounceTimers.get(filename));
+      }
+
+      const timer = setTimeout(() => {
+        debounceTimers.delete(filename);
+        handleWatchedFileEvent(filename, onExternalChange);
+      }, 350);
+
+      debounceTimers.set(filename, timer);
+    });
+
+    console.log(`[Config Store] 👁️ Profile file watcher active on: ${PROFILES_DIR}`);
+  } catch (err) {
+    console.error('[Config Store] ❌ Failed to start profile file watcher:', err.message);
+  }
+}
+
+function handleWatchedFileEvent(filename, onExternalChange) {
+  const filePath = path.join(PROFILES_DIR, filename);
+  const lockTime = internalWriteLocks.get(filename) || 0;
+  const isInternalRecent = (Date.now() - lockTime) < 1800;
+
+  const fileExists = fs.existsSync(filePath);
+
+  if (fileExists) {
+    const currentHash = computeFileHash(filePath);
+    if (!currentHash) return; // Might be temporarily locked while writing
+    const prevHash = lastKnownProfileHashes.get(filename);
+
+    if (isInternalRecent && currentHash === prevHash) {
+      return; // Internal write from NodeHotkey, ignore
+    }
+
+    if (prevHash && currentHash === prevHash) {
+      return; // No real content change
+    }
+
+    const isNew = !prevHash;
+    lastKnownProfileHashes.set(filename, currentHash);
+
+    let pName = path.basename(filename, '.json');
+    try {
+      const raw = fs.readFileSync(filePath, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (parsed.name) pName = parsed.name;
+    } catch (e) { }
+
+    console.log(`[Config Store] 🔔 External profile change: "${pName}" (${isNew ? 'Created' : 'Modified'})`);
+
+    if (typeof onExternalChange === 'function') {
+      onExternalChange({
+        action: isNew ? 'created' : 'modified',
+        filename,
+        profileName: pName,
+        timestamp: Date.now()
+      });
+    }
+  } else {
+    if (isInternalRecent) {
+      return; // Internal deletion
+    }
+    if (lastKnownProfileHashes.has(filename)) {
+      lastKnownProfileHashes.delete(filename);
+      const pName = path.basename(filename, '.json');
+      console.log(`[Config Store] 🔔 External profile deletion: "${pName}"`);
+
+      if (typeof onExternalChange === 'function') {
+        onExternalChange({
+          action: 'deleted',
+          filename,
+          profileName: pName,
+          timestamp: Date.now()
+        });
+      }
     }
   }
 }
@@ -260,6 +447,9 @@ function getGlobalSettings() {
 module.exports = {
   readConfig,
   writeConfig,
+  readSingleProfile,
+  writeSingleProfile,
+  initProfileWatcher,
   migrateLegacyConfig,
   getGlobalSettings,
   CONFIGS_DIR,
