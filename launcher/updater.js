@@ -199,32 +199,128 @@ class SystemUpdater {
     } catch (e) {}
   }
 
-  analyzeImpact(changedFiles = []) {
+  async checkActualDependencyChanges() {
+    try {
+      const localPkgPath = path.join(this.projectDir, 'package.json');
+      if (!fs.existsSync(localPkgPath)) return false;
+      const localPkg = JSON.parse(fs.readFileSync(localPkgPath, 'utf8'));
+      const localDeps = localPkg.dependencies || {};
+
+      let remoteDeps = null;
+
+      // 1. If we already extracted files in Step 1, inspect extracted package.json directly
+      if (this.cachedExtractInfo && this.cachedExtractInfo.extractedRoot) {
+        const extractedPkgPath = path.join(this.cachedExtractInfo.extractedRoot, 'package.json');
+        if (fs.existsSync(extractedPkgPath)) {
+          try {
+            const parsed = JSON.parse(fs.readFileSync(extractedPkgPath, 'utf8'));
+            if (parsed && parsed.dependencies) remoteDeps = parsed.dependencies;
+          } catch (e) {}
+        }
+      }
+
+      // 2. If Git repo exists, inspect origin/main:package.json
+      if (!remoteDeps && this.hasGitRepo) {
+        try {
+          const content = await this.runCommand('git show origin/main:package.json');
+          const parsed = JSON.parse(content);
+          if (parsed && parsed.dependencies) remoteDeps = parsed.dependencies;
+        } catch (e) {}
+      }
+
+      // 3. Fallback: Fetch raw package.json from GitHub
+      if (!remoteDeps) {
+        const remoteData = await new Promise((resolve) => {
+          const options = {
+            hostname: 'raw.githubusercontent.com',
+            path: `/${GITHUB_REPO}/main/package.json`,
+            method: 'GET',
+            headers: { 'User-Agent': 'NodeHotkey-Launcher-Updater' }
+          };
+          const req = https.request(options, res => {
+            if (res.statusCode !== 200) return resolve(null);
+            let buf = '';
+            res.on('data', chunk => buf += chunk);
+            res.on('end', () => {
+              try { resolve(JSON.parse(buf)); } catch (e) { resolve(null); }
+            });
+          });
+          req.on('error', () => resolve(null));
+          req.setTimeout(4000, () => { req.destroy(); resolve(null); });
+          req.end();
+        });
+        if (remoteData && remoteData.dependencies) remoteDeps = remoteData.dependencies;
+      }
+
+      if (!remoteDeps) return false;
+
+      // Check if any remote dependency is missing locally or has different version
+      const hasAddedOrChanged = Object.keys(remoteDeps).some(key => {
+        return !localDeps[key] || localDeps[key] !== remoteDeps[key];
+      });
+
+      return hasAddedOrChanged;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  findNpmRunner() {
+    const runtimeNode = path.join(this.projectDir, 'runtime', 'node.exe');
+    const embeddedNpmPaths = [
+      path.join(this.projectDir, 'runtime', 'npm', 'bin', 'npm-cli.js'),
+      path.join(this.projectDir, 'node_modules', 'npm', 'bin', 'npm-cli.js')
+    ];
+    if (fs.existsSync(runtimeNode)) {
+      for (const p of embeddedNpmPaths) {
+        if (fs.existsSync(p)) {
+          return { command: `"${runtimeNode}" "${p}"`, isDirect: false };
+        }
+      }
+    }
+
+    if (process.env['ProgramFiles']) {
+      const globalNpmCli = path.join(process.env['ProgramFiles'], 'nodejs', 'node_modules', 'npm', 'bin', 'npm-cli.js');
+      if (fs.existsSync(globalNpmCli)) {
+        const nodeExec = fs.existsSync(runtimeNode) ? runtimeNode : (process.execPath || 'node');
+        return { command: `"${nodeExec}" "${globalNpmCli}"`, isDirect: false };
+      }
+    }
+
+    return { command: 'npm', isDirect: true };
+  }
+
+  async analyzeImpact(changedFiles = []) {
     const normalized = changedFiles.map(f => f.replace(/\\/g, '/').toLowerCase());
     
-    // Check for Dependencies changes (package.json or package-lock.json)
-    const hasDependencyChanges = normalized.some(f => 
+    // Check if package.json has actual dependency additions or updates
+    const mentionsPkg = normalized.some(f => 
       f === 'package.json' || 
       f === 'package-lock.json'
     );
+
+    let hasDependencyChanges = false;
+    if (mentionsPkg) {
+      hasDependencyChanges = await this.checkActualDependencyChanges();
+    }
 
     // Level 3: Core App (Requires full Electron App Relaunch)
     const isLevel3 = normalized.some(f => 
       f.includes('launcher/main.js') || 
       f.includes('launcher/preload.js') || 
-      f.includes('launcher/updater.js') || 
-      f === 'package.json'
-    );
+      f.includes('launcher/updater.js')
+    ) || hasDependencyChanges;
+
     if (isLevel3) {
-      if (hasDependencyChanges && !this.hasGitRepo) {
+      if (hasDependencyChanges) {
         return {
           level: 3,
           levelName: 'core_dependencies',
-          badge: '⚠️ New Modules / Full Setup Required',
-          badgeClass: 'level-core',
-          color: '#ef4444',
-          title: 'อัปเดตโมดูลระบบใหม่ (New Dependencies)',
-          description: 'มีการเพิ่มหรือปรับปรุง Library ระบบ (package.json) การอัปเดตอัตโนมัติอาจขาดโมดูลใหม่ แนะนำให้ดาวน์โหลดตัวติดตั้งใหม่ (Full Setup) เพื่อการทำงานที่สมบูรณ์ 100%',
+          badge: '⚡ Auto-Install Ready',
+          badgeClass: 'level-dependencies',
+          color: '#38bdf8',
+          title: 'อัปเดตโมดูลและฟีเจอร์ใหม่',
+          description: 'ตรวจพบ Library ใหม่ในระบบ ตัวโปรแกรมจะทำการติดตั้ง Library ใหม่อัตโนมัติใน Step 2 โดยที่คุณไม่ต้องติดตั้งโปรแกรมใหม่เอง',
           actionLabel: 'ปิดและเปิดโปรแกรมใหม่',
           hasDependencyChanges: true,
           needsRelaunch: true,
@@ -241,7 +337,7 @@ class SystemUpdater {
         title: 'อัปเดตระบบหลัก (Core System)',
         description: 'มีการแก้ไขไฟล์ระบบหลักของ Launcher จำเป็นต้องปิดและเปิดโปรแกรมใหม่',
         actionLabel: 'ปิดและเปิดโปรแกรมใหม่',
-        hasDependencyChanges: !!hasDependencyChanges,
+        hasDependencyChanges: false,
         needsRelaunch: true,
         needsEngineRestart: true,
         isUiOnly: false
@@ -267,6 +363,7 @@ class SystemUpdater {
         title: 'อัปเดตระบบบอท (Bot Logic)',
         description: 'มีการแก้ไขโค้ดการทำงานของบอท แนะนำให้รีสตาร์ท Engine เพื่อโหลดตรรกะใหม่',
         actionLabel: 'รีสตาร์ท Engine เดี๋ยวนี้',
+        hasDependencyChanges: false,
         needsRelaunch: false,
         needsEngineRestart: true,
         isUiOnly: false
@@ -283,6 +380,7 @@ class SystemUpdater {
       title: 'อัปเดตหน้าตา UI & Web Dashboard',
       description: 'แก้ไขเฉพาะหน้าตาเว็บและข้อความ ไม่กระทบต่อการทำงานของบอทและหน้าจอเกม',
       actionLabel: 'Hot-Reload UI ทันที',
+      hasDependencyChanges: false,
       needsRelaunch: false,
       needsEngineRestart: false,
       isUiOnly: true
@@ -319,7 +417,7 @@ class SystemUpdater {
           changedFiles = diffOutput.split('\n').map(s => s.trim()).filter(Boolean);
         }
 
-        const impact = this.analyzeImpact(changedFiles);
+        const impact = await this.analyzeImpact(changedFiles);
 
         return {
           hasUpdate,
@@ -340,7 +438,7 @@ class SystemUpdater {
     try {
       const localInfo = this.getLocalVersion();
       const diffInfo = await this.fetchGitHubDiff(localInfo.commit);
-      const impact = this.analyzeImpact(diffInfo.changedFiles);
+      const impact = await this.analyzeImpact(diffInfo.changedFiles);
 
       return {
         hasUpdate: diffInfo.hasUpdate,
@@ -392,7 +490,7 @@ class SystemUpdater {
         const remoteHash = await this.runCommand('git rev-parse @{u}');
         const diffOutput = await this.runCommand(`git diff --name-only ${localHash} ${remoteHash}`);
         const changedFiles = diffOutput.split('\n').map(s => s.trim()).filter(Boolean);
-        const impact = this.analyzeImpact(changedFiles);
+        const impact = await this.analyzeImpact(changedFiles);
 
         this.cachedExtractInfo = { hasGit: true, remoteHash, changedFiles, impact };
         this.isDownloaded = true;
@@ -432,7 +530,7 @@ class SystemUpdater {
         diffInfo = await this.fetchGitHubCommit();
       }
       const changedFiles = diffInfo.changedFiles || [];
-      const impact = this.analyzeImpact(changedFiles);
+      const impact = await this.analyzeImpact(changedFiles);
 
       this.cachedExtractInfo = {
         hasGit: false,
@@ -477,12 +575,16 @@ class SystemUpdater {
       if (this.hasGitRepo) {
         if (typeof onProgressCallback === 'function') onProgressCallback('🔄 Applying Git pull...');
         const pullResult = await this.runCommand('git pull');
-        try { await this.runCommand('npm install --ignore-scripts'); } catch (e) {}
+        const npmRunner = this.findNpmRunner();
+        try { 
+          if (typeof onProgressCallback === 'function') onProgressCallback('📦 Checking dependencies...');
+          await this.runCommand(`${npmRunner.command} install --omit=dev --no-audit --no-fund --ignore-scripts`); 
+        } catch (e) {}
 
         const newHash = await this.runCommand('git rev-parse HEAD');
         this.saveLocalVersion(newHash);
 
-        const impact = this.cachedExtractInfo ? this.cachedExtractInfo.impact : this.analyzeImpact([]);
+        const impact = this.cachedExtractInfo ? this.cachedExtractInfo.impact : await this.analyzeImpact([]);
         this.isDownloaded = false;
         this.cachedExtractInfo = null;
         return { success: true, impact, details: pullResult };
@@ -545,14 +647,16 @@ class SystemUpdater {
         throw new Error('No files were updated during installation.');
       }
 
-      // If dependencies changed, try running npm install if npm is available in the environment
+      // If dependencies changed, run npm install using bundled runtime npm or system npm
       if (impact && impact.hasDependencyChanges) {
         try {
-          if (typeof onProgressCallback === 'function') onProgressCallback('📦 Checking and installing new node modules...');
-          await this.runCommand('npm install --omit=dev --ignore-scripts');
-          if (typeof onProgressCallback === 'function') onProgressCallback('✅ Node modules updated successfully!');
+          if (typeof onProgressCallback === 'function') onProgressCallback('📦 กำลังติดตั้งโมดูลและ Library ใหม่อัตโนมัติ...');
+          const npmRunner = this.findNpmRunner();
+          await this.runCommand(`${npmRunner.command} install --omit=dev --no-audit --no-fund --ignore-scripts`);
+          if (typeof onProgressCallback === 'function') onProgressCallback('✅ ติดตั้ง Library ใหม่สำเร็จเรียบร้อย!');
         } catch (npmErr) {
-          console.warn('[Updater] npm install in standalone environment skipped or unavailable:', npmErr.message);
+          console.warn('[Updater] npm install error:', npmErr.message);
+          if (typeof onProgressCallback === 'function') onProgressCallback(`⚠️ ติดตั้งโมดูลบางส่วนไม่สำเร็จ: ${npmErr.message}`);
         }
       }
 

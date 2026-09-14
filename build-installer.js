@@ -24,17 +24,7 @@ fs.mkdirSync(appDistDir, { recursive: true });
 const runtimeDir = path.join(appDistDir, 'runtime');
 fs.mkdirSync(runtimeDir, { recursive: true });
 
-// 2. Copy Portable Node.js Runtime
-console.log('[2/5] 📦 Embedding Portable Node.js Runtime...');
-const currentRuntime = process.execPath;
-if (fs.existsSync(currentRuntime)) {
-  fs.copyFileSync(currentRuntime, path.join(runtimeDir, 'node.exe'));
-  console.log(`      ✓ Copied node.exe from ${currentRuntime}`);
-} else {
-  console.error('      ❌ node.exe not found at:', currentRuntime);
-}
-
-// 3. Helper to recursively copy directories
+// 2. Helper to recursively copy directories
 function copyFolderSync(from, to, excludeFilter = null) {
   if (!fs.existsSync(to)) fs.mkdirSync(to, { recursive: true });
   const entries = fs.readdirSync(from, { withFileTypes: true });
@@ -53,6 +43,35 @@ function copyFolderSync(from, to, excludeFilter = null) {
       fs.copyFileSync(srcPath, destPath);
     }
   }
+}
+
+// 3. Copy Portable Node.js Runtime & Embedded NPM
+console.log('[2/5] 📦 Embedding Portable Node.js Runtime & NPM...');
+const currentRuntime = process.execPath;
+if (fs.existsSync(currentRuntime)) {
+  fs.copyFileSync(currentRuntime, path.join(runtimeDir, 'node.exe'));
+  console.log(`      ✓ Copied node.exe from ${currentRuntime}`);
+} else {
+  console.error('      ❌ node.exe not found at:', currentRuntime);
+}
+
+// Embed portable npm package
+const possibleNpmPaths = [
+  path.join(path.dirname(currentRuntime), 'node_modules', 'npm'),
+  path.join(rootDir, 'node_modules', 'npm')
+];
+let npmCopied = false;
+for (const npmSrc of possibleNpmPaths) {
+  if (fs.existsSync(npmSrc)) {
+    console.log(`      ⏳ Copying portable npm from ${npmSrc}...`);
+    copyFolderSync(npmSrc, path.join(runtimeDir, 'npm'), (p, name) => name.toLowerCase().endsWith('.md') || name === '.github');
+    console.log(`      ✓ Embedded runtime/npm successfully`);
+    npmCopied = true;
+    break;
+  }
+}
+if (!npmCopied) {
+  console.warn('      ⚠️ Could not find npm to embed in runtime/npm');
 }
 
 // 4. Copy Project Files & Folders
