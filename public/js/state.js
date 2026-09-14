@@ -590,37 +590,57 @@ export function renderActiveProfilesPills() {
         cursor: pointer;
         user-select: none;
         transition: all 0.15s;
-        background: ${isActive ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.02)'};
-        border: 1px solid ${isActive ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.05)'};
+        background: ${isEditing ? 'rgba(59,130,246,0.16)' : (isActive ? 'rgba(16,185,129,0.10)' : 'rgba(255,255,255,0.02)')};
+        border: 1px solid ${isEditing ? 'rgba(59,130,246,0.5)' : (isActive ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.05)')};
       `;
       row.onmouseenter = () => {
-        row.style.background = isActive ? 'rgba(16,185,129,0.22)' : 'rgba(255,255,255,0.08)';
+        if (!isEditing) {
+          row.style.background = isActive ? 'rgba(16,185,129,0.18)' : 'rgba(255,255,255,0.06)';
+        }
       };
       row.onmouseleave = () => {
-        row.style.background = isActive ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.02)';
+        if (!isEditing) {
+          row.style.background = isActive ? 'rgba(16,185,129,0.10)' : 'rgba(255,255,255,0.02)';
+        }
       };
 
-      // Clicking row toggles Active
+      // Clicking row switches to edit profile (WITHOUT toggling active state)
       row.onclick = (e) => {
         e.stopPropagation();
-        toggleProfileActive(name);
+        if (currentEditProfile !== name) {
+          switchToEditProfile(name);
+        }
       };
 
       // Left: Checkbox + Name
       const leftGroup = document.createElement('div');
       leftGroup.style.cssText = 'display:flex; align-items:center; gap:8px; overflow:hidden; flex:1;';
 
+      // Checkbox strictly handles Active / Inactive
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.checked = isActive;
-      checkbox.style.cssText = 'accent-color:#10b981; cursor:pointer; width:14px; height:14px; flex-shrink:0;';
-      checkbox.onclick = (e) => e.stopPropagation();
-      checkbox.onchange = () => toggleProfileActive(name, checkbox.checked);
+      checkbox.title = isActive ? 'คลิกเพื่อปิดการทำงาน (Active)' : 'คลิกเพื่อเปิดการทำงาน (Active)';
+      checkbox.style.cssText = 'accent-color:#10b981; cursor:pointer; width:15px; height:15px; flex-shrink:0;';
+      checkbox.onclick = (e) => {
+        e.stopPropagation();
+      };
+      checkbox.onchange = (e) => {
+        e.stopPropagation();
+        toggleProfileActive(name, checkbox.checked);
+      };
       leftGroup.appendChild(checkbox);
 
       const nameLabel = document.createElement('span');
-      nameLabel.style.cssText = `font-size: 11.5px; font-weight: ${isActive ? '700' : '500'}; color: ${isActive ? '#34d399' : 'var(--text)'}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;`;
+      nameLabel.style.cssText = `font-size: 11.5px; font-weight: ${isActive || isEditing ? '700' : '500'}; color: ${isEditing ? '#93c5fd' : (isActive ? '#34d399' : 'var(--text)')}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer;`;
       nameLabel.textContent = name;
+      nameLabel.title = `คลิกเพื่อเปิดแก้ไขผัง "${name}"`;
+      nameLabel.onclick = (e) => {
+        e.stopPropagation();
+        if (currentEditProfile !== name) {
+          switchToEditProfile(name);
+        }
+      };
       leftGroup.appendChild(nameLabel);
 
       row.appendChild(leftGroup);
@@ -631,8 +651,9 @@ export function renderActiveProfilesPills() {
 
       if (isEditing) {
         const editBadge = document.createElement('span');
-        editBadge.style.cssText = 'font-size:9.5px; font-weight:700; color:#60a5fa; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); padding:2px 7px; border-radius:10px; white-space:nowrap;';
+        editBadge.style.cssText = 'font-size:9.5px; font-weight:700; color:#60a5fa; background:rgba(59,130,246,0.18); border:1px solid rgba(59,130,246,0.4); padding:2px 7px; border-radius:10px; white-space:nowrap; cursor:default;';
         editBadge.textContent = tEditing;
+        editBadge.onclick = (e) => e.stopPropagation();
         rightGroup.appendChild(editBadge);
       } else {
         const editBtn = document.createElement('button');

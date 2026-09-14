@@ -164,6 +164,10 @@ class NodeExecutionEngine {
    * Dynamically build in-memory executable actions model from Pure Node Graph
    */
   buildInMemoryActions(profile) {
+    return NodeExecutionEngine.buildInMemoryActions(profile);
+  }
+
+  static buildInMemoryActions(profile) {
     if (!profile) return [];
     if (Array.isArray(profile.actions) && profile.actions.length > 0 && (!profile.nodes || profile.nodes.length === 0)) {
       return profile.actions.map(act => ({ ...act, _profileName: profile.name }));
@@ -275,7 +279,7 @@ class NodeExecutionEngine {
         conditionRule: d.conditionRule || 'is_running',
         conditionValue: d.conditionValue !== undefined ? d.conditionValue : '',
         stepTag: d.stepTag || 'STEP',
-        showClient: d.showClient !== false,
+        showClient: d.showClient === true,
         defaultValue: d.defaultValue !== undefined ? d.defaultValue : '',
         varName: d.varName || node.title || '',
         varType: d.varType || 'boolean',
@@ -291,7 +295,7 @@ class NodeExecutionEngine {
         soundFile: d.soundFile || '',
         volume: d.volume !== undefined ? d.volume : 100,
         text: d.text || d.message || '',
-        message: d.message || d.text || '',
+        message: d.message !== undefined ? d.message : (d.text || ''),
         voice: d.voice || 'th-TH-PremwadeeNeural',
         delayActivation: !!d.delayActivation,
         activationDelayMs: d.activationDelayMs || 1000,

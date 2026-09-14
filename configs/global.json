@@ -1,9 +1,7 @@
 {
-  "activeProfile": "[WD] Add-ons",
+  "activeProfile": "Test3",
   "activeProfiles": [
-    "[WD] Add-ons",
-    "[WD] Full Buff",
-    "[WD] Heal 1,2,4"
+    "Test3"
   ],
   "disabledClients": [],
   "globalSettings": {

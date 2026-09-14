@@ -32,6 +32,10 @@ class NodeCanvasEditor {
     this.nodes = [];
     this.connections = [];
 
+    // Blueprint Variables state
+    this.variables = [];
+    this.variablesSearchQuery = '';
+
     // History Timeline state
     this.historyTimeline = [];
     this.activeDrawerTab = 'outliner';
@@ -92,7 +96,7 @@ class NodeCanvasEditor {
       key_hold: canvasT('canvas_key_hold', isEn ? 'Key Hold' : 'กดค้าง (Hold)'),
       sequencer: canvasT('canvas_sequencer', isEn ? 'Cast Sequencer' : 'จัดคิวสกิล (Sequencer)'),
       loop_scheduler: canvasT('canvas_loop_scheduler', isEn ? 'Loop Scheduler' : 'ตารางลูปกันชน (Scheduler)'),
-      step_log: canvasT('canvas_step_log', isEn ? 'Step Log (Validation)' : 'บันทึกขั้นตอน (Step Log)'),
+      step_log: canvasT('canvas_step_log', isEn ? 'Log Message' : 'บันทึกข้อความ (Log Message)'),
       var_get: canvasT('canvas_var_get', isEn ? 'Get Variable' : 'อ่านค่าตัวแปร (Get Var)'),
       var_set: canvasT('canvas_var_set', isEn ? 'Set Variable' : 'กำหนดค่าตัวแปร (Set Var)'),
       variable: canvasT('canvas_variable', isEn ? 'Variable / State' : 'ตัวแปร / สถานะ (Variable)'),
@@ -100,7 +104,6 @@ class NodeCanvasEditor {
       party_slot: canvasT('canvas_party_slot', isEn ? 'Select Party Slot' : 'เลือกสมาชิกปาร์ตี้ (Select Slot)'),
       party_heal: canvasT('canvas_party_heal', isEn ? 'Party Heal Target' : 'เลือกเป้าหมายฮีล (Party Heal)'),
       party_buff: canvasT('canvas_party_buff', isEn ? 'Party Buff Target' : 'วนเลือกเป้าหมายบัฟ (Party Buff)'),
-      party_target: canvasT('canvas_party_target', isEn ? 'Party Target Router (Legacy)' : 'เลือกเป้าหมายปาร์ตี้ (Legacy)'),
       tts: canvasT('canvas_tts', isEn ? 'Text to Speech (TTS)' : 'อ่านข้อความเสียง (TTS)'),
       screenshot: canvasT('canvas_screenshot', isEn ? 'Screenshot' : 'ถ่ายภาพหน้าจอ (Screenshot)'),
       webhook_out: canvasT('canvas_webhook_out', isEn ? 'HTTP Webhook' : 'ส่ง Webhook / HTTP')
@@ -122,6 +125,7 @@ class NodeCanvasEditor {
         <div class="outliner-header">
           <div class="panel-tab-bar">
             <button class="panel-tab-btn active" id="tab-btn-outliner" onclick="window.nodeCanvas.switchDrawerTab('outliner')">📑 <span id="lbl-drawer-tab-outliner">${window.currentLang === 'en' ? 'Actions' : 'รายการคำสั่ง'}</span> (<span id="outliner-node-count">0</span>)</button>
+            <button class="panel-tab-btn" id="tab-btn-variables" onclick="window.nodeCanvas.switchDrawerTab('variables')">📦 <span id="lbl-drawer-tab-variables">${window.currentLang === 'en' ? 'Variables' : 'ตัวแปร'}</span> (<span id="variables-count">0</span>)</button>
             <button class="panel-tab-btn" id="tab-btn-history" onclick="window.nodeCanvas.switchDrawerTab('history')">🕒 <span id="lbl-drawer-tab-history">${window.currentLang === 'en' ? 'History' : 'ประวัติแก้ไข'}</span> (<span id="history-entry-count">0</span>)</button>
           </div>
           <button class="outliner-close-btn" onclick="window.nodeCanvas.togglePanel(null, false)">✕</button>
@@ -135,7 +139,18 @@ class NodeCanvasEditor {
           <div class="outliner-list" id="outliner-node-list"></div>
         </div>
 
-        <!-- Tab 2: History Timeline Body -->
+        <!-- Tab 2: Blueprint Variables Body -->
+        <div id="drawer-variables-body" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
+          <div class="variables-toolbar">
+            <button type="button" class="btn-add-variable-hero" onclick="window.nodeCanvas.openVariableModal()">
+              <span>➕ ${canvasT('btn_add_variable', 'สร้างตัวแปรใหม่ (Add Variable)')}</span>
+            </button>
+            <input type="text" class="outliner-search-input" id="variables-search-input" placeholder="${canvasT('var_search_placeholder', '🔍 ค้นหาตัวแปร...')}" oninput="window.nodeCanvas.filterVariables(this.value)" />
+          </div>
+          <div class="variables-list" id="variables-list"></div>
+        </div>
+
+        <!-- Tab 3: History Timeline Body -->
         <div id="drawer-history-body" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
           <div style="padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:space-between;">
             <span id="lbl-history-hint" style="font-size:11px; color:var(--muted); font-weight:600;">คลิกรายการเพื่อย้อนเวลา (Restore)</span>
@@ -148,6 +163,7 @@ class NodeCanvasEditor {
       <!-- Canvas Floating Toolbar -->
       <div class="canvas-toolbar">
         <button class="canvas-tool-btn" id="btn-toggle-outliner" onclick="window.nodeCanvas.togglePanel('outliner')" title="Action Outliner (Ctrl+O)" style="font-weight:700;">📑</button>
+        <button class="canvas-tool-btn" id="btn-toggle-variables" onclick="window.nodeCanvas.togglePanel('variables')" title="Blueprint Variables (Ctrl+B)" style="font-weight:700;">📦</button>
         <button class="canvas-tool-btn" id="btn-toggle-history" onclick="window.nodeCanvas.togglePanel('history')" title="Edit History (Ctrl+H)" style="font-weight:700;">🕒</button>
         <div style="width:1px; height:20px; background:rgba(255,255,255,0.15); margin:0 4px;"></div>
         <button class="canvas-tool-btn" id="btn-canvas-undo" onclick="if(window.triggerUndo) window.triggerUndo()" title="Undo (Ctrl+Z)" disabled>↩️</button>
@@ -215,9 +231,14 @@ class NodeCanvasEditor {
     this.outlinerNodeList = this.container.querySelector('#outliner-node-list');
     this.outlinerNodeCount = this.container.querySelector('#outliner-node-count');
     this.tabBtnOutliner = this.container.querySelector('#tab-btn-outliner');
+    this.tabBtnVariables = this.container.querySelector('#tab-btn-variables');
     this.tabBtnHistory = this.container.querySelector('#tab-btn-history');
     this.drawerOutlinerBody = this.container.querySelector('#drawer-outliner-body');
+    this.drawerVariablesBody = this.container.querySelector('#drawer-variables-body');
     this.drawerHistoryBody = this.container.querySelector('#drawer-history-body');
+    this.variablesListEl = this.container.querySelector('#variables-list');
+    this.variablesCountEl = this.container.querySelector('#variables-count');
+    this.variablesSearchInput = this.container.querySelector('#variables-search-input');
     this.historyTimelineList = this.container.querySelector('#history-timeline-list');
     this.historyEntryCount = this.container.querySelector('#history-entry-count');
     this.portContextMenu = this.container.querySelector('#port-context-menu');
@@ -560,6 +581,11 @@ class NodeCanvasEditor {
         e.preventDefault();
         this.togglePanel('history');
       }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        this.togglePanel('variables');
+      }
     });
   }
 
@@ -573,6 +599,7 @@ class NodeCanvasEditor {
 
     this.nodes = Array.isArray(profile.nodes) ? JSON.parse(JSON.stringify(profile.nodes)) : [];
     this.connections = Array.isArray(profile.connections) ? JSON.parse(JSON.stringify(profile.connections)) : [];
+    this.variables = Array.isArray(profile.variables) ? JSON.parse(JSON.stringify(profile.variables)) : [];
     if (profile.canvas) {
       this.zoom = profile.canvas.zoom || 1.0;
       this.pan = profile.canvas.pan || { x: 0, y: 0 };
@@ -598,6 +625,8 @@ class NodeCanvasEditor {
     this.selectedNodeIds.clear();
     this.updateTransform();
     this.render();
+    this.getAvailableVariables();
+    this.renderVariablesPanel();
     this.updateLiveFlowButtonUI();
     this.addHistory('📂', `เปิดโปรไฟล์ "${profile.name || 'Default'}"`);
   }
@@ -669,7 +698,7 @@ class NodeCanvasEditor {
         emit_event: '📡',
         sequencer: '⚔️',
         loop_scheduler: '⏱️',
-        step_log: '🧭',
+        step_log: '📝',
         var_get: '📥',
         var_set: '📦',
         variable: '📦',
@@ -677,7 +706,6 @@ class NodeCanvasEditor {
         party_slot: '🎯',
         party_heal: '🚑',
         party_buff: '📜',
-        party_target: '👥',
         tts: '🗣️',
         screenshot: '📸',
         webhook_out: '🌐'
@@ -934,26 +962,6 @@ class NodeCanvasEditor {
             <span>Delay:</span> <span class="node-info-value">${delay}ms</span>
           </div>
         `;
-      } else if (node.type === 'party_target') {
-        const mode = node.data?.targetMode || 'heal_priority';
-        const modeLabel = mode === 'buff_loop' ? '📜 Buff Loop' : '🚑 Heal Priority';
-        const interval = node.data?.scanIntervalMs || 250;
-        const hpThresh = node.data?.lowHpThreshold || 70;
-        bodyHTML = `
-          <div class="node-info-row">
-            <span>Target:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
-          </div>
-          <div class="node-info-row">
-            <span>Mode:</span> <span class="node-info-value" style="color:#06b6d4; font-weight:700;">${modeLabel}</span>
-          </div>
-          <div class="node-info-row">
-            <span>Interval:</span> <span class="node-info-value">${interval}ms</span>
-          </div>
-          ${mode === 'heal_priority' ? `
-          <div class="node-info-row">
-            <span>HP Limit:</span> <span class="node-info-value" style="color:#ef4444; font-weight:700;">&lt; ${hpThresh}%</span>
-          </div>` : ''}
-        `;
       } else if (node.type === 'tts') {
         const isEn = window.currentLang === 'en';
         const text = node.data?.text || (isEn ? 'Voice alert message...' : 'ข้อความเสียง...');
@@ -1092,7 +1100,7 @@ class NodeCanvasEditor {
       } else if (node.type === 'step_log') {
         const stepTag = node.data?.stepTag || 'STEP 1';
         const msg = node.data?.message || '';
-        const showClient = node.data?.showClient !== false;
+        const showClient = node.data?.showClient === true;
         bodyHTML = `
           <div class="node-info-row">
             <span>Tag:</span> <span class="node-info-value" style="color:#10b981; font-weight:700;">${stepTag}</span>
@@ -1197,12 +1205,15 @@ class NodeCanvasEditor {
         `;
       } else if (node.type === 'var_set' || node.type === 'variable') {
         const vType = node.data?.varType || 'boolean';
+        const op = node.data?.operation || 'set_value';
+        const showValIn = (op === 'set_value');
         pinsHTML = `
           <div class="node-pins-section">
+            ${showValIn ? `
             <div class="node-pin-row pin-row-in">
               <div class="node-port port-in port-data port-${vType}" data-node="${node.id}" data-port="val_in" title="Value In (${vType})"></div>
               <span class="node-pin-label port-${vType}">◀ Value In</span>
-            </div>
+            </div>` : ''}
             <div class="node-pin-row">
               <span class="node-pin-label port-${vType}">Value Out ▶</span>
               <div class="node-port port-out port-data port-${vType}" data-node="${node.id}" data-port="val_out" title="Value Out (${vType})"></div>
@@ -1350,27 +1361,6 @@ class NodeCanvasEditor {
             <div class="node-pin-row">
               <span class="node-pin-label onAfterStart" style="color:#38bdf8;">🏁 All Complete ▶</span>
               <div class="node-port port-out port-onAfterStart" data-node="${node.id}" data-port="onComplete" title="Triggered when all party members have been buffed"></div>
-            </div>
-            <div class="node-pin-row">
-              <span class="node-pin-label" style="color:#f59e0b;">⚠️ Error ▶</span>
-              <div class="node-port port-out" data-node="${node.id}" data-port="onError" title="Error / Party not found"></div>
-            </div>
-          </div>
-        `;
-      } else if (node.type === 'party_target') {
-        pinsHTML = `
-          <div class="node-pins-section">
-            <div class="node-pin-row">
-              <span class="node-pin-label onStop" style="color:#ef4444;">🚨 On Low HP ▶</span>
-              <div class="node-port port-out port-onStop" data-node="${node.id}" data-port="onMemberLowHp" title="Triggered when member HP <= threshold"></div>
-            </div>
-            <div class="node-pin-row">
-              <span class="node-pin-label onComplete" style="color:#10b981;">📜 Next Member ▶</span>
-              <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="onNextMember" title="Triggered for each active member in buff loop"></div>
-            </div>
-            <div class="node-pin-row">
-              <span class="node-pin-label onAfterStart" style="color:#38bdf8;">🏁 All Complete ▶</span>
-              <div class="node-port port-out port-onAfterStart" data-node="${node.id}" data-port="onComplete" title="Triggered when all members in buff loop are finished"></div>
             </div>
             <div class="node-pin-row">
               <span class="node-pin-label" style="color:#f59e0b;">⚠️ Error ▶</span>
@@ -2331,7 +2321,7 @@ class NodeCanvasEditor {
       key_hold: 'Key Hold Toggle',
       sequencer: 'Cast Sequencer',
       loop_scheduler: 'Loop Scheduler',
-      step_log: 'Step Log (🧭)',
+      step_log: 'Log Message (📝)',
       var_get: 'myVar',
       var_set: 'Set myVar',
       variable: 'Set myVar',
@@ -2344,9 +2334,8 @@ class NodeCanvasEditor {
       initialData = { triggerType: 'keyboard', triggerValue: '1', enabled: true };
     } else if (type === 'step_log') {
       initialData = {
-        stepTag: 'STEP 1',
         message: '',
-        showClient: true,
+        showClient: false,
         targetClient: '1',
         enabled: true
       };
@@ -2355,16 +2344,16 @@ class NodeCanvasEditor {
         varName: 'myVar',
         varType: 'string',
         defaultValue: '',
-        scope: 'client',
-        targetClient: '1',
+        scope: 'global',
+        targetClient: 'all',
         enabled: true
       };
     } else if (type === 'var_set' || type === 'variable') {
       initialData = {
         varName: 'myVar',
         varType: 'boolean', // 'boolean' | 'number' | 'string'
-        scope: 'client',    // 'client' | 'global'
-        targetClient: '1',
+        scope: 'global',
+        targetClient: 'all',
         initialValue: 'false',
         operation: 'set_value', // 'set_value' | 'toggle' | 'set_true' | 'set_false' | 'increment' | 'decrement' | 'reset'
         opValue: '',
@@ -2436,15 +2425,6 @@ class NodeCanvasEditor {
         targetClient: '1',
         delayAfterClick: 80,
         showOverlay: true,
-        enabled: true
-      };
-    } else if (type === 'party_target') {
-      initialData = {
-        targetClient: '1',
-        targetMode: 'heal_priority', // 'heal_priority' | 'buff_loop'
-        lowHpThreshold: 70,
-        scanIntervalMs: 250,
-        delayAfterClick: 250,
         enabled: true
       };
     } else if (type === 'tts') {
@@ -2602,12 +2582,16 @@ class NodeCanvasEditor {
   switchDrawerTab(tabName) {
     this.activeDrawerTab = tabName;
     if (this.tabBtnOutliner) this.tabBtnOutliner.classList.toggle('active', tabName === 'outliner');
+    if (this.tabBtnVariables) this.tabBtnVariables.classList.toggle('active', tabName === 'variables');
     if (this.tabBtnHistory) this.tabBtnHistory.classList.toggle('active', tabName === 'history');
     if (this.drawerOutlinerBody) this.drawerOutlinerBody.style.display = tabName === 'outliner' ? 'flex' : 'none';
+    if (this.drawerVariablesBody) this.drawerVariablesBody.style.display = tabName === 'variables' ? 'flex' : 'none';
     if (this.drawerHistoryBody) this.drawerHistoryBody.style.display = tabName === 'history' ? 'flex' : 'none';
 
     if (tabName === 'history') {
       this.renderHistory();
+    } else if (tabName === 'variables') {
+      this.renderVariablesPanel();
     } else {
       this.renderOutliner();
     }
@@ -2627,6 +2611,11 @@ class NodeCanvasEditor {
       this.outlinerPanel.classList.add('open');
       if (this.activeDrawerTab === 'history') {
         this.renderHistory();
+      } else if (this.activeDrawerTab === 'variables') {
+        this.renderVariablesPanel();
+        if (this.variablesSearchInput) {
+          setTimeout(() => this.variablesSearchInput.focus(), 50);
+        }
       } else {
         this.renderOutliner();
         if (this.outlinerSearchInput) {
@@ -2636,6 +2625,414 @@ class NodeCanvasEditor {
     } else {
       this.outlinerPanel.classList.remove('open');
     }
+  }
+
+  // =========================================================================
+  // UNREAL ENGINE BLUEPRINT VARIABLES SYSTEM
+  // =========================================================================
+  getAvailableVariables() {
+    if (!Array.isArray(this.variables)) this.variables = [];
+
+    // Auto-discovery from nodes on canvas
+    const existingNames = new Set(this.variables.map(v => v.name));
+
+    this.nodes.forEach(node => {
+      if (node.type === 'var_set' || node.type === 'variable' || node.type === 'var_get') {
+        const vName = node.data?.varName || (node.title ? node.title.replace(/^(Get |Set )/, '') : null);
+        if (vName && !existingNames.has(vName)) {
+          existingNames.add(vName);
+          const vType = node.data?.varType || (node.type === 'var_get' ? 'string' : 'boolean');
+          const vScope = node.data?.scope || 'client';
+          const defVal = node.data?.defaultValue !== undefined 
+            ? node.data.defaultValue 
+            : (node.data?.initialValue !== undefined ? node.data.initialValue : (vType === 'boolean' ? 'false' : (vType === 'number' ? '0' : '')));
+
+          this.variables.push({
+            id: 'var_' + Math.random().toString(36).substring(2, 9),
+            name: vName,
+            type: vType,
+            scope: 'global',
+            targetClient: 'all',
+            defaultValue: String(defVal),
+            description: ''
+          });
+        }
+      }
+    });
+
+    return this.variables.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  filterVariables(query) {
+    this.variablesSearchQuery = (query || '').toLowerCase().trim();
+    this.renderVariablesPanel();
+  }
+
+  renderVariablesPanel() {
+    if (!this.variablesListEl) return;
+    const allVars = this.getAvailableVariables();
+
+    if (this.variablesCountEl) {
+      this.variablesCountEl.textContent = allVars.length;
+    }
+
+    const filtered = allVars.filter(v => {
+      if (!this.variablesSearchQuery) return true;
+      return v.name.toLowerCase().includes(this.variablesSearchQuery) ||
+             (v.type && v.type.toLowerCase().includes(this.variablesSearchQuery)) ||
+             (v.description && v.description.toLowerCase().includes(this.variablesSearchQuery));
+    });
+
+    if (filtered.length === 0) {
+      this.variablesListEl.innerHTML = `
+        <div style="text-align:center; padding:30px 16px; color:var(--muted);">
+          <div style="font-size:28px; margin-bottom:8px;">📦</div>
+          <div style="font-weight:700; font-size:12px; color:#cbd5e1; margin-bottom:4px;">
+            ${this.variablesSearchQuery ? 'ไม่พบตัวแปรที่ค้นหา' : canvasT('var_empty_title', 'ยังไม่มีตัวแปรในโปรไฟล์นี้')}
+          </div>
+          <div style="font-size:10.5px; opacity:0.75; line-height:1.4;">
+            ${this.variablesSearchQuery ? 'ลองพิมพ์คำค้นหาอื่น' : canvasT('var_empty_desc', 'สร้างตัวแปรเพื่อใช้อ่าน (Get) หรือกำหนดค่า (Set) ระหว่างโหนด')}
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    this.variablesListEl.innerHTML = filtered.map(v => {
+      const typeBadgeClass = v.type === 'number' ? 'var-badge-number' : (v.type === 'boolean' ? 'var-badge-boolean' : 'var-badge-string');
+      const typeIcon = v.type === 'number' ? '🔢' : (v.type === 'boolean' ? '🔘' : '📝');
+
+      return `
+        <div class="variable-card" id="var-card-${v.id}">
+          <div class="variable-card-top">
+            <span class="variable-name" title="${v.name}">${v.name}</span>
+            <span class="var-type-badge ${typeBadgeClass}">${typeIcon} ${v.type}</span>
+          </div>
+          <div class="variable-card-meta">
+            <span>🌐 Global</span>
+            <span style="font-family:'JetBrains Mono'; opacity:0.85;">Def: ${v.defaultValue !== undefined ? v.defaultValue : '-'}</span>
+          </div>
+          ${v.description ? `<div style="font-size:10px; color:#94a3b8; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${v.description}">${v.description}</div>` : ''}
+          <div class="variable-actions">
+            <button type="button" class="btn-var-spawn btn-var-get" onclick="window.nodeCanvas.spawnVariableNode('${v.name}', 'var_get')" title="วางโหนด Get Variable ลง Canvas">
+              📥 ${canvasT('var_spawn_get', 'Get')}
+            </button>
+            <button type="button" class="btn-var-spawn btn-var-set" onclick="window.nodeCanvas.spawnVariableNode('${v.name}', 'var_set')" title="วางโหนด Set Variable ลง Canvas">
+              ✏️ ${canvasT('var_spawn_set', 'Set')}
+            </button>
+            <button type="button" class="btn-var-icon" onclick="window.nodeCanvas.openVariableModal('${v.id}')" title="แก้ไขตัวแปร (Edit)">
+              ⚙️
+            </button>
+            <button type="button" class="btn-var-icon btn-var-del" onclick="window.nodeCanvas.deleteVariable('${v.id}')" title="ลบตัวแปร (Delete)">
+              🗑️
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  spawnVariableNode(varName, nodeType = 'var_get') {
+    const allVars = this.getAvailableVariables();
+    const vObj = allVars.find(v => v.name === varName) || {
+      name: varName,
+      type: nodeType === 'var_get' ? 'string' : 'boolean',
+      scope: 'global',
+      targetClient: 'all',
+      defaultValue: ''
+    };
+
+    const viewportRect = this.viewport ? this.viewport.getBoundingClientRect() : { width: 800, height: 600 };
+    const centerClient = { x: viewportRect.width / 2, y: viewportRect.height / 2 };
+    const worldPos = this.clientToWorld(centerClient.x, centerClient.y);
+    const jitterX = Math.floor(Math.random() * 40) - 20;
+    const jitterY = Math.floor(Math.random() * 40) - 20;
+    const finalPos = { x: Math.round(worldPos.x + jitterX), y: Math.round(worldPos.y + jitterY) };
+
+    const nodeId = 'node_' + Math.random().toString(36).substring(2, 9);
+    let initialData = {};
+
+    if (nodeType === 'var_get') {
+      initialData = {
+        varName: vObj.name,
+        varType: vObj.type || 'string',
+        scope: 'global',
+        targetClient: 'all',
+        defaultValue: vObj.defaultValue !== undefined ? vObj.defaultValue : '',
+        enabled: true
+      };
+    } else {
+      initialData = {
+        varName: vObj.name,
+        varType: vObj.type || 'boolean',
+        scope: 'global',
+        targetClient: 'all',
+        initialValue: vObj.defaultValue !== undefined ? vObj.defaultValue : (vObj.type === 'boolean' ? 'false' : (vObj.type === 'number' ? '0' : '')),
+        operation: 'set_value',
+        opValue: vObj.type === 'number' ? '1' : (vObj.type === 'boolean' ? 'true' : ''),
+        enabled: true
+      };
+    }
+
+    const newNode = {
+      id: nodeId,
+      type: nodeType,
+      title: (nodeType === 'var_get' ? 'Get ' : 'Set ') + vObj.name,
+      position: finalPos,
+      data: initialData
+    };
+
+    this.nodes.push(newNode);
+    this.render();
+    this.focusNode(nodeId);
+    this.addHistory('✨', `เพิ่มโหนด "${newNode.title}"`);
+    this.onProfileChanged();
+    if (typeof window.toast === 'function') {
+      window.toast(`✨ วางโหนด "${newNode.title}" แล้ว`, 'success');
+    }
+  }
+
+  deleteVariable(varId) {
+    const v = (this.variables || []).find(it => it.id === varId);
+    if (!v) return;
+
+    const referencingNodes = this.nodes.filter(n => 
+      (n.type === 'var_set' || n.type === 'variable' || n.type === 'var_get') &&
+      n.data?.varName === v.name
+    );
+
+    let confirmMsg = `ต้องการลบตัวแปร "${v.name}" หรือไม่?`;
+    if (referencingNodes.length > 0) {
+      confirmMsg += `\n⚠️ มีโหนดบน Canvas ใช้งานตัวแปรนี้อยู่ ${referencingNodes.length} โหนด`;
+    }
+
+    if (!confirm(confirmMsg)) return;
+
+    this.variables = this.variables.filter(it => it.id !== varId);
+    this.renderVariablesPanel();
+    this.addHistory('🗑️', `ลบตัวแปร "${v.name}"`);
+    this.onProfileChanged();
+    if (typeof window.toast === 'function') {
+      window.toast(`🗑️ ลบตัวแปร "${v.name}" แล้ว`, 'info');
+    }
+  }
+
+  renderDefaultValueInputHTML(type, val = '') {
+    if (type === 'boolean') {
+      const isTrue = String(val) === 'true';
+      return `
+        <select id="modal-var-default" class="inspector-select" style="font-weight:700;">
+          <option value="false" ${!isTrue ? 'selected' : ''}>🔴 False (Off / ปิด)</option>
+          <option value="true" ${isTrue ? 'selected' : ''}>🟢 True (On / เปิด)</option>
+        </select>
+      `;
+    } else if (type === 'number') {
+      const numVal = isNaN(Number(val)) ? 0 : Number(val);
+      return `
+        <input type="number" id="modal-var-default" class="inspector-input" value="${numVal}" step="any" placeholder="0" style="font-family:'JetBrains Mono'; font-weight:700; color:#38bdf8;" />
+      `;
+    } else {
+      return `
+        <input type="text" id="modal-var-default" class="inspector-input" value="${val || ''}" placeholder="ค่าข้อความเริ่มต้น..." style="font-family:'JetBrains Mono';" />
+      `;
+    }
+  }
+
+  openVariableModal(varId = null, targetNodeId = null) {
+    let vObj = null;
+    if (varId) {
+      vObj = (this.variables || []).find(it => it.id === varId);
+    }
+
+    let modalEl = document.getElementById('variable-editor-modal');
+    if (!modalEl) {
+      modalEl = document.createElement('div');
+      modalEl.id = 'variable-editor-modal';
+      modalEl.className = 'modal-bg';
+      document.body.appendChild(modalEl);
+    }
+
+    const isEdit = !!vObj;
+    const varName = vObj ? vObj.name : '';
+    const varType = vObj ? (vObj.type || 'boolean') : 'boolean';
+    const defaultValue = vObj ? (vObj.defaultValue !== undefined ? vObj.defaultValue : '') : (varType === 'boolean' ? 'false' : (varType === 'number' ? '0' : ''));
+    const desc = vObj ? (vObj.description || '') : '';
+
+    modalEl.innerHTML = `
+      <div class="variable-modal-dialog">
+        <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
+          <div style="font-weight:700; font-size:14px; color:#fff; display:flex; align-items:center; gap:8px;">
+            <span>📦</span>
+            <span>${isEdit ? canvasT('var_modal_title_edit', 'แก้ไขข้อมูลตัวแปร') : canvasT('var_modal_title_new', 'สร้างตัวแปร Blueprint ใหม่')}</span>
+          </div>
+          <button type="button" style="background:transparent; border:none; color:var(--muted); font-size:16px; cursor:pointer;" onclick="window.nodeCanvas.closeVariableModal()">✕</button>
+        </div>
+
+        <form id="var-editor-form" onsubmit="event.preventDefault(); window.nodeCanvas.saveVariableFromModal('${varId || ''}', '${targetNodeId || ''}');">
+          <div class="inspector-field-group" style="margin-bottom:12px;">
+            <label class="inspector-label">${canvasT('var_name_label', 'ชื่อตัวแปร')} <span style="color:#ef4444;">*</span></label>
+            <input type="text" id="modal-var-name" class="inspector-input" value="${varName}" placeholder="e.g. isBuffActive, comboCounter, bossHealth" required pattern="[A-Za-z0-9_]+" title="ใช้อักษรภาษาอังกฤษ ตัวเลข และ _ เท่านั้น (ห้ามเว้นวรรค)" style="font-family:'JetBrains Mono'; font-weight:700; color:#38bdf8;" />
+            <span style="font-size:10px; color:var(--muted); margin-top:3px; display:block;">ใช้อักษร A-Z, 0-9 และ _ (เช่น isBuffActive, comboCount)</span>
+          </div>
+
+          <div class="inspector-field-group" style="margin-bottom:12px;">
+            <label class="inspector-label">${canvasT('var_type_label', 'ชนิดข้อมูล (Data Type)')}</label>
+            <select id="modal-var-type" class="inspector-select" onchange="window.nodeCanvas.onModalTypeChange(this.value)">
+              <option value="boolean" ${varType === 'boolean' ? 'selected' : ''}>🔘 Boolean (True / False - สีแดง)</option>
+              <option value="number" ${varType === 'number' ? 'selected' : ''}>🔢 Number (ตัวเลขจำนวนเต็ม/ทศนิยม - สีฟ้า)</option>
+              <option value="string" ${varType === 'string' ? 'selected' : ''}>📝 String (ข้อความตัวอักษร - สีชมพู)</option>
+            </select>
+          </div>
+
+          <div class="inspector-field-group" style="margin-bottom:12px;">
+            <label class="inspector-label">${canvasT('var_default_label', 'ค่าเริ่มต้น (Default Value)')}</label>
+            <div id="modal-var-default-container">
+              ${this.renderDefaultValueInputHTML(varType, defaultValue)}
+            </div>
+          </div>
+
+          <div class="inspector-field-group" style="margin-bottom:16px;">
+            <label class="inspector-label">${canvasT('var_desc_label', 'คำอธิบาย (Optional)')}</label>
+            <input type="text" id="modal-var-desc" class="inspector-input" value="${desc}" placeholder="อธิบายหน้าที่ของตัวแปรนี้..." />
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; gap:8px; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
+            <button type="button" class="btn btn-ghost" onclick="window.nodeCanvas.closeVariableModal()">${canvasT('var_btn_cancel', 'ยกเลิก')}</button>
+            <button type="submit" class="btn btn-hero-primary" style="background:linear-gradient(135deg, #a855f7, #6366f1); border-color:#a855f7;">${canvasT('var_btn_save', 'บันทึกตัวแปร')}</button>
+          </div>
+        </form>
+      </div>
+    `;
+
+    modalEl.classList.add('show');
+    const nameInput = document.getElementById('modal-var-name');
+    if (nameInput) setTimeout(() => nameInput.focus(), 50);
+  }
+
+  onModalTypeChange(type) {
+    const container = document.getElementById('modal-var-default-container');
+    const curInput = document.getElementById('modal-var-default');
+    const curVal = curInput ? curInput.value : '';
+    if (container) {
+      container.innerHTML = this.renderDefaultValueInputHTML(type, curVal);
+    }
+  }
+
+  closeVariableModal() {
+    const modalEl = document.getElementById('variable-editor-modal');
+    if (modalEl) modalEl.classList.remove('show');
+  }
+
+  saveVariableFromModal(varId, targetNodeId) {
+    const nameInput = document.getElementById('modal-var-name');
+    const typeSelect = document.getElementById('modal-var-type');
+    const defaultInput = document.getElementById('modal-var-default');
+    const descInput = document.getElementById('modal-var-desc');
+
+    if (!nameInput || !nameInput.value.trim()) return;
+
+    const rawName = nameInput.value.trim().replace(/\s+/g, '_');
+    const type = typeSelect ? typeSelect.value : 'boolean';
+    const scope = 'global';
+    const targetClient = 'all';
+    let defaultValue = defaultInput ? defaultInput.value.trim() : '';
+    if (type === 'boolean' && defaultValue !== 'true' && defaultValue !== 'false') defaultValue = 'false';
+    const description = descInput ? descInput.value.trim() : '';
+
+    if (!Array.isArray(this.variables)) this.variables = [];
+
+    let oldName = null;
+    if (varId) {
+      const existing = this.variables.find(v => v.id === varId);
+      if (existing) {
+        oldName = existing.name;
+        existing.name = rawName;
+        existing.type = type;
+        existing.scope = scope;
+        existing.targetClient = targetClient;
+        existing.defaultValue = defaultValue;
+        existing.description = description;
+      }
+    } else {
+      const dup = this.variables.find(v => v.name === rawName);
+      if (dup) {
+        dup.type = type;
+        dup.scope = scope;
+        dup.targetClient = targetClient;
+        dup.defaultValue = defaultValue;
+        dup.description = description;
+      } else {
+        this.variables.push({
+          id: 'var_' + Math.random().toString(36).substring(2, 9),
+          name: rawName,
+          type,
+          scope,
+          targetClient,
+          defaultValue,
+          description
+        });
+      }
+    }
+
+    // If renamed, update nodes on canvas
+    if (oldName && oldName !== rawName) {
+      this.nodes.forEach(n => {
+        if ((n.type === 'var_set' || n.type === 'variable' || n.type === 'var_get') && n.data?.varName === oldName) {
+          n.data.varName = rawName;
+          n.data.varType = type;
+          n.data.scope = 'global';
+          n.data.targetClient = 'all';
+          if (n.title.includes(oldName)) {
+            n.title = n.title.replace(oldName, rawName);
+          }
+        }
+      });
+      this.render();
+    }
+
+    this.closeVariableModal();
+    this.renderVariablesPanel();
+    this.onProfileChanged();
+
+    if (targetNodeId) {
+      this.selectVariableForNode(targetNodeId, rawName);
+    }
+
+    if (typeof window.toast === 'function') {
+      window.toast(`✅ บันทึกตัวแปร "${rawName}" สำเร็จ`, 'success');
+    }
+  }
+
+  selectVariableForNode(nodeId, varName) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node) return;
+
+    const allVars = this.getAvailableVariables();
+    const vObj = allVars.find(v => v.name === varName);
+
+    if (!node.data) node.data = {};
+    node.data.varName = varName;
+
+    if (vObj) {
+      node.data.varType = vObj.type;
+      node.data.scope = 'global';
+      node.data.targetClient = 'all';
+      if (node.type === 'var_get') {
+        node.data.defaultValue = vObj.defaultValue !== undefined ? vObj.defaultValue : '';
+        node.title = 'Get ' + varName;
+      } else {
+        node.title = 'Set ' + varName;
+        if (vObj.type === 'boolean' && node.data.operation !== 'toggle' && node.data.operation !== 'set_value' && node.data.operation !== 'set_true' && node.data.operation !== 'set_false' && node.data.operation !== 'reset') {
+          node.data.operation = 'set_value';
+        } else if (vObj.type === 'number' && node.data.operation !== 'set_value' && node.data.operation !== 'increment' && node.data.operation !== 'decrement' && node.data.operation !== 'reset') {
+          node.data.operation = 'set_value';
+        }
+      }
+    }
+
+    this.render();
+    this.openInspector(nodeId);
+    this.onProfileChanged();
   }
 
   toggleOutliner(forceState = undefined) {
@@ -3160,8 +3557,6 @@ class NodeCanvasEditor {
       fieldsHTML += this.renderPartyHealHelper(node);
     } else if (node.type === 'party_buff') {
       fieldsHTML += this.renderPartyBuffHelper(node);
-    } else if (node.type === 'party_target') {
-      fieldsHTML += this.renderPartyTargetHelper(node);
     } else if (node.type === 'tts') {
       fieldsHTML += this.renderTtsHelper(node);
     } else if (node.type === 'screenshot') {
@@ -3193,25 +3588,19 @@ class NodeCanvasEditor {
   }
 
   renderStepLogHelper(node) {
-    const stepTag = node.data?.stepTag || 'STEP 1';
     const message = node.data?.message || '';
-    const showClient = node.data?.showClient !== false;
+    const showClient = node.data?.showClient === true;
 
     return `
       <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_step_tag', 'Step Badge Tag')}</label>
-        <input type="text" class="inspector-input" value="${stepTag}" placeholder="e.g. STEP 1, CHECK_BUFF, KILL_BOSS" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'stepTag', this.value); window.nodeCanvas.renderNodes();" />
+        <label class="inspector-label">${canvasT('inspector_log_message', window.currentLang === 'en' ? 'Log Message to Print' : 'ข้อความที่จะแสดงใน Log')}</label>
+        <textarea class="inspector-input" rows="3" placeholder="${window.currentLang === 'en' ? 'Type message to print in terminal (or connect via pink Message pin)...' : 'พิมพ์ข้อความที่ต้องการแสดงใน Log (หรือต่อสายสีชมพูจากตัวแปร)...'}" oninput="window.nodeCanvas.updateNodeData('${node.id}', 'message', this.value); window.nodeCanvas.renderNodes();" style="resize:vertical; min-height:60px; font-family:inherit; padding:8px 10px; line-height:1.4;">${message}</textarea>
+        <span style="font-size:10px; color:var(--muted); margin-top:4px; display:block; line-height:1.4;">💡 <b>Dynamic Wire Tip:</b> เชื่อมสายสีชมพูจากโหนด <b>Get Variable</b> เข้าขา <b>◀ Message</b> เพื่อนำค่าตัวแปรมาแสดงใน Log ได้</span>
       </div>
       <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_step_message', 'Log Message (Default / Static)')}</label>
-        <input type="text" class="inspector-input" value="${message}" placeholder="Message to print (or connect via pink Message pin)..." onchange="window.nodeCanvas.updateNodeData('${node.id}', 'message', this.value); window.nodeCanvas.renderNodes();" />
-        <span style="font-size:10px; color:var(--muted); margin-top:4px; display:block; line-height:1.4;">💡 <b>Unreal Data Pin Tip:</b> เชื่อมสายสีชมพูจากโหนด <b>Get Variable</b> เข้าขา <b>◀ Message</b> เพื่อนำค่าตัวแปรมาปรินต์แบบไดนามิกได้ทันที!</span>
-      </div>
-      <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_step_show_client', 'Include Client Number')}</label>
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; color:var(--text);">
           <input type="checkbox" ${showClient ? 'checked' : ''} onchange="window.nodeCanvas.updateNodeData('${node.id}', 'showClient', this.checked); window.nodeCanvas.renderNodes();" style="accent-color:#10b981; cursor:pointer;" />
-          <span>${canvasT('inspector_step_show_client', 'Show [Client 1] in step log')}</span>
+          <span>${canvasT('inspector_step_show_client', window.currentLang === 'en' ? 'Show [Client 1] tag in log' : 'แสดงป้ายระบุเลขจอ [Client 1] ใน Log')}</span>
         </label>
       </div>
       <div class="inspector-field-group">
@@ -3222,15 +3611,46 @@ class NodeCanvasEditor {
   }
 
   renderVarGetHelper(node) {
-    const vName = node.data?.varName || node.title || 'myVar';
+    const vName = node.data?.varName || (node.title ? node.title.replace(/^Get /, '') : 'myVar');
     const vType = node.data?.varType || 'string';
     const defVal = node.data?.defaultValue !== undefined ? node.data.defaultValue : '';
-    const vScope = node.data?.scope || 'client';
+
+    const allVars = this.getAvailableVariables();
+    const hasCurrent = allVars.some(v => v.name === vName);
+    const varOptions = allVars.map(v => {
+      const typeIcon = v.type === 'number' ? '🔢' : (v.type === 'boolean' ? '🔘' : '📝');
+      return `<option value="${v.name}" ${v.name === vName ? 'selected' : ''}>${typeIcon} ${v.name} (${v.type})</option>`;
+    }).join('');
+
+    let defValHTML = '';
+    if (vType === 'boolean') {
+      const isTrue = String(defVal) === 'true';
+      defValHTML = `
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'defaultValue', this.value === 'true'); window.nodeCanvas.renderNodes();">
+          <option value="false" ${!isTrue ? 'selected' : ''}>🔴 False (Off)</option>
+          <option value="true" ${isTrue ? 'selected' : ''}>🟢 True (On)</option>
+        </select>
+      `;
+    } else if (vType === 'number') {
+      defValHTML = `
+        <input type="number" class="inspector-input" value="${defVal || '0'}" step="any" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'defaultValue', parseFloat(this.value) || 0); window.nodeCanvas.renderNodes();" />
+      `;
+    } else {
+      defValHTML = `
+        <input type="text" class="inspector-input" value="${defVal}" placeholder="Fallback value if uninitialized..." onchange="window.nodeCanvas.updateNodeData('${node.id}', 'defaultValue', this.value); window.nodeCanvas.renderNodes();" />
+      `;
+    }
 
     return `
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_var_name', 'Variable Name')}</label>
-        <input type="text" class="inspector-input" value="${vName}" placeholder="e.g. myVar, isBuffActive, comboCounter" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'varName', this.value); window.nodeCanvas.updateNodeData('${node.id}', 'title', this.value); window.nodeCanvas.renderNodes();" style="font-family:'JetBrains Mono'; font-weight:700; color:#38bdf8;" />
+        <div class="inspector-input-with-action">
+          <select class="inspector-select" onchange="window.nodeCanvas.selectVariableForNode('${node.id}', this.value)" style="font-family:'JetBrains Mono'; font-weight:700; color:#ec4899;">
+            ${!hasCurrent ? `<option value="${vName}" selected>⚠️ ${vName} (Custom)</option>` : ''}
+            ${varOptions || `<option value="${vName}" selected>${vName}</option>`}
+          </select>
+          <button type="button" class="inspector-btn-action" onclick="window.nodeCanvas.openVariableModal(null, '${node.id}')" title="สร้างตัวแปรใหม่ (Add Variable)">➕</button>
+        </div>
       </div>
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_var_type', 'Data Type')}</label>
@@ -3242,71 +3662,60 @@ class NodeCanvasEditor {
       </div>
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_var_default', 'Default Fallback Value')}</label>
-        <input type="text" class="inspector-input" value="${defVal}" placeholder="Fallback value if uninitialized..." onchange="window.nodeCanvas.updateNodeData('${node.id}', 'defaultValue', this.value); window.nodeCanvas.renderNodes();" />
+        ${defValHTML}
       </div>
-      <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_var_scope', 'Variable Scope')}</label>
-        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'scope', this.value); window.nodeCanvas.openInspector('${node.id}');">
-          <option value="client" ${vScope === 'client' ? 'selected' : ''}>${canvasT('var_scope_client', '🎯 Client Screen Specific')}</option>
-          <option value="global" ${vScope === 'global' ? 'selected' : ''}>${canvasT('var_scope_global', '🌐 Global (Shared All Clients)')}</option>
-        </select>
-      </div>
-      ${vScope === 'client' ? `
-        <div class="inspector-field-group">
-          <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen')}</label>
-          ${this.renderClientButtonSelector(node)}
-        </div>
-      ` : ''}
     `;
   }
 
   renderVariableHelper(node) {
-    const vName = node.data?.varName || node.title || 'myVar';
+    const vName = node.data?.varName || 'myVar';
     const vType = node.data?.varType || 'boolean';
-    const vScope = node.data?.scope || 'client';
-    const initVal = node.data?.initialValue !== undefined ? node.data.initialValue : 'false';
-    const op = node.data?.operation || 'set_value';
-    const opVal = node.data?.opValue !== undefined ? node.data.opValue : '1';
+    const op = node.data?.operation || (vType === 'boolean' ? 'set_true' : 'set_value');
+    const opVal = node.data?.opValue !== undefined ? node.data.opValue : (vType === 'number' ? 0 : '');
 
-    let initValHTML = '';
-    if (vType === 'boolean') {
-      initValHTML = `
-        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'initialValue', this.value === 'true')">
-          <option value="false" ${String(initVal) === 'false' ? 'selected' : ''}>🔴 False (Off)</option>
-          <option value="true" ${String(initVal) === 'true' ? 'selected' : ''}>🟢 True (On)</option>
-        </select>
-      `;
-    } else if (vType === 'number') {
-      initValHTML = `
-        <input type="number" class="inspector-input" value="${initVal}" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'initialValue', parseFloat(this.value) || 0)" />
-      `;
-    } else {
-      initValHTML = `
-        <input type="text" class="inspector-input" value="${initVal}" placeholder="Initial text..." onchange="window.nodeCanvas.updateNodeData('${node.id}', 'initialValue', this.value)" />
-      `;
-    }
+    const allVars = this.getAvailableVariables();
+    const hasCurrent = allVars.some(v => v.name === vName);
+    const varOptions = allVars.map(v => {
+      const typeIcon = v.type === 'number' ? '🔢' : (v.type === 'boolean' ? '🔘' : '📝');
+      return `<option value="${v.name}" ${v.name === vName ? 'selected' : ''}>${typeIcon} ${v.name} (${v.type})</option>`;
+    }).join('');
 
     let opOptionsHTML = '';
     let opValInputHTML = '';
 
     if (vType === 'boolean') {
       opOptionsHTML = `
-        <option value="set_value" ${op === 'set_value' ? 'selected' : ''}>${canvasT('var_op_set_value', '✏️ Set Value (via Pin / Param)')}</option>
+        <option value="set_true" ${op === 'set_true' ? 'selected' : ''}>${canvasT('var_op_set_true', '🟢 Set True (Enable / On)')}</option>
+        <option value="set_false" ${op === 'set_false' ? 'selected' : ''}>${canvasT('var_op_set_false', '🔴 Set False (Disable / Off)')}</option>
         <option value="toggle" ${op === 'toggle' ? 'selected' : ''}>${canvasT('var_op_toggle', '🔄 Toggle (True ⇄ False)')}</option>
-        <option value="set_true" ${op === 'set_true' ? 'selected' : ''}>${canvasT('var_op_set_true', '🟢 Set True (Enable)')}</option>
-        <option value="set_false" ${op === 'set_false' ? 'selected' : ''}>${canvasT('var_op_set_false', '🔴 Set False (Disable)')}</option>
+        <option value="set_value" ${op === 'set_value' ? 'selected' : ''}>${canvasT('var_op_set_value_wire', '📥 Receive from Wire (Value In)')}</option>
         <option value="reset" ${op === 'reset' ? 'selected' : ''}>${canvasT('var_op_reset', '🔁 Reset to Initial')}</option>
       `;
+      if (op === 'set_value') {
+        opValInputHTML = `
+          <div style="font-size:11px; color:#38bdf8; margin-top:8px; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25); border-radius:6px; padding:6px 10px; line-height:1.4;">
+            💡 ${window.currentLang === 'en' ? 'Connect a data wire to the <b>◀ Value In</b> pin on Canvas to set this variable dynamically.' : 'นำสายสัญญาณจากโหนดอื่นมาต่อเข้าที่พอร์ต <b>◀ Value In</b> บน Canvas เพื่อส่งค่า'}
+          </div>
+        `;
+      }
     } else if (vType === 'number') {
       opOptionsHTML = `
-        <option value="set_value" ${op === 'set_value' ? 'selected' : ''}>${canvasT('var_op_set_value', '✏️ Set Value')}</option>
+        <option value="set_value" ${op === 'set_value' ? 'selected' : ''}>${canvasT('var_op_set_value', '✏️ Set Value / Value In')}</option>
         <option value="increment" ${op === 'increment' ? 'selected' : ''}>${canvasT('var_op_increment', '➕ Increment (+step)')}</option>
         <option value="decrement" ${op === 'decrement' ? 'selected' : ''}>${canvasT('var_op_decrement', '➖ Decrement (-step)')}</option>
         <option value="reset" ${op === 'reset' ? 'selected' : ''}>${canvasT('var_op_reset', '🔁 Reset to Initial')}</option>
       `;
-      if (op === 'set_value' || op === 'increment' || op === 'decrement') {
+      if (op === 'set_value') {
         opValInputHTML = `
-          <div class="inspector-field-group" style="margin-top:6px;">
+          <div class="inspector-field-group" style="margin-top:8px;">
+            <label class="inspector-label">${window.currentLang === 'en' ? 'Value to Set (or connect via Value In pin)' : 'ค่าตัวเลขที่ต้องการกำหนด (หรือต่อสายเข้า Value In)'}</label>
+            <input type="number" class="inspector-input" value="${opVal}" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'opValue', parseFloat(this.value) || 0)" />
+            <div style="font-size:10.5px; color:#94a3b8; margin-top:4px;">💡 นำสายมาต่อที่พอร์ต <b>◀ Value In</b> บน Canvas หรือใส่ตัวเลขตรงนี้</div>
+          </div>
+        `;
+      } else if (op === 'increment' || op === 'decrement') {
+        opValInputHTML = `
+          <div class="inspector-field-group" style="margin-top:8px;">
             <label class="inspector-label">${canvasT('inspector_var_op_value', 'Value / Step Amount')}</label>
             <input type="number" class="inspector-input" value="${opVal}" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'opValue', parseFloat(this.value) || 0)" />
           </div>
@@ -3314,14 +3723,15 @@ class NodeCanvasEditor {
       }
     } else {
       opOptionsHTML = `
-        <option value="set_value" ${op === 'set_value' ? 'selected' : ''}>${canvasT('var_op_set_value', '✏️ Set Value')}</option>
+        <option value="set_value" ${op === 'set_value' ? 'selected' : ''}>${canvasT('var_op_set_value', '✏️ Set Value / Value In')}</option>
         <option value="reset" ${op === 'reset' ? 'selected' : ''}>${canvasT('var_op_reset', '🔁 Reset to Initial')}</option>
       `;
       if (op === 'set_value') {
         opValInputHTML = `
-          <div class="inspector-field-group" style="margin-top:6px;">
-            <label class="inspector-label">${canvasT('inspector_var_op_value', 'New Text Value')}</label>
+          <div class="inspector-field-group" style="margin-top:8px;">
+            <label class="inspector-label">${window.currentLang === 'en' ? 'Text Value (or connect via Value In pin)' : 'ข้อความที่ต้องการกำหนด (หรือต่อสายเข้า Value In)'}</label>
             <input type="text" class="inspector-input" value="${opVal}" placeholder="New value..." onchange="window.nodeCanvas.updateNodeData('${node.id}', 'opValue', this.value)" />
+            <div style="font-size:10.5px; color:#94a3b8; margin-top:4px;">💡 นำสายมาต่อที่พอร์ต <b>◀ Value In</b> บน Canvas หรือพิมพ์ข้อความตรงนี้</div>
           </div>
         `;
       }
@@ -3330,21 +3740,14 @@ class NodeCanvasEditor {
     return `
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_var_name', 'Variable Name')}</label>
-        <input type="text" class="inspector-input" value="${vName}" placeholder="e.g. myVar, isBuffActive" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'varName', this.value); window.nodeCanvas.updateNodeData('${node.id}', 'title', 'Set ' + this.value); window.nodeCanvas.renderNodes();" style="font-family:'JetBrains Mono'; font-weight:700; color:#ec4899;" />
-      </div>
-      <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_var_scope', 'Variable Scope')}</label>
-        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'scope', this.value); window.nodeCanvas.openInspector('${node.id}');">
-          <option value="client" ${vScope === 'client' ? 'selected' : ''}>${canvasT('var_scope_client', '🎯 Client Screen Specific')}</option>
-          <option value="global" ${vScope === 'global' ? 'selected' : ''}>${canvasT('var_scope_global', '🌐 Global (Shared All Clients)')}</option>
-        </select>
-      </div>
-      ${vScope === 'client' ? `
-        <div class="inspector-field-group">
-          <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen')}</label>
-          ${this.renderClientButtonSelector(node)}
+        <div class="inspector-input-with-action">
+          <select class="inspector-select" onchange="window.nodeCanvas.selectVariableForNode('${node.id}', this.value)" style="font-family:'JetBrains Mono'; font-weight:700; color:#a855f7;">
+            ${!hasCurrent ? `<option value="${vName}" selected>⚠️ ${vName} (Custom)</option>` : ''}
+            ${varOptions || `<option value="${vName}" selected>${vName}</option>`}
+          </select>
+          <button type="button" class="inspector-btn-action" onclick="window.nodeCanvas.openVariableModal(null, '${node.id}')" title="สร้างตัวแปรใหม่ (Add Variable)">➕</button>
         </div>
-      ` : ''}
+      </div>
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_var_type', 'Variable Type')}</label>
         <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'varType', this.value); window.nodeCanvas.render(); window.nodeCanvas.openInspector('${node.id}');">
@@ -3354,89 +3757,11 @@ class NodeCanvasEditor {
         </select>
       </div>
       <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_var_initial', 'Initial Value (Default)')}</label>
-        ${initValHTML}
-      </div>
-      <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_var_operation', 'Operation on Exec In')}</label>
-        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'operation', this.value); window.nodeCanvas.openInspector('${node.id}');">
+        <label class="inspector-label">${canvasT('inspector_var_action', 'Action (When Executed)')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.setNodeOperation('${node.id}', this.value);">
           ${opOptionsHTML}
         </select>
         ${opValInputHTML}
-      </div>
-    `;
-  }
-
-  renderPartyTargetHelper(node) {
-    const isEn = window.currentLang === 'en';
-    const targetMode = node.data?.targetMode || 'heal_priority';
-    const lowHpThreshold = node.data?.lowHpThreshold ?? 70;
-    const scanIntervalMs = node.data?.scanIntervalMs ?? 250;
-    const delayAfterClick = node.data?.delayAfterClick ?? 250;
-    const scanRegion = node.data?.scanRegion || 'left';
-
-    return `
-      <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen (Vision)')}</label>
-        ${this.renderClientButtonSelector(node)}
-      </div>
-      <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_scan_region', isEn ? 'Scan Region (Screen Area)' : 'พื้นที่สแกนบนหน้าจอ')}</label>
-        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'scanRegion', this.value);">
-          <option value="auto" ${scanRegion === 'auto' || !scanRegion ? 'selected' : ''}>🔍 ${canvasT('region_auto', isEn ? 'Auto (Detect Left/Right)' : 'อัตโนมัติ (ตรวจจับซ้าย/ขวา Auto)')}</option>
-          <option value="right" ${scanRegion === 'right' ? 'selected' : ''}>👉 ${canvasT('region_right', isEn ? 'Right Half' : 'ฝั่งขวาของจอ')}</option>
-          <option value="left" ${scanRegion === 'left' ? 'selected' : ''}>👈 ${canvasT('region_left', isEn ? 'Left Half' : 'ฝั่งซ้ายของจอ')}</option>
-          <option value="full" ${scanRegion === 'full' ? 'selected' : ''}>🖥️ ${canvasT('region_full', isEn ? 'Full Screen (Entire Window)' : 'ทั่วทั้งหน้าจอ (สแกนทั้งจอ)')}</option>
-        </select>
-      </div>
-      <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_party_mode', 'Party Target Mode')}</label>
-        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'targetMode', this.value); window.nodeCanvas.openInspector('${node.id}');">
-          <option value="heal_priority" ${targetMode === 'heal_priority' ? 'selected' : ''}>🚑 Auto Heal Priority (Click lowest HP &lt;= Threshold)</option>
-          <option value="buff_loop" ${targetMode === 'buff_loop' ? 'selected' : ''}>📜 Buff Loop (Cycle click alive members 1 by 1)</option>
-          <option value="select_slot" ${targetMode === 'select_slot' ? 'selected' : ''}>🎯 Select Specific Slot (e.g. Slot 1 Leader)</option>
-        </select>
-      </div>
-      ${targetMode === 'select_slot' ? `
-      <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_target_slot', 'Target Party Member Slot')}</label>
-        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'targetSlot', parseInt(this.value, 10));">
-          <option value="1" ${(node.data?.targetSlot || 1) == 1 ? 'selected' : ''}>👑 Slot 1 (หัวตี้ / Leader)</option>
-          <option value="2" ${(node.data?.targetSlot || 1) == 2 ? 'selected' : ''}>Slot 2</option>
-          <option value="3" ${(node.data?.targetSlot || 1) == 3 ? 'selected' : ''}>Slot 3</option>
-          <option value="4" ${(node.data?.targetSlot || 1) == 4 ? 'selected' : ''}>Slot 4</option>
-          <option value="5" ${(node.data?.targetSlot || 1) == 5 ? 'selected' : ''}>Slot 5</option>
-          <option value="6" ${(node.data?.targetSlot || 1) == 6 ? 'selected' : ''}>Slot 6</option>
-          <option value="7" ${(node.data?.targetSlot || 1) == 7 ? 'selected' : ''}>Slot 7</option>
-          <option value="8" ${(node.data?.targetSlot || 1) == 8 ? 'selected' : ''}>Slot 8</option>
-        </select>
-      </div>
-      ` : ''}
-      ${targetMode === 'heal_priority' ? `
-      <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_party_low_hp', 'Low HP Threshold (%)')}</label>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <input type="range" min="10" max="95" step="5" value="${lowHpThreshold}" style="flex:1; accent-color:#ef4444;" oninput="this.nextElementSibling.innerText = this.value + '%'; window.nodeCanvas.updateNodeData('${node.id}', 'lowHpThreshold', parseInt(this.value, 10));" />
-          <span style="min-width:44px; font-weight:700; color:#ef4444; font-family:'JetBrains Mono',monospace;">${lowHpThreshold}%</span>
-        </div>
-      </div>
-      ` : ''}
-      <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_party_scan_interval', 'Scan Interval (ms)')}</label>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <input type="number" class="inspector-input" value="${scanIntervalMs}" min="50" max="3000" step="50" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'scanIntervalMs', parseInt(this.value, 10))" style="flex:1;" />
-          <span style="font-size:11px; opacity:0.6;">(50 - 2000 ms)</span>
-        </div>
-      </div>
-      <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_party_delay_click', 'Delay After Click (ms)')}</label>
-        <input type="number" class="inspector-input" value="${delayAfterClick}" min="0" max="2000" step="50" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'delayAfterClick', parseInt(this.value, 10))" />
-      </div>
-      <div class="inspector-field-group" style="margin-top:6px;">
-        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
-          <input type="checkbox" ${node.data?.showOverlay !== false ? 'checked' : ''} onchange="window.nodeCanvas.updateNodeData('${node.id}', 'showOverlay', this.checked)" style="accent-color:#06b6d4; cursor:pointer;" />
-          <span>👁️ ${canvasT('inspector_party_show_overlay', 'Visual Overlay')}</span>
-        </label>
       </div>
     `;
   }
@@ -5050,11 +5375,41 @@ class NodeCanvasEditor {
       this.renderWires();
     }
 
+    // If operation changed away from set_value on variable node, auto-prune val_in wire connections
+    if (key === 'operation' && value !== 'set_value') {
+      this.connections = this.connections.filter(c => !(c.toNodeId === nodeId && c.toPort === 'val_in'));
+      this.renderWires();
+    }
+
     this.renderNodes();
     const oldStr = typeof oldVal === 'object' ? JSON.stringify(oldVal) : String(oldVal ?? '');
     const newStr = typeof value === 'object' ? JSON.stringify(value) : String(value ?? '');
     const detail = (oldVal !== undefined && oldStr !== newStr) ? `${key}: "${oldStr}" ➔ "${newStr}"` : `${key}: "${newStr}"`;
     this.addHistory('⚙️', `แก้ไข ${key} ของโหนด "${node.title || node.type}"`, true, detail);
+    this.onProfileChanged();
+  }
+
+  setNodeOperation(nodeId, operation) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node) return;
+    if (!node.data) node.data = {};
+    const oldOp = node.data.operation || 'set_value';
+    node.data.operation = operation;
+
+    // When switching away from set_value, automatically prune any wires connected to val_in
+    if (operation !== 'set_value') {
+      const hadWire = this.connections.some(c => c.toNodeId === nodeId && c.toPort === 'val_in');
+      if (hadWire) {
+        this.connections = this.connections.filter(c => !(c.toNodeId === nodeId && c.toPort === 'val_in'));
+        if (typeof window.toast === 'function') {
+          window.toast(`✂️ ปลดสายออกจาก Value In อัตโนมัติ (${operation})`, 'info');
+        }
+      }
+    }
+
+    this.render();
+    this.openInspector(nodeId);
+    this.addHistory('⚙️', `เปลี่ยน Operation ของ "${node.title || node.type}" เป็น ${operation}`, true, `Operation: "${oldOp}" ➔ "${operation}"`);
     this.onProfileChanged();
   }
 
@@ -5249,14 +5604,20 @@ class NodeCanvasEditor {
         if (d.customCooldownMs) cleanData.customCooldownMs = parseInt(d.customCooldownMs, 10);
       } else if (type === 'delay') {
         cleanData.delayMs = d.delayMs !== undefined ? parseInt(d.delayMs, 10) : 1000;
-      } else if (type === 'variable') {
-        cleanData.varName = d.varName || node.title || 'isBuffActive';
+      } else if (type === 'var_set' || type === 'variable') {
+        cleanData.varName = d.varName || (node.title ? node.title.replace(/^Set /, '') : 'myVar');
         cleanData.varType = d.varType || 'boolean';
         cleanData.scope = d.scope || 'client';
         cleanData.targetClient = d.targetClient || '1';
         cleanData.initialValue = d.initialValue !== undefined ? d.initialValue : 'false';
-        cleanData.operation = d.operation || 'toggle';
+        cleanData.operation = d.operation || 'set_value';
         cleanData.opValue = d.opValue !== undefined ? d.opValue : '1';
+      } else if (type === 'var_get') {
+        cleanData.varName = d.varName || (node.title ? node.title.replace(/^Get /, '') : 'myVar');
+        cleanData.varType = d.varType || 'string';
+        cleanData.scope = d.scope || 'client';
+        cleanData.targetClient = d.targetClient || '1';
+        cleanData.defaultValue = d.defaultValue !== undefined ? d.defaultValue : '';
       } else if (type === 'branch' || type === 'condition') {
         cleanData.conditionTargetId = d.conditionTargetId || '';
         cleanData.conditionRule = d.conditionRule || 'is_running';
@@ -5350,18 +5711,20 @@ class NodeCanvasEditor {
         cleanData.targetClient = d.targetClient || '1';
         cleanData.delayAfterClick = d.delayAfterClick !== undefined ? parseInt(d.delayAfterClick, 10) : 80;
         cleanData.showOverlay = d.showOverlay !== false;
-      } else if (type === 'party_target') {
-        cleanData.targetClient = d.targetClient || '1';
-        cleanData.targetMode = d.targetMode || 'heal_priority';
-        cleanData.targetSlot = d.targetSlot !== undefined ? parseInt(d.targetSlot, 10) : 1;
-        cleanData.lowHpThreshold = d.lowHpThreshold !== undefined ? parseInt(d.lowHpThreshold, 10) : 70;
-        cleanData.scanIntervalMs = d.scanIntervalMs !== undefined ? parseInt(d.scanIntervalMs, 10) : 250;
-        cleanData.delayAfterClick = d.delayAfterClick !== undefined ? parseInt(d.delayAfterClick, 10) : 200;
-        cleanData.showOverlay = d.showOverlay !== false;
       } else if (type === 'tts') {
         cleanData.text = d.text || '';
         cleanData.voice = d.voice || 'th-TH-PremwadeeNeural';
         cleanData.volume = d.volume !== undefined ? parseInt(d.volume, 10) : 100;
+      } else if (type === 'step_log') {
+        cleanData.message = d.message !== undefined ? d.message : '';
+        cleanData.showClient = d.showClient === true;
+        cleanData.targetClient = d.targetClient || '1';
+      } else if (type === 'screenshot') {
+        cleanData.targetClient = d.targetClient || '1';
+        cleanData.captureRegion = d.captureRegion || 'active_client';
+        cleanData.subfolder = d.subfolder || '';
+        cleanData.prefix = d.prefix || 'error_snap';
+        cleanData.annotate = d.annotate === true;
       }
 
       let actionId = d.actionId || (node.id.startsWith('node_') ? node.id.replace('node_', '') : node.id);
@@ -5383,6 +5746,7 @@ class NodeCanvasEditor {
         zoom: this.zoom,
         pan: this.pan
       },
+      variables: this.getAvailableVariables(),
       nodes: cleanNodes,
       connections: this.connections
     };
@@ -5656,7 +6020,7 @@ class NodeCanvasEditor {
         icon: '🛡️',
         name: canvasT('cat_utilities', 'Safety & Utilities'),
         items: [
-          { type: 'step_log', icon: '🧭', name: this.getNodeTypeLabel('step_log') },
+          { type: 'step_log', icon: '📝', name: this.getNodeTypeLabel('step_log') },
           { type: 'emergency_stop', icon: '🛑', name: this.getNodeTypeLabel('emergency_stop') },
           { type: 'tts', icon: '🗣️', name: this.getNodeTypeLabel('tts') },
           { type: 'screenshot', icon: '📸', name: this.getNodeTypeLabel('screenshot') },

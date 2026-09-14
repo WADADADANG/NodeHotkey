@@ -331,7 +331,8 @@
       filterError: "🔴 Error",
       filterWarn: "🟡 Warning",
       filterAction: "🟣 Action",
-      filterStep: "🟢 Step",
+      filterLog: "🟢 Log",
+      filterStep: "🟢 Log",
       btnAutoScroll: "⬇️ Auto-scroll",
       btnClearTerm: "🗑️ ล้าง",
       termToday: "📁 วันนี้: ",
@@ -422,7 +423,8 @@
       filterError: "🔴 Error",
       filterWarn: "🟡 Warning",
       filterAction: "🟣 Action",
-      filterStep: "🟢 Step",
+      filterLog: "🟢 Log",
+      filterStep: "🟢 Log",
       btnAutoScroll: "⬇️ Auto-scroll",
       btnClearTerm: "🗑️ Clear",
       termToday: "📁 Today: ",
@@ -533,8 +535,8 @@
     if (searchInput) searchInput.placeholder = t.termSearchPlaceholder;
     const clearBtn = document.getElementById('btn-clear-terminal');
     if (clearBtn) clearBtn.textContent = t.btnClearTerm;
-    const pillStep = document.querySelector('.filter-pill[data-filter="step"]');
-    if (pillStep) pillStep.textContent = t.filterStep || '🟢 Step';
+    const pillLog = document.querySelector('.filter-pill[data-filter="log"]') || document.querySelector('.filter-pill[data-filter="step"]');
+    if (pillLog) pillLog.textContent = t.filterLog || t.filterStep || '🟢 Log';
 
     // Update Settings View Elements
     const lblHeadEm = document.getElementById('lbl-setting-head-emergency');
@@ -600,6 +602,7 @@
       else if (f === 'error') pill.textContent = t.filterError;
       else if (f === 'warn') pill.textContent = t.filterWarn;
       else if (f === 'action') pill.textContent = t.filterAction;
+      else if (f === 'log' || f === 'step') pill.textContent = t.filterLog || t.filterStep || '🟢 Log';
     });
 
     // Re-render Client Cards in active language

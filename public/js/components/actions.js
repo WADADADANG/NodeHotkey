@@ -37,7 +37,6 @@ export function getModeDescription(mode) {
     party_slot: currentLang === 'en' ? 'Select specific party slot (e.g. Slot 1 Leader) and click' : 'เลือกคลิกเป้าหมายปาร์ตี้ตามลำดับช่อง (เช่น ช่อง 1 หัวตี้)',
     party_heal: currentLang === 'en' ? 'Select member with lowest HP <= threshold and click' : 'เลือกคลิกคนเลือดต่ำสุดที่ <= เกณฑ์เพื่อฮีล',
     party_buff: currentLang === 'en' ? 'Cycle through party members for buffing (Downward Tracking)' : 'คลิกวนแจกบัฟสมาชิกทีละคนตามลำดับ (Downward Tracking)',
-    party_target_router: currentLang === 'en' ? 'Party Target Router (Legacy)' : 'เลือกเป้าหมายปาร์ตี้ (Legacy)',
     tts: currentLang === 'en' ? 'Text to Speech alert (Microsoft Edge Neural AI voice)' : 'อ่านข้อความเสียงแจ้งเตือน (Microsoft Edge Neural AI)',
     screenshot: currentLang === 'en' ? 'Capture game screenshot with diagnostic annotations' : 'ถ่ายภาพหน้าจอเกมแบบ Zero-Flicker พร้อมวิเคราะห์ปัญหา'
   };
@@ -62,7 +61,6 @@ export function getModeBadgeInfo(mode) {
     party_slot: { label: 'PARTY SLOT', color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.35)' },
     party_heal: { label: 'PARTY HEAL', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)', border: 'rgba(239, 68, 68, 0.35)' },
     party_buff: { label: 'PARTY BUFF', color: '#a855f7', bg: 'rgba(168, 85, 247, 0.15)', border: 'rgba(168, 85, 247, 0.35)' },
-    party_target_router: { label: 'PARTY TARGET', color: '#06b6d4', bg: 'rgba(6, 182, 212, 0.15)', border: 'rgba(6, 182, 212, 0.35)' },
     tts: { label: 'TTS', color: '#c084fc', bg: 'rgba(192, 132, 252, 0.15)', border: 'rgba(192, 132, 252, 0.35)' },
     screenshot: { label: 'SCREENSHOT', color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.35)' }
   };
@@ -529,39 +527,6 @@ export function renderModeSpecificFields(act) {
         </div>
       </div>
     `;
-  } else if (act.mode === 'party_target_router' || act.mode === 'party_target') {
-    html = `
-      <div style="display:flex; flex-direction:column; gap:12px; border-top:1px dashed var(--border); padding-top:12px;">
-        <div class="field-row">
-          <div class="field">
-            <label style="color:var(--primary); font-weight:700;">🎯 ${currentLang === 'en' ? 'Targeting Mode' : 'โหมดการเลือกเป้าหมาย'}</label>
-            <select class="party-target-mode" onchange="saveCurrentProfile()" style="background:#131826; border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:'Outfit'; font-size:13px; outline:none; width:100%;">
-              <option value="heal_priority" ${(act.targetMode || 'heal_priority') === 'heal_priority' ? 'selected' : ''}>🚑 ${currentLang === 'en' ? 'Heal Priority (Lowest HP Member)' : 'เช็คเลือดฉุกเฉิน (คลิกคนที่เลือดน้อยสุดที่ < เกณฑ์)'}</option>
-              <option value="buff_loop" ${(act.targetMode || 'heal_priority') === 'buff_loop' ? 'selected' : ''}>📜 ${currentLang === 'en' ? 'Buff Sequence Loop (Cycle all members)' : 'วนแจกบัฟทีละคน (ข้ามคนตาย/นอกระยะ)'}</option>
-              <option value="select_slot" ${(act.targetMode || 'heal_priority') === 'select_slot' ? 'selected' : ''}>🎯 ${currentLang === 'en' ? 'Select Specific Slot' : 'เลือกช่องระบุเจาะจง (เช่น ช่อง 1 หัวตี้)'}</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>⚡ ${currentLang === 'en' ? 'Scan Interval (ms)' : 'รอบเวลาสแกน (มิลลิวินาที)'}</label>
-            <input type="number" class="party-scan-interval" value="${act.scanIntervalMs ?? 250}" min="50" max="3000" step="50" placeholder="250" onchange="saveCurrentProfile()" style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:'JetBrains Mono'; font-size:13px; outline:none; width:100%;">
-            <span style="font-size:10px; color:var(--muted); margin-top:2px;">${currentLang === 'en' ? '100ms (Fast) / 250ms (Recommended) / 500ms (Low CPU)' : '100ms (เร็ว) / 250ms (แนะนำ) / 500ms (ประหยัด CPU)'}</span>
-          </div>
-        </div>
-
-        <div class="field-row">
-          <div class="field">
-            <label>🩸 ${currentLang === 'en' ? 'Low HP Threshold (%)' : 'เกณฑ์เลือดต่ำสำหรับฮีล (%)'}</label>
-            <input type="number" class="party-low-hp-threshold" value="${act.lowHpThreshold ?? 70}" min="1" max="99" placeholder="70" onchange="saveCurrentProfile()" style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:'JetBrains Mono'; font-size:13px; outline:none; width:100%;">
-            <span style="font-size:10px; color:var(--muted); margin-top:2px;">${currentLang === 'en' ? 'Trigger onMemberLowHp when HP <= threshold' : 'ส่งสัญญาณ onMemberLowHp เมื่อเลือด <= ค่านี้'}</span>
-          </div>
-          <div class="field">
-            <label>⏱️ ${currentLang === 'en' ? 'Delay After Click (ms)' : 'หน่วงเวลาหลังคลิกก่อนส่งสัญญาณ (ms)'}</label>
-            <input type="number" class="party-delay-after-click" value="${act.delayAfterClick ?? 80}" min="0" max="1000" step="10" placeholder="80" onchange="saveCurrentProfile()" style="background:var(--bg-input); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text); font-family:'JetBrains Mono'; font-size:13px; outline:none; width:100%;">
-            <span style="font-size:10px; color:var(--muted); margin-top:2px;">${currentLang === 'en' ? 'Wait time for game to switch target' : 'รอให้เกมเปลี่ยนเป้าหมายสมบูรณ์ก่อนกดยิงสกิล'}</span>
-          </div>
-        </div>
-      </div>
-    `;
   } else if (normalizeMode(act.mode) === 'party_scanner') {
     html = `
       <div style="display:flex; flex-direction:column; gap:12px; border-top:1px dashed var(--border); padding-top:12px;">
@@ -1012,7 +977,6 @@ function getChainEventsForMode(mode, act) {
     party_slot: ['onSelected', 'onComplete', 'onError'],
     party_heal: ['onHealTarget', 'onNoTarget', 'onError'],
     party_buff: ['onNextMember', 'onComplete', 'onError'],
-    party_target_router: ['onMemberLowHp', 'onNextMember', 'onComplete', 'onError'],
     tts: ['next', 'onError'],
     screenshot: ['onComplete', 'onError']
   };
@@ -1229,18 +1193,6 @@ export function syncActionFromDom(actionId) {
   } else if (normalizeMode(act.mode) === 'emit_event') {
     const eventNameEl = card.querySelector('.emit-event-name');
     if (eventNameEl) act.eventName = eventNameEl.value.trim();
-  } else if (normalizeMode(act.mode) === 'party_target_router') {
-    const modeEl = card.querySelector('.party-target-mode');
-    if (modeEl) act.targetMode = modeEl.value;
-
-    const intervalEl = card.querySelector('.party-scan-interval');
-    if (intervalEl) act.scanIntervalMs = parseInt(intervalEl.value) || 250;
-
-    const hpEl = card.querySelector('.party-low-hp-threshold');
-    if (hpEl) act.lowHpThreshold = parseInt(hpEl.value) || 70;
-
-    const delayClickEl = card.querySelector('.party-delay-after-click');
-    if (delayClickEl) act.delayAfterClick = parseInt(delayClickEl.value) || 80;
   } else if (normalizeMode(act.mode) === 'party_scanner') {
     const intervalEl = card.querySelector('.party-scan-interval');
     if (intervalEl) act.scanIntervalMs = parseInt(intervalEl.value) || 250;

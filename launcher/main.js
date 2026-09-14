@@ -226,16 +226,20 @@ function classifyLogLevel(line, isStderr = false) {
     return 'warn';
   }
 
-  // 3. Step Checkpoint Logs (บันทึกขั้นตอนการทำงานเฉพาะกิจ)
+  // 3. User Log Messages (ข้อความ Log ทั่วไป)
   if (
+    line.includes('📝') ||
+    line.includes('[Log]') ||
+    line.includes('[log]') ||
     line.includes('🧭') ||
     line.includes('📍') ||
     line.includes('[Step]') ||
     line.includes('[step]') ||
     lower.includes('[step log]') ||
-    lower.startsWith('[step]')
+    lower.startsWith('[step]') ||
+    lower.startsWith('[log]')
   ) {
-    return 'step';
+    return 'log';
   }
 
   // 4. Actions / Hotkeys / Triggers / CDP (การกดปุ่ม / รัน workflow)

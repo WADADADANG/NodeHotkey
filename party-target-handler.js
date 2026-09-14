@@ -6,7 +6,7 @@
  * 2. `runSelectPartySlotAction`: คลิกเลือกสมาชิกตาม Slot ที่ระบุ (เช่น Slot 1 หัวตี้) เพื่อกดเดินตาม Follow (Z)
  * 3. `runPartyHealAction`: ดึงข้อมูลจากตัวสแกนกลางเพื่อคลิกเลือกคนเลือดต่ำสุดที่ <= เกณฑ์
  * 4. `runPartyBuffAction`: ดึงข้อมูลจากตัวสแกนกลางเพื่อคลิกวนแจกบัฟทีละคน (Downward Tracking + Tooltip Evasion)
- * 5. `runPartyTargetRouterAction`: ฟังก์ชันรองรับย้อนหลังสำหรับ Profile เดิม
+ * 5. `runScreenshotAction`: จับภาพหน้าจอเฉพาะส่วนหรือทั้งจอ
  */
 
 const fs = require('fs');
@@ -398,21 +398,7 @@ async function runPartyBuffAction(action, callStack) {
 }
 
 /**
- * 5. runPartyTargetRouterAction (Backwards Compatibility Fallback)
- */
-async function runPartyTargetRouterAction(action, callStack) {
-    const targetMode = action.targetMode || 'heal_priority';
-    if (targetMode === 'select_slot') {
-        return await runSelectPartySlotAction(action, callStack);
-    } else if (targetMode === 'buff_loop') {
-        return await runPartyBuffAction(action, callStack);
-    } else {
-        return await runPartyHealAction(action, callStack);
-    }
-}
-
-/**
- * 6. runScreenshotAction (Utility / Vision Diagnostic)
+ * 5. runScreenshotAction (Utility / Vision Diagnostic)
  * ถ่ายภาพหน้าจอตามโซนที่กำหนด (full, party, right, left, target, custom) และบันทึกลง ./screenshots/
  */
 async function runScreenshotAction(action, callStack) {
@@ -468,6 +454,5 @@ module.exports = {
     runSelectPartySlotAction,
     runPartyHealAction,
     runPartyBuffAction,
-    runPartyTargetRouterAction,
     runScreenshotAction
 };

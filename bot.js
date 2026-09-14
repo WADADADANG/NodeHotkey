@@ -65,16 +65,6 @@ let runPartyBuffAction = async (action, callStack) => {
         console.error('⚠️ [Vision Module] PartyBuff error:', e.message);
     }
 };
-let runPartyTargetRouterAction = async (action, callStack) => {
-    try {
-        delete require.cache[require.resolve('./vision-service')];
-        delete require.cache[require.resolve('./party-target-handler')];
-        const handler = require('./party-target-handler');
-        return await handler.runPartyTargetRouterAction(action, callStack);
-    } catch (e) {
-        console.error('⚠️ [Vision Module] PartyTargetHandler error:', e.message);
-    }
-};
 let runScreenshotAction = async (action, callStack) => {
     try {
         delete require.cache[require.resolve('./vision-service')];
@@ -90,7 +80,6 @@ global.runPartyScannerAction = runPartyScannerAction;
 global.runSelectPartySlotAction = runSelectPartySlotAction;
 global.runPartyHealAction = runPartyHealAction;
 global.runPartyBuffAction = runPartyBuffAction;
-global.runPartyTargetRouterAction = runPartyTargetRouterAction;
 global.runScreenshotAction = runScreenshotAction;
 
 let runTtsAction = async (action, callStack) => {
@@ -293,14 +282,14 @@ function getClientStatuses() {
                     icon: '⚡',
                     detail: `${a.trigger?.value || 'Key'} ➜ ${a.targetKey || '1'}`
                 });
-            } else if ((a.mode === 'party_target_router' || a.mode === 'party_target') && global.activePartyTargetRouters && global.activePartyTargetRouters[a.id]) {
+            } else if ((a.mode === 'party_heal' || a.mode === 'party_buff' || a.mode === 'party_scanner' || a.mode === 'party_slot') && global.activePartyTargetRouters && global.activePartyTargetRouters[a.id]) {
                 const info = global.activePartyTargetRouters[a.id];
                 runningActions.push({
                     id: a.id,
-                    name: a.name || 'Party Target',
-                    type: 'party_target',
+                    name: a.name || 'Party Vision',
+                    type: a.mode,
                     icon: '👥',
-                    detail: info.detail || 'Targeting...'
+                    detail: info.detail || 'Vision active...'
                 });
             }
         });
@@ -2891,6 +2880,17 @@ function getVariableValue(action, clientOverride = null) {
     if (global.profileVariables[pName][varId][clientStr] !== undefined) {
         return global.profileVariables[pName][varId][clientStr];
     }
+    if (global.profileVariables[pName][varId]['global'] !== undefined) {
+        return global.profileVariables[pName][varId]['global'];
+    }
+    const fallbackClient = String(clientOverride !== null ? clientOverride : (action.targetClient || '1'));
+    if (global.profileVariables[pName][varId][fallbackClient] !== undefined) {
+        return global.profileVariables[pName][varId][fallbackClient];
+    }
+    const keys = Object.keys(global.profileVariables[pName][varId]);
+    if (keys.length > 0 && global.profileVariables[pName][varId][keys[0]] !== undefined) {
+        return global.profileVariables[pName][varId][keys[0]];
+    }
 
     // Fallback to initialValue parsed according to varType
     const vType = action.varType || 'boolean';
@@ -2921,7 +2921,7 @@ function getNamedVariableValue(varName, actionContext = {}, clientOverride = nul
         varName: varName,
         name: varName,
         id: varName,
-        scope: actionContext.scope || 'client',
+        scope: actionContext.scope || 'global',
         _profileName: actionContext._profileName || 'Active',
         targetClient: actionContext.targetClient || (clientOverride || '1'),
         varType: actionContext.varType || 'string',
@@ -2937,7 +2937,7 @@ function resolveNodeInputData(targetAction, inputPortName) {
     if (global.activeProfileConnections && Array.isArray(global.activeProfileConnections)) {
         const conn = global.activeProfileConnections.find(c => 
             (c.toNodeId === targetId || c.toNodeId === `node_${targetId}`) && 
-            (c.toPort === inputPortName || (!c.toPort && inputPortName === 'msg_in'))
+            (c.toPort === inputPortName || (!c.toPort && (inputPortName === 'msg_in' || inputPortName === 'val_in')))
         );
         if (conn) {
             const actionPool = (global.activeActions && global.activeActions.length > 0) ? global.activeActions : (typeof activeActions !== 'undefined' ? activeActions : []);
@@ -2971,24 +2971,30 @@ async function runVariableAction(action, callStack) {
     const opVal = action.opValue;
     const currentVal = getVariableValue(action);
 
+    const wireVal = resolveNodeInputData(action, 'val_in');
+    const hasWireVal = (wireVal !== null && wireVal !== undefined);
+    const effectiveOpVal = hasWireVal ? wireVal : opVal;
+
     let nextVal = currentVal;
     if (vType === 'boolean') {
         if (op === 'toggle') nextVal = !currentVal;
         else if (op === 'set_true') nextVal = true;
         else if (op === 'set_false') nextVal = false;
-        else if (op === 'reset') {
+        else if (op === 'set_value') {
+            nextVal = (effectiveOpVal === true || String(effectiveOpVal) === 'true');
+        } else if (op === 'reset') {
             const init = action.initialValue;
             nextVal = (init === true || String(init) === 'true');
         }
     } else if (vType === 'number') {
         const curNum = typeof currentVal === 'number' ? currentVal : (parseFloat(currentVal) || 0);
-        const step = parseFloat(opVal) || 0;
+        const step = parseFloat(effectiveOpVal) || 0;
         if (op === 'set_value') nextVal = step;
         else if (op === 'increment') nextVal = curNum + step;
         else if (op === 'decrement') nextVal = curNum - step;
         else if (op === 'reset') nextVal = parseFloat(action.initialValue) || 0;
     } else {
-        if (op === 'set_value') nextVal = String(opVal !== undefined ? opVal : '');
+        if (op === 'set_value') nextVal = String(effectiveOpVal !== undefined ? effectiveOpVal : '');
         else if (op === 'reset') nextVal = String(action.initialValue !== undefined ? action.initialValue : '');
     }
 
@@ -3194,10 +3200,6 @@ function handleActionTrigger(act) {
         if (typeof runPartyBuffAction === 'function') {
             runPartyBuffAction(act, []).catch(err => console.error(`Error in runPartyBuffAction:`, err));
         }
-    } else if (act.mode === 'party_target_router' || act.mode === 'party_target') {
-        if (typeof runPartyTargetRouterAction === 'function') {
-            runPartyTargetRouterAction(act, []).catch(err => console.error(`Error in runPartyTargetRouterAction:`, err));
-        }
     } else if (act.mode === 'tts' || act.mode === 'tts_alert' || act.mode === 'text_to_speech') {
         if (typeof runTtsAction === 'function') {
             runTtsAction(act, []).catch(err => console.error(`Error in runTtsAction:`, err));
@@ -3347,10 +3349,6 @@ async function runChainedAction(action, callStack) {
     } else if (action.mode === 'party_buff') {
         if (typeof runPartyBuffAction === 'function') {
             await runPartyBuffAction(action, callStack).catch(err => console.error(`[Chain Error] runPartyBuffAction:`, err));
-        }
-    } else if (action.mode === 'party_target_router' || action.mode === 'party_target') {
-        if (typeof runPartyTargetRouterAction === 'function') {
-            await runPartyTargetRouterAction(action, callStack).catch(err => console.error(`[Chain Error] runPartyTargetRouterAction:`, err));
         }
     } else if (action.mode === 'tts' || action.mode === 'tts_alert' || action.mode === 'text_to_speech') {
         if (typeof runTtsAction === 'function') {

@@ -1,25 +1,24 @@
 /**
  * nodes/step_log.node.js
- * Action Node: Step Log / Workflow Checkpoint
+ * Action Node: Log Message / Print String
  * 
- * Emits dedicated, high-visibility step checkpoint logs for flow validation.
+ * Emits dedicated, high-visibility log messages to Terminal/Logs.
  * Supports Unreal Engine-style Data Pin input ('msg_in') to log dynamic variables (string/number/bool).
- * Automatically classified as 'step' level and filterable in Launcher Terminal.
+ * Automatically classified as 'log' level and filterable in Launcher Terminal.
  */
 
 module.exports = {
   type: 'step_log',
-  aliases: ['step', 'steplog', 'step_checkpoint'],
-  title: 'Step Log',
+  aliases: ['step', 'steplog', 'step_checkpoint', 'log', 'log_message', 'print_string'],
+  title: 'Log Message',
   category: 'Utility & Debug',
-  icon: '🧭',
+  icon: '📝',
   color: '#10b981',
   inputs: ['in', 'msg_in'],
   outputs: ['onComplete'],
   defaultData: {
-    stepTag: 'STEP 1',
-    message: 'Reached workflow checkpoint',
-    showClient: true
+    message: '',
+    showClient: false
   },
 
   async execute(context, action, callStack = []) {
@@ -33,14 +32,19 @@ module.exports = {
 
     // 2. Fallback to static message configured in Inspector
     if (resolvedMsg === null || resolvedMsg === undefined || resolvedMsg === '') {
-      resolvedMsg = action.message || action.logMessage || 'Reached checkpoint';
+      resolvedMsg = action.message !== undefined ? action.message : (action.logMessage || action.text || '');
     }
 
-    const tag = (action.stepTag || action.name || 'STEP').trim();
+    // 3. Fallback to custom action name ONLY if explicitly renamed and not a default title
+    if (!resolvedMsg && action.name && !action.name.startsWith('Log Message') && !action.name.startsWith('Step Log') && !action.name.startsWith('node_')) {
+      resolvedMsg = action.name;
+    }
+    if (!resolvedMsg) resolvedMsg = 'Log Message';
+
     const clientPrefix = action.showClient && action.targetClient ? `[Client ${action.targetClient}] ` : '';
 
-    // 3. Emit formatted Step Log to stdout (classified by Launcher as level: 'step')
-    console.log(`🧭 [Step] ${clientPrefix}[${tag}] ${resolvedMsg}`);
+    // 3. Emit formatted Log to stdout (classified by Launcher as level: 'log')
+    console.log(`📝 [Log] ${clientPrefix}${resolvedMsg}`.trim());
 
     // 4. Emit onComplete signal to trigger subsequent execution flow
     if (typeof global.emitSignal === 'function') {

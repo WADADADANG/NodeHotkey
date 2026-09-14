@@ -66,8 +66,11 @@
         return { icon: '⚔️', text: 'Sequencer', className: 'sequencer' };
       case 'hold':
         return { icon: '⚓', text: 'Holding', className: 'hold' };
-      case 'party_target':
-        return { icon: '👥', text: 'Party Target', className: 'party' };
+      case 'party_heal':
+      case 'party_buff':
+      case 'party_scanner':
+      case 'party_slot':
+        return { icon: '👥', text: 'Party Vision', className: 'party' };
       default:
         return { icon: '💤', text: 'Standby', className: 'standby' };
     }
