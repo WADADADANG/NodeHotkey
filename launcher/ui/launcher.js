@@ -331,6 +331,7 @@
       filterError: "🔴 Error",
       filterWarn: "🟡 Warning",
       filterAction: "🟣 Action",
+      filterStep: "🟢 Step",
       btnAutoScroll: "⬇️ Auto-scroll",
       btnClearTerm: "🗑️ ล้าง",
       termToday: "📁 วันนี้: ",
@@ -421,6 +422,7 @@
       filterError: "🔴 Error",
       filterWarn: "🟡 Warning",
       filterAction: "🟣 Action",
+      filterStep: "🟢 Step",
       btnAutoScroll: "⬇️ Auto-scroll",
       btnClearTerm: "🗑️ Clear",
       termToday: "📁 Today: ",
@@ -531,6 +533,8 @@
     if (searchInput) searchInput.placeholder = t.termSearchPlaceholder;
     const clearBtn = document.getElementById('btn-clear-terminal');
     if (clearBtn) clearBtn.textContent = t.btnClearTerm;
+    const pillStep = document.querySelector('.filter-pill[data-filter="step"]');
+    if (pillStep) pillStep.textContent = t.filterStep || '🟢 Step';
 
     // Update Settings View Elements
     const lblHeadEm = document.getElementById('lbl-setting-head-emergency');

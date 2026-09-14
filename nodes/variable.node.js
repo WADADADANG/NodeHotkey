@@ -1,27 +1,28 @@
 /**
  * nodes/variable.node.js
- * Action Node: Variable / State Management
+ * Action Node: Set Variable (Unreal Engine Blueprint Impure Node)
  * 
- * Manages runtime state variables (boolean, number, string) per-client or globally.
- * Supports operations: toggle, set_true, set_false, set_value, increment, decrement, reset.
- * Emits 'onComplete' signal when variable operation finishes.
+ * Sets or modifies runtime state variables (boolean, number, string).
+ * Supports execution flow ('in' ➔ 'onComplete') and data pins ('val_in', 'val_out').
+ * Operations: set_value, increment, decrement, toggle, reset.
  */
 
 module.exports = {
-  type: 'variable',
-  aliases: ['var', 'state'],
-  title: 'Variable / State',
+  type: 'var_set',
+  aliases: ['variable', 'var', 'state', 'set_var', 'variable_set'],
+  title: 'Set Variable',
   category: 'Logic & Flow',
   icon: '📦',
   color: '#a855f7',
-  inputs: ['in'],
-  outputs: ['onComplete'],
+  inputs: ['in', 'val_in'],
+  outputs: ['onComplete', 'val_out'],
   defaultData: {
+    varName: 'my_var',
     varType: 'boolean', // 'boolean' | 'number' | 'string'
     scope: 'client',    // 'client' | 'global'
     targetClient: '1',
     initialValue: 'false',
-    operation: 'toggle', // 'toggle' | 'set_true' | 'set_false' | 'set_value' | 'increment' | 'decrement' | 'reset'
+    operation: 'set_value', // 'set_value' | 'increment' | 'decrement' | 'toggle' | 'reset'
     opValue: '1'
   },
 
@@ -33,7 +34,7 @@ module.exports = {
       return true;
     }
 
-    console.warn(`⚠️ [Variable Node] "${action.name}": global.runVariableAction not found.`);
+    console.warn(`⚠️ [Set Variable Node] "${action.name}": global.runVariableAction not found.`);
     return false;
   }
 };

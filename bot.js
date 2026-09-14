@@ -2878,9 +2878,9 @@ global.profileVariables = global.profileVariables || {};
 function getVariableKey(action, clientOverride = null) {
     const scope = action.scope || 'client';
     const pName = action._profileName || 'Active';
-    const varId = action.id;
+    const varKey = (action.varName || action.name || action.id || 'default').trim();
     const clientStr = scope === 'global' ? 'global' : String(clientOverride !== null ? clientOverride : (action.targetClient || '1'));
-    return { pName, varId, clientStr };
+    return { pName, varId: varKey, clientStr };
 }
 
 function getVariableValue(action, clientOverride = null) {
@@ -2894,7 +2894,7 @@ function getVariableValue(action, clientOverride = null) {
 
     // Fallback to initialValue parsed according to varType
     const vType = action.varType || 'boolean';
-    const init = action.initialValue;
+    const init = action.initialValue !== undefined ? action.initialValue : action.defaultValue;
     if (vType === 'boolean') {
         return init === true || String(init) === 'true';
     } else if (vType === 'number') {
@@ -2911,6 +2911,58 @@ function setVariableValue(action, val, clientOverride = null) {
     global.profileVariables[pName][varId][clientStr] = val;
     return val;
 }
+
+function getNamedVariableValue(varName, actionContext = {}, clientOverride = null) {
+    if (typeof actionContext === 'string' || typeof actionContext === 'number') {
+        clientOverride = String(actionContext);
+        actionContext = {};
+    }
+    const pseudoAction = {
+        varName: varName,
+        name: varName,
+        id: varName,
+        scope: actionContext.scope || 'client',
+        _profileName: actionContext._profileName || 'Active',
+        targetClient: actionContext.targetClient || (clientOverride || '1'),
+        varType: actionContext.varType || 'string',
+        initialValue: actionContext.defaultValue !== undefined ? actionContext.defaultValue : ''
+    };
+    return getVariableValue(pseudoAction, clientOverride);
+}
+global.getNamedVariableValue = getNamedVariableValue;
+
+function resolveNodeInputData(targetAction, inputPortName) {
+    if (!targetAction) return null;
+    const targetId = targetAction.id || targetAction.nodeId;
+    if (global.activeProfileConnections && Array.isArray(global.activeProfileConnections)) {
+        const conn = global.activeProfileConnections.find(c => 
+            (c.toNodeId === targetId || c.toNodeId === `node_${targetId}`) && 
+            (c.toPort === inputPortName || (!c.toPort && inputPortName === 'msg_in'))
+        );
+        if (conn) {
+            const actionPool = (global.activeActions && global.activeActions.length > 0) ? global.activeActions : (typeof activeActions !== 'undefined' ? activeActions : []);
+            const sourceAction = actionPool.find(a => 
+                a.id === conn.fromNodeId || 
+                a.id === `node_${conn.fromNodeId}` || 
+                (a.nodeId && a.nodeId === conn.fromNodeId)
+            );
+            if (sourceAction) {
+                if (sourceAction.mode === 'var_get' || sourceAction.type === 'var_get') {
+                    return getNamedVariableValue(sourceAction.varName || sourceAction.name, sourceAction);
+                } else if (sourceAction.mode === 'variable' || sourceAction.mode === 'var_set') {
+                    return getVariableValue(sourceAction);
+                } else if (sourceAction.value !== undefined) {
+                    return sourceAction.value;
+                }
+            }
+        }
+    }
+    if (targetAction[inputPortName] !== undefined && targetAction[inputPortName] !== '') {
+        return targetAction[inputPortName];
+    }
+    return null;
+}
+global.resolveNodeInputData = resolveNodeInputData;
 
 async function runVariableAction(action, callStack) {
     if (global.isSuspended) return;
@@ -3307,6 +3359,11 @@ async function runChainedAction(action, callStack) {
     } else if (action.mode === 'screenshot' || action.mode === 'capture_screen') {
         if (typeof runScreenshotAction === 'function') {
             await runScreenshotAction(action, callStack).catch(err => console.error(`[Chain Error] runScreenshotAction:`, err));
+        }
+    } else if (action.mode === 'step_log' || action.mode === 'step') {
+        const stepNode = (typeof nodeRegistry !== 'undefined' && nodeRegistry.get('step_log')) || require('./nodes/step_log.node');
+        if (stepNode && typeof stepNode.execute === 'function') {
+            await stepNode.execute({}, action, callStack).catch(err => console.error(`[Chain Error] step_log:`, err));
         }
     }
 }
@@ -3768,4 +3825,16 @@ process.on('SIGTERM', () => {
 });
 
 // Start system initialization
-initSystem();
+if (require.main === module) {
+    initSystem();
+}
+
+if (typeof module !== 'undefined') {
+    module.exports = {
+        setVariableValue,
+        getVariableValue,
+        getNamedVariableValue,
+        resolveNodeInputData,
+        getVariableKey
+    };
+}

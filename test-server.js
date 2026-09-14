@@ -594,6 +594,7 @@ const server = http.createServer((req, res) => {
         category: def.category || 'Custom',
         icon: def.icon || '🧩',
         color: def.color || '#3b82f6',
+        isPure: !!def.isPure,
         inputs: def.inputs || ['in'],
         outputs: def.outputs || ['onComplete', 'onError'],
         defaultData: def.defaultData || {}

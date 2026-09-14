@@ -92,6 +92,9 @@ class NodeCanvasEditor {
       key_hold: canvasT('canvas_key_hold', isEn ? 'Key Hold' : 'กดค้าง (Hold)'),
       sequencer: canvasT('canvas_sequencer', isEn ? 'Cast Sequencer' : 'จัดคิวสกิล (Sequencer)'),
       loop_scheduler: canvasT('canvas_loop_scheduler', isEn ? 'Loop Scheduler' : 'ตารางลูปกันชน (Scheduler)'),
+      step_log: canvasT('canvas_step_log', isEn ? 'Step Log (Validation)' : 'บันทึกขั้นตอน (Step Log)'),
+      var_get: canvasT('canvas_var_get', isEn ? 'Get Variable' : 'อ่านค่าตัวแปร (Get Var)'),
+      var_set: canvasT('canvas_var_set', isEn ? 'Set Variable' : 'กำหนดค่าตัวแปร (Set Var)'),
       variable: canvasT('canvas_variable', isEn ? 'Variable / State' : 'ตัวแปร / สถานะ (Variable)'),
       party_scanner: canvasT('canvas_party_scanner', isEn ? 'Party Scanner' : 'สแกนปาร์ตี้กลาง (Party Scanner)'),
       party_slot: canvasT('canvas_party_slot', isEn ? 'Select Party Slot' : 'เลือกสมาชิกปาร์ตี้ (Select Slot)'),
@@ -642,7 +645,9 @@ class NodeCanvasEditor {
     this.nodes.forEach(node => {
       const nodeEl = document.createElement('div');
       const isSelected = this.selectedNodeIds.has(node.id);
-      nodeEl.className = `canvas-node ${isSelected ? 'selected' : ''}`;
+      const isPure = (node.type === 'var_get' || node.isPure);
+      const pureTypeClass = isPure ? `pure-node pure-${node.data?.varType || 'string'}` : '';
+      nodeEl.className = `canvas-node ${isSelected ? 'selected' : ''} ${pureTypeClass}`.trim();
       nodeEl.style.left = `${node.position.x}px`;
       nodeEl.style.top = `${node.position.y}px`;
       nodeEl.dataset.id = node.id;
@@ -664,6 +669,9 @@ class NodeCanvasEditor {
         emit_event: '📡',
         sequencer: '⚔️',
         loop_scheduler: '⏱️',
+        step_log: '🧭',
+        var_get: '📥',
+        var_set: '📦',
         variable: '📦',
         party_scanner: '👁️',
         party_slot: '🎯',
@@ -1081,10 +1089,40 @@ class NodeCanvasEditor {
             ${stepItemsHTML || '<div style="font-size:10px; color:var(--muted); text-align:center;">No steps added</div>'}
           </div>
         `;
-      } else if (node.type === 'variable') {
+      } else if (node.type === 'step_log') {
+        const stepTag = node.data?.stepTag || 'STEP 1';
+        const msg = node.data?.message || '';
+        const showClient = node.data?.showClient !== false;
+        bodyHTML = `
+          <div class="node-info-row">
+            <span>Tag:</span> <span class="node-info-value" style="color:#10b981; font-weight:700;">${stepTag}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Msg:</span> <span class="node-info-value" style="color:#ec4899; font-weight:600; max-width:115px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${msg || '(dynamic wire input)'}">${msg || '🔗 (Dynamic Wire)'}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Client:</span> <span class="node-info-value" style="color:${showClient ? '#38bdf8' : 'var(--muted)'};">${showClient ? 'Client ' + (node.data?.targetClient || '1') : 'Off'}</span>
+          </div>
+        `;
+      } else if (node.type === 'var_get') {
+        const vName = node.data?.varName || node.title || 'myVar';
+        const vType = node.data?.varType || 'string';
+        const defVal = node.data?.defaultValue !== undefined ? node.data.defaultValue : '';
+        const typeColor = vType === 'number' ? '#06b6d4' : (vType === 'boolean' ? '#ef4444' : '#ec4899');
+        bodyHTML = `
+          <div class="node-info-row" style="margin-bottom:2px;">
+            <span style="font-family:'JetBrains Mono'; font-weight:700; color:var(--text); font-size:12px;">${vName}</span>
+          </div>
+          <div class="node-info-row">
+            <span style="font-size:10px; color:${typeColor}; font-weight:700;">● ${vType.toUpperCase()}</span>
+            ${defVal ? `<span class="node-info-value" style="font-size:10px; opacity:0.8;">(def: ${defVal})</span>` : ''}
+          </div>
+        `;
+      } else if (node.type === 'var_set' || node.type === 'variable') {
+        const vName = node.data?.varName || 'myVar';
         const vType = node.data?.varType || 'boolean';
         const vScope = node.data?.scope || 'client';
-        const op = node.data?.operation || 'toggle';
+        const op = node.data?.operation || 'set_value';
         const scopeLabel = vScope === 'global' ? 'Global (All)' : `Client ${node.data?.targetClient || '1'}`;
         const typeMap = {
           boolean: '🔘 Boolean',
@@ -1102,10 +1140,10 @@ class NodeCanvasEditor {
         };
         bodyHTML = `
           <div class="node-info-row">
-            <span>Type:</span> <span class="node-info-value" style="color:#a855f7; font-weight:700;">${typeMap[vType] || vType}</span>
+            <span>Name:</span> <span class="node-info-value" style="color:var(--text); font-weight:700; font-family:'JetBrains Mono';">${vName}</span>
           </div>
           <div class="node-info-row">
-            <span>Scope:</span> <span class="node-info-value" style="color:#38bdf8;">${scopeLabel}</span>
+            <span>Type:</span> <span class="node-info-value" style="color:#a855f7; font-weight:700;">${typeMap[vType] || vType}</span>
           </div>
           <div class="node-info-row">
             <span>Op:</span> <span class="node-info-value" style="color:#10b981; font-weight:700;">${opMap[op] || op}</span>
@@ -1122,7 +1160,7 @@ class NodeCanvasEditor {
       let portsHTML = '';
       let pinsHTML = '';
 
-      if (node.type !== 'trigger') {
+      if (node.type !== 'trigger' && !isPure) {
         portsHTML += `<div class="node-port port-in" data-node="${node.id}" data-port="exec_in" title="Input (exec_in)"></div>`;
       }
 
@@ -1134,7 +1172,48 @@ class NodeCanvasEditor {
         </div>
       ` : '';
 
-      if (node.type === 'loop') {
+      if (node.type === 'step_log') {
+        pinsHTML = `
+          <div class="node-pins-section">
+            <div class="node-pin-row pin-row-in">
+              <div class="node-port port-in port-data port-string" data-node="${node.id}" data-port="msg_in" title="Message Data Input (String - Pink)"></div>
+              <span class="node-pin-label port-string">◀ Message</span>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label onComplete">${canvasT('port_onComplete', 'On Complete')} ▶</span>
+              <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="next" title="${canvasT('port_onComplete', 'On Complete')}"></div>
+            </div>
+          </div>
+        `;
+      } else if (node.type === 'var_get') {
+        const vType = node.data?.varType || 'string';
+        pinsHTML = `
+          <div class="node-pins-section pure-pins">
+            <div class="node-pin-row">
+              <span class="node-pin-label port-${vType}">Value ●</span>
+              <div class="node-port port-out port-data port-${vType}" data-node="${node.id}" data-port="val_out" title="Value Output (${vType})"></div>
+            </div>
+          </div>
+        `;
+      } else if (node.type === 'var_set' || node.type === 'variable') {
+        const vType = node.data?.varType || 'boolean';
+        pinsHTML = `
+          <div class="node-pins-section">
+            <div class="node-pin-row pin-row-in">
+              <div class="node-port port-in port-data port-${vType}" data-node="${node.id}" data-port="val_in" title="Value In (${vType})"></div>
+              <span class="node-pin-label port-${vType}">◀ Value In</span>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label port-${vType}">Value Out ▶</span>
+              <div class="node-port port-out port-data port-${vType}" data-node="${node.id}" data-port="val_out" title="Value Out (${vType})"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label onComplete">${canvasT('port_onComplete', 'On Complete')} ▶</span>
+              <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="next" title="${canvasT('port_onComplete', 'On Complete')}"></div>
+            </div>
+          </div>
+        `;
+      } else if (node.type === 'loop') {
         pinsHTML = `
           <div class="node-pins-section">
             <div class="node-pin-row">
@@ -1406,6 +1485,8 @@ class NodeCanvasEditor {
         `;
       } else if (node.type === 'trigger') {
         portsHTML += `<div class="node-port port-out" data-node="${node.id}" data-port="exec_out" title="Output (exec_out)"></div>`;
+      } else if (node.type === 'step_log' || node.type === 'var_get' || node.type === 'var_set' || node.type === 'variable') {
+        // Output pins explicitly handled in pinsHTML
       } else {
         portsHTML += `<div class="node-port port-out" data-node="${node.id}" data-port="next" title="Output (next)"></div>`;
       }
@@ -1508,9 +1589,16 @@ class NodeCanvasEditor {
               portRect.top + portRect.height / 2
             );
 
+            let wireType = null;
+            if (portName === 'val_out') {
+              const srcNode = this.nodes.find(n => n.id === nodeId);
+              wireType = srcNode?.data?.varType || 'string';
+            }
+
             this.draftWire = {
               fromNodeId: nodeId,
               fromPort: portName,
+              wireType,
               x1: portPos.x,
               y1: portPos.y,
               x2: portPos.x,
@@ -1584,7 +1672,7 @@ class NodeCanvasEditor {
     const node = this.nodes.find(n => n.id === nodeId);
     if (!node) return { x: 0, y: 0 };
 
-    const isOutput = portName !== 'exec_in';
+    const isOutput = !(portName === 'exec_in' || portName === 'msg_in' || portName === 'val_in');
     const x = isOutput ? node.position.x + 221 : node.position.x - 1;
     let y = node.position.y + 38;
     if (portName === 'onBeforeStart') y = node.position.y + 75;
@@ -1622,6 +1710,10 @@ class NodeCanvasEditor {
           <feGaussianBlur stdDeviation="3" result="blur" />
           <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
+        <filter id="wire-glow-pink" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
         <filter id="wire-glow-amber" x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="3" result="blur" />
           <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
@@ -1646,9 +1738,19 @@ class NodeCanvasEditor {
       const dx = Math.max(30, Math.abs(x2 - x1) * 0.5);
       const pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
 
+      const fromNode = this.nodes.find(n => n.id === conn.fromNodeId);
+      const isDataWire = (conn.fromPort === 'val_out' || conn.toPort === 'val_in' || conn.toPort === 'msg_in');
+      let wireTypeClass = '';
+      if (isDataWire) {
+        let vType = fromNode?.data?.varType;
+        if (!vType && conn.toPort === 'msg_in') vType = 'string';
+        if (!vType) vType = 'string';
+        wireTypeClass = `wire-data wire-${vType}`;
+      }
+
       svgContent += `
         <g class="wire-group" data-id="${conn.id}">
-          <path class="wire-path" d="${pathData}" data-id="${conn.id}" />
+          <path class="wire-path ${wireTypeClass}" d="${pathData}" data-id="${conn.id}" />
         </g>
       `;
     });
@@ -1657,7 +1759,8 @@ class NodeCanvasEditor {
     if (this.draftWire) {
       const dx = Math.max(30, Math.abs(this.draftWire.x2 - this.draftWire.x1) * 0.5);
       const pathData = `M ${this.draftWire.x1} ${this.draftWire.y1} C ${this.draftWire.x1 + dx} ${this.draftWire.y1}, ${this.draftWire.x2 - dx} ${this.draftWire.y2}, ${this.draftWire.x2} ${this.draftWire.y2}`;
-      svgContent += `<path class="wire-path wire-draft" d="${pathData}" />`;
+      const draftClass = this.draftWire.wireType ? `wire-draft wire-data wire-${this.draftWire.wireType}` : 'wire-draft';
+      svgContent += `<path class="wire-path ${draftClass}" d="${pathData}" />`;
     }
 
     this.svgLayer.innerHTML = svgContent;
@@ -1681,7 +1784,9 @@ class NodeCanvasEditor {
     let colorKey = colorOverride || 'default';
     let orbColor = '#38bdf8';
 
-    if (colorOverride === 'red') {
+    if (colorOverride === 'pink') {
+      orbColor = '#ec4899';
+    } else if (colorOverride === 'red') {
       orbColor = '#f87171';
     } else if (colorOverride === 'blue') {
       orbColor = '#60a5fa';
@@ -1696,7 +1801,25 @@ class NodeCanvasEditor {
       orbColor = '#f59e0b';
     } else {
       const pName = conn.fromPort || '';
-      if (pName === 'onBeforeStart') {
+      const toPName = conn.toPort || '';
+      const fromNode = this.nodes.find(n => n.id === conn.fromNodeId);
+      const isDataWire = (pName === 'val_out' || toPName === 'val_in' || toPName === 'msg_in');
+
+      if (isDataWire) {
+        let vType = fromNode?.data?.varType;
+        if (!vType && toPName === 'msg_in') vType = 'string';
+        if (!vType) vType = 'string';
+        if (vType === 'number') {
+          colorKey = 'cyan';
+          orbColor = '#06b6d4';
+        } else if (vType === 'boolean') {
+          colorKey = 'red';
+          orbColor = '#ef4444';
+        } else {
+          colorKey = 'pink';
+          orbColor = '#ec4899';
+        }
+      } else if (pName === 'onBeforeStart') {
         colorKey = 'purple';
         orbColor = '#c084fc';
       } else if (pName === 'onAfterStart') {
@@ -2208,7 +2331,10 @@ class NodeCanvasEditor {
       key_hold: 'Key Hold Toggle',
       sequencer: 'Cast Sequencer',
       loop_scheduler: 'Loop Scheduler',
-      variable: 'isBuffActive',
+      step_log: 'Step Log (🧭)',
+      var_get: 'myVar',
+      var_set: 'Set myVar',
+      variable: 'Set myVar',
       tts: 'Text to Speech (TTS)',
       webhook_out: 'Discord / HTTP Webhook'
     };
@@ -2216,6 +2342,34 @@ class NodeCanvasEditor {
     let initialData = { enabled: true };
     if (type === 'trigger') {
       initialData = { triggerType: 'keyboard', triggerValue: '1', enabled: true };
+    } else if (type === 'step_log') {
+      initialData = {
+        stepTag: 'STEP 1',
+        message: '',
+        showClient: true,
+        targetClient: '1',
+        enabled: true
+      };
+    } else if (type === 'var_get') {
+      initialData = {
+        varName: 'myVar',
+        varType: 'string',
+        defaultValue: '',
+        scope: 'client',
+        targetClient: '1',
+        enabled: true
+      };
+    } else if (type === 'var_set' || type === 'variable') {
+      initialData = {
+        varName: 'myVar',
+        varType: 'boolean', // 'boolean' | 'number' | 'string'
+        scope: 'client',    // 'client' | 'global'
+        targetClient: '1',
+        initialValue: 'false',
+        operation: 'set_value', // 'set_value' | 'toggle' | 'set_true' | 'set_false' | 'increment' | 'decrement' | 'reset'
+        opValue: '',
+        enabled: true
+      };
     } else if (type === 'webhook_out') {
       initialData = {
         name: 'Discord / HTTP Webhook',
@@ -2224,16 +2378,6 @@ class NodeCanvasEditor {
         headers: '{\n  "Content-Type": "application/json"\n}',
         payload: '{\n  "content": "⚡ NodeHotkey Alert: Triggered!"\n}',
         timeoutMs: 5000,
-        enabled: true
-      };
-    } else if (type === 'variable') {
-      initialData = {
-        varType: 'boolean', // 'boolean' | 'number' | 'string'
-        scope: 'client',    // 'client' | 'global'
-        targetClient: '1',
-        initialValue: 'false',
-        operation: 'toggle', // 'toggle' | 'set_true' | 'set_false' | 'set_value' | 'increment' | 'decrement' | 'reset'
-        opValue: '1',
         enabled: true
       };
     } else if (type === 'emit_event') {
@@ -3000,7 +3144,11 @@ class NodeCanvasEditor {
         </div>
         ${this.renderSkillCooldownHelper(node)}
       `;
-    } else if (node.type === 'variable') {
+    } else if (node.type === 'step_log') {
+      fieldsHTML += this.renderStepLogHelper(node);
+    } else if (node.type === 'var_get') {
+      fieldsHTML += this.renderVarGetHelper(node);
+    } else if (node.type === 'var_set' || node.type === 'variable') {
       fieldsHTML += this.renderVariableHelper(node);
     } else if (node.type === 'macro_group') {
       fieldsHTML += this.renderMacroGroupHelper(node);
@@ -3044,12 +3192,80 @@ class NodeCanvasEditor {
     this.inspectorPanel.classList.add('open');
   }
 
+  renderStepLogHelper(node) {
+    const stepTag = node.data?.stepTag || 'STEP 1';
+    const message = node.data?.message || '';
+    const showClient = node.data?.showClient !== false;
+
+    return `
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_step_tag', 'Step Badge Tag')}</label>
+        <input type="text" class="inspector-input" value="${stepTag}" placeholder="e.g. STEP 1, CHECK_BUFF, KILL_BOSS" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'stepTag', this.value); window.nodeCanvas.renderNodes();" />
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_step_message', 'Log Message (Default / Static)')}</label>
+        <input type="text" class="inspector-input" value="${message}" placeholder="Message to print (or connect via pink Message pin)..." onchange="window.nodeCanvas.updateNodeData('${node.id}', 'message', this.value); window.nodeCanvas.renderNodes();" />
+        <span style="font-size:10px; color:var(--muted); margin-top:4px; display:block; line-height:1.4;">💡 <b>Unreal Data Pin Tip:</b> เชื่อมสายสีชมพูจากโหนด <b>Get Variable</b> เข้าขา <b>◀ Message</b> เพื่อนำค่าตัวแปรมาปรินต์แบบไดนามิกได้ทันที!</span>
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_step_show_client', 'Include Client Number')}</label>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; color:var(--text);">
+          <input type="checkbox" ${showClient ? 'checked' : ''} onchange="window.nodeCanvas.updateNodeData('${node.id}', 'showClient', this.checked); window.nodeCanvas.renderNodes();" style="accent-color:#10b981; cursor:pointer;" />
+          <span>${canvasT('inspector_step_show_client', 'Show [Client 1] in step log')}</span>
+        </label>
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen')}</label>
+        ${this.renderClientButtonSelector(node)}
+      </div>
+    `;
+  }
+
+  renderVarGetHelper(node) {
+    const vName = node.data?.varName || node.title || 'myVar';
+    const vType = node.data?.varType || 'string';
+    const defVal = node.data?.defaultValue !== undefined ? node.data.defaultValue : '';
+    const vScope = node.data?.scope || 'client';
+
+    return `
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_var_name', 'Variable Name')}</label>
+        <input type="text" class="inspector-input" value="${vName}" placeholder="e.g. myVar, isBuffActive, comboCounter" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'varName', this.value); window.nodeCanvas.updateNodeData('${node.id}', 'title', this.value); window.nodeCanvas.renderNodes();" style="font-family:'JetBrains Mono'; font-weight:700; color:#38bdf8;" />
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_var_type', 'Data Type')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'varType', this.value); window.nodeCanvas.render(); window.nodeCanvas.openInspector('${node.id}');">
+          <option value="string" ${vType === 'string' ? 'selected' : ''}>${canvasT('var_type_string', '📝 String (Text - Pink)')}</option>
+          <option value="number" ${vType === 'number' ? 'selected' : ''}>${canvasT('var_type_number', '🔢 Number (Integer/Float - Cyan)')}</option>
+          <option value="boolean" ${vType === 'boolean' ? 'selected' : ''}>${canvasT('var_type_boolean', '🔘 Boolean (True/False - Red)')}</option>
+        </select>
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_var_default', 'Default Fallback Value')}</label>
+        <input type="text" class="inspector-input" value="${defVal}" placeholder="Fallback value if uninitialized..." onchange="window.nodeCanvas.updateNodeData('${node.id}', 'defaultValue', this.value); window.nodeCanvas.renderNodes();" />
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_var_scope', 'Variable Scope')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'scope', this.value); window.nodeCanvas.openInspector('${node.id}');">
+          <option value="client" ${vScope === 'client' ? 'selected' : ''}>${canvasT('var_scope_client', '🎯 Client Screen Specific')}</option>
+          <option value="global" ${vScope === 'global' ? 'selected' : ''}>${canvasT('var_scope_global', '🌐 Global (Shared All Clients)')}</option>
+        </select>
+      </div>
+      ${vScope === 'client' ? `
+        <div class="inspector-field-group">
+          <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen')}</label>
+          ${this.renderClientButtonSelector(node)}
+        </div>
+      ` : ''}
+    `;
+  }
+
   renderVariableHelper(node) {
-    const vName = node.data?.varName || node.title || 'isBuffActive';
+    const vName = node.data?.varName || node.title || 'myVar';
     const vType = node.data?.varType || 'boolean';
     const vScope = node.data?.scope || 'client';
     const initVal = node.data?.initialValue !== undefined ? node.data.initialValue : 'false';
-    const op = node.data?.operation || 'toggle';
+    const op = node.data?.operation || 'set_value';
     const opVal = node.data?.opValue !== undefined ? node.data.opValue : '1';
 
     let initValHTML = '';
@@ -3075,6 +3291,7 @@ class NodeCanvasEditor {
 
     if (vType === 'boolean') {
       opOptionsHTML = `
+        <option value="set_value" ${op === 'set_value' ? 'selected' : ''}>${canvasT('var_op_set_value', '✏️ Set Value (via Pin / Param)')}</option>
         <option value="toggle" ${op === 'toggle' ? 'selected' : ''}>${canvasT('var_op_toggle', '🔄 Toggle (True ⇄ False)')}</option>
         <option value="set_true" ${op === 'set_true' ? 'selected' : ''}>${canvasT('var_op_set_true', '🟢 Set True (Enable)')}</option>
         <option value="set_false" ${op === 'set_false' ? 'selected' : ''}>${canvasT('var_op_set_false', '🔴 Set False (Disable)')}</option>
@@ -3112,6 +3329,10 @@ class NodeCanvasEditor {
 
     return `
       <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_var_name', 'Variable Name')}</label>
+        <input type="text" class="inspector-input" value="${vName}" placeholder="e.g. myVar, isBuffActive" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'varName', this.value); window.nodeCanvas.updateNodeData('${node.id}', 'title', 'Set ' + this.value); window.nodeCanvas.renderNodes();" style="font-family:'JetBrains Mono'; font-weight:700; color:#ec4899;" />
+      </div>
+      <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_var_scope', 'Variable Scope')}</label>
         <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'scope', this.value); window.nodeCanvas.openInspector('${node.id}');">
           <option value="client" ${vScope === 'client' ? 'selected' : ''}>${canvasT('var_scope_client', '🎯 Client Screen Specific')}</option>
@@ -3126,10 +3347,10 @@ class NodeCanvasEditor {
       ` : ''}
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_var_type', 'Variable Type')}</label>
-        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'varType', this.value); window.nodeCanvas.openInspector('${node.id}');">
-          <option value="boolean" ${vType === 'boolean' ? 'selected' : ''}>${canvasT('var_type_boolean', '🔘 Boolean (True / False)')}</option>
-          <option value="number" ${vType === 'number' ? 'selected' : ''}>${canvasT('var_type_number', '🔢 Number (Counter / Value)')}</option>
-          <option value="string" ${vType === 'string' ? 'selected' : ''}>${canvasT('var_type_string', '📝 Text (String)')}</option>
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'varType', this.value); window.nodeCanvas.render(); window.nodeCanvas.openInspector('${node.id}');">
+          <option value="boolean" ${vType === 'boolean' ? 'selected' : ''}>${canvasT('var_type_boolean', '🔘 Boolean (True / False - Red)')}</option>
+          <option value="number" ${vType === 'number' ? 'selected' : ''}>${canvasT('var_type_number', '🔢 Number (Counter / Value - Cyan)')}</option>
+          <option value="string" ${vType === 'string' ? 'selected' : ''}>${canvasT('var_type_string', '📝 Text (String - Pink)')}</option>
         </select>
       </div>
       <div class="inspector-field-group">
@@ -5423,6 +5644,8 @@ class NodeCanvasEditor {
         name: canvasT('cat_flow', 'Logic & Flow'),
         items: [
           { type: 'branch', icon: '🌿', name: this.getNodeTypeLabel('branch') },
+          { type: 'var_set', icon: '📦', name: this.getNodeTypeLabel('var_set') },
+          { type: 'var_get', icon: '📥', name: this.getNodeTypeLabel('var_get') },
           { type: 'variable', icon: '📦', name: this.getNodeTypeLabel('variable') },
           { type: 'control', icon: '🎛️', name: this.getNodeTypeLabel('control') },
           { type: 'delay', icon: '⏳', name: this.getNodeTypeLabel('delay') }
@@ -5433,6 +5656,7 @@ class NodeCanvasEditor {
         icon: '🛡️',
         name: canvasT('cat_utilities', 'Safety & Utilities'),
         items: [
+          { type: 'step_log', icon: '🧭', name: this.getNodeTypeLabel('step_log') },
           { type: 'emergency_stop', icon: '🛑', name: this.getNodeTypeLabel('emergency_stop') },
           { type: 'tts', icon: '🗣️', name: this.getNodeTypeLabel('tts') },
           { type: 'screenshot', icon: '📸', name: this.getNodeTypeLabel('screenshot') },

@@ -97,6 +97,35 @@
   animation: dash 1s linear infinite;
 }
 
+/* Unreal Blueprint Data Wires */
+.wire-path.wire-data {
+  stroke-width: 3.5px;
+}
+.wire-path.wire-string,
+.wire-path.wire-draft.wire-string {
+  stroke: #ec4899 !important;
+}
+.wire-path.wire-string:hover {
+  stroke: #f472b6 !important;
+  filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.85)) !important;
+}
+.wire-path.wire-number,
+.wire-path.wire-draft.wire-number {
+  stroke: #06b6d4 !important;
+}
+.wire-path.wire-number:hover {
+  stroke: #22d3ee !important;
+  filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.85)) !important;
+}
+.wire-path.wire-boolean,
+.wire-path.wire-draft.wire-boolean {
+  stroke: #ef4444 !important;
+}
+.wire-path.wire-boolean:hover {
+  stroke: #f87171 !important;
+  filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.85)) !important;
+}
+
 /* Signal Pulse & Node Hit Effect */
 .wire-pulse-trail {
   fill: none;
@@ -111,6 +140,7 @@
 .wire-pulse-trail.cyan { stroke: #06b6d4; filter: drop-shadow(0 0 8px #0891b2); }
 .wire-pulse-trail.green { stroke: #34d399; filter: drop-shadow(0 0 8px #10b981); }
 .wire-pulse-trail.red { stroke: #f87171; filter: drop-shadow(0 0 8px #ef4444); }
+.wire-pulse-trail.pink { stroke: #ec4899; filter: drop-shadow(0 0 8px #ec4899); }
 .wire-pulse-trail.default { stroke: #38bdf8; filter: drop-shadow(0 0 8px #0284c7); }
 
 .canvas-node.node-signal-hit,
@@ -893,6 +923,93 @@
 .node-port.port-on-cooldown:hover {
   background: #f59e0b;
   box-shadow: 0 0 10px #f59e0b;
+}
+
+/* Inbound Pin Row & Data Pins */
+.node-pin-row.pin-row-in {
+  justify-content: flex-start;
+  padding-left: 16px;
+  padding-right: 8px;
+}
+.node-pin-row.pin-row-in .node-port {
+  left: -8px;
+  right: auto;
+}
+
+.node-pin-label.port-string { color: #ec4899; }
+.node-pin-label.port-number { color: #06b6d4; }
+.node-pin-label.port-boolean { color: #ef4444; }
+
+.node-port.port-data {
+  border-radius: 50% !important;
+  width: 13px !important;
+  height: 13px !important;
+}
+
+.node-port.port-string {
+  border-color: #ec4899 !important;
+  background: #831843 !important;
+}
+.node-port.port-string:hover {
+  background: #ec4899 !important;
+  box-shadow: 0 0 10px #ec4899 !important;
+}
+
+.node-port.port-number {
+  border-color: #06b6d4 !important;
+  background: #164e63 !important;
+}
+.node-port.port-number:hover {
+  background: #06b6d4 !important;
+  box-shadow: 0 0 10px #06b6d4 !important;
+}
+
+.node-port.port-boolean {
+  border-color: #ef4444 !important;
+  background: #7f1d1d !important;
+}
+.node-port.port-boolean:hover {
+  background: #ef4444 !important;
+  box-shadow: 0 0 10px #ef4444 !important;
+}
+
+/* Unreal Engine Blueprint Style Pure Node (Get Variable) */
+.canvas-node.pure-node {
+  min-width: 130px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.94);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+.canvas-node.pure-node .node-header {
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 14px 14px 0 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.canvas-node.pure-node.pure-string {
+  border-color: rgba(236, 72, 153, 0.6);
+}
+.canvas-node.pure-node.pure-string .node-header {
+  background: linear-gradient(90deg, rgba(236, 72, 153, 0.25), transparent);
+}
+.canvas-node.pure-node.pure-number {
+  border-color: rgba(6, 182, 212, 0.6);
+}
+.canvas-node.pure-node.pure-number .node-header {
+  background: linear-gradient(90deg, rgba(6, 182, 212, 0.25), transparent);
+}
+.canvas-node.pure-node.pure-boolean {
+  border-color: rgba(239, 68, 68, 0.6);
+}
+.canvas-node.pure-node.pure-boolean .node-header {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.25), transparent);
+}
+.canvas-node.pure-node .node-pins-section.pure-pins {
+  border-top: none;
+  background: transparent;
+  padding: 2px 0 6px 0;
 }
 
 /* Floating Port Context Menu (Unreal Engine Blueprint Break Links Style) */

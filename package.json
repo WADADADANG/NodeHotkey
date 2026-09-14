@@ -8,7 +8,7 @@
     "launcher": "electron launcher/main.js",
     "bot": "node bot.js",
     "server": "node test-server.js",
-    "test": "node test/converter.test.js && node test/watcher.test.js"
+    "test": "node test/converter.test.js && node test/watcher.test.js && node test/step_and_vars.test.js"
   },
   "dependencies": {
     "@andresaya/edge-tts": "^1.8.0",

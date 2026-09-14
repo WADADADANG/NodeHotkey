@@ -29,6 +29,7 @@ class NodeExecutionEngine {
     this.actionIdToNodeMap.clear();
     this.connectionsFromMap.clear();
     this.connectionsToMap.clear();
+    global.activeProfileConnections = [];
 
     for (const profile of this.profiles) {
       if (!profile) continue;
@@ -43,6 +44,7 @@ class NodeExecutionEngine {
 
       const connections = Array.isArray(profile.connections) ? profile.connections : [];
       connections.forEach(conn => {
+        global.activeProfileConnections.push(conn);
         // Outgoing index
         if (!this.connectionsFromMap.has(conn.fromNodeId)) {
           this.connectionsFromMap.set(conn.fromNodeId, []);
@@ -198,6 +200,10 @@ class NodeExecutionEngine {
       sequencer: 'sequencer',
       loop_scheduler: 'loop_scheduler',
       variable: 'variable',
+      var_set: 'variable',
+      var_get: 'var_get',
+      step_log: 'step_log',
+      step: 'step_log',
       party_scanner: 'party_scanner',
       party_slot: 'party_slot',
       select_party_slot: 'party_slot',
@@ -268,6 +274,9 @@ class NodeExecutionEngine {
         conditionTargetId: d.conditionTargetId || '',
         conditionRule: d.conditionRule || 'is_running',
         conditionValue: d.conditionValue !== undefined ? d.conditionValue : '',
+        stepTag: d.stepTag || 'STEP',
+        showClient: d.showClient !== false,
+        defaultValue: d.defaultValue !== undefined ? d.defaultValue : '',
         varName: d.varName || node.title || '',
         varType: d.varType || 'boolean',
         scope: d.scope || 'client',
