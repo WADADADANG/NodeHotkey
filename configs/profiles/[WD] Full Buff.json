@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Full Buff",
   "canvas": {
-    "zoom": 0.8950374517998226,
+    "zoom": 0.6807017712286445,
     "pan": {
-      "x": -380,
-      "y": 258
+      "x": -1188,
+      "y": -154
     }
   },
   "nodes": [
@@ -37,21 +37,6 @@
         "triggerType": "keyboard",
         "triggerValue": "NUMPAD DIVIDE",
         "actionId": "1786881149621"
-      }
-    },
-    {
-      "id": "node_1787311612588",
-      "type": "trigger",
-      "title": "Btn Follow Buff",
-      "position": {
-        "x": 3590,
-        "y": 1760
-      },
-      "data": {
-        "enabled": true,
-        "triggerType": "keyboard",
-        "triggerValue": "NUMPAD 8",
-        "actionId": "1787311612588"
       }
     },
     {
@@ -172,98 +157,6 @@
       }
     },
     {
-      "id": "node_1787587645224",
-      "type": "branch",
-      "title": "Check Follow Buff",
-      "position": {
-        "x": 3990,
-        "y": 1760
-      },
-      "data": {
-        "enabled": true,
-        "conditionTargetId": "1787587668208",
-        "conditionRule": "is_running",
-        "actionId": "1787587645224"
-      }
-    },
-    {
-      "id": "node_1787587649303",
-      "type": "control",
-      "title": "AC Stop Follow Buff",
-      "position": {
-        "x": 4370,
-        "y": 1750
-      },
-      "data": {
-        "enabled": true,
-        "controlOperation": "stop",
-        "controlTargetIds": [
-          "1787587668208"
-        ],
-        "actionId": "1787587649303"
-      }
-    },
-    {
-      "id": "node_1787587668208",
-      "type": "sequencer",
-      "title": "Follow Buff",
-      "position": {
-        "x": 4370,
-        "y": 1860
-      },
-      "data": {
-        "enabled": true,
-        "modeType": "once",
-        "targetClient": "4",
-        "interval": 1000,
-        "repeatCount": 1,
-        "delayAfter": 0,
-        "steps": [
-          {
-            "key": "F2",
-            "delay": 200,
-            "castTimeMs": 200
-          },
-          {
-            "key": "1",
-            "delay": 1000,
-            "castTimeMs": 1000
-          },
-          {
-            "key": "2",
-            "delay": 1000,
-            "castTimeMs": 1000
-          },
-          {
-            "key": "3",
-            "delay": 1000,
-            "castTimeMs": 1000
-          },
-          {
-            "key": "4",
-            "delay": 1000,
-            "castTimeMs": 1000
-          },
-          {
-            "key": "LEFT ALT + 1",
-            "delay": 1000,
-            "castTimeMs": 1000
-          },
-          {
-            "key": "LEFT ALT + 2",
-            "delay": 1000,
-            "castTimeMs": 1000
-          },
-          {
-            "key": "LEFT ALT + 5",
-            "delay": 1000,
-            "castTimeMs": 1000
-          }
-        ],
-        "actionId": "1787587668208"
-      }
-    },
-    {
       "id": "node_1787587786808",
       "type": "branch",
       "title": "Check First Buff",
@@ -351,17 +244,17 @@
       "data": {
         "enabled": true,
         "triggerType": "keyboard",
-        "triggerValue": "NUMPAD 5",
+        "triggerValue": "NUMPAD 8",
         "actionId": "1788958982230"
       }
     },
     {
-      "id": "node_1788959032220_7421",
+      "id": "node_1788970148217_3228",
       "type": "sequencer",
       "title": "First Buff",
       "position": {
-        "x": 920,
-        "y": 350
+        "x": 1370,
+        "y": 20
       },
       "data": {
         "enabled": true,
@@ -397,36 +290,16 @@
             "castTimeMs": 1000
           }
         ],
-        "actionId": "1788959032220_7421"
+        "actionId": "1788970148217_3228"
       }
     },
     {
-      "id": "node_1788959214719",
-      "type": "party_target",
-      "title": "party_target",
-      "position": {
-        "x": 1630,
-        "y": 1070
-      },
-      "data": {
-        "enabled": true,
-        "targetClient": "4",
-        "targetMode": "buff_loop",
-        "targetSlot": 1,
-        "lowHpThreshold": 70,
-        "scanIntervalMs": 250,
-        "delayAfterClick": 250,
-        "showOverlay": false,
-        "actionId": "1788959214719"
-      }
-    },
-    {
-      "id": "node_1788959226828_3955",
+      "id": "node_1788970211279_2906",
       "type": "sequencer",
       "title": "Full Buff",
       "position": {
-        "x": 2010,
-        "y": 810
+        "x": 2700,
+        "y": 40
       },
       "data": {
         "enabled": true,
@@ -502,112 +375,65 @@
             "castTimeMs": 100
           }
         ],
-        "actionId": "1788959226828_3955"
+        "actionId": "1788970211279_2906"
       }
     },
     {
-      "id": "node_1788959243081",
-      "type": "sound",
-      "title": "Sound Alert",
+      "id": "node_1788970221662",
+      "type": "tts",
+      "title": "Text to Speech (TTS)",
       "position": {
-        "x": 2320,
-        "y": 1220
+        "x": 1720,
+        "y": 480
       },
       "data": {
         "enabled": true,
-        "soundSource": "preset",
-        "soundPreset": "laser",
-        "volume": 10,
-        "actionId": "1788959243081"
-      }
-    },
-    {
-      "id": "node_1788959271010_8201",
-      "type": "sound",
-      "title": "Sound Alert",
-      "position": {
-        "x": 1630,
-        "y": 1300
-      },
-      "data": {
-        "enabled": true,
-        "soundSource": "preset",
-        "soundPreset": "alarm",
-        "volume": 41,
-        "actionId": "1788959271010_8201"
-      }
-    },
-    {
-      "id": "node_1788959287215",
-      "type": "sound",
-      "title": "Sound Alert",
-      "position": {
-        "x": 2010,
-        "y": 1330
-      },
-      "data": {
-        "enabled": true,
-        "soundSource": "preset",
-        "soundPreset": "success",
+        "text": "สแกนไม่พบปาร์ตี้",
+        "voice": "en-US-JennyNeural",
         "volume": 100,
-        "actionId": "1788959287215"
+        "actionId": "1788970221662"
       }
     },
     {
-      "id": "node_1788959331315",
-      "type": "sound",
-      "title": "Sound Alert",
+      "id": "node_1788970282798",
+      "type": "tts",
+      "title": "Text to Speech (TTS)",
       "position": {
-        "x": 920,
-        "y": 670
+        "x": 2100,
+        "y": 560
       },
       "data": {
         "enabled": true,
-        "soundSource": "preset",
-        "soundPreset": "ding",
-        "volume": 32,
-        "actionId": "1788959331315"
+        "text": "บัฟเสร็จแล้ว",
+        "voice": "en-US-JennyNeural",
+        "volume": 100,
+        "actionId": "1788970282798"
       }
     },
     {
-      "id": "node_1788961176509",
-      "type": "trigger",
-      "title": "Global Trigger",
+      "id": "node_1788970297861",
+      "type": "key_press",
+      "title": "Single Key Press",
       "position": {
-        "x": 1380,
-        "y": 1090
-      },
-      "data": {
-        "enabled": true,
-        "triggerType": "keyboard",
-        "triggerValue": "NUMPAD 6",
-        "actionId": "1788961176509"
-      }
-    },
-    {
-      "id": "node_1788963781360",
-      "type": "party_scanner",
-      "title": "party_scanner",
-      "position": {
-        "x": 1540,
-        "y": 20
+        "x": 3010,
+        "y": 830
       },
       "data": {
         "enabled": true,
         "targetClient": "4",
-        "scanIntervalMs": 250,
-        "lowHpThreshold": 70,
-        "showOverlay": true,
-        "actionId": "1788963781360"
+        "keys": [
+          "Z"
+        ],
+        "actionId": "1788970297861"
       }
     },
     {
-      "id": "node_1788963828357",
+      "id": "node_1788970309194",
       "type": "party_slot",
       "title": "party_slot",
       "position": {
-        "x": 2050,
-        "y": 20
+        "x": 2700,
+        "y": 730
       },
       "data": {
         "enabled": true,
@@ -615,24 +441,127 @@
         "targetSlot": 1,
         "delayAfterClick": 80,
         "showOverlay": true,
-        "actionId": "1788963828357"
+        "actionId": "1788970309194"
       }
     },
     {
-      "id": "node_1788964236869",
-      "type": "key_press",
-      "title": "Single Key Press",
+      "id": "node_1788970337332",
+      "type": "tts",
+      "title": "Text to Speech (TTS)",
       "position": {
-        "x": 2330,
-        "y": 20
+        "x": 2700,
+        "y": 920
       },
       "data": {
         "enabled": true,
-        "targetClient": "1,4",
-        "keys": [
-          "Z"
-        ],
-        "actionId": "1788964236869"
+        "text": "เกิดข้อผิดพลาด",
+        "voice": "en-US-JennyNeural",
+        "volume": 100,
+        "actionId": "1788970337332"
+      }
+    },
+    {
+      "id": "node_1788992241098",
+      "type": "sound",
+      "title": "Sound Alert",
+      "position": {
+        "x": 2980,
+        "y": 420
+      },
+      "data": {
+        "enabled": true,
+        "soundSource": "preset",
+        "soundPreset": "success",
+        "volume": 20,
+        "actionId": "1788992241098"
+      }
+    },
+    {
+      "id": "node_1789126551048",
+      "type": "screenshot",
+      "title": "screenshot",
+      "position": {
+        "x": 1720,
+        "y": 680
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1789126551048"
+      }
+    },
+    {
+      "id": "node_1789127455286",
+      "type": "tts",
+      "title": "Text to Speech (TTS)",
+      "position": {
+        "x": 1370,
+        "y": 340
+      },
+      "data": {
+        "enabled": true,
+        "text": "กำลังสแกน",
+        "voice": "th-TH-PremwadeeNeural",
+        "volume": 100,
+        "actionId": "1789127455286"
+      }
+    },
+    {
+      "id": "node_1789159465925",
+      "type": "party_scanner",
+      "title": "party_scanner",
+      "position": {
+        "x": 1720,
+        "y": 260
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "scanIntervalMs": 250,
+        "lowHpThreshold": 70,
+        "showOverlay": true,
+        "actionId": "1789159465925"
+      }
+    },
+    {
+      "id": "node_1789159615592",
+      "type": "party_buff",
+      "title": "party_buff",
+      "position": {
+        "x": 2100,
+        "y": 330
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "delayAfterClick": 80,
+        "showOverlay": true,
+        "actionId": "1789159615592"
+      }
+    },
+    {
+      "id": "node_1789256723555",
+      "type": "screenshot",
+      "title": "screenshot",
+      "position": {
+        "x": 2700,
+        "y": 500
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1789256723555"
+      }
+    },
+    {
+      "id": "node_1789256875566",
+      "type": "screenshot",
+      "title": "screenshot",
+      "position": {
+        "x": 2100,
+        "y": 770
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1789256875566"
       }
     }
   ],
@@ -659,27 +588,6 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1787587671909",
-      "fromNodeId": "node_1787587645224",
-      "fromPort": "onFalse",
-      "toNodeId": "node_1787587668208",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1787587738363",
-      "fromNodeId": "node_1787311612588",
-      "fromPort": "exec_out",
-      "toNodeId": "node_1787587645224",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1787587759986",
-      "fromNodeId": "node_1787587645224",
-      "fromPort": "onTrue",
-      "toNodeId": "node_1787587649303",
-      "toPort": "exec_in"
-    },
-    {
       "id": "conn_1787587790063",
       "fromNodeId": "node_1786881149621",
       "fromPort": "exec_out",
@@ -701,66 +609,101 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1788959232885",
-      "fromNodeId": "node_1788959214719",
-      "fromPort": "onNextMember",
-      "toNodeId": "node_1788959226828_3955",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1788959246037",
-      "fromNodeId": "node_1788959226828_3955",
-      "fromPort": "onStop",
-      "toNodeId": "node_1788959243081",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1788959275110",
-      "fromNodeId": "node_1788959214719",
-      "fromPort": "onError",
-      "toNodeId": "node_1788959271010_8201",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1788959294499",
-      "fromNodeId": "node_1788959214719",
-      "fromPort": "onComplete",
-      "toNodeId": "node_1788959287215",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1788961185622",
-      "fromNodeId": "node_1788961176509",
-      "fromPort": "exec_out",
-      "toNodeId": "node_1788959214719",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1788963800350",
-      "fromNodeId": "node_1788959032220_7421",
-      "fromPort": "onStop",
-      "toNodeId": "node_1788959331315",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1788963836624",
-      "fromNodeId": "node_1788963781360",
-      "fromPort": "onScanned",
-      "toNodeId": "node_1788963828357",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1788964244062",
-      "fromNodeId": "node_1788963828357",
-      "fromPort": "next",
-      "toNodeId": "node_1788964236869",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1788964296026",
+      "id": "conn_1788970153242",
       "fromNodeId": "node_1788958982230",
       "fromPort": "exec_out",
-      "toNodeId": "node_1788963781360",
+      "toNodeId": "node_1788970148217_3228",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1788970320589",
+      "fromNodeId": "node_1788970309194",
+      "fromPort": "next",
+      "toNodeId": "node_1788970297861",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1788970347568",
+      "fromNodeId": "node_1788970309194",
+      "fromPort": "onError",
+      "toNodeId": "node_1788970337332",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1788992244080",
+      "fromNodeId": "node_1788970211279_2906",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1788992241098",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789127458922",
+      "fromNodeId": "node_1788970148217_3228",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1789127455286",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789159470261",
+      "fromNodeId": "node_1788970148217_3228",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1789159465925",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789159483787",
+      "fromNodeId": "node_1789159465925",
+      "fromPort": "onError",
+      "toNodeId": "node_1788970221662",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789159486063",
+      "fromNodeId": "node_1789159465925",
+      "fromPort": "onError",
+      "toNodeId": "node_1789126551048",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789159624925",
+      "fromNodeId": "node_1789159615592",
+      "fromPort": "onNextMember",
+      "toNodeId": "node_1788970211279_2906",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789159629695",
+      "fromNodeId": "node_1789159615592",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1788970309194",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789159639245",
+      "fromNodeId": "node_1789159615592",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1788970282798",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789159715163",
+      "fromNodeId": "node_1789159465925",
+      "fromPort": "onScanned",
+      "toNodeId": "node_1789159615592",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789256729438",
+      "fromNodeId": "node_1789159615592",
+      "fromPort": "onNextMember",
+      "toNodeId": "node_1789256723555",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789256907604",
+      "fromNodeId": "node_1789159615592",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1789256875566",
       "toPort": "exec_in"
     }
   ]

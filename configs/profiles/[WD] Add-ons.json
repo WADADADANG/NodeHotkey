@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Add-ons",
   "canvas": {
-    "zoom": 0.4,
+    "zoom": 0.6875775466956006,
     "pan": {
-      "x": 33,
-      "y": -173
+      "x": -77,
+      "y": -811
     }
   },
   "nodes": [
@@ -46,8 +46,8 @@
       "type": "trigger",
       "title": "Btn Follow All",
       "position": {
-        "x": 280,
-        "y": 480
+        "x": 1450,
+        "y": 1180
       },
       "data": {
         "enabled": true,
@@ -61,12 +61,12 @@
       "type": "key_press",
       "title": "Single Key Press",
       "position": {
-        "x": 570,
-        "y": 480
+        "x": 1750,
+        "y": 1180
       },
       "data": {
         "enabled": true,
-        "targetClient": "all",
+        "targetClient": "1,2,3,4,5,6",
         "keys": [
           "Z"
         ],
@@ -207,8 +207,8 @@
       "type": "key_hold",
       "title": "Knight  PowerStomp 6",
       "position": {
-        "x": 700,
-        "y": 1680
+        "x": 690,
+        "y": 1650
       },
       "data": {
         "enabled": true,
@@ -222,8 +222,8 @@
       "type": "loop",
       "title": "Knight Loop FP 6",
       "position": {
-        "x": 1030,
-        "y": 1760
+        "x": 1090,
+        "y": 1750
       },
       "data": {
         "enabled": true,
@@ -241,8 +241,8 @@
       "type": "control",
       "title": "AC Stop Knight Loop FP 6",
       "position": {
-        "x": 1030,
-        "y": 1970
+        "x": 1090,
+        "y": 1960
       },
       "data": {
         "enabled": true,
@@ -411,13 +411,6 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1786880127819",
-      "fromNodeId": "node_1786880085539",
-      "fromPort": "exec_out",
-      "toNodeId": "node_1786880124294",
-      "toPort": "exec_in"
-    },
-    {
       "id": "conn_1786882816309",
       "fromNodeId": "node_1786880252871",
       "fromPort": "exec_out",
@@ -467,13 +460,6 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1786887680747",
-      "fromNodeId": "node_1786880252871",
-      "fromPort": "exec_out",
-      "toNodeId": "node_1786887562506_9436",
-      "toPort": "exec_in"
-    },
-    {
       "id": "conn_1786926325427",
       "fromNodeId": "node_1786883312235",
       "fromPort": "exec_out",
@@ -513,6 +499,20 @@
       "fromNodeId": "node_1786882811325",
       "fromPort": "onDisable",
       "toNodeId": "node_1788519618159",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789165019276",
+      "fromNodeId": "node_1786880085539",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786880124294",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789242703859",
+      "fromNodeId": "node_1786880252871",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786887562506_9436",
       "toPort": "exec_in"
     }
   ]

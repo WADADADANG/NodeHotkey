@@ -1,14 +1,15 @@
 {
-  "activeProfile": "Test2",
+  "activeProfile": "[WD] Add-ons",
   "activeProfiles": [
-    "Test2"
+    "[WD] Add-ons",
+    "[WD] Full Buff",
+    "[WD] Heal 1,2,4"
   ],
   "disabledClients": [],
   "globalSettings": {
     "targetUrlKeyword": "universe.flyff.com/play",
-    "enableOverlay": true,
+    "enableOverlay": false,
     "suspendHotkey": "END",
-    "webPort": 3092,
     "ghostMouseJitter": {
       "enabled": false,
       "intervalMin": 8000,
@@ -92,6 +93,7 @@
         "w": 919,
         "h": 712
       }
-    }
+    },
+    "webPort": 3088
   }
 }

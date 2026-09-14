@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[Dg] Rm 2 Slots",
   "canvas": {
-    "zoom": 1,
+    "zoom": 0.7290000000000001,
     "pan": {
-      "x": -653,
-      "y": 558
+      "x": 74,
+      "y": 178
     }
   },
   "nodes": [
@@ -63,8 +63,8 @@
       "type": "loop",
       "title": "Heal Rain 1",
       "position": {
-        "x": 2040,
-        "y": 840
+        "x": 2010,
+        "y": 870
       },
       "data": {
         "enabled": true,
@@ -82,8 +82,8 @@
       "type": "loop",
       "title": "Heal Rain 2",
       "position": {
-        "x": 2040,
-        "y": 1070
+        "x": 2010,
+        "y": 1100
       },
       "data": {
         "enabled": true,
@@ -116,8 +116,8 @@
       "type": "delay",
       "title": "Delay Timer",
       "position": {
-        "x": 1730,
-        "y": 890
+        "x": 1700,
+        "y": 920
       },
       "data": {
         "enabled": true,
@@ -130,8 +130,8 @@
       "type": "key_press",
       "title": "Buff GT",
       "position": {
-        "x": 1430,
-        "y": 890
+        "x": 1400,
+        "y": 920
       },
       "data": {
         "enabled": true,
@@ -147,8 +147,8 @@
       "type": "loop",
       "title": "Restroe Mp 2",
       "position": {
-        "x": 2400,
-        "y": 1110
+        "x": 2370,
+        "y": 1140
       },
       "data": {
         "enabled": true,
@@ -166,8 +166,8 @@
       "type": "loop",
       "title": "Restroe Mp 1",
       "position": {
-        "x": 2400,
-        "y": 880
+        "x": 2370,
+        "y": 910
       },
       "data": {
         "enabled": true,
@@ -185,8 +185,8 @@
       "type": "control",
       "title": "AC Stop Restore Mp Both",
       "position": {
-        "x": 2400,
-        "y": 1350
+        "x": 2370,
+        "y": 1380
       },
       "data": {
         "enabled": true,
@@ -268,8 +268,8 @@
       "type": "control",
       "title": "AC Stop Heal Both",
       "position": {
-        "x": 1520,
-        "y": 760
+        "x": 1500,
+        "y": 770
       },
       "data": {
         "enabled": true,
@@ -279,6 +279,151 @@
           "1787293461532_774"
         ],
         "actionId": "1787294161660"
+      }
+    },
+    {
+      "id": "node_1789341846413",
+      "type": "trigger",
+      "title": "Global Trigger",
+      "position": {
+        "x": 790,
+        "y": 1560
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "NUMPAD 7",
+        "actionId": "1789341846413"
+      }
+    },
+    {
+      "id": "node_1789341953179",
+      "type": "trigger",
+      "title": "Global Trigger",
+      "position": {
+        "x": 780,
+        "y": 1110
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "NUMPAD DIVIDE",
+        "actionId": "1789341953179"
+      }
+    },
+    {
+      "id": "node_1789341968286",
+      "type": "sequencer",
+      "title": "Cast Sequencer",
+      "position": {
+        "x": 1140,
+        "y": 1110
+      },
+      "data": {
+        "enabled": true,
+        "modeType": "once",
+        "targetClient": "1",
+        "interval": 1000,
+        "repeatCount": 1,
+        "delayAfter": 0,
+        "steps": [
+          {
+            "key": "F1",
+            "delay": 150,
+            "castTimeMs": 150
+          },
+          {
+            "key": "ESC",
+            "delay": 150,
+            "castTimeMs": 150
+          },
+          {
+            "key": "LEFT ALT + 1",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "CTRL + 1",
+            "delay": 900,
+            "castTimeMs": 900
+          }
+        ],
+        "actionId": "1789341968286"
+      }
+    },
+    {
+      "id": "node_1789342048274",
+      "type": "sequencer",
+      "title": "Cast Sequencer",
+      "position": {
+        "x": 1140,
+        "y": 1560
+      },
+      "data": {
+        "enabled": true,
+        "modeType": "once",
+        "targetClient": "1",
+        "interval": 1000,
+        "repeatCount": 1,
+        "delayAfter": 0,
+        "steps": [
+          {
+            "key": "CTRL + 1",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "CTRL + 2",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "CTRL + 3",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "CTRL + 4",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "CTRL + 5",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "CTRL + 6",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "LEFT ALT + 1",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "LEFT ALT + 2",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "LEFT ALT + 3",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "LEFT ALT + 4",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
+            "key": "LEFT ALT + 5",
+            "delay": 750,
+            "castTimeMs": 750
+          }
+        ],
+        "actionId": "1789342048274"
       }
     }
   ],
@@ -393,6 +538,20 @@
       "fromNodeId": "node_1787293472456",
       "fromPort": "onTrue",
       "toNodeId": "node_1787294161660",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789341973676",
+      "fromNodeId": "node_1789341953179",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1789341968286",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789342050373",
+      "fromNodeId": "node_1789341846413",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1789342048274",
       "toPort": "exec_in"
     }
   ]

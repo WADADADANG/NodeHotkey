@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "Test",
   "canvas": {
-    "zoom": 0.6010437777175242,
+    "zoom": 0.42308709732208455,
     "pan": {
-      "x": -314,
-      "y": -392
+      "x": -23,
+      "y": 10
     }
   },
   "nodes": [
@@ -15,12 +15,12 @@
       "title": "Btn First buff",
       "position": {
         "x": 580,
-        "y": 190
+        "y": 160
       },
       "data": {
         "enabled": true,
         "triggerType": "keyboard",
-        "triggerValue": "NUMPAD 1",
+        "triggerValue": "NUMPAD 5",
         "actionId": "1788964309726"
       }
     },
@@ -29,7 +29,7 @@
       "type": "party_scanner",
       "title": "party_scanner",
       "position": {
-        "x": 1300,
+        "x": 1280,
         "y": 420
       },
       "data": {
@@ -46,8 +46,8 @@
       "type": "tts",
       "title": "Text to Speech (TTS)",
       "position": {
-        "x": 1300,
-        "y": 860
+        "x": 1280,
+        "y": 630
       },
       "data": {
         "enabled": true,
@@ -163,8 +163,8 @@
       "type": "tts",
       "title": "Text to Speech (TTS)",
       "position": {
-        "x": 1610,
-        "y": 580
+        "x": 1620,
+        "y": 570
       },
       "data": {
         "enabled": true,
@@ -179,7 +179,7 @@
       "type": "tts",
       "title": "Text to Speech (TTS)",
       "position": {
-        "x": 2270,
+        "x": 2260,
         "y": 960
       },
       "data": {
@@ -196,7 +196,7 @@
       "title": "First buff",
       "position": {
         "x": 900,
-        "y": 190
+        "y": 160
       },
       "data": {
         "enabled": true,
@@ -240,13 +240,13 @@
       "type": "trigger",
       "title": "Btn All Buff",
       "position": {
-        "x": 900,
-        "y": 540
+        "x": 590,
+        "y": 510
       },
       "data": {
         "enabled": true,
         "triggerType": "keyboard",
-        "triggerValue": "NUMPAD 2",
+        "triggerValue": "NUMPAD 6",
         "actionId": "1788966784692"
       }
     },
@@ -260,7 +260,7 @@
       },
       "data": {
         "enabled": true,
-        "targetClient": "4",
+        "targetClient": "1",
         "targetSlot": 1,
         "delayAfterClick": 80,
         "showOverlay": true,
@@ -272,7 +272,7 @@
       "type": "sound",
       "title": "Sound Alert",
       "position": {
-        "x": 1950,
+        "x": 1960,
         "y": 1060
       },
       "data": {
@@ -288,7 +288,7 @@
       "type": "key_press",
       "title": "Single Key Press",
       "position": {
-        "x": 2600,
+        "x": 2560,
         "y": 1060
       },
       "data": {
@@ -298,19 +298,6 @@
           "Z"
         ],
         "actionId": "1788967982251"
-      }
-    },
-    {
-      "id": "node_1789094472486",
-      "type": "screenshot",
-      "title": "screenshot",
-      "position": {
-        "x": 1300,
-        "y": 640
-      },
-      "data": {
-        "enabled": true,
-        "actionId": "1789094472486"
       }
     }
   ],
@@ -390,13 +377,6 @@
       "fromNodeId": "node_1788966414924",
       "fromPort": "next",
       "toNodeId": "node_1788967982251",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1789094475570",
-      "fromNodeId": "node_1788964319072",
-      "fromPort": "onError",
-      "toNodeId": "node_1789094472486",
       "toPort": "exec_in"
     }
   ]

@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 0.5513684346952022,
     "pan": {
-      "x": -691,
-      "y": -1526
+      "x": -1040,
+      "y": -2301
     }
   },
   "nodes": [
@@ -439,7 +439,7 @@
         "keys": [
           "3"
         ],
-        "interval": 13350,
+        "interval": 12050,
         "executeImmediately": false,
         "actionId": "1787761572525"
       }

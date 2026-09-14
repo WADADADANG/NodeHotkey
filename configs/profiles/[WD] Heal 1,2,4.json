@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 0.7049539258012572,
     "pan": {
-      "x": -1302,
-      "y": -901
+      "x": -678,
+      "y": -286
     }
   },
   "nodes": [
@@ -58,7 +58,7 @@
         "keys": [
           "2"
         ],
-        "interval": 900,
+        "interval": 800,
         "jitter": 100,
         "executeImmediately": true,
         "actionId": "1786680432366"
@@ -78,7 +78,7 @@
         "keys": [
           "2"
         ],
-        "interval": 900,
+        "interval": 800,
         "jitter": 100,
         "executeImmediately": true,
         "actionId": "1786680465713_967"
@@ -98,7 +98,7 @@
         "keys": [
           "2"
         ],
-        "interval": 1100,
+        "interval": 800,
         "jitter": 100,
         "executeImmediately": true,
         "actionId": "1786680473923_7676"
@@ -205,7 +205,7 @@
         "keys": [
           "3"
         ],
-        "interval": 10900,
+        "interval": 10000,
         "executeImmediately": false,
         "actionId": "1786684538557_1206"
       }
@@ -224,7 +224,7 @@
         "keys": [
           "3"
         ],
-        "interval": 5500,
+        "interval": 4300,
         "executeImmediately": false,
         "actionId": "1786684545395_4783"
       }
@@ -235,7 +235,7 @@
       "title": "AC Stop Loop MP 1",
       "position": {
         "x": 1510,
-        "y": 1820
+        "y": 1830
       },
       "data": {
         "enabled": true,
@@ -252,7 +252,7 @@
       "title": "AC Stop Heal 1",
       "position": {
         "x": 1510,
-        "y": 1520
+        "y": 1510
       },
       "data": {
         "enabled": true,
@@ -270,7 +270,7 @@
       "title": "Buff GT 4",
       "position": {
         "x": 2700,
-        "y": 1530
+        "y": 1520
       },
       "data": {
         "enabled": true,
@@ -307,7 +307,7 @@
       "title": "AC Stop Loop MP 2",
       "position": {
         "x": 2120,
-        "y": 1890
+        "y": 1900
       },
       "data": {
         "enabled": true,
@@ -324,7 +324,7 @@
       "title": "AC Stop Loop MP 4",
       "position": {
         "x": 2700,
-        "y": 1830
+        "y": 1840
       },
       "data": {
         "enabled": true,
@@ -521,7 +521,7 @@
       "title": "EmitEvent_4564E",
       "position": {
         "x": 1510,
-        "y": 1920
+        "y": 1950
       },
       "data": {
         "enabled": true,
@@ -535,7 +535,7 @@
       "title": "EmitEvent_EW944DDA",
       "position": {
         "x": 1510,
-        "y": 1420
+        "y": 1400
       },
       "data": {
         "enabled": true,
