@@ -3,7 +3,9 @@
 เครื่องมืออัตโนมัติช่วยกดปุ่มคีย์บอร์ดและเมาส์ในเบราว์เซอร์แบบพื้นหลัง (Background Automation) ออกแบบมาสำหรับเกม HTML5 / WebGL เช่น **Flyff Universe** รองรับหลายจอพร้อมกัน ไม่แย่งเมาส์ ไม่กวนการทำงานของคอมพิวเตอร์
 
 > 🧭 **แผนผังและสถาปัตยกรรมระบบ (System Architecture & Dev Guide):**  
-> ศึกษาการทำงานของโหนด, สายไฟ Wires, Bot Engine และโครงสร้างโปรเจกต์ฉบับเต็มได้ที่ [docs/SYSTEM_ARCHITECTURE.md](docs/SYSTEM_ARCHITECTURE.md)
+> ศึกษาการทำงานของโหนด, สายไฟ Wires, Bot Engine และโครงสร้างโปรเจกต์ฉบับเต็มได้ที่ [docs/SYSTEM_ARCHITECTURE.md](docs/SYSTEM_ARCHITECTURE.md)  
+> 💻 **การรองรับระบบปฏิบัติการ (OS Compatibility Guide):**  
+> ดูข้อมูลความเข้ากันได้กับ Windows, macOS และ Linux ได้ที่ [docs/OS_COMPATIBILITY.md](docs/OS_COMPATIBILITY.md)
 
 ---
 
