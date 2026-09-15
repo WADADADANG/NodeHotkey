@@ -1796,6 +1796,7 @@ class NodeCanvasEditor {
       const dx = Math.max(30, Math.abs(x2 - x1) * 0.5);
       const pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
 
+      const fromNode = this.nodes.find(n => n.id === conn.fromNodeId);
       const toNode = this.nodes.find(n => n.id === conn.toNodeId);
       const isDataWire = (
         conn.fromPort === 'val_out' || 
@@ -1874,6 +1875,7 @@ class NodeCanvasEditor {
     } else {
       const pName = conn.fromPort || '';
       const toPName = conn.toPort || '';
+      const fromNode = this.nodes.find(n => n.id === conn.fromNodeId);
       const toNode = this.nodes.find(n => n.id === conn.toNodeId);
       const isDataWire = (
         pName === 'val_out' || 
