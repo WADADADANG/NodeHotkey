@@ -145,6 +145,7 @@
   let startTime = Date.now();
   let uptimeInterval = null;
   let isServerOnline = false;
+  let currentModalState = null;
 
   // 1. Navigation View Switcher Logic
   const breadcrumbEl = document.getElementById('view-breadcrumb-text');
@@ -374,7 +375,41 @@
       unsavedModalHintTitle: "คำแนะนำ:",
       unsavedModalHintDesc: "กดปุ่ม <strong>\"ปิด เพื่อกลับไปบันทึกเอง\"</strong> ด้านล่าง แล้วกดปุ่ม 💾 บันทึก (หรือ Ctrl+S) ในหน้า Action Node ก่อนที่จะรีโหลดครับ",
       unsavedModalDiscardBtn: "🔄 ละทิ้งและรีโหลด",
-      unsavedModalBackBtn: "✕ ปิด เพื่อกลับไปบันทึกเอง"
+      unsavedModalBackBtn: "✕ ปิด เพื่อกลับไปบันทึกเอง",
+      modalUpdateTitle: "ตรวจสอบการอัปเดตระบบ",
+      btnUpdateChecking: "กำลังตรวจสอบสถานะและวิเคราะห์ผลกระทบจาก GitHub...",
+      btnUpdateCheckErr: "เกิดข้อผิดพลาดในการตรวจสอบ:",
+      btnUpdateNoUpdate: "ระบบเป็นเวอร์ชันล่าสุดแล้ว!",
+      btnUpdateNoUpdateDesc: "Current Commit: <code>{hash}</code> (เป็นเวอร์ชันล่าสุดแล้ว)",
+      btnUpdateHasNewTitle: "มีอัปเดตใหม่พร้อมใช้งาน!",
+      btnUpdateDepTitle: "ระบบพร้อมติดตั้ง Library ใหม่อัตโนมัติ",
+      btnUpdateDepDesc: "ตรวจพบโมดูลระบบใหม่ ตัวโปรแกรมจะทำการดาวน์โหลดและติดตั้ง Library ใหม่ให้พร้อมใช้งานอัตโนมัติใน Step 2 โดยที่คุณไม่ต้องดาวน์โหลดหรือติดตั้งโปรแกรมใหม่เอง",
+      btnUpdateImpactLabel: "ผลกระทบ:",
+      btnUpdateLevelLabel: "ระดับการอัปเดต:",
+      btnUpdateFilesLabel: "ไฟล์ที่เปลี่ยนแปลงทั้งหมด:",
+      btnUpdateFilesMore: "... และอีก {count} ไฟล์",
+      btnUpdateDownloading: "กำลังดาวน์โหลดแพ็คเกจและจัดเตรียมความพร้อม...",
+      btnUpdateDownloadComplete: "ดาวน์โหลดแพ็คเกจเสร็จสิ้น!",
+      btnUpdateDownloadCompleteDesc: "แพ็คเกจถูกเตรียมพร้อมสำหรับการติดตั้งแล้ว คุณสามารถกดปุ่มด้านล่างเพื่อเริ่มการติดตั้งทับไฟล์ live ในระบบได้ทันที",
+      btnUpdateDownloadFailed: "การดาวน์โหลดล้มเหลว:",
+      btnUpdateApplying: "กำลังแตกไฟล์และเขียนทับข้อมูลเวอร์ชันใหม่...",
+      btnUpdateApplyFailed: "การติดตั้งล้มเหลว:",
+      btnUpdateCoreComplete: "ติดตั้งระบบหลักเสร็จสมบูรณ์!",
+      btnUpdateCoreCompleteDesc: "มีการเปลี่ยนแปลงในไฟล์ระบบหลัก (Core Launcher) จำเป็นต้องรีสตาร์ทตัวโปรแกรมเพื่อให้การตั้งค่าใหม่มีผล",
+      btnUpdateCoreDepSuccess: "ติดตั้งโมดูลใหม่สำเร็จ: ระบบได้ติดตั้ง Library ที่จำเป็นเรียบร้อยแล้ว เมื่อรีสตาร์ทโปรแกรมจะพร้อมใช้งานได้ทันที",
+      btnUpdateEngineComplete: "อัปเดต Bot Engine เรียบร้อย!",
+      btnUpdateEngineCompleteDesc: "ไฟล์คำสั่งและตรรกะของบอทได้รับการอัปเดตแล้ว คุณต้องการรีสตาร์ท Bot Engine ตอนนี้เลยหรือไม่? (หน้าจอเกมจะคงอยู่)",
+      btnUpdateUiComplete: "Hot-Reload สำเร็จสมบูรณ์!",
+      btnUpdateUiCompleteDesc: "หน้าจอ UI และ Web Dashboard ได้รับการรีเฟรชเป็นเวอร์ชันใหม่เรียบร้อยแล้ว — <strong>บอทและหน้าจอเกมทุกจอทำงานต่อเนื่อง 100% ไม่มีการปิดจอ</strong>",
+      btnStep1Download: "📥 Step 1: ดาวน์โหลดแพ็คเกจ",
+      btnStep2Apply: "⚡ Step 2: เริ่มการติดตั้งไฟล์",
+      btnRelaunchApp: "🚀 รีสตาร์ทโปรแกรมทันที",
+      btnRestartEngineNow: "🔄 รีสตาร์ท Engine เดี๋ยวนี้",
+      btnLater: "เลื่อนไปก่อน",
+      btnRestartLater: "⏳ รีสตาร์ทเองภายหลัง",
+      btnDone: "เสร็จสิ้น",
+      btnCancel: "ยกเลิก",
+      btnClose: "ปิด"
     },
     en: {
       menuMain: "Main Workspace",
@@ -464,7 +499,41 @@
       unsavedModalHintTitle: "Recommendation:",
       unsavedModalHintDesc: "Click <strong>\"Close to Save Manually\"</strong> below, then click 💾 Save Profile (or press Ctrl+S) in Action Node before reloading.",
       unsavedModalDiscardBtn: "🔄 Discard & Reload",
-      unsavedModalBackBtn: "✕ Close to Save Manually"
+      unsavedModalBackBtn: "✕ Close to Save Manually",
+      modalUpdateTitle: "System Update",
+      btnUpdateChecking: "Checking update status and analyzing impact from GitHub...",
+      btnUpdateCheckErr: "Error checking for updates:",
+      btnUpdateNoUpdate: "System is up to date!",
+      btnUpdateNoUpdateDesc: "Current Commit: <code>{hash}</code> (Up to date)",
+      btnUpdateHasNewTitle: "Update Available!",
+      btnUpdateDepTitle: "Automatic Library & Module Installation",
+      btnUpdateDepDesc: "New system modules detected. The launcher will automatically download and install required dependencies in Step 2 with no manual reinstall needed.",
+      btnUpdateImpactLabel: "Impact:",
+      btnUpdateLevelLabel: "Update Level:",
+      btnUpdateFilesLabel: "Total Changed Files:",
+      btnUpdateFilesMore: "... and {count} more files",
+      btnUpdateDownloading: "Downloading update package and preparing...",
+      btnUpdateDownloadComplete: "Package Download Complete!",
+      btnUpdateDownloadCompleteDesc: "The update package is ready for installation. Click the button below to apply the update directly to the live system.",
+      btnUpdateDownloadFailed: "Download Failed:",
+      btnUpdateApplying: "Extracting files and applying update...",
+      btnUpdateApplyFailed: "Installation Failed:",
+      btnUpdateCoreComplete: "Core System Update Complete!",
+      btnUpdateCoreCompleteDesc: "Core Launcher system files have been modified. A full application restart is required for changes to take effect.",
+      btnUpdateCoreDepSuccess: "Dependencies Installed: Required libraries were installed successfully and will be loaded upon restart.",
+      btnUpdateEngineComplete: "Bot Engine Updated!",
+      btnUpdateEngineCompleteDesc: "Bot logic and scripts have been updated. Would you like to restart the Bot Engine now? (Active game clients remain running)",
+      btnUpdateUiComplete: "Hot-Reload Complete!",
+      btnUpdateUiCompleteDesc: "UI and Web Dashboard have been refreshed to the latest version — <strong>Bots and game clients continue running 100% uninterrupted.</strong>",
+      btnStep1Download: "📥 Step 1: Download Package",
+      btnStep2Apply: "⚡ Step 2: Apply Update",
+      btnRelaunchApp: "🚀 Restart App Now",
+      btnRestartEngineNow: "🔄 Restart Engine Now",
+      btnLater: "Later",
+      btnRestartLater: "⏳ Restart Later",
+      btnDone: "Done",
+      btnCancel: "Cancel",
+      btnClose: "Close"
     }
   };
 
@@ -604,6 +673,68 @@
       else if (f === 'action') pill.textContent = t.filterAction;
       else if (f === 'log' || f === 'step') pill.textContent = t.filterLog || t.filterStep || '🟢 Log';
     });
+
+    // Update Update Modal Title
+    const lblUpdateModalTitle = document.getElementById('lbl-update-modal-title');
+    if (lblUpdateModalTitle) lblUpdateModalTitle.textContent = t.modalUpdateTitle || 'System Update';
+
+    // If Update Modal is open, re-render its content in the newly selected language
+    if (updateModal && updateModal.style.display === 'flex' && currentModalState) {
+      if (currentModalState.type === 'step1_result' && currentModalState.data) {
+        renderStep1CheckResult(currentModalState.data);
+      } else if (currentModalState.type === 'download_complete' && currentModalState.data) {
+        const impact = currentModalState.data.impact || (currentUpdateCheck && currentUpdateCheck.impact) || {};
+        const isEn = lang === 'en';
+        const badgeText = (isEn ? impact.badge_en : impact.badge_th) || impact.badge || '';
+        const titleText = (isEn ? impact.title_en : impact.title_th) || impact.title || (isEn ? 'Live Application Update' : 'อัปเดตแอปพลิเคชัน');
+        updateModalBody.innerHTML = `
+          ${renderWizardSteps(2)}
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <div style="color:#10b981; font-weight:700; font-size:13px;">✅ ${t.btnUpdateDownloadComplete}</div>
+            ${badgeText ? `<span class="impact-badge ${impact.badgeClass}">${badgeText}</span>` : ''}
+          </div>
+          <div style="font-size:11.5px; color:#cbd5e1; line-height:1.5;">
+            ${t.btnUpdateDownloadCompleteDesc}
+          </div>
+          <div style="margin-top:10px; font-size:11px; color:#94a3b8;">
+            ⚙️ <strong>${t.btnUpdateLevelLabel}</strong> ${titleText}
+          </div>
+        `;
+        btnPerformUpdate.textContent = t.btnStep2Apply;
+        btnCancelUpdate.textContent = t.btnCancel;
+      } else if (currentModalState.type === 'apply_complete') {
+        const impact = currentModalState.impact || { level: 1 };
+        if (impact.level === 3) {
+          updateModalBody.innerHTML = `
+            ${renderWizardSteps(3)}
+            <div style="color:#f87171; font-weight:700; font-size:13px; margin-bottom:6px;">🚀 ${t.btnUpdateCoreComplete}</div>
+            <div style="font-size:11.5px; color:#cbd5e1; line-height:1.5;">${t.btnUpdateCoreCompleteDesc}</div>
+            ${impact.hasDependencyChanges ? `
+              <div style="margin-top:8px; background:rgba(16, 185, 129, 0.12); border:1px solid rgba(16, 185, 129, 0.3); border-radius:6px; padding:8px 10px; font-size:11px; color:#6ee7b7; line-height:1.4;">
+                ✅ <strong>${t.btnUpdateCoreDepSuccess}</strong>
+              </div>
+            ` : ''}
+          `;
+          btnPerformUpdate.textContent = t.btnRelaunchApp;
+          btnCancelUpdate.textContent = t.btnLater;
+        } else if (impact.level === 2) {
+          updateModalBody.innerHTML = `
+            ${renderWizardSteps(3)}
+            <div style="color:#fbbf24; font-weight:700; font-size:13px; margin-bottom:6px;">🟡 ${t.btnUpdateEngineComplete}</div>
+            <div style="font-size:11.5px; color:#cbd5e1; line-height:1.5;">${t.btnUpdateEngineCompleteDesc}</div>
+          `;
+          btnPerformUpdate.textContent = t.btnRestartEngineNow;
+          btnCancelUpdate.textContent = t.btnRestartLater;
+        } else {
+          updateModalBody.innerHTML = `
+            ${renderWizardSteps(3)}
+            <div style="color:#34d399; font-weight:700; font-size:13px; margin-bottom:6px;">✨ ${t.btnUpdateUiComplete}</div>
+            <div style="font-size:11.5px; color:#cbd5e1; line-height:1.5;">${t.btnUpdateUiCompleteDesc}</div>
+          `;
+          btnCancelUpdate.textContent = t.btnDone;
+        }
+      }
+    }
 
     // Re-render Client Cards in active language
     renderLauncherClientCards(cachedStatus, cachedConfig);
@@ -1525,17 +1656,21 @@
 
   function renderFileList(files = []) {
     if (!files || files.length === 0) return '';
+    const isEn = currentLang === 'en';
+    const t = i18nDict[currentLang] || i18nDict.th;
     const fileItems = files.slice(0, 30).map(f => `
       <div class="changed-file-item">
         <span class="changed-file-icon">📄</span>
         <span>${f}</span>
       </div>
     `).join('');
-    const extraCount = files.length > 30 ? `<div style="font-size:10px; opacity:0.6; padding-top:2px;">... และอีก ${files.length - 30} ไฟล์</div>` : '';
+    const extraCount = files.length > 30 
+      ? `<div style="font-size:10px; opacity:0.6; padding-top:2px;">${(t.btnUpdateFilesMore || '... and {count} more files').replace('{count}', files.length - 30)}</div>` 
+      : '';
     return `
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; margin-bottom:4px; font-size:11px;">
-        <span style="color:#94a3b8; font-weight:600;">📁 ไฟล์ที่เปลี่ยนแปลงทั้งหมด:</span>
-        <span style="color:#64748b; font-size:10px;">${files.length} ไฟล์</span>
+        <span style="color:#94a3b8; font-weight:600;">📁 ${t.btnUpdateFilesLabel || 'Total Changed Files:'}</span>
+        <span style="color:#64748b; font-size:10px;">${files.length} ${isEn ? 'files' : 'ไฟล์'}</span>
       </div>
       <div class="changed-files-box" style="max-height:120px; overflow-y:auto;">
         ${fileItems}
@@ -1545,20 +1680,29 @@
   }
 
   function renderStep1CheckResult(result) {
+    currentModalState = { type: 'step1_result', data: result };
+    const isEn = currentLang === 'en';
+    const t = i18nDict[currentLang] || i18nDict.th;
+
     if (result.error) {
       updateModalBody.innerHTML = `
         ${renderWizardSteps(1)}
-        <div style="color:#ef4444; font-weight:700; margin-bottom:6px;">⚠️ ไม่สามารถตรวจสอบอัปเดตได้</div>
+        <div style="color:#ef4444; font-weight:700; margin-bottom:6px;">${t.btnUpdateCheckErr || '⚠️ Error checking for updates:'}</div>
         <div style="font-size:11px; opacity:0.8;">${result.error}</div>
       `;
+      btnPerformUpdate.style.display = 'none';
+      btnCancelUpdate.disabled = false;
+      btnCancelUpdate.textContent = t.btnClose || 'Close';
     } else if (result.hasUpdate) {
       const impact = result.impact || { badge: 'Update Available', badgeClass: 'level-ui', description: 'New updates available' };
+      const badgeText = (isEn ? impact.badge_en : impact.badge_th) || impact.badge;
+      const descText = (isEn ? impact.description_en : impact.description_th) || impact.description;
       const hasMultipleCommits = result.commitsList && result.commitsList.length > 1;
       updateModalBody.innerHTML = `
         ${renderWizardSteps(1)}
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-          <div style="color:#10b981; font-weight:700; font-size:13px;">🎉 มีอัปเดตใหม่พร้อมใช้งาน!</div>
-          <span class="impact-badge ${impact.badgeClass}">${impact.badge}</span>
+          <div style="color:#10b981; font-weight:700; font-size:13px;">🎉 ${t.btnUpdateHasNewTitle || 'Update Available!'}</div>
+          <span class="impact-badge ${impact.badgeClass}">${badgeText}</span>
         </div>
         <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:8px 10px; margin:6px 0; font-family:'JetBrains Mono'; font-size:11px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -1575,31 +1719,35 @@
               `).join('')}
             </div>
           ` : `
-            <div style="color:#60a5fa; margin-top:4px;">"${result.commitMessage || 'New features & improvements'}"</div>
+            <div style="color:#60a5fa; margin-top:4px;">"${result.commitMessage || (isEn ? 'New features & improvements' : 'ปรับปรุงประสิทธิภาพและเพิ่มฟีเจอร์ใหม่')}"</div>
           `}
         </div>
         ${impact.hasDependencyChanges ? `
           <div style="background:rgba(14, 165, 233, 0.15); border:1px solid rgba(14, 165, 233, 0.4); border-radius:6px; padding:10px; margin:8px 0; color:#bae6fd; font-size:11.5px; line-height:1.45;">
             <div style="font-weight:700; display:flex; align-items:center; gap:6px; margin-bottom:4px; color:#38bdf8;">
-              <span>⚡ ระบบพร้อมติดตั้ง Library ใหม่อัตโนมัติ</span>
+              <span>⚡ ${t.btnUpdateDepTitle}</span>
             </div>
-            <div>ตรวจพบโมดูลระบบใหม่ ตัวโปรแกรมจะทำการดาวน์โหลดและติดตั้ง Library ใหม่ให้พร้อมใช้งานอัตโนมัติใน Step 2 โดยที่คุณไม่ต้องดาวน์โหลดหรือติดตั้งโปรแกรมใหม่เอง</div>
+            <div>${t.btnUpdateDepDesc}</div>
           </div>
         ` : ''}
-        <div style="font-size:11px; color:#cbd5e1; margin-top:6px;">💡 <strong>ผลกระทบ:</strong> ${impact.description}</div>
+        <div style="font-size:11px; color:#cbd5e1; margin-top:6px;">💡 <strong>${t.btnUpdateImpactLabel || 'Impact:'}</strong> ${descText}</div>
         ${renderFileList(result.changedFiles)}
       `;
       btnPerformUpdate.style.display = 'block';
       btnPerformUpdate.disabled = false;
-      btnPerformUpdate.textContent = '📥 Step 1: ดาวน์โหลดแพ็คเกจ';
+      btnPerformUpdate.textContent = t.btnStep1Download || '📥 Step 1: Download Package';
       btnPerformUpdate.onclick = () => handleStep1Download();
+      btnCancelUpdate.disabled = false;
+      btnCancelUpdate.textContent = t.btnCancel || 'Cancel';
     } else {
       updateModalBody.innerHTML = `
         ${renderWizardSteps(1)}
-        <div style="color:#10b981; font-weight:700; font-size:13px; margin-bottom:4px;">✅ ระบบเป็นเวอร์ชันล่าสุดแล้ว!</div>
-        <div style="font-size:11px; opacity:0.8;">Current Commit: <code>${result.localHash}</code> (Up to date)</div>
+        <div style="color:#10b981; font-weight:700; font-size:13px; margin-bottom:4px;">✅ ${t.btnUpdateNoUpdate || 'System is up to date!'}</div>
+        <div style="font-size:11px; opacity:0.8;">${(t.btnUpdateNoUpdateDesc || 'Current Commit: <code>{hash}</code> (Up to date)').replace('{hash}', result.localHash)}</div>
       `;
-      btnCancelUpdate.textContent = 'ปิด';
+      btnPerformUpdate.style.display = 'none';
+      btnCancelUpdate.disabled = false;
+      btnCancelUpdate.textContent = t.btnClose || 'Close';
     }
   }
 
@@ -1620,22 +1768,24 @@
 
   if (btnCheckUpdate) {
     btnCheckUpdate.onclick = async () => {
+      const t = i18nDict[currentLang] || i18nDict.th;
       updateModal.style.display = 'flex';
       btnPerformUpdate.style.display = 'none';
       btnPerformUpdate.disabled = false;
       btnCancelUpdate.disabled = false;
-      btnCancelUpdate.textContent = 'ยกเลิก';
+      btnCancelUpdate.textContent = t.btnCancel || 'Cancel';
 
       if (currentUpdateCheck && currentUpdateCheck.hasUpdate) {
         renderStep1CheckResult(currentUpdateCheck);
         return;
       }
 
+      currentModalState = { type: 'checking' };
       updateModalBody.innerHTML = `
         ${renderWizardSteps(1)}
         <div style="display:flex; align-items:center; gap:10px; padding:12px 0;">
           <div class="spinner"></div>
-          <span>กำลังตรวจสอบสถานะและวิเคราะห์ผลกระทบจาก GitHub...</span>
+          <span>${t.btnUpdateChecking || 'Checking update status and analyzing impact from GitHub...'}</span>
         </div>
       `;
 
@@ -1651,72 +1801,85 @@
         }
         renderStep1CheckResult(result);
       } catch (err) {
+        currentModalState = { type: 'check_error', error: err.message };
         updateModalBody.innerHTML = `
           ${renderWizardSteps(1)}
-          <div style="color:#ef4444; font-weight:700;">❌ เกิดข้อผิดพลาดในการตรวจสอบ:</div>
+          <div style="color:#ef4444; font-weight:700;">❌ ${t.btnUpdateCheckErr || 'Error checking for updates:'}</div>
           <div style="font-size:11px; opacity:0.8; margin-top:4px;">${err.message}</div>
         `;
+        btnCancelUpdate.disabled = false;
+        btnCancelUpdate.textContent = t.btnClose || 'Close';
       }
     };
   }
 
   // Step 1 Handler: Download Package
   async function handleStep1Download() {
+    const t = i18nDict[currentLang] || i18nDict.th;
+    currentModalState = { type: 'downloading' };
     btnPerformUpdate.disabled = true;
     btnCancelUpdate.disabled = true;
     updateModalBody.innerHTML = `
       ${renderWizardSteps(1)}
       <div style="display:flex; align-items:center; gap:10px; padding:12px 0;">
         <div class="spinner"></div>
-        <span>กำลังดาวน์โหลดแพ็คเกจและจัดเตรียมความพร้อม...</span>
+        <span>${t.btnUpdateDownloading || 'Downloading update package and preparing...'}</span>
       </div>
     `;
 
     try {
       const res = await api.downloadUpdate();
       currentDownloadResult = res;
+      currentModalState = { type: 'download_complete', data: res };
+      const isEn = currentLang === 'en';
       const impact = res.impact || (currentUpdateCheck && currentUpdateCheck.impact) || {};
+      const badgeText = (isEn ? impact.badge_en : impact.badge_th) || impact.badge || '';
+      const titleText = (isEn ? impact.title_en : impact.title_th) || impact.title || (isEn ? 'Live Application Update' : 'อัปเดตแอปพลิเคชัน');
 
       updateModalBody.innerHTML = `
         ${renderWizardSteps(2)}
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-          <div style="color:#10b981; font-weight:700; font-size:13px;">✅ ดาวน์โหลดแพ็คเกจเสร็จสิ้น!</div>
-          <span class="impact-badge ${impact.badgeClass}">${impact.badge}</span>
+          <div style="color:#10b981; font-weight:700; font-size:13px;">✅ ${t.btnUpdateDownloadComplete || 'Package Download Complete!'}</div>
+          ${badgeText ? `<span class="impact-badge ${impact.badgeClass}">${badgeText}</span>` : ''}
         </div>
         <div style="font-size:11.5px; color:#cbd5e1; line-height:1.5;">
-          แพ็คเกจถูกเตรียมพร้อมสำหรับการติดตั้งแล้ว คุณสามารถกดปุ่มด้านล่างเพื่อเริ่มการติดตั้งทับไฟล์ live ในระบบได้ทันที
+          ${t.btnUpdateDownloadCompleteDesc || 'The update package is ready for installation. Click the button below to apply the update directly to the live system.'}
         </div>
         <div style="margin-top:10px; font-size:11px; color:#94a3b8;">
-          ⚙️ <strong>ระดับการอัปเดต:</strong> ${impact.title || 'Live Application Update'}
+          ⚙️ <strong>${t.btnUpdateLevelLabel || 'Update Level:'}</strong> ${titleText}
         </div>
       `;
 
       btnPerformUpdate.style.display = 'block';
       btnPerformUpdate.disabled = false;
-      btnPerformUpdate.textContent = '⚡ Step 2: เริ่มการติดตั้งไฟล์';
+      btnPerformUpdate.textContent = t.btnStep2Apply || '⚡ Step 2: Apply Update';
       btnCancelUpdate.disabled = false;
-      btnCancelUpdate.textContent = 'ยกเลิก';
+      btnCancelUpdate.textContent = t.btnCancel || 'Cancel';
       btnPerformUpdate.onclick = () => handleStep2Apply();
     } catch (err) {
+      currentModalState = { type: 'download_failed', error: err.message };
       updateModalBody.innerHTML = `
         ${renderWizardSteps(1)}
-        <div style="color:#ef4444; font-weight:700;">❌ การดาวน์โหลดล้มเหลว:</div>
+        <div style="color:#ef4444; font-weight:700;">❌ ${t.btnUpdateDownloadFailed || 'Download Failed:'}</div>
         <div style="font-size:11px; opacity:0.8; margin-top:4px;">${err.message}</div>
       `;
       btnPerformUpdate.style.display = 'none';
       btnCancelUpdate.disabled = false;
+      btnCancelUpdate.textContent = t.btnClose || 'Close';
     }
   }
 
   // Step 2 Handler: Apply Package
   async function handleStep2Apply() {
+    const t = i18nDict[currentLang] || i18nDict.th;
+    currentModalState = { type: 'applying' };
     btnPerformUpdate.disabled = true;
     btnCancelUpdate.disabled = true;
     updateModalBody.innerHTML = `
       ${renderWizardSteps(2)}
       <div style="display:flex; align-items:center; gap:10px; padding:12px 0;">
         <div class="spinner"></div>
-        <span>กำลังแตกไฟล์และเขียนทับข้อมูลเวอร์ชันใหม่...</span>
+        <span>${t.btnUpdateApplying || 'Extracting files and applying update...'}</span>
       </div>
     `;
 
@@ -1726,43 +1889,44 @@
       detectedUpdateInfo = null;
       currentUpdateCheck = null;
       renderUpdateToolButton(false);
+      currentModalState = { type: 'apply_complete', impact: impact };
 
       // Render Step 3 according to impact level
       if (impact.level === 3) {
         // Level 3: Core App Relaunch Required
         updateModalBody.innerHTML = `
           ${renderWizardSteps(3)}
-          <div style="color:#f87171; font-weight:700; font-size:13px; margin-bottom:6px;">🚀 ติดตั้งระบบหลักเสร็จสมบูรณ์!</div>
+          <div style="color:#f87171; font-weight:700; font-size:13px; margin-bottom:6px;">🚀 ${t.btnUpdateCoreComplete}</div>
           <div style="font-size:11.5px; color:#cbd5e1; line-height:1.5;">
-            มีการเปลี่ยนแปลงในไฟล์ระบบหลัก (Core Launcher) จำเป็นต้องรีสตาร์ทตัวโปรแกรมเพื่อให้การตั้งค่าใหม่มีผล
+            ${t.btnUpdateCoreCompleteDesc}
           </div>
           ${impact.hasDependencyChanges ? `
             <div style="margin-top:8px; background:rgba(16, 185, 129, 0.12); border:1px solid rgba(16, 185, 129, 0.3); border-radius:6px; padding:8px 10px; font-size:11px; color:#6ee7b7; line-height:1.4;">
-              ✅ <strong>ติดตั้งโมดูลใหม่สำเร็จ:</strong> ระบบได้ติดตั้ง Library ที่จำเป็นเรียบร้อยแล้ว เมื่อรีสตาร์ทโปรแกรมจะพร้อมใช้งานได้ทันที
+              ✅ <strong>${t.btnUpdateCoreDepSuccess}</strong>
             </div>
           ` : ''}
         `;
         btnPerformUpdate.style.display = 'block';
         btnPerformUpdate.disabled = false;
         btnPerformUpdate.className = 'btn-hero-primary';
-        btnPerformUpdate.textContent = '🚀 รีสตาร์ทโปรแกรมทันที';
+        btnPerformUpdate.textContent = t.btnRelaunchApp || '🚀 Restart App Now';
         btnPerformUpdate.onclick = () => api.relaunchApp();
 
         btnCancelUpdate.disabled = false;
-        btnCancelUpdate.textContent = 'เลื่อนไปก่อน';
+        btnCancelUpdate.textContent = t.btnLater || 'Later';
       } else if (impact.level === 2) {
-        // Level 2: Bot Engine Update (Ask user to restart engine or keep running)
+        // Level 2: Bot Engine Update
         updateModalBody.innerHTML = `
           ${renderWizardSteps(3)}
-          <div style="color:#fbbf24; font-weight:700; font-size:13px; margin-bottom:6px;">🟡 อัปเดต Bot Engine เรียบร้อย!</div>
+          <div style="color:#fbbf24; font-weight:700; font-size:13px; margin-bottom:6px;">🟡 ${t.btnUpdateEngineComplete}</div>
           <div style="font-size:11.5px; color:#cbd5e1; line-height:1.5;">
-            ไฟล์คำสั่งและตรรกะของบอทได้รับการอัปเดตแล้ว คุณต้องการรีสตาร์ท Bot Engine ตอนนี้เลยหรือไม่? (หน้าจอเกมจะคงอยู่)
+            ${t.btnUpdateEngineCompleteDesc}
           </div>
         `;
         btnPerformUpdate.style.display = 'block';
         btnPerformUpdate.disabled = false;
         btnPerformUpdate.className = 'btn-hero-primary';
-        btnPerformUpdate.textContent = '🔄 รีสตาร์ท Engine เดี๋ยวนี้';
+        btnPerformUpdate.textContent = t.btnRestartEngineNow || '🔄 Restart Engine Now';
         btnPerformUpdate.onclick = async () => {
           btnPerformUpdate.disabled = true;
           await api.restartEngine();
@@ -1771,31 +1935,33 @@
         };
 
         btnCancelUpdate.disabled = false;
-        btnCancelUpdate.textContent = '⏳ รีสตาร์ทเองภายหลัง';
+        btnCancelUpdate.textContent = t.btnRestartLater || '⏳ Restart Later';
       } else {
-        // Level 1: UI Only Hot-Reload (ZERO bot & game disruption)
+        // Level 1: UI Only Hot-Reload
         await api.hotReloadUi();
         if (editorFrame) editorFrame.src = getServerUrl('/?t=' + Date.now());
 
         updateModalBody.innerHTML = `
           ${renderWizardSteps(3)}
-          <div style="color:#34d399; font-weight:700; font-size:13px; margin-bottom:6px;">✨ Hot-Reload สำเร็จสมบูรณ์!</div>
+          <div style="color:#34d399; font-weight:700; font-size:13px; margin-bottom:6px;">✨ ${t.btnUpdateUiComplete}</div>
           <div style="font-size:11.5px; color:#cbd5e1; line-height:1.5;">
-            หน้าจอ UI และ Web Dashboard ได้รับการรีเฟรชเป็นเวอร์ชันใหม่เรียบร้อยแล้ว — <strong>บอทและหน้าจอเกมทุกจอทำงานต่อเนื่อง 100% ไม่มีการปิดจอ</strong>
+            ${t.btnUpdateUiCompleteDesc}
           </div>
         `;
         btnPerformUpdate.style.display = 'none';
         btnCancelUpdate.disabled = false;
-        btnCancelUpdate.textContent = 'เสร็จสิ้น';
+        btnCancelUpdate.textContent = t.btnDone || 'Done';
       }
     } catch (err) {
+      currentModalState = { type: 'apply_failed', error: err.message };
       updateModalBody.innerHTML = `
         ${renderWizardSteps(2)}
-        <div style="color:#ef4444; font-weight:700;">❌ การติดตั้งล้มเหลว:</div>
+        <div style="color:#ef4444; font-weight:700;">❌ ${t.btnUpdateApplyFailed || 'Installation Failed:'}</div>
         <div style="font-size:11px; opacity:0.8; margin-top:4px;">${err.message}</div>
       `;
       btnPerformUpdate.style.display = 'none';
       btnCancelUpdate.disabled = false;
+      btnCancelUpdate.textContent = t.btnClose || 'Close';
     }
   }
 

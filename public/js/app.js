@@ -544,14 +544,18 @@ async function checkAppUpdate() {
       const textEl = document.getElementById('update-badge-text');
       const linkEl = document.getElementById('update-badge-link');
 
+      const isEn = (window.currentLang || localStorage.getItem('nodehotkey_lang')) === 'en';
       if (container && textEl) {
-        textEl.textContent = `🚀 Update v${data.latestVersion} Available!`;
+        textEl.textContent = isEn ? `🚀 Update v${data.latestVersion} Available!` : `🚀 มีอัปเดตใหม่ v${data.latestVersion}!`;
         if (linkEl && data.repoUrl) linkEl.href = data.repoUrl;
         container.style.display = 'block';
       }
 
       if (typeof window.toast === 'function') {
-        window.toast(`🚀 GitHub Update Available: v${data.latestVersion}!`, 'info');
+        window.toast(
+          isEn ? `🚀 GitHub Update Available: v${data.latestVersion}!` : `🚀 มีอัปเดตใหม่บน GitHub: v${data.latestVersion}!`,
+          'info'
+        );
       }
     }
   } catch (e) {}
