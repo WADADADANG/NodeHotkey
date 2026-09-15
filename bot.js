@@ -866,8 +866,177 @@ function getBrowserLaunchParams(choiceStr) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// 🛡️ BROWSER CONTEXT INITIALIZATION SCRIPTS & ROOT-CAUSE ANTI-STUCK ENGINE
+// 🛡️ NATIVE CDP ANTI-STUCK ENGINE & BROWSER CONTEXT INITIALIZATION SCRIPTS
 // ═════════════════════════════════════════════════════════════════════════════
+async function releaseKeyViaCDP(clientIndex, keyInput) {
+    const targetIdx = parseInt(clientIndex, 10);
+    const page = clientPages[targetIdx];
+    if (!page) return;
+
+    let rawKey = '';
+    let info = {};
+    if (typeof keyInput === 'string') {
+        rawKey = keyInput.trim();
+        info = { code: rawKey, key: rawKey };
+    } else if (keyInput && typeof keyInput === 'object') {
+        info = keyInput;
+        rawKey = (info.code || info.key || '').trim();
+    }
+    if (!rawKey) return;
+    const upper = rawKey.toUpperCase();
+
+    // 1. Check if this key is actively held down by a "Key Hold" node action
+    const isHeldByAction = Object.keys(activeHoldStates).some(actId => {
+        const holdAct = activeActions.find(a => a.id === actId);
+        return holdAct && holdAct.targetKey && holdAct.targetKey.toUpperCase() === upper;
+    });
+    if (isHeldByAction) return;
+
+    // 2. Playwright keyboard.up fallback
+    const pwKey = formatKeyForPlaywright(rawKey);
+    try {
+        await page.keyboard.up(pwKey);
+    } catch (e) { }
+
+    // 3. Direct CDP Input.dispatchKeyEvent for 100% native isTrusted release
+    const cdp = await getCDPSession(targetIdx);
+    if (!cdp) return;
+
+    // Numpad Numbers 0 - 9
+    const numpadMatch = upper.match(/^(?:NUMPAD\s*|NUM\s*|KP_?)([0-9])$/);
+    if (numpadMatch) {
+        const digit = parseInt(numpadMatch[1], 10);
+        const numlockOnCode = 96 + digit;
+        const numlockOffMap = { 0: 45, 1: 35, 2: 40, 3: 34, 4: 37, 5: 12, 6: 39, 7: 36, 8: 38, 9: 33 };
+        const numlockOffCode = numlockOffMap[digit] || numlockOnCode;
+
+        // Release NumLock ON state
+        await cdp.send('Input.dispatchKeyEvent', {
+            type: 'keyUp',
+            key: String(digit),
+            code: `Numpad${digit}`,
+            windowsVirtualKeyCode: numlockOnCode,
+            nativeVirtualKeyCode: numlockOnCode,
+            location: 3
+        }).catch(() => { });
+
+        // Release NumLock OFF state
+        if (numlockOffCode !== numlockOnCode) {
+            await cdp.send('Input.dispatchKeyEvent', {
+                type: 'keyUp',
+                key: String(digit),
+                code: `Numpad${digit}`,
+                windowsVirtualKeyCode: numlockOffCode,
+                nativeVirtualKeyCode: numlockOffCode,
+                location: 3
+            }).catch(() => { });
+        }
+        return;
+    }
+
+    // Numpad Operators
+    const numpadOps = {
+        'NUMPAD +': { code: 'NumpadAdd', key: '+', vk: 107 },
+        'NUMPAD ADD': { code: 'NumpadAdd', key: '+', vk: 107 },
+        'NUMPAD -': { code: 'NumpadSubtract', key: '-', vk: 109 },
+        'NUMPAD SUBTRACT': { code: 'NumpadSubtract', key: '-', vk: 109 },
+        'NUMPAD *': { code: 'NumpadMultiply', key: '*', vk: 106 },
+        'NUMPAD MULTIPLY': { code: 'NumpadMultiply', key: '*', vk: 106 },
+        'NUMPAD /': { code: 'NumpadDivide', key: '/', vk: 111 },
+        'NUMPAD DIVIDE': { code: 'NumpadDivide', key: '/', vk: 111 },
+        'NUMPAD .': { code: 'NumpadDecimal', key: '.', vk: 110 },
+        'NUMPAD DECIMAL': { code: 'NumpadDecimal', key: '.', vk: 110 },
+        'NUMPAD ENTER': { code: 'NumpadEnter', key: 'Enter', vk: 13 }
+    };
+    if (numpadOps[upper]) {
+        const op = numpadOps[upper];
+        await cdp.send('Input.dispatchKeyEvent', {
+            type: 'keyUp',
+            key: op.key,
+            code: op.code,
+            windowsVirtualKeyCode: op.vk,
+            nativeVirtualKeyCode: op.vk,
+            location: 3
+        }).catch(() => { });
+        return;
+    }
+
+    // Spacebar
+    if (upper === 'SPACE' || upper === 'SPACEBAR' || rawKey === ' ') {
+        await cdp.send('Input.dispatchKeyEvent', {
+            type: 'keyUp',
+            key: ' ',
+            code: 'Space',
+            windowsVirtualKeyCode: 32,
+            nativeVirtualKeyCode: 32
+        }).catch(() => { });
+        return;
+    }
+
+    // Arrow Keys
+    const arrows = {
+        'ARROWUP': { code: 'ArrowUp', key: 'ArrowUp', vk: 38 },
+        'UP ARROW': { code: 'ArrowUp', key: 'ArrowUp', vk: 38 },
+        'UP': { code: 'ArrowUp', key: 'ArrowUp', vk: 38 },
+        'ARROWDOWN': { code: 'ArrowDown', key: 'ArrowDown', vk: 40 },
+        'DOWN ARROW': { code: 'ArrowDown', key: 'ArrowDown', vk: 40 },
+        'DOWN': { code: 'ArrowDown', key: 'ArrowDown', vk: 40 },
+        'ARROWLEFT': { code: 'ArrowLeft', key: 'ArrowLeft', vk: 37 },
+        'LEFT ARROW': { code: 'ArrowLeft', key: 'ArrowLeft', vk: 37 },
+        'LEFT': { code: 'ArrowLeft', key: 'ArrowLeft', vk: 37 },
+        'ARROWRIGHT': { code: 'ArrowRight', key: 'ArrowRight', vk: 39 },
+        'RIGHT ARROW': { code: 'ArrowRight', key: 'ArrowRight', vk: 39 },
+        'RIGHT': { code: 'ArrowRight', key: 'ArrowRight', vk: 39 }
+    };
+    if (arrows[upper]) {
+        const arr = arrows[upper];
+        await cdp.send('Input.dispatchKeyEvent', {
+            type: 'keyUp',
+            key: arr.key,
+            code: arr.code,
+            windowsVirtualKeyCode: arr.vk,
+            nativeVirtualKeyCode: arr.vk
+        }).catch(() => { });
+        return;
+    }
+
+    // General keys (W, A, S, D, 1-0, etc.)
+    if (info.keyCode || info.key) {
+        await cdp.send('Input.dispatchKeyEvent', {
+            type: 'keyUp',
+            key: info.key || pwKey,
+            code: info.code || pwKey,
+            windowsVirtualKeyCode: info.keyCode || undefined,
+            nativeVirtualKeyCode: info.keyCode || undefined
+        }).catch(() => { });
+    }
+}
+
+async function handleWindowBlurFromClient({ clientIndex, keys, buttons }) {
+    const targetIdx = parseInt(clientIndex, 10);
+    if (!clientPages[targetIdx]) return;
+
+    if (Array.isArray(keys) && keys.length > 0) {
+        for (let k of keys) {
+            await releaseKeyViaCDP(targetIdx, k);
+        }
+    }
+
+    // Release mouse buttons via CDP
+    const cdp = await getCDPSession(targetIdx);
+    if (cdp && Array.isArray(buttons) && buttons.length > 0) {
+        for (let btn of buttons) {
+            const btnName = btn === 2 ? 'right' : (btn === 1 ? 'middle' : 'left');
+            await cdp.send('Input.dispatchMouseEvent', {
+                type: 'mouseReleased',
+                button: btnName,
+                x: 100,
+                y: 100
+            }).catch(() => { });
+        }
+    }
+}
+
 function clientInPageScript({ index, initialPrefix }) {
     if (window.__nodeHotkeyAntiStuckInstalled) return;
     window.__nodeHotkeyAntiStuckInstalled = true;
@@ -959,6 +1128,21 @@ function clientInPageScript({ index, initialPrefix }) {
 
     // 4.3 Auto-release all held inputs on window blur / focus lost
     const releaseAllStuckPhysicalInputs = () => {
+        const heldKeysList = Array.from(heldPhysicalKeys.values());
+        const heldButtonsList = Array.from(heldPhysicalButtons.values());
+
+        // Instant Native CDP Release: notify Node.js bot engine to immediately dispatch keyUp via CDP (isTrusted: true)
+        if (typeof window.__nodeHotkeyOnBlur === 'function') {
+            try {
+                window.__nodeHotkeyOnBlur({
+                    clientIndex: index,
+                    keys: heldKeysList,
+                    buttons: heldButtonsList
+                }).catch(() => { });
+            } catch (e) { }
+        }
+
+        // Secondary In-Page fallback for DOM receivers
         const canvas = document.querySelector('canvas');
         const primaryTarget = canvas || document.activeElement || document.body || window;
 
@@ -1043,6 +1227,14 @@ function clientInPageScript({ index, initialPrefix }) {
 
 async function injectClientInitScripts(browserCtx, clientIndex) {
     const initialPrefix = clientAliases[String(clientIndex)] ? `[${clientAliases[String(clientIndex)]}] ` : `[Client ${clientIndex}] `;
+
+    // Expose Node.js CDP blur handler to page
+    try {
+        await browserCtx.exposeFunction('__nodeHotkeyOnBlur', async (payload) => {
+            handleWindowBlurFromClient(payload).catch(() => { });
+        });
+    } catch (e) { }
+
     await browserCtx.addInitScript(clientInPageScript, { index: clientIndex, initialPrefix });
 
     // Also immediately evaluate on any already-existing pages in the context
@@ -3868,23 +4060,11 @@ function startGlobalListeners() {
         }
 
         // 3. Global Anti-Stuck Key Watchdog:
-        // When any physical key is released anywhere in Windows, ensure all game tabs release it immediately
+        // When any physical key is released anywhere in Windows, ensure all game tabs release it immediately via native CDP
         if (isUp && e.name) {
             const rawKey = e.name.trim();
-            const pwKey = formatKeyForPlaywright(rawKey);
             for (let clientIndex of activeClients) {
-                const page = clientPages[clientIndex];
-                if (!page) continue;
-
-                // Check if this key is intentionally held down by a "Key Hold" node action
-                const isHeldByAction = Object.keys(activeHoldStates).some(actId => {
-                    const holdAct = activeActions.find(a => a.id === actId);
-                    return holdAct && holdAct.targetKey && holdAct.targetKey.toUpperCase() === rawKey.toUpperCase();
-                });
-
-                if (!isHeldByAction) {
-                    page.keyboard.up(pwKey).catch(() => {});
-                }
+                releaseKeyViaCDP(clientIndex, rawKey).catch(() => { });
             }
         }
     });

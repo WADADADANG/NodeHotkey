@@ -18,7 +18,7 @@
 
 ## 🏗️ โครงสร้างการทำงานของระบบ (Architectural Flow)
 
-ระบบนี้ถูกติดตั้งผ่าน `browserCtx.addInitScript()` ใน `bot.js` ซึ่งจะทำงานตั้งแต่ระดับ Injected JavaScript ภายในตัวเบราว์เซอร์ของแต่ละจอเกม:
+ระบบนี้ทำงานผสานกัน 2 ชั้น (Dual-Layer Defense) เพื่อการันตี 100% ว่าปุ่มและเมาส์จะถูกปลดทันที ไม่ว่าเกมจะใช้ WebGL, Emscripten หรือ HTML5 DOM:
 
 ```mermaid
 flowchart TD
@@ -27,17 +27,22 @@ flowchart TD
     Track --> Gaming[เล่นเกมตามปกติ]
     
     Gaming --> SwitchWin[ผู้ใช้สลับหน้าต่าง Alt+Tab หรือคลิกจออื่น]
-    SwitchWin --> BlurDetected[เบราว์เซอร์ส่งสัญญาณ blur / focusout / visibilitychange]
+    SwitchWin --> BlurDetected[เบราว์เซอร์ส่งสัญญาณ blur / focusout]
     
-    subgraph InPageEngine [In-Page Anti-Stuck Engine (ทำงานในระดับ DOM 0 ms)]
-        BlurDetected --> ReleaseKeys[สังเคราะห์ Synthetic KeyUp ให้ครบทุกปุ่มที่เคยกดค้าง]
-        BlurDetected --> ReleaseMouse[สังเคราะห์ Synthetic MouseUp ปล่อยปุ่มเมาส์ทุกปุ่ม]
-        BlurDetected --> ReleasePointerLock[สั่ง document.exitPointerLock ปลดล็อกมุมกล้อง]
-        BlurDetected --> ClearMem[ล้าง heldPhysicalKeys & heldPhysicalButtons]
+    subgraph Layer1 [Layer 1: Native CDP Bridge (ทำงานที่ระดับเบราว์เซอร์ Native isTrusted: true 0 ms)]
+        BlurDetected --> BridgeNotify[แจ้ง Node.js ผ่าน __nodeHotkeyOnBlur]
+        BridgeNotify --> NativeCDPRelease[ยิง Input.dispatchKeyEvent keyUp ผ่าน CDP]
+        NativeCDPRelease --> NumpadBoth[ปล่อย Numpad ทั้งโหมด NumLock ON และ OFF]
+        NativeCDPRelease --> NativeSpaceArrows[ปล่อย Space และปุ่มลูกศรทันที 0 ms]
     end
     
-    ReleaseKeys --> SafeState[ตัวละครหยุดเดินทันที]
-    ReleaseMouse --> SafeState2[เมาส์และมุมกล้องหยุดค้างทันที]
+    subgraph Layer2 [Layer 2: In-Page DOM Fallback]
+        BlurDetected --> ReleaseKeys[สังเคราะห์ Synthetic KeyUp ส่งตรงเข้า Canvas]
+        BlurDetected --> ReleaseMouse[สังเคราะห์ Synthetic MouseUp และ exitPointerLock]
+    end
+    
+    NativeCDPRelease --> SafeState[ตัวละครหยุดเดินและหยุดกระโดดทันที]
+    ReleaseKeys --> SafeState
 ```
 
 ---
