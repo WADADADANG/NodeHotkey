@@ -868,201 +868,190 @@ function getBrowserLaunchParams(choiceStr) {
 // ═════════════════════════════════════════════════════════════════════════════
 // 🛡️ BROWSER CONTEXT INITIALIZATION SCRIPTS & ROOT-CAUSE ANTI-STUCK ENGINE
 // ═════════════════════════════════════════════════════════════════════════════
+function clientInPageScript({ index, initialPrefix }) {
+    if (window.__nodeHotkeyAntiStuckInstalled) return;
+    window.__nodeHotkeyAntiStuckInstalled = true;
+
+    // 1. Webdriver evasion
+    try {
+        Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+    } catch (e) { }
+
+    // 2. Prevent mouse back/forward buttons (Mouse 4 and Mouse 5) from navigating away from the page
+    const preventMouseNav = (e) => {
+        if (e.button === 3 || e.button === 4) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    };
+    window.addEventListener('mousedown', preventMouseNav, true);
+    window.addEventListener('mouseup', preventMouseNav, true);
+    window.addEventListener('click', preventMouseNav, true);
+
+    // 3. Dynamic title observer with client prefix
+    window.__clientPrefix = initialPrefix;
+    const updateTitle = () => {
+        const prefix = window.__clientPrefix || `[Client ${index}] `;
+        const title = document.title;
+        if (title && !title.startsWith(prefix)) {
+            let cleanTitle = title;
+            if (title.includes('] ')) {
+                const parts = title.split('] ');
+                if (parts[0].startsWith('[')) {
+                    cleanTitle = parts.slice(1).join('] ');
+                }
+            }
+            document.title = prefix + cleanTitle;
+        }
+    };
+
+    const observer = new MutationObserver(updateTitle);
+    observer.observe(document.querySelector('title') || document.documentElement, {
+        subtree: true,
+        characterData: true,
+        childList: true
+    });
+    updateTitle();
+
+    // 4. 🛡️ ROOT-CAUSE ANTI-STUCK ENGINE (Auto-release physical keys and mouse buttons on window blur)
+    const heldPhysicalKeys = new Map();     // code -> { key, code, keyCode, which, location }
+    const heldPhysicalButtons = new Set();  // mouse button numbers (0: left, 1: middle, 2: right)
+    let lastMousePos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+
+    // 4.1 Track physical keyboard down/up (only e.isTrusted === true, ignores bot-injected synthetic events)
+    window.addEventListener('keydown', (e) => {
+        if (e.isTrusted) {
+            const code = e.code || `Key_${e.keyCode}`;
+            heldPhysicalKeys.set(code, {
+                key: e.key,
+                code: e.code,
+                keyCode: e.keyCode,
+                which: e.which,
+                location: e.location || 0
+            });
+        }
+    }, true);
+
+    window.addEventListener('keyup', (e) => {
+        if (e.isTrusted) {
+            const code = e.code || `Key_${e.keyCode}`;
+            heldPhysicalKeys.delete(code);
+            if (e.code) heldPhysicalKeys.delete(e.code);
+        }
+    }, true);
+
+    // 4.2 Track physical mouse down/up & position
+    window.addEventListener('mousemove', (e) => {
+        lastMousePos = { x: e.clientX, y: e.clientY };
+    }, true);
+
+    window.addEventListener('mousedown', (e) => {
+        if (e.isTrusted) {
+            heldPhysicalButtons.add(e.button);
+        }
+    }, true);
+
+    window.addEventListener('mouseup', (e) => {
+        if (e.isTrusted) {
+            heldPhysicalButtons.delete(e.button);
+        }
+    }, true);
+
+    // 4.3 Auto-release all held inputs on window blur / focus lost
+    const releaseAllStuckPhysicalInputs = () => {
+        const canvas = document.querySelector('canvas');
+        const primaryTarget = canvas || document.activeElement || document.body || window;
+
+        // Release physical keys
+        if (heldPhysicalKeys.size > 0) {
+            for (const [code, info] of heldPhysicalKeys.entries()) {
+                const isNumpad = (info.code && info.code.startsWith('Numpad')) || info.location === 3;
+                const locationVal = isNumpad ? 3 : (info.location || 0);
+
+                let keyVal = info.key;
+                let keyCodeVal = info.keyCode;
+
+                if (!keyVal) {
+                    if (info.code === 'Space') keyVal = ' ';
+                    else if (info.code && info.code.startsWith('Arrow')) keyVal = info.code;
+                    else keyVal = info.code;
+                }
+                if (!keyCodeVal) {
+                    if (info.code === 'Space') keyCodeVal = 32;
+                    else if (info.code === 'ArrowUp') keyCodeVal = 38;
+                    else if (info.code === 'ArrowDown') keyCodeVal = 40;
+                    else if (info.code === 'ArrowLeft') keyCodeVal = 37;
+                    else if (info.code === 'ArrowRight') keyCodeVal = 39;
+                }
+
+                const keyUpEvent = new KeyboardEvent('keyup', {
+                    key: keyVal,
+                    code: info.code,
+                    keyCode: keyCodeVal,
+                    which: keyCodeVal,
+                    location: locationVal,
+                    bubbles: true,
+                    cancelable: true,
+                    composed: true
+                });
+
+                try {
+                    Object.defineProperty(keyUpEvent, 'keyCode', { value: keyCodeVal, configurable: true });
+                    Object.defineProperty(keyUpEvent, 'which', { value: keyCodeVal, configurable: true });
+                    Object.defineProperty(keyUpEvent, 'location', { value: locationVal, configurable: true });
+                } catch (err) { }
+
+                try { primaryTarget.dispatchEvent(keyUpEvent); } catch (e) { }
+                if (primaryTarget !== window) {
+                    try { window.dispatchEvent(keyUpEvent); } catch (e) { }
+                }
+            }
+            heldPhysicalKeys.clear();
+        }
+
+        // Release physical mouse buttons (and exit pointer lock if any)
+        if (heldPhysicalButtons.size > 0) {
+            if (document.pointerLockElement) {
+                try { document.exitPointerLock?.(); } catch (e) { }
+            }
+            for (const button of heldPhysicalButtons) {
+                const mouseUpEvent = new MouseEvent('mouseup', {
+                    bubbles: true,
+                    cancelable: true,
+                    composed: true,
+                    button: button,
+                    buttons: 0,
+                    clientX: lastMousePos.x,
+                    clientY: lastMousePos.y
+                });
+                try { primaryTarget.dispatchEvent(mouseUpEvent); } catch (e) { }
+                if (primaryTarget !== window) {
+                    try { window.dispatchEvent(mouseUpEvent); } catch (e) { }
+                }
+            }
+            heldPhysicalButtons.clear();
+        }
+    };
+
+    window.addEventListener('blur', releaseAllStuckPhysicalInputs, true);
+    window.addEventListener('focusout', releaseAllStuckPhysicalInputs, true);
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) releaseAllStuckPhysicalInputs();
+    }, true);
+    window.addEventListener('pagehide', releaseAllStuckPhysicalInputs, true);
+}
+
 async function injectClientInitScripts(browserCtx, clientIndex) {
     const initialPrefix = clientAliases[String(clientIndex)] ? `[${clientAliases[String(clientIndex)]}] ` : `[Client ${clientIndex}] `;
+    await browserCtx.addInitScript(clientInPageScript, { index: clientIndex, initialPrefix });
 
-    await browserCtx.addInitScript(({ index, initialPrefix }) => {
-        // 1. Webdriver evasion
-        try {
-            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-        } catch (e) { }
-
-        // 2. Prevent mouse back/forward buttons (Mouse 4 and Mouse 5) from navigating away from the page
-        const preventMouseNav = (e) => {
-            if (e.button === 3 || e.button === 4) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        };
-        window.addEventListener('mousedown', preventMouseNav, true);
-        window.addEventListener('mouseup', preventMouseNav, true);
-        window.addEventListener('click', preventMouseNav, true);
-
-        // 3. Dynamic title observer with client prefix
-        window.__clientPrefix = initialPrefix;
-        const updateTitle = () => {
-            const prefix = window.__clientPrefix || `[Client ${index}] `;
-            const title = document.title;
-            if (title && !title.startsWith(prefix)) {
-                let cleanTitle = title;
-                if (title.includes('] ')) {
-                    const parts = title.split('] ');
-                    if (parts[0].startsWith('[')) {
-                        cleanTitle = parts.slice(1).join('] ');
-                    }
-                }
-                document.title = prefix + cleanTitle;
-            }
-        };
-
-        const observer = new MutationObserver(updateTitle);
-        observer.observe(document.querySelector('title') || document.documentElement, {
-            subtree: true,
-            characterData: true,
-            childList: true
-        });
-        updateTitle();
-
-        // 4. 🛡️ ROOT-CAUSE ANTI-STUCK ENGINE (Auto-release physical keys and mouse buttons on window blur)
-        const heldPhysicalKeys = new Map();     // code -> { key, code, keyCode, which, location }
-        const heldPhysicalButtons = new Set();  // mouse button numbers (0: left, 1: middle, 2: right)
-        let lastMousePos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-
-        // 4.1 Track physical keyboard down/up (only e.isTrusted === true, ignores bot-injected synthetic events)
-        window.addEventListener('keydown', (e) => {
-            if (e.isTrusted) {
-                const code = e.code || `Key_${e.keyCode}`;
-                heldPhysicalKeys.set(code, {
-                    key: e.key,
-                    code: e.code,
-                    keyCode: e.keyCode,
-                    which: e.which,
-                    location: e.location || 0
-                });
-            }
-        }, true);
-
-        window.addEventListener('keyup', (e) => {
-            if (e.isTrusted) {
-                const code = e.code || `Key_${e.keyCode}`;
-                heldPhysicalKeys.delete(code);
-                if (e.code) heldPhysicalKeys.delete(e.code);
-            }
-        }, true);
-
-        // 4.2 Track physical mouse down/up & position
-        window.addEventListener('mousemove', (e) => {
-            lastMousePos = { x: e.clientX, y: e.clientY };
-        }, true);
-
-        window.addEventListener('mousedown', (e) => {
-            if (e.isTrusted) {
-                heldPhysicalButtons.add(e.button);
-            }
-        }, true);
-
-        window.addEventListener('mouseup', (e) => {
-            if (e.isTrusted) {
-                heldPhysicalButtons.delete(e.button);
-            }
-        }, true);
-
-        // 4.3 Auto-release all held inputs on window blur / focus lost
-        const releaseAllStuckPhysicalInputs = () => {
-            // Collect all possible input receivers in the page (Crucial for WebGL Canvas games)
-            const targets = new Set();
-            document.querySelectorAll('canvas').forEach(c => targets.add(c));
-            if (document.activeElement) targets.add(document.activeElement);
-            if (document.body) targets.add(document.body);
-            targets.add(document);
-            targets.add(window);
-
-            // Release physical keys
-            if (heldPhysicalKeys.size > 0) {
-                for (const [code, info] of heldPhysicalKeys.entries()) {
-                    // Auto-detect Numpad location: Numpad keys MUST have location = 3 for game engines
-                    const isNumpad = (info.code && info.code.startsWith('Numpad')) || info.location === 3;
-                    const locationVal = isNumpad ? 3 : (info.location || 0);
-
-                    let keyVal = info.key;
-                    let keyCodeVal = info.keyCode;
-
-                    // Normalize Numpad keys
-                    if (info.code && /^Numpad[0-9]$/.test(info.code)) {
-                        const digit = info.code.replace('Numpad', '');
-                        keyVal = digit;
-                        keyCodeVal = 96 + parseInt(digit, 10);
-                    } else if (info.code === 'NumpadDecimal') {
-                        keyVal = '.';
-                        keyCodeVal = 110;
-                    } else if (info.code === 'NumpadAdd') {
-                        keyVal = '+';
-                        keyCodeVal = 107;
-                    } else if (info.code === 'NumpadSubtract') {
-                        keyVal = '-';
-                        keyCodeVal = 109;
-                    } else if (info.code === 'NumpadMultiply') {
-                        keyVal = '*';
-                        keyCodeVal = 106;
-                    } else if (info.code === 'NumpadDivide') {
-                        keyVal = '/';
-                        keyCodeVal = 111;
-                    } else if (info.code === 'NumpadEnter') {
-                        keyVal = 'Enter';
-                        keyCodeVal = 13;
-                    }
-                    // Normalize Arrow Keys
-                    else if (info.code === 'ArrowUp') { keyVal = 'ArrowUp'; keyCodeVal = 38; }
-                    else if (info.code === 'ArrowDown') { keyVal = 'ArrowDown'; keyCodeVal = 40; }
-                    else if (info.code === 'ArrowLeft') { keyVal = 'ArrowLeft'; keyCodeVal = 37; }
-                    else if (info.code === 'ArrowRight') { keyVal = 'ArrowRight'; keyCodeVal = 39; }
-                    // Normalize Spacebar
-                    else if (info.code === 'Space') { keyVal = ' '; keyCodeVal = 32; }
-
-                    const keyUpEvent = new KeyboardEvent('keyup', {
-                        key: keyVal || info.key,
-                        code: info.code,
-                        keyCode: keyCodeVal || info.keyCode,
-                        which: keyCodeVal || info.which || info.keyCode,
-                        location: locationVal,
-                        bubbles: true,
-                        cancelable: true,
-                        composed: true
-                    });
-
-                    try {
-                        Object.defineProperty(keyUpEvent, 'keyCode', { value: keyCodeVal || info.keyCode, configurable: true });
-                        Object.defineProperty(keyUpEvent, 'which', { value: keyCodeVal || info.which || info.keyCode, configurable: true });
-                        Object.defineProperty(keyUpEvent, 'location', { value: locationVal, configurable: true });
-                    } catch (err) { }
-
-                    targets.forEach(t => {
-                        try { t.dispatchEvent(keyUpEvent); } catch (e) { }
-                    });
-                }
-                heldPhysicalKeys.clear();
-            }
-
-            // Release physical mouse buttons (and exit pointer lock if any)
-            if (heldPhysicalButtons.size > 0) {
-                if (document.pointerLockElement) {
-                    try { document.exitPointerLock?.(); } catch (e) { }
-                }
-                for (const button of heldPhysicalButtons) {
-                    const mouseUpEvent = new MouseEvent('mouseup', {
-                        bubbles: true,
-                        cancelable: true,
-                        composed: true,
-                        button: button,
-                        buttons: 0,
-                        clientX: lastMousePos.x,
-                        clientY: lastMousePos.y
-                    });
-                    targets.forEach(t => {
-                        try { t.dispatchEvent(mouseUpEvent); } catch (e) { }
-                    });
-                }
-                heldPhysicalButtons.clear();
-            }
-        };
-
-        window.addEventListener('blur', releaseAllStuckPhysicalInputs, true);
-        window.addEventListener('focusout', releaseAllStuckPhysicalInputs, true);
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) releaseAllStuckPhysicalInputs();
-        }, true);
-        window.addEventListener('pagehide', releaseAllStuckPhysicalInputs, true);
-    }, { index: clientIndex, initialPrefix });
+    // Also immediately evaluate on any already-existing pages in the context
+    try {
+        const pages = browserCtx.pages();
+        for (let p of pages) {
+            p.evaluate(clientInPageScript, { index: clientIndex, initialPrefix }).catch(() => {});
+        }
+    } catch (e) { }
 }
 
 async function launchBrowser(activeClientsList, choice) {
@@ -1594,6 +1583,10 @@ async function findAndAttachTabForClient(clientIndex, browserCtx) {
                 delete clientCDPSessions[clientIndex];
                 console.log(`\n[System] ✅ [Client ${clientIndex}] Game tab detected! Target locked: "${await foundPage.title()}"`);
 
+                // Ensure In-Page Anti-Stuck Engine is running immediately on attached tab
+                const initialPrefix = clientAliases[String(clientIndex)] ? `[${clientAliases[String(clientIndex)]}] ` : `[Client ${clientIndex}] `;
+                foundPage.evaluate(clientInPageScript, { index: clientIndex, initialPrefix }).catch(() => {});
+
                 foundPage.removeAllListeners('close');
                 foundPage.removeAllListeners('crash');
 
@@ -1730,7 +1723,7 @@ async function initSystem() {
 
 function normalizeKeyName(keyName) {
     if (!keyName) return '';
-    const u = keyName.trim().toUpperCase();
+    let u = keyName.trim().toUpperCase();
     if (u === 'INS' || u === 'INSERT') return 'INSERT';
     if (u === 'ESC' || u === 'ESCAPE') return 'ESCAPE';
     if (u === 'DEL' || u === 'DELETE') return 'DELETE';
@@ -1742,6 +1735,17 @@ function normalizeKeyName(keyName) {
     if (u === 'SCRLK' || u === 'SCROLLLOCK' || u === 'SCROLL LOCK') return 'SCROLLLOCK';
     if (u === 'PAUSE' || u === 'PAUSE BREAK') return 'PAUSE';
     if (u === 'NUM' || u === 'NUMLOCK' || u === 'NUM LOCK') return 'NUMLOCK';
+    if (u === 'CAPS' || u === 'CAPSLOCK' || u === 'CAPS LOCK') return 'CAPSLOCK';
+    if (u === 'SPACE' || u === 'SPACEBAR' || u === 'SPACE BAR') return 'SPACE';
+    if (u === 'UP' || u === 'UP ARROW' || u === 'ARROWUP' || u === 'ARROW UP') return 'UP ARROW';
+    if (u === 'DOWN' || u === 'DOWN ARROW' || u === 'ARROWDOWN' || u === 'ARROW DOWN') return 'DOWN ARROW';
+    if (u === 'LEFT' || u === 'LEFT ARROW' || u === 'ARROWLEFT' || u === 'ARROW LEFT') return 'LEFT ARROW';
+    if (u === 'RIGHT' || u === 'RIGHT ARROW' || u === 'ARROWRIGHT' || u === 'ARROW RIGHT') return 'RIGHT ARROW';
+
+    const numpadMatch = u.match(/^(?:NUMPAD\s*|NUM\s*|KP_?)([0-9])$/);
+    if (numpadMatch) {
+        return `NUMPAD ${numpadMatch[1]}`;
+    }
     return u;
 }
 
@@ -1810,7 +1814,8 @@ function matchKeyTrigger(triggerValue, eventKeyName, downState, isUp = false) {
 
 function formatKeyForPlaywright(keyStr) {
     if (!keyStr) return '1';
-    const parts = keyStr.split('+').map(s => s.trim());
+    let sanitized = keyStr.replace(/NUMPAD\s*\+/gi, 'NumpadAdd').replace(/NUMPAD\s*PLUS/gi, 'NumpadAdd');
+    const parts = sanitized.split('+').map(s => s.trim());
 
     const mappedParts = parts.map(p => {
         const u = p.toUpperCase();
@@ -1826,8 +1831,36 @@ function formatKeyForPlaywright(keyStr) {
         if (u === 'PGDN' || u === 'PAGEDOWN' || u === 'PAGE DOWN') return 'PageDown';
         if (u === 'PRTSC' || u === 'PRINTSCREEN' || u === 'PRINT SCREEN') return 'PrintScreen';
         if (u === 'SCRLK' || u === 'SCROLLLOCK' || u === 'SCROLL LOCK') return 'ScrollLock';
-        if (u === 'PAUSE') return 'Pause';
+        if (u === 'PAUSE' || u === 'PAUSE BREAK') return 'Pause';
         if (u === 'NUM' || u === 'NUMLOCK' || u === 'NUM LOCK') return 'NumLock';
+        if (u === 'CAPS' || u === 'CAPSLOCK' || u === 'CAPS LOCK') return 'CapsLock';
+        if (u === 'TAB') return 'Tab';
+        if (u === 'HOME') return 'Home';
+        if (u === 'END') return 'End';
+
+        // Space
+        if (u === 'SPACE' || u === 'SPACEBAR' || u === 'SPACE BAR' || u === ' ') return 'Space';
+
+        // Arrow Keys
+        if (u === 'UP' || u === 'UP ARROW' || u === 'ARROWUP' || u === 'ARROW UP') return 'ArrowUp';
+        if (u === 'DOWN' || u === 'DOWN ARROW' || u === 'ARROWDOWN' || u === 'ARROW DOWN') return 'ArrowDown';
+        if (u === 'LEFT' || u === 'LEFT ARROW' || u === 'ARROWLEFT' || u === 'ARROW LEFT') return 'ArrowLeft';
+        if (u === 'RIGHT' || u === 'RIGHT ARROW' || u === 'ARROWRIGHT' || u === 'ARROW RIGHT') return 'ArrowRight';
+
+        // Numpad Numbers 0 - 9
+        const numpadMatch = u.match(/^(?:NUMPAD\s*|NUM\s*|KP_?)([0-9])$/);
+        if (numpadMatch) {
+            return `Numpad${numpadMatch[1]}`;
+        }
+
+        // Numpad Operators
+        if (u === 'NUMPAD +' || u === 'NUMPAD ADD' || u === 'NUMPADADD' || u === 'KP_ADD' || u === 'NUMPADADD') return 'NumpadAdd';
+        if (u === 'NUMPAD -' || u === 'NUMPAD SUBTRACT' || u === 'NUMPADSUBTRACT' || u === 'KP_SUBTRACT') return 'NumpadSubtract';
+        if (u === 'NUMPAD *' || u === 'NUMPAD MULTIPLY' || u === 'NUMPADMULTIPLY' || u === 'KP_MULTIPLY') return 'NumpadMultiply';
+        if (u === 'NUMPAD /' || u === 'NUMPAD DIVIDE' || u === 'NUMPADDIVIDE' || u === 'KP_DIVIDE') return 'NumpadDivide';
+        if (u === 'NUMPAD .' || u === 'NUMPAD DECIMAL' || u === 'NUMPADDECIMAL' || u === 'KP_DECIMAL') return 'NumpadDecimal';
+        if (u === 'NUMPAD ENTER' || u === 'NUMPADENTER' || u === 'KP_ENTER') return 'NumpadEnter';
+
         return p;
     });
     return mappedParts.join('+');

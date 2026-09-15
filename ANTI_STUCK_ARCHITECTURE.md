@@ -69,15 +69,10 @@ window.addEventListener('mouseup', (e) => {
 
 // 3. ปลดล็อกทันทีเมื่อหน้าต่างสูญเสียโฟกัส (Window Blur / Tab Switch)
 const releaseAllStuckPhysicalInputs = () => {
-    // รวบรวม Target ทุกจุดในหน้าจอ (เน้นส่งตรงเข้า WebGL Canvas ทุกตัว)
-    const targets = new Set();
-    document.querySelectorAll('canvas').forEach(c => targets.add(c));
-    if (document.activeElement) targets.add(document.activeElement);
-    if (document.body) targets.add(document.body);
-    targets.add(document);
-    targets.add(window);
+    const canvas = document.querySelector('canvas');
+    const primaryTarget = canvas || document.activeElement || document.body || window;
 
-    // 3.1 ยิง KeyUp ให้ครบทุกปุ่มที่ค้าง (ครอบคลุม A-Z, 0-9 แถวบน, Numpad, ลูกศร, Space)
+    // 3.1 ยิง KeyUp ให้ครบทุกปุ่มที่ค้าง (รักษา Key / KeyCode ดั้งเดิม 100% พร้อม location = 3 สำหรับ Numpad)
     if (heldPhysicalKeys.size > 0) {
         for (const [code, info] of heldPhysicalKeys.entries()) {
             const isNumpad = (info.code && info.code.startsWith('Numpad')) || info.location === 3;
@@ -86,24 +81,24 @@ const releaseAllStuckPhysicalInputs = () => {
             let keyVal = info.key;
             let keyCodeVal = info.keyCode;
 
-            // Normalize Numpad Keys (ส่ง location: 3 ให้เกมจำแนก Numpad ถูกต้อง)
-            if (info.code && /^Numpad[0-9]$/.test(info.code)) {
-                const digit = info.code.replace('Numpad', '');
-                keyVal = digit;
-                keyCodeVal = 96 + parseInt(digit, 10);
+            if (!keyVal) {
+                if (info.code === 'Space') keyVal = ' ';
+                else if (info.code && info.code.startsWith('Arrow')) keyVal = info.code;
+                else keyVal = info.code;
             }
-            // Normalize Arrow Keys & Spacebar
-            else if (info.code === 'ArrowUp') { keyVal = 'ArrowUp'; keyCodeVal = 38; }
-            else if (info.code === 'ArrowDown') { keyVal = 'ArrowDown'; keyCodeVal = 40; }
-            else if (info.code === 'ArrowLeft') { keyVal = 'ArrowLeft'; keyCodeVal = 37; }
-            else if (info.code === 'ArrowRight') { keyVal = 'ArrowRight'; keyCodeVal = 39; }
-            else if (info.code === 'Space') { keyVal = ' '; keyCodeVal = 32; }
+            if (!keyCodeVal) {
+                if (info.code === 'Space') keyCodeVal = 32;
+                else if (info.code === 'ArrowUp') keyCodeVal = 38;
+                else if (info.code === 'ArrowDown') keyCodeVal = 40;
+                else if (info.code === 'ArrowLeft') keyCodeVal = 37;
+                else if (info.code === 'ArrowRight') keyCodeVal = 39;
+            }
 
             const keyUpEvent = new KeyboardEvent('keyup', {
-                key: keyVal || info.key,
+                key: keyVal,
                 code: info.code,
-                keyCode: keyCodeVal || info.keyCode,
-                which: keyCodeVal || info.which || info.keyCode,
+                keyCode: keyCodeVal,
+                which: keyCodeVal,
                 location: locationVal,
                 bubbles: true,
                 cancelable: true,
@@ -111,14 +106,15 @@ const releaseAllStuckPhysicalInputs = () => {
             });
 
             try {
-                Object.defineProperty(keyUpEvent, 'keyCode', { value: keyCodeVal || info.keyCode, configurable: true });
-                Object.defineProperty(keyUpEvent, 'which', { value: keyCodeVal || info.which || info.keyCode, configurable: true });
+                Object.defineProperty(keyUpEvent, 'keyCode', { value: keyCodeVal, configurable: true });
+                Object.defineProperty(keyUpEvent, 'which', { value: keyCodeVal, configurable: true });
                 Object.defineProperty(keyUpEvent, 'location', { value: locationVal, configurable: true });
             } catch (err) { }
 
-            targets.forEach(t => {
-                try { t.dispatchEvent(keyUpEvent); } catch (e) { }
-            });
+            try { primaryTarget.dispatchEvent(keyUpEvent); } catch (e) { }
+            if (primaryTarget !== window) {
+                try { window.dispatchEvent(keyUpEvent); } catch (e) { }
+            }
         }
         heldPhysicalKeys.clear();
     }
@@ -138,9 +134,10 @@ const releaseAllStuckPhysicalInputs = () => {
                 clientX: lastMousePos.x,
                 clientY: lastMousePos.y
             });
-            targets.forEach(t => {
-                try { t.dispatchEvent(mouseUpEvent); } catch (e) { }
-            });
+            try { primaryTarget.dispatchEvent(mouseUpEvent); } catch (e) { }
+            if (primaryTarget !== window) {
+                try { window.dispatchEvent(mouseUpEvent); } catch (e) { }
+            }
         }
         heldPhysicalButtons.clear();
     }
