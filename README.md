@@ -1,6 +1,9 @@
-# 🚀 NodeHotkey (v3.0.0) - Node-Based Visual Workflow Automation Suite - Background WebGL Multi-Client Automation Suite
+# 🚀 NodeHotkey (v3.1.0) - Node-Based Visual Workflow Automation Suite - Background WebGL Multi-Client Automation Suite
 
 เครื่องมืออัตโนมัติช่วยกดปุ่มคีย์บอร์ดและเมาส์ในเบราว์เซอร์แบบพื้นหลัง (Background Automation) ออกแบบมาสำหรับเกม HTML5 / WebGL เช่น **Flyff Universe** รองรับหลายจอพร้อมกัน ไม่แย่งเมาส์ ไม่กวนการทำงานของคอมพิวเตอร์
+
+> 🧭 **แผนผังและสถาปัตยกรรมระบบ (System Architecture & Dev Guide):**  
+> ศึกษาการทำงานของโหนด, สายไฟ Wires, Bot Engine และโครงสร้างโปรเจกต์ฉบับเต็มได้ที่ [docs/SYSTEM_ARCHITECTURE.md](docs/SYSTEM_ARCHITECTURE.md)
 
 ---
 
