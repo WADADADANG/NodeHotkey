@@ -868,6 +868,8 @@ function getBrowserLaunchParams(choiceStr) {
 // ═════════════════════════════════════════════════════════════════════════════
 // 🛡️ NATIVE CDP ANTI-STUCK ENGINE & BROWSER CONTEXT INITIALIZATION SCRIPTS
 // ═════════════════════════════════════════════════════════════════════════════
+const physicallyPressedKeys = new Set();
+
 async function releaseKeyViaCDP(clientIndex, keyInput) {
     const targetIdx = parseInt(clientIndex, 10);
     const page = clientPages[targetIdx];
@@ -1000,7 +1002,36 @@ async function releaseKeyViaCDP(clientIndex, keyInput) {
         return;
     }
 
-    // General keys (W, A, S, D, 1-0, etc.)
+    // Single Alphabet Keys (A-Z, W, A, S, D, etc.)
+    const letterMatch = upper.match(/^[A-Z]$/);
+    if (letterMatch) {
+        const charCode = upper.charCodeAt(0);
+        await cdp.send('Input.dispatchKeyEvent', {
+            type: 'keyUp',
+            key: upper.toLowerCase(),
+            code: `Key${upper}`,
+            windowsVirtualKeyCode: charCode,
+            nativeVirtualKeyCode: charCode
+        }).catch(() => { });
+        return;
+    }
+
+    // Number Row Digits (0-9)
+    const digitMatch = upper.match(/^(?:KEY|DIGIT)?([0-9])$/);
+    if (digitMatch) {
+        const d = digitMatch[1];
+        const charCode = 48 + parseInt(d, 10);
+        await cdp.send('Input.dispatchKeyEvent', {
+            type: 'keyUp',
+            key: d,
+            code: `Digit${d}`,
+            windowsVirtualKeyCode: charCode,
+            nativeVirtualKeyCode: charCode
+        }).catch(() => { });
+        return;
+    }
+
+    // General keys fallback
     if (info.keyCode || info.key) {
         await cdp.send('Input.dispatchKeyEvent', {
             type: 'keyUp',
@@ -1012,20 +1043,52 @@ async function releaseKeyViaCDP(clientIndex, keyInput) {
     }
 }
 
+async function releaseAllStuckKeysForClient(clientIndex) {
+    const targetIdx = parseInt(clientIndex, 10);
+    if (!clientPages[targetIdx]) return;
+
+    // 1. Release keys currently tracked as physically pressed
+    if (physicallyPressedKeys.size > 0) {
+        for (let k of physicallyPressedKeys) {
+            await releaseKeyViaCDP(targetIdx, k);
+        }
+    }
+
+    // 2. Comprehensive defensive sweep for all critical movement & action keys
+    const criticalActionKeys = [
+        'Space',
+        'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+        'W', 'A', 'S', 'D',
+        'Numpad0', 'Numpad1', 'Numpad2', 'Numpad3', 'Numpad4',
+        'Numpad5', 'Numpad6', 'Numpad7', 'Numpad8', 'Numpad9',
+        'NumpadAdd', 'NumpadSubtract', 'NumpadMultiply', 'NumpadDivide', 'NumpadDecimal', 'NumpadEnter'
+    ];
+    for (let k of criticalActionKeys) {
+        await releaseKeyViaCDP(targetIdx, k);
+    }
+}
+
 async function handleWindowBlurFromClient({ clientIndex, keys, buttons }) {
     const targetIdx = parseInt(clientIndex, 10);
     if (!clientPages[targetIdx]) return;
 
+    console.log(`[Anti-Stuck] 🛡️ [Client ${targetIdx}] Focus lost / window blur detected! Auto-releasing all held inputs via native CDP...`);
+
+    // 1. Release keys sent from page
     if (Array.isArray(keys) && keys.length > 0) {
         for (let k of keys) {
             await releaseKeyViaCDP(targetIdx, k);
         }
     }
 
-    // Release mouse buttons via CDP
+    // 2. Comprehensive defensive sweep of all tracked physical keys and movement keys
+    await releaseAllStuckKeysForClient(targetIdx);
+
+    // 3. Release mouse buttons via CDP
     const cdp = await getCDPSession(targetIdx);
-    if (cdp && Array.isArray(buttons) && buttons.length > 0) {
-        for (let btn of buttons) {
+    if (cdp) {
+        const btnList = (Array.isArray(buttons) && buttons.length > 0) ? buttons : [0, 1, 2];
+        for (let btn of btnList) {
             const btnName = btn === 2 ? 'right' : (btn === 1 ? 'middle' : 'left');
             await cdp.send('Input.dispatchMouseEvent', {
                 type: 'mouseReleased',
@@ -1223,6 +1286,13 @@ function clientInPageScript({ index, initialPrefix }) {
         if (document.hidden) releaseAllStuckPhysicalInputs();
     }, true);
     window.addEventListener('pagehide', releaseAllStuckPhysicalInputs, true);
+
+    // 4.4 High-frequency OS Window Defocus Sentinel (Instantly detects window defocus at 50ms when user clicks another program)
+    setInterval(() => {
+        if (!document.hasFocus() && (heldPhysicalKeys.size > 0 || heldPhysicalButtons.size > 0)) {
+            releaseAllStuckPhysicalInputs();
+        }
+    }, 50);
 }
 
 async function injectClientInitScripts(browserCtx, clientIndex) {
@@ -3931,6 +4001,24 @@ function startGlobalListeners() {
         mouseEvents = require('global-mouse-events');
         if (mouseEvents && typeof mouseEvents.on === 'function') {
             mouseEvents.on('mousedown', (event) => {
+                // Check if user clicked outside the active game window while keys are pressed
+                if (physicallyPressedKeys.size > 0 && typeof event.x === 'number' && typeof event.y === 'number') {
+                    for (let clientIndex of activeClients) {
+                        const bounds = clientWindowBounds[String(clientIndex)];
+                        if (bounds && bounds.width && bounds.height) {
+                            const inside = (
+                                event.x >= bounds.x &&
+                                event.x <= bounds.x + bounds.width &&
+                                event.y >= bounds.y &&
+                                event.y <= bounds.y + bounds.height
+                            );
+                            if (!inside) {
+                                releaseAllStuckKeysForClient(clientIndex).catch(() => { });
+                            }
+                        }
+                    }
+                }
+
                 if (global.isSuspended) return;
 
                 // Find matching actions
@@ -3957,6 +4045,25 @@ function startGlobalListeners() {
         const isDown = e.state === "DOWN";
         const isUp = e.state === "UP";
         if (!isDown && !isUp) return;
+
+        // Track global physical key state for anti-stuck watchdog
+        if (e.name) {
+            const upperKey = e.name.trim().toUpperCase();
+            if (isDown) {
+                physicallyPressedKeys.add(upperKey);
+            } else if (isUp) {
+                physicallyPressedKeys.delete(upperKey);
+            }
+        }
+
+        // Instant OS-level window switch detection (Alt+Tab / Win key)
+        const isAltTab = (e.name === 'TAB' && (down['LEFT ALT'] || down['RIGHT ALT']));
+        const isMetaKey = (e.name === 'LEFT META' || e.name === 'RIGHT META' || e.name === 'WINDOWS');
+        if (isDown && (isAltTab || isMetaKey)) {
+            for (let clientIndex of activeClients) {
+                releaseAllStuckKeysForClient(clientIndex).catch(() => { });
+            }
+        }
 
         // Handle global suspend hotkey toggle
         if (isDown && suspendHotkey && e.name && matchKeyTrigger(suspendHotkey, e.name, down, false)) {
