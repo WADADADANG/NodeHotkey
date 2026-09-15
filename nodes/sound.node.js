@@ -34,18 +34,18 @@ module.exports = {
     const volume = action.volume !== undefined ? parseInt(action.volume, 10) : 100;
 
     if (volume <= 0) {
-      console.log(`🔊 [Sound Node] "${action.name}" skipped (Volume: 0%)`);
+      console.log(`[Sound Node] "${action.name}" skipped (Volume: 0%)`);
       if (typeof global.fireChain === 'function') {
         await global.fireChain(action, 'onFired', callStack);
       }
       return true;
     }
 
-    console.log(`🔊 [Sound Node] Playing: "${action.name}" (Type: ${source}, Preset: ${preset}, Vol: ${volume}%)`);
+    console.log(`[Sound Node] Playing: "${action.name}" (Type: ${source}, Preset: ${preset}, Vol: ${volume}%)`);
     if (typeof global.playNativeSound === 'function') {
       global.playNativeSound(preset, url, file, repeat, volume, 'sfx', action.interrupt !== false);
     } else {
-      console.warn('⚠️ [Sound Node] global.playNativeSound is not initialized.');
+      console.warn('[Sound Node] global.playNativeSound is not initialized.');
     }
 
     if (typeof global.fireChain === 'function') {

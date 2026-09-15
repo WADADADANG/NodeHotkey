@@ -22,7 +22,7 @@ module.exports = {
     if (global.isSuspended) return false;
 
     const delay = action.delayMs !== undefined ? parseInt(action.delayMs, 10) : (action.delayBuff || 1000);
-    console.log(`⏳ [Delay Node] Started: "${action.name || 'Delay'}" (Waiting ${delay}ms)...`);
+    console.log(`[Delay Node] Started: "${action.name || 'Delay'}" (Waiting ${delay}ms)...`);
 
     if (typeof global.fireChain === 'function') {
       await global.fireChain(action, 'onBeforeStart', callStack);
@@ -32,7 +32,7 @@ module.exports = {
       await new Promise(res => setTimeout(res, delay));
     }
 
-    console.log(`⏳ [Delay Node] Finished: "${action.name || 'Delay'}" (${delay}ms complete)`);
+    console.log(`[Delay Node] Finished: "${action.name || 'Delay'}" (${delay}ms complete)`);
 
     if (typeof global.fireChain === 'function') {
       await global.fireChain(action, 'onComplete', callStack);

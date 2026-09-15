@@ -40,7 +40,7 @@ async function runPartyScannerAction(action, callStack) {
     const showOverlay = action.showOverlay !== false;
 
     if (!page || (typeof page.isClosed === 'function' && page.isClosed())) {
-        console.warn(`⚠️ [PartyScanner] Client ${targetClientId} is not active or closed.`);
+        console.warn(`[PartyScanner] Client ${targetClientId} is not active or closed.`);
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
@@ -48,12 +48,12 @@ async function runPartyScannerAction(action, callStack) {
     }
 
     try {
-        // สแกนหน้าจอสด 1 รอบผ่าน VisionService และเก็บแคชไว้ส่วนกลาง
+        // Scan live page once via VisionService
         const readNames = action.readNames !== false;
         const partyState = await visionService.scanClientPage(page, targetClientId, action.scanRegion, { readNames });
 
         if (!partyState || !Array.isArray(partyState.members) || partyState.members.length === 0) {
-            console.warn(`⚠️ [PartyScanner] Client ${targetClientId}: ไม่พบหน้าต่างปาร์ตี้บนจอ`);
+            console.warn(`[PartyScanner] Client ${targetClientId}: Party window not found on screen.`);
             visionService.saveVisionDebugDump(targetClientId, 'party_not_found').catch(() => {});
             if (showOverlay && visionService.VisualOverlay) {
                 await visionService.VisualOverlay.clear(page).catch(() => {});
@@ -64,12 +64,12 @@ async function runPartyScannerAction(action, callStack) {
             return;
         }
 
-        // วาด HUD Overlay หากเปิดไว้
+        // Render HUD overlay if enabled
         if (showOverlay && visionService.VisualOverlay) {
             await visionService.VisualOverlay.render(page, partyState);
         }
 
-        // เตรียมข้อมูลผลลัพธ์ Data Outputs
+        // Prepare data outputs
         const count = partyState.members.length;
         const namesList = partyState.members.map(m => m.name || `Slot_${m.slot}`);
         const namesStr = namesList.join(', ');
@@ -78,9 +78,9 @@ async function runPartyScannerAction(action, callStack) {
             const statusStr = m.statusCode === 'active' ? '' : ` [${m.statusCode}]`;
             return `Slot ${m.slot}: ${m.name || 'Slot_' + m.slot} (${hpStr}${statusStr})`;
         });
-        const summaryInfo = `สแกนพบ ${count} คน: ${memberSummaries.join(', ')}`;
+        const summaryInfo = `Found ${count} members: ${memberSummaries.join(', ')}`;
 
-        // กำหนดข้อมูล Data Outputs ลงใน Action Object สำหรับเชื่อมต่อ Data Wires
+        // Set action properties for data wire routing
         action.names_out = namesStr;
         action.count_out = count;
         action.info_out = summaryInfo;
@@ -89,9 +89,9 @@ async function runPartyScannerAction(action, callStack) {
         action.value = summaryInfo;
         action.members_out = partyState.members;
 
-        console.log(`👁️ [PartyScanner] Client ${targetClientId}: ${summaryInfo}`);
+        console.log(`[PartyScanner] Client ${targetClientId}: ${summaryInfo}`);
 
-        // ตรวจสอบว่ามีคนเลือดต่ำกว่าเกณฑ์หรือไม่ เพื่อส่งสัญญาณ onLowHp
+        // Check low HP members to trigger onLowHp signal
         const lowHpThresh = parseInt(action.lowHpThreshold, 10) || 70;
         const lowHpMembers = partyState.members.filter(m => m.isAlive && m.hpPercent !== null && m.hpPercent <= lowHpThresh);
 
@@ -102,7 +102,7 @@ async function runPartyScannerAction(action, callStack) {
             }
         }
     } catch (err) {
-        console.error(`❌ [PartyScanner Error] Client ${targetClientId}:`, err.message);
+        console.error(`[PartyScanner Error] Client ${targetClientId}:`, err.message);
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
@@ -121,7 +121,7 @@ async function runSelectPartySlotAction(action, callStack) {
     const showOverlay = action.showOverlay !== false;
 
     if (!page || (typeof page.isClosed === 'function' && page.isClosed())) {
-        console.warn(`⚠️ [SelectPartySlot] Client ${targetClientId} is not active or closed.`);
+        console.warn(`[SelectPartySlot] Client ${targetClientId} is not active or closed.`);
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
@@ -132,14 +132,14 @@ async function runSelectPartySlotAction(action, callStack) {
     const slotIndex = Math.max(0, targetSlotNum - 1);
     const delayAfterClick = parseInt(action.delayAfterClick, 10) || 80;
 
-    // ตรวจสอบแคชกลางก่อน หากมีแคชสดใหม่ไม่เกิน 2000ms ใช้งานได้ทันที ไม่ต้องแคปเจอร์จอใหม่
+    // Check central cache first
     let partyState = visionService.getLatestPartyState(targetClientId);
     if (!partyState || !Array.isArray(partyState.members) || partyState.members.length <= slotIndex || (Date.now() - (partyState.timestamp || 0)) > 2000) {
         partyState = await visionService.scanClientPage(page, targetClientId);
     }
 
     if (!partyState || !Array.isArray(partyState.members) || partyState.members.length === 0) {
-        console.warn(`⚠️ [SelectPartySlot] Client ${targetClientId}: ไม่พบหน้าต่างปาร์ตี้บนจอ`);
+        console.warn(`[SelectPartySlot] Client ${targetClientId}: Party window not found on screen.`);
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
@@ -154,9 +154,9 @@ async function runSelectPartySlotAction(action, callStack) {
         return;
     }
 
-    console.log(`🎯 [SelectPartySlot] Client ${targetClientId}: คลิกเลือก Slot ${targetSlotNum} ที่พิกัด (${target.click.x}, ${target.click.y})`);
+    console.log(`[SelectPartySlot] Client ${targetClientId}: Selected Slot ${targetSlotNum} at (${target.click.x}, ${target.click.y})`);
 
-    // วาดเป้าหมายจุดคลิกบนหน้าจอเกม
+    // Draw click target on game overlay
     if (showOverlay && visionService.VisualOverlay) {
         await visionService.VisualOverlay.render(page, {
             ...partyState,
@@ -164,10 +164,10 @@ async function runSelectPartySlotAction(action, callStack) {
         });
     }
 
-    // คลิกเลือก Slot นั้น
+    // Click on target slot
     await simulateRealisticClick(page, target.click.x, target.click.y);
 
-    // สะบัดเมาส์หลบออกไปทางขวา 250px ป้องกัน Tooltip เด้งค้าง
+    // Flick mouse cursor away by 250px to prevent tooltip staying open
     try {
         await page.mouse.move(target.click.x + 250, target.click.y);
     } catch (e) {}
@@ -176,7 +176,7 @@ async function runSelectPartySlotAction(action, callStack) {
         await new Promise(r => setTimeout(r, delayAfterClick));
     }
 
-    // ส่งสัญญาณต่อไปยัง Action ถัดไป (เช่น Key Press ปุ่ม Z เพื่อเดินตาม)
+    // Trigger subsequent execution flow
     if (typeof global.fireChain === 'function') {
         await global.fireChain(action, 'next', callStack);
         await global.fireChain(action, 'onSelected', callStack);
@@ -186,7 +186,7 @@ async function runSelectPartySlotAction(action, callStack) {
 
 /**
  * 3. runPartyHealAction (Consumer Action)
- * คลิกเลือกสมาชิกที่มีเลือดต่ำสุดที่ <= เกณฑ์ เพื่อส่งสัญญาณยิงสกิลฮีล
+ * Click lowest HP member <= threshold to trigger healing skill
  */
 async function runPartyHealAction(action, callStack) {
     if (global.isSuspended) return;
@@ -196,7 +196,7 @@ async function runPartyHealAction(action, callStack) {
     const showOverlay = action.showOverlay !== false;
 
     if (!page || (typeof page.isClosed === 'function' && page.isClosed())) {
-        console.warn(`⚠️ [PartyHeal] Client ${targetClientId} is not active or closed.`);
+        console.warn(`[PartyHeal] Client ${targetClientId} is not active or closed.`);
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
@@ -206,36 +206,33 @@ async function runPartyHealAction(action, callStack) {
     const lowHpThreshold = parseInt(action.lowHpThreshold, 10) || 70;
     const delayAfterClick = parseInt(action.delayAfterClick, 10) || 80;
 
-    // ตรวจสอบแคชกลางก่อน
     let partyState = visionService.getLatestPartyState(targetClientId);
     if (!partyState || !Array.isArray(partyState.members) || (Date.now() - (partyState.timestamp || 0)) > 1500) {
         partyState = await visionService.scanClientPage(page, targetClientId);
     }
 
     if (!partyState || !Array.isArray(partyState.members) || partyState.members.length === 0) {
-        console.warn(`⚠️ [PartyHeal] Client ${targetClientId}: ไม่พบสมาชิกปาร์ตี้`);
+        console.warn(`[PartyHeal] Client ${targetClientId}: No party members found.`);
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
         return;
     }
 
-    // ค้นหาเฉพาะคนที่ยังมีชีวิตอยู่และเลือดต่ำกว่าเกณฑ์
+    // Find damaged members
     const damagedMembers = partyState.members.filter(m => m.isAlive && m.hpPercent !== null && m.hpPercent <= lowHpThreshold);
 
     if (damagedMembers.length === 0) {
-        // ทุกคนเลือดปกติ/ปลอดภัย ไม่ต้องทำอะไร
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onNoTarget', callStack);
         }
         return;
     }
 
-    // เรียงหาคนที่เลือดน้อยที่สุด
     damagedMembers.sort((a, b) => (a.hpPercent ?? 100) - (b.hpPercent ?? 100));
     const target = damagedMembers[0];
 
-    console.log(`🚑 [PartyHeal] Client ${targetClientId}: พบ Slot ${target.slot} เลือดต่ำ (${target.hpPercent}%) กำลังคลิกช่วยเหลือ...`);
+    console.log(`[PartyHeal] Client ${targetClientId}: Low HP detected on Slot ${target.slot} (${target.hpPercent}%), clicking target...`);
 
     // วาดจุดคลิก
     if (showOverlay && visionService.VisualOverlay) {
@@ -281,7 +278,7 @@ async function runPartyBuffAction(action, callStack) {
     const showOverlay = action.showOverlay !== false;
 
     if (!page || (typeof page.isClosed === 'function' && page.isClosed())) {
-        console.warn(`⚠️ [PartyBuff] Client ${targetClientId} is not active or closed.`);
+        console.warn(`[PartyBuff] Client ${targetClientId} is not active or closed.`);
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
@@ -291,18 +288,18 @@ async function runPartyBuffAction(action, callStack) {
     const delayAfterClick = parseInt(action.delayAfterClick, 10) || 80;
     const scanRegion = action.scanRegion || 'auto';
 
-    // สแกนรอบแรกเพื่อค้นหาหน้าต่างปาร์ตี้และอ่านรายชื่อสมาชิก (เปิด OCR รอบแรกเพื่อให้ได้ชื่อจริง)
+    // First scan to find party window and member names (readNames: true for initial scan)
     const initialScan = await visionService.scanClientPage(page, targetClientId, scanRegion, { readNames: true });
 
     if (!initialScan || !Array.isArray(initialScan.members) || initialScan.members.length === 0) {
-        console.warn(`⚠️ [PartyBuff] Client ${targetClientId}: ไม่พบหน้าต่างปาร์ตี้`);
+        console.warn(`[PartyBuff] Client ${targetClientId}: Party window not found on screen.`);
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
         return;
     }
 
-    // จัดเก็บชื่อและสถานะเริ่มต้นของแต่ละ Slot
+    // Cache initial member names and statuses
     const slotNames = new Map();
     const slotIsLeader = new Map();
     initialScan.members.forEach(m => {
@@ -310,16 +307,16 @@ async function runPartyBuffAction(action, callStack) {
         if (m.isLeader) slotIsLeader.set(m.slot, true);
     });
 
-    // กรองเฉพาะ Slot ที่เป็นสมาชิกที่อยู่ในระยะและพร้อมรับบัฟ (active)
+    // Filter active members in range
     const activeSlots = initialScan.members
         .filter(m => m.isAlive && m.statusCode === 'active')
         .map(m => m.slot);
     const totalToBuff = activeSlots.length;
 
-    console.log(`🚀 [PartyBuff] Client ${targetClientId}: เริ่มต้นวนแจกบัฟสมาชิกปาร์ตี้ (พบในระยะพร้อมบัฟ ${totalToBuff} คน จากทั้งหมด ${initialScan.members.length} คน: ${activeSlots.map(s => slotNames.get(s)).join(', ')})...`);
+    console.log(`[PartyBuff] Client ${targetClientId}: Starting buff cycle (${totalToBuff} ready out of ${initialScan.members.length} total: ${activeSlots.map(s => slotNames.get(s)).join(', ')})...`);
 
     if (totalToBuff === 0) {
-        console.warn(`⚠️ [PartyBuff] Client ${targetClientId}: ไม่มีสมาชิกที่พร้อมรับบัฟ (ทั้งหมดไม่อยู่ในระยะหรือ Offline)`);
+        console.warn(`[PartyBuff] Client ${targetClientId}: No members in range or ready for buff.`);
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onComplete', callStack);
         }
@@ -332,7 +329,7 @@ async function runPartyBuffAction(action, callStack) {
 
     for (let i = 0; i < activeSlots.length; i++) {
         if (global.isSuspended) {
-            console.log(`⏸️ [PartyBuff] Client ${targetClientId}: ระบบถูกสั่งหยุดชั่วคราว`);
+            console.log(`[PartyBuff] Client ${targetClientId}: Paused.`);
             break;
         }
 
@@ -340,8 +337,7 @@ async function runPartyBuffAction(action, callStack) {
         const memberName = slotNames.get(targetSlot) || `Slot_${targetSlot}`;
         const isLeader = slotIsLeader.get(targetSlot) || false;
 
-        // ถ้าไม่ใช่คนแรก (i > 0) ให้สแกนตำแหน่งสดใหม่เพื่ออัปเดตแกน Y (เพราะไอคอนบัฟของคนก่อนหน้าจะดันหลอดเลือดคนล่างๆ เลื่อนลง)
-        // ใช้ readNames: false เพื่อความรวดเร็วระดับมิลลิวินาที ไม่ต้องรอ Tesseract OCR และป้องกันชื่อเพี้ยน
+        // Refresh coordinates for subsequent members
         if (i > 0) {
             try {
                 const safeX = (currentPartyState?.startX && currentPartyState.startX > 500) ? currentPartyState.startX - 220 : 350;
@@ -355,27 +351,24 @@ async function runPartyBuffAction(action, callStack) {
             }
         }
 
-        // ค้นหาพิกัดของ slot เป้าหมายใน state ปัจจุบัน
         let target = currentPartyState.members.find(m => m.slot === targetSlot);
         if (!target) {
-            // Fallback ใช้พิกัดเดิมจาก initialScan
             target = initialScan.members.find(m => m.slot === targetSlot);
         }
 
         if (!target) {
-            console.warn(`⚠️ [PartyBuff] Client ${targetClientId}: ไม่พบพิกัดของ Slot ${targetSlot} ("${memberName}") ข้ามไปยังคนถัดไป`);
+            console.warn(`[PartyBuff] Client ${targetClientId}: Coordinates not found for Slot ${targetSlot} ("${memberName}"), skipping.`);
             continue;
         }
 
-        // ตรวจสอบว่าสมาชิกยัง active อยู่หรือไม่
         if (target.statusCode && target.statusCode !== 'active') {
-            console.log(`⏩ [PartyBuff] Client ${targetClientId}: ข้าม Slot ${targetSlot} ("${memberName}") เนื่องจากสถานะเป็น ${target.statusCode}`);
+            console.log(`[PartyBuff] Client ${targetClientId}: Skipping Slot ${targetSlot} ("${memberName}") - status: ${target.statusCode}`);
             continue;
         }
 
-        console.log(`🎯 [PartyBuff] Client ${targetClientId}: [บัฟคนที่ ${i + 1}/${totalToBuff}] ลำดับที่ ${targetSlot} ชื่อ "${memberName}" ${isLeader ? '👑 (หัวตี้)' : ''} ที่ (${target.click.x}, ${target.click.y})`);
+        console.log(`[PartyBuff] Client ${targetClientId}: [Buffing ${i + 1}/${totalToBuff}] Slot ${targetSlot} "${memberName}" ${isLeader ? '(Leader)' : ''} at (${target.click.x}, ${target.click.y})`);
 
-        // กำหนดข้อมูล Data Outputs สำหรับสมาชิกรอบนี้ (เพื่อให้โหนดถัดไปดึงไปใช้งานได้ทันที)
+        // Set action output values for downstream nodes
         action.slot_out = targetSlot;
         action.name_out = memberName;
         action.info_out = `Slot ${targetSlot}: ${memberName} [${i + 1}/${totalToBuff}]`;
@@ -383,7 +376,6 @@ async function runPartyBuffAction(action, callStack) {
         action.total_out = totalToBuff;
         action.value = memberName;
 
-        // วาด HUD Overlay
         if (showOverlay && visionService.VisualOverlay) {
             await visionService.VisualOverlay.render(page, {
                 ...currentPartyState,
@@ -391,10 +383,8 @@ async function runPartyBuffAction(action, callStack) {
             });
         }
 
-        // คลิกเลือกสมาชิกคนนี้
         await simulateRealisticClick(page, target.click.x, target.click.y);
 
-        // สะบัดเมาส์หลบออกไปด้านข้าง 220px ทันทีเพื่อป้องกัน Tooltip บัง
         try {
             const awayX = target.click.x > 500 ? target.click.x - 220 : target.click.x + 220;
             await page.mouse.move(awayX, target.click.y);
@@ -405,27 +395,24 @@ async function runPartyBuffAction(action, callStack) {
             if (!ok || global.isSuspended) break;
         }
 
-        // ส่งสัญญาณให้ Action ร่ายสกิลบัฟ และรอให้ร่ายเสร็จ
         if (typeof global.fireChain === 'function' && !global.isSuspended) {
             await global.fireChain(action, 'onNextMember', new Set());
         }
 
-        // บันทึกว่าสล็อตนี้บัฟสำเร็จแล้ว
         buffedSlots.add(targetSlot);
         buffedMemberSummaries.push(memberName);
 
         if (global.isSuspended) break;
 
-        // หน่วงเวลาระหว่างสมาชิกเล็กน้อย
         const ok = await (global.abortableSleep ? global.abortableSleep(200) : new Promise(r => setTimeout(r, 200)));
         if (!ok || global.isSuspended) break;
     }
 
-    const completeSummary = `วนแจกบัฟครบทุกคนแล้ว! (${buffedSlots.size}/${totalToBuff} คน: ${buffedMemberSummaries.join(', ')})`;
+    const completeSummary = `Completed buff cycle (${buffedSlots.size}/${totalToBuff} members: ${buffedMemberSummaries.join(', ')})`;
     action.info_out = completeSummary;
     action.value = `Complete (${buffedSlots.size}/${totalToBuff})`;
 
-    console.log(`🏁 [PartyBuff] Client ${targetClientId}: ${completeSummary}`);
+    console.log(`[PartyBuff] Client ${targetClientId}: ${completeSummary}`);
     if (typeof global.fireChain === 'function') {
         await global.fireChain(action, 'onComplete', callStack);
     }
@@ -433,7 +420,6 @@ async function runPartyBuffAction(action, callStack) {
 
 /**
  * 5. runScreenshotAction (Utility / Vision Diagnostic)
- * ถ่ายภาพหน้าจอตามโซนที่กำหนด (full, party, right, left, target, custom) และบันทึกลง ./screenshots/
  */
 async function runScreenshotAction(action, callStack) {
     if (global.isSuspended) return;
@@ -456,7 +442,7 @@ async function runScreenshotAction(action, callStack) {
         });
 
         if (!buffer) {
-            console.warn(`⚠️ [Screenshot] Client ${targetClientId}: ไม่สามารถดึงภาพหน้าจอได้`);
+            console.warn(`[Screenshot] Client ${targetClientId}: Failed to capture screenshot.`);
             if (typeof global.fireChain === 'function') {
                 await global.fireChain(action, 'onError', callStack);
             }
@@ -470,13 +456,13 @@ async function runScreenshotAction(action, callStack) {
         const filepath = path.join(dir, filename);
         fs.writeFileSync(filepath, buffer);
 
-        console.log(`📸 [Screenshot] Client ${targetClientId}: บันทึกภาพเรียบร้อย (${region}) ➔ ./screenshots/${subfolder}/${filename}`);
+        console.log(`[Screenshot] Client ${targetClientId}: Saved screenshot (${region}) -> ./screenshots/${subfolder}/${filename}`);
 
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onComplete', callStack);
         }
     } catch (err) {
-        console.error(`❌ [Screenshot Error] Client ${targetClientId}:`, err.message);
+        console.error(`[Screenshot Error] Client ${targetClientId}:`, err.message);
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }

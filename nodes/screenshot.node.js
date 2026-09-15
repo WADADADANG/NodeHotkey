@@ -51,7 +51,7 @@ module.exports = {
       });
 
       if (!buffer) {
-        console.warn(`⚠️ [Screenshot Node] Client ${targetClientId}: ไม่สามารถดึงภาพหน้าจอได้`);
+        console.warn(`[Screenshot Node] Client ${targetClientId}: Failed to capture screenshot.`);
         if (typeof global.fireChain === 'function') {
           await global.fireChain(action, 'onError', callStack);
         }
@@ -65,14 +65,14 @@ module.exports = {
       const filepath = path.join(dir, filename);
       fs.writeFileSync(filepath, buffer);
 
-      console.log(`📸 [Screenshot Node] Client ${targetClientId}: บันทึกภาพเรียบร้อย (${region}) ➔ ./screenshots/${subfolder}/${filename}`);
+      console.log(`[Screenshot Node] Client ${targetClientId}: Saved screenshot (${region}) -> ./screenshots/${subfolder}/${filename}`);
 
       if (typeof global.fireChain === 'function') {
         await global.fireChain(action, 'onComplete', callStack);
       }
       return true;
     } catch (err) {
-      console.error(`❌ [Screenshot Node] Error taking screenshot:`, err.message);
+      console.error(`[Screenshot Node] Error taking screenshot:`, err.message);
       if (typeof global.fireChain === 'function') {
         await global.fireChain(action, 'onError', callStack);
       }

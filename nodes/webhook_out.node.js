@@ -27,7 +27,7 @@ module.exports = {
 
     const url = (action.url || '').trim();
     if (!url) {
-      console.warn(`⚠️ [Webhook Out Node] "${action.name}": URL is empty, skipping.`);
+      console.warn(`[Webhook Out Node] "${action.name}": URL is empty, skipping.`);
       if (typeof global.emitSignal === 'function') global.emitSignal(action.id, 'onError');
       if (typeof global.fireChain === 'function') await global.fireChain(action, 'onError', callStack);
       return false;
@@ -52,7 +52,7 @@ module.exports = {
       body = typeof action.payload === 'string' ? action.payload : JSON.stringify(action.payload);
     }
 
-    console.log(`🌐 [Webhook Out Node] "${action.name}" ➔ ${method} ${url}`);
+    console.log(`[Webhook Out Node] "${action.name}" -> ${method} ${url}`);
     if (typeof global.emitSignal === 'function') global.emitSignal(action.id, 'trigger');
 
     try {
@@ -67,12 +67,12 @@ module.exports = {
       });
       clearTimeout(timeoutId);
 
-      console.log(`✅ [Webhook Out Node] "${action.name}" ➔ Status: ${response.status} ${response.statusText}`);
+      console.log(`[Webhook Out Node] "${action.name}" -> Status: ${response.status} ${response.statusText}`);
       if (typeof global.emitSignal === 'function') global.emitSignal(action.id, 'onComplete');
       if (typeof global.fireChain === 'function') await global.fireChain(action, 'onComplete', callStack);
       return true;
     } catch (err) {
-      console.error(`❌ [Webhook Out Node] "${action.name}" Error:`, err.message);
+      console.error(`[Webhook Out Node] "${action.name}" Error:`, err.message);
       if (typeof global.emitSignal === 'function') global.emitSignal(action.id, 'onError');
       if (typeof global.fireChain === 'function') await global.fireChain(action, 'onError', callStack);
       return false;

@@ -242,33 +242,12 @@ function classifyLogLevel(line, isStderr = false) {
     return 'log';
   }
 
-  // 4. Actions / Hotkeys / Triggers / CDP / Node Workflow Actions (การกดปุ่ม / รัน workflow)
+  // 4. Actions / Hotkeys / Triggers / CDP (การกดปุ่ม / รัน workflow)
   if (
     line.includes('🔵') ||
     line.includes('🎯') ||
     line.includes('🎮') ||
-    line.includes('⚔️') ||
-    line.includes('⚡') ||
-    line.includes('👁️') ||
-    line.includes('🚀') ||
-    line.includes('🏁') ||
-    line.includes('🗣️') ||
-    line.includes('🔊') ||
-    line.includes('📸') ||
-    line.includes('⏳') ||
-    line.includes('🌐') ||
     lower.includes('[action') ||
-    lower.includes('[graph chain]') ||
-    lower.includes('[partyscanner') ||
-    lower.includes('[partybuff') ||
-    lower.includes('[selectpartyslot') ||
-    lower.includes('[tts node]') ||
-    lower.includes('[sound node]') ||
-    lower.includes('[screenshot node]') ||
-    lower.includes('[delay node]') ||
-    lower.includes('[webhook out node]') ||
-    lower.includes('[condition check]') ||
-    lower.includes('[global key captured]') ||
     lower.includes('hotkey') ||
     lower.includes('triggered') ||
     lower.includes('forwarder')

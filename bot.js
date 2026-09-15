@@ -2763,7 +2763,7 @@ async function runCastSequencerOnce(action, callStack) {
     }
     sendOverlayUpdate();
 
-    console.log(`⚔️ [Action] Cast Sequencer (Once): "${action.name}" (${steps.length} steps, ${repeatCount}x) on Client ${target}... (token: ${myToken})`);
+    console.log(`[Action] Cast Sequencer (Once): "${action.name}" (${steps.length} steps, ${repeatCount}x) on Client ${target}... (token: ${myToken})`);
 
     let wasInterrupted = false;
 
@@ -2811,11 +2811,11 @@ async function runCastSequencerOnce(action, callStack) {
             }
 
             if (!wasInterrupted) {
-                console.log(`⚔️ [Action] Cast Sequencer Finished: "${action.name}" on Client ${target}`);
+                console.log(`[Action] Cast Sequencer Finished: "${action.name}" on Client ${target}`);
                 await fireChain(action, 'onComplete', callStack);
             }
         } else {
-            console.log(`🔴 [Action] Cast Sequencer Cancelled / Interrupted: "${action.name}"`);
+            console.log(`[Action] Cast Sequencer Cancelled / Interrupted: "${action.name}"`);
             if (!global.isSuspended) {
                 await fireChain(action, 'onStop', callStack);
             }
@@ -3054,12 +3054,12 @@ async function runSoundAlertAction(action, callStack) {
     const volume = action.volume !== undefined ? parseInt(action.volume, 10) : 100;
 
     if (volume <= 0) {
-        console.log(`🔊 [Action] Sound Alert: "${action.name}" skipped (Volume: 0%)`);
+        console.log(`[Action] Sound Alert: "${action.name}" skipped (Volume: 0%)`);
         await fireChain(action, 'onFired', callStack);
         return;
     }
 
-    console.log(`🔊 [Action] Playing Sound Alert: "${action.name}" (Type: ${source}, Preset: ${preset}, Vol: ${volume}%)`);
+    console.log(`[Action] Playing Sound Alert: "${action.name}" (Type: ${source}, Preset: ${preset}, Vol: ${volume}%)`);
     playNativeSound(preset, url, file, repeat, volume, 'sfx', true);
     await fireChain(action, 'onFired', callStack);
 }
@@ -3068,7 +3068,7 @@ async function runEmergencyStopAction(action, callStack) {
     global.runEmergencyStopAction = runEmergencyStopAction;
     stopAllAudio();
     const scope = action.stopScope || 'all';
-    console.log(`🛑 [Action] Emergency Stop Triggered: "${action.name}" (Scope: ${scope})`);
+    console.log(`[Action] Emergency Stop Triggered: "${action.name}" (Scope: ${scope})`);
 
     if (scope === 'all') {
         // 1. Stop all active loops
@@ -3112,7 +3112,7 @@ async function runEmergencyStopAction(action, callStack) {
             activeHoldStates[actId] = false;
         });
 
-        console.log(`🛑 [Emergency Stop] All loops, buff sequences, sequencers, schedulers, and held keys stopped across all clients 100%!`);
+        console.log(`[Emergency Stop] All loops, buff sequences, sequencers, schedulers, and held keys stopped across all clients!`);
     } else if (scope === 'profile') {
         const profileName = action._profileName;
         // Stop all actions belonging to the same profile
@@ -3142,7 +3142,7 @@ async function runEmergencyStopAction(action, callStack) {
                 schedulerTokens[act.id] = (schedulerTokens[act.id] || 0) + 1;
             }
         });
-        console.log(`🛑 [Emergency Stop] Stopped all actions in profile "${profileName || 'Current'}"!`);
+        console.log(`[Emergency Stop] Stopped all actions in profile "${profileName || 'Current'}"!`);
     } else if (scope === 'client') {
         const targets = getActionTargets(action.targetClient || '1');
         targets.forEach(t => {
@@ -3167,7 +3167,7 @@ async function runEmergencyStopAction(action, callStack) {
                 }
             }
         });
-        console.log(`🛑 [Emergency Stop] Stopped actions on target client(s): ${targets.join(', ')}`);
+        console.log(`[Emergency Stop] Stopped actions on target client(s): ${targets.join(', ')}`);
     }
 
     sendOverlayUpdate();
@@ -3179,13 +3179,13 @@ async function runEmitEventAction(action, callStack) {
     if (global.isSuspended) return;
     const eventName = (action.eventName || action.event || '').trim();
     if (!eventName) {
-        console.warn(`📡 [Emit Event] "${action.name}" has no Event Name specified — skipped.`);
+        console.warn(`[Emit Event] "${action.name}" has no Event Name specified - skipped.`);
         await fireChain(action, 'onFired', callStack);
         return;
     }
 
     const cleanEventName = eventName.toLowerCase();
-    console.log(`📡 [Event Bus] Broadcasting custom event: "${eventName}" (from "${action._profileName || 'Active'}" / "${action.name}")`);
+    console.log(`[Event Bus] Broadcasting custom event: "${eventName}" (from "${action._profileName || 'Active'}" / "${action.name}")`);
 
     // Find all matching trigger actions in activeActions
     const listeners = activeActions.filter(act => 
@@ -3195,13 +3195,13 @@ async function runEmitEventAction(action, callStack) {
         String(act.trigger.value || '').trim().toLowerCase() === cleanEventName
     );
 
-    console.log(`📡 [Event Bus] Found ${listeners.length} active listener(s) for event "${eventName}"`);
+    console.log(`[Event Bus] Found ${listeners.length} active listener(s) for event "${eventName}"`);
 
     // Prevent recursive event loop within callStack
     const stackKey = `event:${cleanEventName}`;
     const resolvedStack = (callStack instanceof Set) ? callStack : new Set(Array.isArray(callStack) ? callStack : []);
     if (resolvedStack.has(stackKey)) {
-        console.warn(`📡 [Event Bus] ⚠️ Circular event broadcast loop detected for "${cleanEventName}" — stopping cascade.`);
+        console.warn(`[Event Bus] Circular event broadcast loop detected for "${cleanEventName}" - stopping cascade.`);
         await fireChain(action, 'onFired', callStack);
         return;
     }
@@ -3209,7 +3209,7 @@ async function runEmitEventAction(action, callStack) {
 
     // Fire all active listener actions
     for (const listener of listeners) {
-        console.log(`👂 [Event Triggered] Event "${eventName}" ➔ Firing "${listener.name}" (Profile: ${listener._profileName || 'Default'})`);
+        console.log(`[Event Triggered] Event "${eventName}" -> Firing "${listener.name}" (Profile: ${listener._profileName || 'Default'})`);
         handleActionTrigger(listener);
     }
 
@@ -3388,7 +3388,7 @@ async function runVariableAction(action, callStack) {
     }
 
     setVariableValue(action, nextVal);
-    console.log(`📦 [Variable] "${action.name}" (${action.varName || action.name}) ➔ Changed from [${currentVal}] to [${nextVal}] (Op: ${op})`);
+    console.log(`[Variable] "${action.name}" (${action.varName || action.name}) -> Changed from [${currentVal}] to [${nextVal}] (Op: ${op})`);
     emitSignal(action.id, 'onComplete');
     await fireChain(action, 'onComplete', callStack);
 }
@@ -3401,7 +3401,7 @@ async function runHttpRequestAction(act, callStack) {
     if (global.isSuspended) return;
     const url = (act.url || '').trim();
     if (!url) {
-        console.warn(`⚠️ [Webhook Out] "${act.name}": URL is empty, skipping.`);
+        console.warn(`[Webhook Out] "${act.name}": URL is empty, skipping.`);
         emitSignal(act.id, 'onError');
         await fireChain(act, 'onError', callStack);
         return;
@@ -3426,7 +3426,7 @@ async function runHttpRequestAction(act, callStack) {
         body = typeof act.payload === 'string' ? act.payload : JSON.stringify(act.payload);
     }
 
-    console.log(`🌐 [Webhook Out] "${act.name}" ➔ ${method} ${url}`);
+    console.log(`[Webhook Out] "${act.name}" -> ${method} ${url}`);
     emitSignal(act.id, 'trigger');
 
     try {
@@ -3441,11 +3441,11 @@ async function runHttpRequestAction(act, callStack) {
         });
         clearTimeout(timeoutId);
 
-        console.log(`✅ [Webhook Out] "${act.name}" ➔ Status: ${response.status} ${response.statusText}`);
+        console.log(`[Webhook Out] "${act.name}" -> Status: ${response.status} ${response.statusText}`);
         emitSignal(act.id, 'onComplete');
         await fireChain(act, 'onComplete', callStack);
     } catch (err) {
-        console.error(`❌ [Webhook Out] "${act.name}" Error:`, err.message);
+        console.error(`[Webhook Out] "${act.name}" Error:`, err.message);
         emitSignal(act.id, 'onError');
         await fireChain(act, 'onError', callStack);
     }
@@ -3454,12 +3454,12 @@ async function runHttpRequestAction(act, callStack) {
 // Inbound HTTP Webhook Trigger Handler
 function triggerWebhookEvent(eventName, payload = null) {
     if (global.isSuspended) {
-        console.warn(`⚠️ [Webhook Trigger] Skipped: Bot is suspended (Emergency Pause active).`);
+        console.warn(`[Webhook Trigger] Skipped: Bot is suspended (Emergency Pause active).`);
         return { count: 0, actions: [] };
     }
 
     const cleanEventName = String(eventName || '').trim().toLowerCase();
-    console.log(`🌐 [Webhook Inbound] Received external event: "${eventName}"`);
+    console.log(`[Webhook Inbound] Received external event: "${eventName}"`);
 
     // 1. Direct Graph Engine Matching
     const downstreamGraphTargets = activeWorkflowEngine && typeof activeWorkflowEngine.getTriggerDownstreamNodes === 'function'
@@ -3474,7 +3474,7 @@ function triggerWebhookEvent(eventName, payload = null) {
             const targetAction = activeActions.find(a => a.id === actId || a.id === node.id);
             if (targetAction && targetAction.enabled) {
                 executedActions.push(targetAction.name || targetAction.id);
-                console.log(`⚡ [Webhook Triggered] Event "${eventName}" ➔ Firing Node "${targetAction.name}"`);
+                console.log(`[Webhook Triggered] Event "${eventName}" -> Firing Node "${targetAction.name}"`);
                 handleActionTrigger(targetAction);
             }
         });
@@ -3491,7 +3491,7 @@ function triggerWebhookEvent(eventName, payload = null) {
 
     for (const listener of directListeners) {
         executedActions.push(listener.name || listener.id);
-        console.log(`⚡ [Webhook Triggered] Event "${eventName}" ➔ Firing Action "${listener.name}"`);
+        console.log(`[Webhook Triggered] Event "${eventName}" -> Firing Action "${listener.name}"`);
         handleActionTrigger(listener);
     }
 
@@ -3646,10 +3646,10 @@ async function fireChain(sourceAction, eventName, callStack = new Set()) {
     const executeChain = async () => {
         for (const targetAction of targetActionsToRun) {
             if (safeStack.has(targetAction.id)) {
-                console.warn(`[Graph Chain] Circular chain detected: ${Array.from(safeStack).join(' → ')} → ${targetAction.id}. Aborting branch.`);
+                console.warn(`[Graph Chain] Circular chain detected: ${Array.from(safeStack).join(' -> ')} -> ${targetAction.id}. Aborting branch.`);
                 continue;
             }
-            console.log(`[Graph Chain] "${sourceAction.name}" [${eventName}] ➔ "${targetAction.name}"`);
+            console.log(`[Graph Chain] "${sourceAction.name}" [${eventName}] -> "${targetAction.name}"`);
             emitSignal(sourceAction.id, eventName, targetAction.id);
             await runChainedAction(targetAction, new Set([...safeStack, targetAction.id]));
         }
@@ -3832,7 +3832,7 @@ async function runActionControl(act, callStack) {
                     for (let t of targets) {
                         isBuffSequenceRunning[String(t)] = false;
                     }
-                    console.log(`🔴 [Action Control] Stopped Buff Sequence: "${targetAction.name}"`);
+                    console.log(`[Action Control] Stopped Buff Sequence: "${targetAction.name}"`);
                     sendOverlayUpdate();
                 }
             } else { // toggle
@@ -3842,7 +3842,7 @@ async function runActionControl(act, callStack) {
                     for (let t of targets) {
                         isBuffSequenceRunning[String(t)] = false;
                     }
-                    console.log(`🔴 [Action Control] Toggled (Stopped) Buff Sequence: "${targetAction.name}"`);
+                    console.log(`[Action Control] Toggled (Stopped) Buff Sequence: "${targetAction.name}"`);
                     sendOverlayUpdate();
                 } else {
                     emitSignal(act.id, 'control_start', targetAction.id);
@@ -3873,7 +3873,7 @@ async function runActionControl(act, callStack) {
                     for (let t of targets) {
                         delete isSequencerRunning[String(t)];
                     }
-                    console.log(`🔴 [Action Control] Stopped Sequencer: "${targetAction.name}"`);
+                    console.log(`[Action Control] Stopped Sequencer: "${targetAction.name}"`);
                     sendOverlayUpdate();
                 }
             } else { // toggle
@@ -3883,7 +3883,7 @@ async function runActionControl(act, callStack) {
                     for (let t of targets) {
                         delete isSequencerRunning[String(t)];
                     }
-                    console.log(`🔴 [Action Control] Toggled (Stopped) Sequencer: "${targetAction.name}"`);
+                    console.log(`[Action Control] Toggled (Stopped) Sequencer: "${targetAction.name}"`);
                     sendOverlayUpdate();
                 } else {
                     emitSignal(act.id, 'control_start', targetAction.id);
@@ -3905,14 +3905,14 @@ async function runActionControl(act, callStack) {
                 if (isRunning) {
                     emitSignal(act.id, 'control_stop', targetAction.id);
                     stopLoopSchedulerAction(targetAction.id, targetAction.name);
-                    console.log(`🔴 [Action Control] Stopped Scheduler: "${targetAction.name}"`);
+                    console.log(`[Action Control] Stopped Scheduler: "${targetAction.name}"`);
                     sendOverlayUpdate();
                 }
             } else { // toggle
                 if (isRunning) {
                     emitSignal(act.id, 'control_stop', targetAction.id);
                     stopLoopSchedulerAction(targetAction.id, targetAction.name);
-                    console.log(`🔴 [Action Control] Toggled (Stopped) Scheduler: "${targetAction.name}"`);
+                    console.log(`[Action Control] Toggled (Stopped) Scheduler: "${targetAction.name}"`);
                     sendOverlayUpdate();
                 } else {
                     emitSignal(act.id, 'control_start', targetAction.id);
@@ -4006,11 +4006,11 @@ async function runActionCondition(act, callStack) {
             else if (rule === 'not_equals') isTrue = (strVal !== compareStr);
             else isTrue = (strVal === compareStr);
         }
-        console.log(`[Condition Check] "${act.name}": Checking Variable "${targetName}" [Value: ${varVal}] (${rule} vs "${condVal !== undefined ? condVal : ''}") ➔ Result: ${isTrue ? 'TRUE' : 'FALSE'}`);
+        console.log(`[Condition Check] "${act.name}": Checking Variable "${targetName}" [Value: ${varVal}] (${rule} vs "${condVal !== undefined ? condVal : ''}") -> Result: ${isTrue ? 'TRUE' : 'FALSE'}`);
     } else {
         const isRunning = isActionRunning(targetId);
         isTrue = (rule === 'is_running') ? isRunning : !isRunning;
-        console.log(`[Condition Check] "${act.name}": Checking target "${targetName}" (${rule}) ➔ Result: ${isTrue ? 'TRUE' : 'FALSE'}`);
+        console.log(`[Condition Check] "${act.name}": Checking target "${targetName}" (${rule}) -> Result: ${isTrue ? 'TRUE' : 'FALSE'}`);
     }
 
     if (isTrue) {

@@ -43,13 +43,13 @@ module.exports = {
       tts._lastTime = now;
       tts._lastText = text;
 
-      console.log(`🗣️ [TTS Node] Synthesizing: "${text}" (${voice}, Vol: ${volume}%)`);
+      console.log(`[TTS Node] Synthesizing: "${text}" (${voice}, Vol: ${volume}%)`);
       const mp3Path = await tts.synthesize(text, voice);
       if (mp3Path && fs.existsSync(mp3Path)) {
         if (typeof global.playNativeSound === 'function') {
           global.playNativeSound(null, mp3Path, null, 1, volume, 'tts', action.interrupt !== false);
         } else {
-          console.warn('⚠️ [TTS Node] global.playNativeSound is not initialized.');
+          console.warn('[TTS Node] global.playNativeSound is not initialized.');
         }
         if (typeof global.broadcastToClients === 'function') {
           global.broadcastToClients({
@@ -68,7 +68,7 @@ module.exports = {
       }
       return true;
     } catch (e) {
-      console.error(`⚠️ [TTS Node] Error:`, e.message);
+      console.error(`[TTS Node] Error:`, e.message);
       if (typeof global.fireChain === 'function') {
         await global.fireChain(action, 'onError', callStack);
       }
