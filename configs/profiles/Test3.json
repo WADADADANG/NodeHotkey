@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 1,
     "pan": {
-      "x": -9,
-      "y": -104
+      "x": -1350,
+      "y": 55
     }
   },
   "nodes": [
@@ -35,7 +35,7 @@
       "data": {
         "enabled": true,
         "message": "สวัสดีครับ",
-        "showClient": true,
+        "showClient": false,
         "targetClient": "1",
         "actionId": "1789423658868"
       }

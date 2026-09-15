@@ -105,6 +105,7 @@ NodeHotkey ใช้ระบบเชื่อมต่อแบบสองป
 | ⌨️ | **key_press** | `nodes/key_press.node.js` | ส่งการกดปุ่มคีย์บอร์ดไปยังจอ Client ที่ระบุ |
 | 🔁 | **loop** | `nodes/loop.node.js` | วนลูปส่งคีย์ตามช่วงเวลา (Interval + Jitter) |
 | 📝 | **step_log** | `nodes/step_log.node.js` | พิมพ์ข้อความบันทึก (Print Log) ลงใน Terminal แยกหมวดหมู่ชัดเจน |
+| 🧩 | **format_text** | `nodes/format_text.node.js` | รวม/จัดรูปแบบข้อความ ตัวเลข บูลีน (Boolean to String) ผ่าน Data Pins |
 | 🔘 | **var_get** | `nodes/var_get.node.js` | ดึงค่าตัวแปรในระบบ (Pure Node) ส่งออกผ่านสายสีชมพู |
 | ⚙️ | **var_set** | `nodes/var_set.node.js` | กำหนด/เปลี่ยนค่าตัวแปร (Set Value, Toggle, Increment) |
 | 🩺 | **party_heal / buff** | `party-target-handler.js` | สแกนหลอดเลือดสมาชิกในตี้และสั่งฮีล/บัฟอัตโนมัติ |

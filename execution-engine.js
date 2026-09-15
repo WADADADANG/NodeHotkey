@@ -220,7 +220,9 @@ class NodeExecutionEngine {
       text_to_speech: 'tts',
       webhook_out: 'webhook_out',
       screenshot: 'screenshot',
-      capture_screen: 'screenshot'
+      capture_screen: 'screenshot',
+      format_text: 'format_text',
+      format: 'format_text'
     };
 
     const actions = [];
@@ -301,6 +303,10 @@ class NodeExecutionEngine {
         activationDelayMs: d.activationDelayMs || 1000,
         cooldownPresetId: d.cooldownPresetId || '',
         customCooldownMs: d.customCooldownMs ? parseInt(d.customCooldownMs, 10) : 0,
+        template: d.template !== undefined ? d.template : '{val_a} {val_b}',
+        pins: Array.isArray(d.pins) ? d.pins : (d.pins ? [d.pins] : ['val_a', 'val_b']),
+        boolFormat: d.boolFormat || 'true_false',
+        separator: d.separator !== undefined ? d.separator : ' ',
         _profileName: profile.name || 'Active'
       });
     });

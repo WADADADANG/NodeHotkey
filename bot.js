@@ -3306,8 +3306,22 @@ function resolveNodeInputData(targetAction, inputPortName) {
                     return getNamedVariableValue(sourceAction.varName || sourceAction.name, sourceAction);
                 } else if (sourceAction.mode === 'variable' || sourceAction.mode === 'var_set') {
                     return getVariableValue(sourceAction);
+                } else if (sourceAction.mode === 'format_text' || sourceAction.type === 'format_text') {
+                    if (global.nodeRegistry && global.nodeRegistry.get('format_text')) {
+                        const fmtNode = global.nodeRegistry.get('format_text');
+                        if (typeof fmtNode.computeFormattedText === 'function') {
+                            return fmtNode.computeFormattedText(sourceAction);
+                        }
+                    }
+                    if (sourceAction.msg_out !== undefined) return sourceAction.msg_out;
+                    if (sourceAction.val_out !== undefined) return sourceAction.val_out;
+                    if (sourceAction.value !== undefined) return sourceAction.value;
                 } else if (conn.fromPort && sourceAction[conn.fromPort] !== undefined) {
                     return sourceAction[conn.fromPort];
+                } else if (conn.fromPort === 'msg_out' && sourceAction.msg_out !== undefined) {
+                    return sourceAction.msg_out;
+                } else if (conn.fromPort === 'val_out' && sourceAction.val_out !== undefined) {
+                    return sourceAction.val_out;
                 } else if (conn.fromPort === 'name_out' && sourceAction.name_out !== undefined) {
                     return sourceAction.name_out;
                 } else if (conn.fromPort === 'slot_out' && sourceAction.slot_out !== undefined) {
@@ -3318,6 +3332,10 @@ function resolveNodeInputData(targetAction, inputPortName) {
                     return sourceAction.count_out;
                 } else if (conn.fromPort === 'info_out' && sourceAction.info_out !== undefined) {
                     return sourceAction.info_out;
+                } else if (sourceAction.msg_out !== undefined) {
+                    return sourceAction.msg_out;
+                } else if (sourceAction.val_out !== undefined) {
+                    return sourceAction.val_out;
                 } else if (sourceAction.value !== undefined) {
                     return sourceAction.value;
                 } else if (sourceAction.info_out !== undefined) {

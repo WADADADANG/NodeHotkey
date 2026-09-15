@@ -400,7 +400,7 @@
       "title": "Text to Speech (TTS)",
       "position": {
         "x": 2100,
-        "y": 560
+        "y": 610
       },
       "data": {
         "enabled": true,
@@ -486,6 +486,11 @@
       },
       "data": {
         "enabled": true,
+        "targetClient": "1",
+        "captureRegion": "active_client",
+        "subfolder": "",
+        "prefix": "error_snap",
+        "annotate": false,
         "actionId": "1789126551048"
       }
     },
@@ -548,6 +553,11 @@
       },
       "data": {
         "enabled": true,
+        "targetClient": "1",
+        "captureRegion": "active_client",
+        "subfolder": "",
+        "prefix": "error_snap",
+        "annotate": false,
         "actionId": "1789256723555"
       }
     },
@@ -557,10 +567,15 @@
       "title": "screenshot",
       "position": {
         "x": 2100,
-        "y": 770
+        "y": 810
       },
       "data": {
         "enabled": true,
+        "targetClient": "1",
+        "captureRegion": "active_client",
+        "subfolder": "",
+        "prefix": "error_snap",
+        "annotate": false,
         "actionId": "1789256875566"
       }
     }

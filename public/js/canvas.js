@@ -107,7 +107,8 @@ class NodeCanvasEditor {
       party_buff: canvasT('canvas_party_buff', isEn ? 'Party Buff Target' : 'วนเลือกเป้าหมายบัฟ (Party Buff)'),
       tts: canvasT('canvas_tts', isEn ? 'Text to Speech (TTS)' : 'อ่านข้อความเสียง (TTS)'),
       screenshot: canvasT('canvas_screenshot', isEn ? 'Screenshot' : 'ถ่ายภาพหน้าจอ (Screenshot)'),
-      webhook_out: canvasT('canvas_webhook_out', isEn ? 'HTTP Webhook' : 'ส่ง Webhook / HTTP')
+      webhook_out: canvasT('canvas_webhook_out', isEn ? 'HTTP Webhook' : 'ส่ง Webhook / HTTP'),
+      format_text: canvasT('canvas_format_text', isEn ? 'Format Text' : 'รวมข้อความ (Format Text)')
     };
     return map[type] || canvasT(`canvas_${type}`, (type || '').toUpperCase());
   }
@@ -709,7 +710,8 @@ class NodeCanvasEditor {
         party_buff: '📜',
         tts: '🗣️',
         screenshot: '📸',
-        webhook_out: '🌐'
+        webhook_out: '🌐',
+        format_text: '🧩'
       };
 
       const icon = iconMap[node.type] || '📦';
@@ -1113,6 +1115,21 @@ class NodeCanvasEditor {
             <span>Client:</span> <span class="node-info-value" style="color:${showClient ? '#38bdf8' : 'var(--muted)'};">${showClient ? 'Client ' + (node.data?.targetClient || '1') : 'Off'}</span>
           </div>
         `;
+      } else if (node.type === 'format_text') {
+        const template = node.data?.template !== undefined ? node.data.template : '{val_a} {val_b}';
+        const pins = (Array.isArray(node.data?.pins) && node.data.pins.length > 0) ? node.data.pins : ['val_a', 'val_b'];
+        const boolFmt = node.data?.boolFormat || 'true_false';
+        bodyHTML = `
+          <div class="node-info-row">
+            <span>Pattern:</span> <span class="node-info-value" style="color:#ec4899; font-family:'JetBrains Mono'; font-weight:700; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${template}">${template || '(Concat)'}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Pins:</span> <span class="node-info-value" style="color:#a855f7; font-weight:700;">${pins.length} inputs</span>
+          </div>
+          <div class="node-info-row">
+            <span>Bool:</span> <span class="node-info-value" style="color:#38bdf8; font-size:10px;">${boolFmt}</span>
+          </div>
+        `;
       } else if (node.type === 'var_get') {
         const vName = node.data?.varName || node.title || 'myVar';
         const vType = node.data?.varType || 'string';
@@ -1187,6 +1204,28 @@ class NodeCanvasEditor {
             <div class="node-pin-row pin-row-in">
               <div class="node-port port-in port-data port-string" data-node="${node.id}" data-port="msg_in" title="Message Data Input (String - Pink)"></div>
               <span class="node-pin-label port-string">◀ Message</span>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label onComplete">${canvasT('port_onComplete', 'On Complete')} ▶</span>
+              <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="next" title="${canvasT('port_onComplete', 'On Complete')}"></div>
+            </div>
+          </div>
+        `;
+      } else if (node.type === 'format_text') {
+        const pins = (Array.isArray(node.data?.pins) && node.data.pins.length > 0) ? node.data.pins : ['val_a', 'val_b'];
+        const inputPinsHTML = pins.map(p => `
+          <div class="node-pin-row pin-row-in">
+            <div class="node-port port-in port-data port-string" data-node="${node.id}" data-port="${p}" title="Input: {${p}} (String / Number / Bool)"></div>
+            <span class="node-pin-label port-string">◀ {${p}}</span>
+          </div>
+        `).join('');
+
+        pinsHTML = `
+          <div class="node-pins-section">
+            ${inputPinsHTML}
+            <div class="node-pin-row">
+              <span class="node-pin-label port-string">Result (msg_out) ●</span>
+              <div class="node-port port-out port-data port-string" data-node="${node.id}" data-port="msg_out" title="Formatted Text (String - Pink)"></div>
             </div>
             <div class="node-pin-row">
               <span class="node-pin-label onComplete">${canvasT('port_onComplete', 'On Complete')} ▶</span>
@@ -1500,7 +1539,7 @@ class NodeCanvasEditor {
         `;
       } else if (node.type === 'trigger') {
         portsHTML += `<div class="node-port port-out" data-node="${node.id}" data-port="exec_out" title="Output (exec_out)"></div>`;
-      } else if (node.type === 'step_log' || node.type === 'var_get' || node.type === 'var_set' || node.type === 'variable') {
+      } else if (node.type === 'step_log' || node.type === 'format_text' || node.type === 'var_get' || node.type === 'var_set' || node.type === 'variable') {
         // Output pins explicitly handled in pinsHTML
       } else {
         portsHTML += `<div class="node-port port-out" data-node="${node.id}" data-port="next" title="Output (next)"></div>`;
@@ -1608,6 +1647,10 @@ class NodeCanvasEditor {
             if (portName === 'val_out') {
               const srcNode = this.nodes.find(n => n.id === nodeId);
               wireType = srcNode?.data?.varType || 'string';
+            } else if (portName === 'msg_out' || portName === 'name_out' || portName === 'names_out' || portName === 'info_out') {
+              wireType = 'string';
+            } else if (portName === 'slot_out' || portName === 'count_out') {
+              wireType = 'number';
             }
 
             this.draftWire = {
@@ -1687,7 +1730,7 @@ class NodeCanvasEditor {
     const node = this.nodes.find(n => n.id === nodeId);
     if (!node) return { x: 0, y: 0 };
 
-    const isOutput = !(portName === 'exec_in' || portName === 'msg_in' || portName === 'val_in');
+    const isOutput = !(portName === 'exec_in' || portName === 'msg_in' || portName === 'val_in' || (node.type === 'format_text' && portName !== 'msg_out' && portName !== 'next' && portName !== 'onComplete'));
     const x = isOutput ? node.position.x + 221 : node.position.x - 1;
     let y = node.position.y + 38;
     if (portName === 'onBeforeStart') y = node.position.y + 75;
@@ -1753,23 +1796,25 @@ class NodeCanvasEditor {
       const dx = Math.max(30, Math.abs(x2 - x1) * 0.5);
       const pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
 
-      const fromNode = this.nodes.find(n => n.id === conn.fromNodeId);
+      const toNode = this.nodes.find(n => n.id === conn.toNodeId);
       const isDataWire = (
         conn.fromPort === 'val_out' || 
+        conn.fromPort === 'msg_out' || 
         conn.fromPort === 'name_out' || 
         conn.fromPort === 'slot_out' || 
         conn.fromPort === 'names_out' || 
         conn.fromPort === 'count_out' || 
         conn.fromPort === 'info_out' || 
         conn.toPort === 'val_in' || 
-        conn.toPort === 'msg_in'
+        conn.toPort === 'msg_in' ||
+        (toNode && toNode.type === 'format_text' && conn.toPort !== 'exec_in')
       );
       let wireTypeClass = '';
       if (isDataWire) {
         let vType = fromNode?.data?.varType;
         if (!vType) {
           if (conn.fromPort === 'slot_out' || conn.fromPort === 'count_out') vType = 'number';
-          else if (conn.fromPort === 'name_out' || conn.fromPort === 'names_out' || conn.fromPort === 'info_out' || conn.toPort === 'msg_in') vType = 'string';
+          else if (conn.fromPort === 'msg_out' || conn.fromPort === 'name_out' || conn.fromPort === 'names_out' || conn.fromPort === 'info_out' || conn.toPort === 'msg_in') vType = 'string';
           else vType = 'string';
         }
         wireTypeClass = `wire-data wire-${vType}`;
@@ -1829,23 +1874,25 @@ class NodeCanvasEditor {
     } else {
       const pName = conn.fromPort || '';
       const toPName = conn.toPort || '';
-      const fromNode = this.nodes.find(n => n.id === conn.fromNodeId);
+      const toNode = this.nodes.find(n => n.id === conn.toNodeId);
       const isDataWire = (
         pName === 'val_out' || 
+        pName === 'msg_out' || 
         pName === 'name_out' || 
         pName === 'slot_out' || 
         pName === 'names_out' || 
         pName === 'count_out' || 
         pName === 'info_out' || 
         toPName === 'val_in' || 
-        toPName === 'msg_in'
+        toPName === 'msg_in' ||
+        (toNode && toNode.type === 'format_text' && toPName !== 'exec_in')
       );
 
       if (isDataWire) {
         let vType = fromNode?.data?.varType;
         if (!vType) {
           if (pName === 'slot_out' || pName === 'count_out') vType = 'number';
-          else if (pName === 'name_out' || pName === 'names_out' || pName === 'info_out' || toPName === 'msg_in') vType = 'string';
+          else if (pName === 'msg_out' || pName === 'name_out' || pName === 'names_out' || pName === 'info_out' || toPName === 'msg_in') vType = 'string';
           else vType = 'string';
         }
         if (vType === 'number') {
@@ -2375,7 +2422,8 @@ class NodeCanvasEditor {
       var_set: 'Set myVar',
       variable: 'Set myVar',
       tts: 'Text to Speech (TTS)',
-      webhook_out: 'Discord / HTTP Webhook'
+      webhook_out: 'Discord / HTTP Webhook',
+      format_text: 'Format Text'
     };
 
     let initialData = { enabled: true };
@@ -2386,6 +2434,14 @@ class NodeCanvasEditor {
         message: '',
         showClient: false,
         targetClient: '1',
+        enabled: true
+      };
+    } else if (type === 'format_text') {
+      initialData = {
+        template: '{val_a} {val_b}',
+        pins: ['val_a', 'val_b'],
+        boolFormat: 'true_false',
+        separator: ' ',
         enabled: true
       };
     } else if (type === 'var_get') {
@@ -3829,6 +3885,7 @@ class NodeCanvasEditor {
         name: canvasT('cat_utilities', 'Safety & Utilities'),
         items: [
           { type: 'step_log', icon: '📝', name: this.getNodeTypeLabel('step_log') },
+          { type: 'format_text', icon: '🧩', name: this.getNodeTypeLabel('format_text') },
           { type: 'emergency_stop', icon: '🛑', name: this.getNodeTypeLabel('emergency_stop') },
           { type: 'tts', icon: '🗣️', name: this.getNodeTypeLabel('tts') },
           { type: 'screenshot', icon: '📸', name: this.getNodeTypeLabel('screenshot') },

@@ -309,5 +309,106 @@ assert.strictEqual(resolvedScanInfo, 'สแกนพบ 3 คน: Slot 1: Alice
 
 console.log('✅ Test 8 Passed: Party Buff & Party Scanner Data Output Pins verified!\n');
 
+// 9. Test Format Text Node (String, Number, Boolean formatting & Data Pin wiring)
+console.log('Test 9: Testing Format Text Node (String, Number, Boolean formatting & Template)...');
+
+const formatTextNode = nodeRegistry.get('format_text');
+assert(formatTextNode, 'format_text node should be registered in NodeRegistry');
+
+// 9.1 Test direct value formatting
+assert.strictEqual(formatTextNode.formatValue(true, 'true_false'), 'true');
+assert.strictEqual(formatTextNode.formatValue(false, 'true_false'), 'false');
+assert.strictEqual(formatTextNode.formatValue(true, 'yes_no'), 'Yes');
+assert.strictEqual(formatTextNode.formatValue(false, 'yes_no'), 'No');
+assert.strictEqual(formatTextNode.formatValue(true, 'thai'), 'จริง');
+assert.strictEqual(formatTextNode.formatValue(false, 'thai'), 'เท็จ');
+assert.strictEqual(formatTextNode.formatValue(12345), '12345');
+assert.strictEqual(formatTextNode.formatValue('Hello World'), 'Hello World');
+
+// 9.2 Test template interpolation
+const sampleAction = {
+  template: 'Member: {name} (Slot {slot}, Active: {active})',
+  pins: ['name', 'slot', 'active'],
+  boolFormat: 'true_false',
+  name: 'Warrior',
+  slot: 3,
+  active: true
+};
+const formattedResult = formatTextNode.computeFormattedText(sampleAction);
+assert.strictEqual(formattedResult, 'Member: Warrior (Slot 3, Active: true)', 'Template should correctly interpolate string, number, and bool');
+
+// 9.3 Test Thai boolean format in template
+sampleAction.boolFormat = 'thai';
+const formattedThaiResult = formatTextNode.computeFormattedText(sampleAction);
+assert.strictEqual(formattedThaiResult, 'Member: Warrior (Slot 3, Active: จริง)', 'Template should support Thai boolean format');
+
+// 9.4 Test Data Pin wiring: Party Buff (name_out, slot_out) + Boolean Var -> Format Text -> Step Log (msg_in)
+const boolLeaderVarAction = {
+  id: 'act_var_leader_1',
+  nodeId: 'node_var_leader_1',
+  mode: 'var_get',
+  varName: 'IsLeader',
+  varType: 'boolean',
+  defaultValue: true
+};
+bot.setVariableValue(boolLeaderVarAction, true);
+
+const formatTextAction = {
+  id: 'act_format_text_1',
+  nodeId: 'node_format_text_1',
+  mode: 'format_text',
+  template: 'Buffing {name} at Slot {slot} (Leader: {isLeader})',
+  pins: ['name', 'slot', 'isLeader'],
+  boolFormat: 'true_false'
+};
+
+const finalLogAction = {
+  id: 'act_final_log_1',
+  nodeId: 'node_final_log_1',
+  mode: 'step_log'
+};
+
+// Connect:
+// party_buff (name_out: String) -> format_text (name)
+// party_buff (slot_out: Number) -> format_text (slot)
+// boolLeaderVar (val_out: Boolean true) -> format_text (isLeader)
+// format_text (msg_out: String) -> step_log (msg_in)
+global.activeActions.push(partyBuffAction, boolLeaderVarAction, formatTextAction, finalLogAction);
+global.activeProfileConnections.push(
+  { id: 'c_ft_name', fromNodeId: 'node_party_buff_1', fromPort: 'name_out', toNodeId: 'node_format_text_1', toPort: 'name' },
+  { id: 'c_ft_slot', fromNodeId: 'node_party_buff_1', fromPort: 'slot_out', toNodeId: 'node_format_text_1', toPort: 'slot' },
+  { id: 'c_ft_leader', fromNodeId: 'node_var_leader_1', fromPort: 'val_out', toNodeId: 'node_format_text_1', toPort: 'isLeader' },
+  { id: 'c_ft_log', fromNodeId: 'node_format_text_1', fromPort: 'msg_out', toNodeId: 'node_final_log_1', toPort: 'msg_in' }
+);
+
+// Resolve from downstream Step Log
+const resolvedThroughFormatText = bot.resolveNodeInputData(finalLogAction, 'msg_in');
+assert.strictEqual(
+  resolvedThroughFormatText,
+  'Buffing HeroSlayer at Slot 2 (Leader: true)',
+  'Step Log should resolve combined string via Format Text node with Boolean converted to string'
+);
+
+// 9.5 Test with Thai Boolean formatting
+formatTextAction.boolFormat = 'thai';
+const resolvedThai = bot.resolveNodeInputData(finalLogAction, 'msg_in');
+assert.strictEqual(
+  resolvedThai,
+  'Buffing HeroSlayer at Slot 2 (Leader: จริง)',
+  'Step Log should resolve Boolean converted to Thai string'
+);
+
+// 9.6 Test with Boolean False
+bot.setVariableValue(boolLeaderVarAction, false);
+formatTextAction.boolFormat = 'yes_no';
+const resolvedFalse = bot.resolveNodeInputData(finalLogAction, 'msg_in');
+assert.strictEqual(
+  resolvedFalse,
+  'Buffing HeroSlayer at Slot 2 (Leader: No)',
+  'Step Log should resolve Boolean false converted to No'
+);
+
+console.log('✅ Test 9 Passed: Format Text Node, Type Conversion & Data Pin Resolution verified!\n');
+
 console.log('🎉 All Step Log & Unreal Blueprint Variable Tests Passed Successfully!');
 process.exit(0);
