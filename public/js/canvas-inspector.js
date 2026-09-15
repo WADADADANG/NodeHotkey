@@ -337,7 +337,7 @@
             ⚡ ${window.currentLang === 'en' ? 'Auto-detect Pins' : 'ตรวจหา Pin จากข้อความ'}
           </button>
         </div>
-        <textarea class="inspector-input" rows="3" placeholder="e.g. ข้อความ {${pins[0] || 'val_a'}}" oninput="window.nodeCanvas.updateNodeData('${node.id}', 'template', this.value); window.nodeCanvas.renderNodes();" style="resize:vertical; min-height:65px; font-family:'JetBrains Mono',monospace; padding:8px 10px; line-height:1.4;">${template}</textarea>
+        <textarea class="inspector-input" rows="6" placeholder="e.g. ข้อความ {${pins[0] || 'val_a'}}" oninput="window.nodeCanvas.updateNodeData('${node.id}', 'template', this.value); window.nodeCanvas.renderNodes();" style="resize:vertical; min-height:130px; font-family:'JetBrains Mono',monospace; padding:10px 12px; font-size:12.5px; line-height:1.5;">${template}</textarea>
         <span style="font-size:10px; color:var(--muted); margin-top:4px; display:block; line-height:1.4;">
           💡 ใส่ชื่อพินในวงเล็บปีกกา เช่น <code>{${pins[0] || 'val_a'}}</code> เมื่อเชื่อมสายเข้ามา ระบบจะแทนที่ข้อความให้อัตโนมัติ
         </span>
@@ -463,7 +463,7 @@
     ` : `
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_log_message', window.currentLang === 'en' ? 'Log Message' : 'ข้อความใน Log')}</label>
-        <textarea class="inspector-input" rows="3" placeholder="${window.currentLang === 'en' ? 'Type message to print in terminal...' : 'พิมพ์ข้อความที่ต้องการแสดงใน Log...'}" oninput="window.nodeCanvas.updateNodeData('${node.id}', 'message', this.value); window.nodeCanvas.renderNodes();" style="resize:vertical; min-height:60px; font-family:inherit; padding:8px 10px; line-height:1.4;">${message}</textarea>
+        <textarea class="inspector-input" rows="5" placeholder="${window.currentLang === 'en' ? 'Type message to print in terminal...' : 'พิมพ์ข้อความที่ต้องการแสดงใน Log...'}" oninput="window.nodeCanvas.updateNodeData('${node.id}', 'message', this.value); window.nodeCanvas.renderNodes();" style="resize:vertical; min-height:110px; font-family:inherit; padding:10px 12px; font-size:12.5px; line-height:1.5;">${message}</textarea>
       </div>
     `;
   },
