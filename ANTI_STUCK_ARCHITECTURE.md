@@ -67,29 +67,63 @@ window.addEventListener('mouseup', (e) => {
     if (e.isTrusted) heldPhysicalButtons.delete(e.button);
 }, true);
 
-// 3. ปลดล็อกทันทีเมื่อหน้าต่างสูญเสียโฟกัส (Window Blur)
+// 3. ปลดล็อกทันทีเมื่อหน้าต่างสูญเสียโฟกัส (Window Blur / Tab Switch)
 const releaseAllStuckPhysicalInputs = () => {
-    const target = document.activeElement || document.querySelector('canvas') || document.body || window;
+    // รวบรวม Target ทุกจุดในหน้าจอ (เน้นส่งตรงเข้า WebGL Canvas ทุกตัว)
+    const targets = new Set();
+    document.querySelectorAll('canvas').forEach(c => targets.add(c));
+    if (document.activeElement) targets.add(document.activeElement);
+    if (document.body) targets.add(document.body);
+    targets.add(document);
+    targets.add(window);
 
-    // 3.1 ยิง KeyUp ให้ครบทุกปุ่มที่ค้าง
+    // 3.1 ยิง KeyUp ให้ครบทุกปุ่มที่ค้าง (ครอบคลุม A-Z, 0-9 แถวบน, Numpad, ลูกศร, Space)
     if (heldPhysicalKeys.size > 0) {
         for (const [code, info] of heldPhysicalKeys.entries()) {
+            const isNumpad = (info.code && info.code.startsWith('Numpad')) || info.location === 3;
+            const locationVal = isNumpad ? 3 : (info.location || 0);
+
+            let keyVal = info.key;
+            let keyCodeVal = info.keyCode;
+
+            // Normalize Numpad Keys (ส่ง location: 3 ให้เกมจำแนก Numpad ถูกต้อง)
+            if (info.code && /^Numpad[0-9]$/.test(info.code)) {
+                const digit = info.code.replace('Numpad', '');
+                keyVal = digit;
+                keyCodeVal = 96 + parseInt(digit, 10);
+            }
+            // Normalize Arrow Keys & Spacebar
+            else if (info.code === 'ArrowUp') { keyVal = 'ArrowUp'; keyCodeVal = 38; }
+            else if (info.code === 'ArrowDown') { keyVal = 'ArrowDown'; keyCodeVal = 40; }
+            else if (info.code === 'ArrowLeft') { keyVal = 'ArrowLeft'; keyCodeVal = 37; }
+            else if (info.code === 'ArrowRight') { keyVal = 'ArrowRight'; keyCodeVal = 39; }
+            else if (info.code === 'Space') { keyVal = ' '; keyCodeVal = 32; }
+
             const keyUpEvent = new KeyboardEvent('keyup', {
-                key: info.key,
+                key: keyVal || info.key,
                 code: info.code,
-                keyCode: info.keyCode,
-                which: info.which,
+                keyCode: keyCodeVal || info.keyCode,
+                which: keyCodeVal || info.which || info.keyCode,
+                location: locationVal,
                 bubbles: true,
                 cancelable: true,
                 composed: true
             });
-            target.dispatchEvent(keyUpEvent);
-            window.dispatchEvent(keyUpEvent);
+
+            try {
+                Object.defineProperty(keyUpEvent, 'keyCode', { value: keyCodeVal || info.keyCode, configurable: true });
+                Object.defineProperty(keyUpEvent, 'which', { value: keyCodeVal || info.which || info.keyCode, configurable: true });
+                Object.defineProperty(keyUpEvent, 'location', { value: locationVal, configurable: true });
+            } catch (err) { }
+
+            targets.forEach(t => {
+                try { t.dispatchEvent(keyUpEvent); } catch (e) { }
+            });
         }
         heldPhysicalKeys.clear();
     }
 
-    // 3.2 ยิง MouseUp และปลด PointerLock
+    // 3.2 ยิง MouseUp และปลด PointerLock ส่งตรงเข้า Canvas
     if (heldPhysicalButtons.size > 0) {
         if (document.pointerLockElement) {
             try { document.exitPointerLock?.(); } catch (e) { }
@@ -104,8 +138,9 @@ const releaseAllStuckPhysicalInputs = () => {
                 clientX: lastMousePos.x,
                 clientY: lastMousePos.y
             });
-            target.dispatchEvent(mouseUpEvent);
-            window.dispatchEvent(mouseUpEvent);
+            targets.forEach(t => {
+                try { t.dispatchEvent(mouseUpEvent); } catch (e) { }
+            });
         }
         heldPhysicalButtons.clear();
     }

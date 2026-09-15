@@ -914,25 +914,29 @@ async function injectClientInitScripts(browserCtx, clientIndex) {
         updateTitle();
 
         // 4. 🛡️ ROOT-CAUSE ANTI-STUCK ENGINE (Auto-release physical keys and mouse buttons on window blur)
-        const heldPhysicalKeys = new Map();     // code -> { key, code, keyCode, which }
+        const heldPhysicalKeys = new Map();     // code -> { key, code, keyCode, which, location }
         const heldPhysicalButtons = new Set();  // mouse button numbers (0: left, 1: middle, 2: right)
         let lastMousePos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 
         // 4.1 Track physical keyboard down/up (only e.isTrusted === true, ignores bot-injected synthetic events)
         window.addEventListener('keydown', (e) => {
             if (e.isTrusted) {
-                heldPhysicalKeys.set(e.code, {
+                const code = e.code || `Key_${e.keyCode}`;
+                heldPhysicalKeys.set(code, {
                     key: e.key,
                     code: e.code,
                     keyCode: e.keyCode,
-                    which: e.which
+                    which: e.which,
+                    location: e.location || 0
                 });
             }
         }, true);
 
         window.addEventListener('keyup', (e) => {
             if (e.isTrusted) {
-                heldPhysicalKeys.delete(e.code);
+                const code = e.code || `Key_${e.keyCode}`;
+                heldPhysicalKeys.delete(code);
+                if (e.code) heldPhysicalKeys.delete(e.code);
             }
         }, true);
 
@@ -955,22 +959,76 @@ async function injectClientInitScripts(browserCtx, clientIndex) {
 
         // 4.3 Auto-release all held inputs on window blur / focus lost
         const releaseAllStuckPhysicalInputs = () => {
-            const target = document.activeElement || document.querySelector('canvas') || document.body || window;
+            // Collect all possible input receivers in the page (Crucial for WebGL Canvas games)
+            const targets = new Set();
+            document.querySelectorAll('canvas').forEach(c => targets.add(c));
+            if (document.activeElement) targets.add(document.activeElement);
+            if (document.body) targets.add(document.body);
+            targets.add(document);
+            targets.add(window);
 
             // Release physical keys
             if (heldPhysicalKeys.size > 0) {
                 for (const [code, info] of heldPhysicalKeys.entries()) {
+                    // Auto-detect Numpad location: Numpad keys MUST have location = 3 for game engines
+                    const isNumpad = (info.code && info.code.startsWith('Numpad')) || info.location === 3;
+                    const locationVal = isNumpad ? 3 : (info.location || 0);
+
+                    let keyVal = info.key;
+                    let keyCodeVal = info.keyCode;
+
+                    // Normalize Numpad keys
+                    if (info.code && /^Numpad[0-9]$/.test(info.code)) {
+                        const digit = info.code.replace('Numpad', '');
+                        keyVal = digit;
+                        keyCodeVal = 96 + parseInt(digit, 10);
+                    } else if (info.code === 'NumpadDecimal') {
+                        keyVal = '.';
+                        keyCodeVal = 110;
+                    } else if (info.code === 'NumpadAdd') {
+                        keyVal = '+';
+                        keyCodeVal = 107;
+                    } else if (info.code === 'NumpadSubtract') {
+                        keyVal = '-';
+                        keyCodeVal = 109;
+                    } else if (info.code === 'NumpadMultiply') {
+                        keyVal = '*';
+                        keyCodeVal = 106;
+                    } else if (info.code === 'NumpadDivide') {
+                        keyVal = '/';
+                        keyCodeVal = 111;
+                    } else if (info.code === 'NumpadEnter') {
+                        keyVal = 'Enter';
+                        keyCodeVal = 13;
+                    }
+                    // Normalize Arrow Keys
+                    else if (info.code === 'ArrowUp') { keyVal = 'ArrowUp'; keyCodeVal = 38; }
+                    else if (info.code === 'ArrowDown') { keyVal = 'ArrowDown'; keyCodeVal = 40; }
+                    else if (info.code === 'ArrowLeft') { keyVal = 'ArrowLeft'; keyCodeVal = 37; }
+                    else if (info.code === 'ArrowRight') { keyVal = 'ArrowRight'; keyCodeVal = 39; }
+                    // Normalize Spacebar
+                    else if (info.code === 'Space') { keyVal = ' '; keyCodeVal = 32; }
+
                     const keyUpEvent = new KeyboardEvent('keyup', {
-                        key: info.key,
+                        key: keyVal || info.key,
                         code: info.code,
-                        keyCode: info.keyCode,
-                        which: info.which,
+                        keyCode: keyCodeVal || info.keyCode,
+                        which: keyCodeVal || info.which || info.keyCode,
+                        location: locationVal,
                         bubbles: true,
                         cancelable: true,
                         composed: true
                     });
-                    try { target.dispatchEvent(keyUpEvent); } catch (e) { }
-                    try { window.dispatchEvent(keyUpEvent); } catch (e) { }
+
+                    try {
+                        Object.defineProperty(keyUpEvent, 'keyCode', { value: keyCodeVal || info.keyCode, configurable: true });
+                        Object.defineProperty(keyUpEvent, 'which', { value: keyCodeVal || info.which || info.keyCode, configurable: true });
+                        Object.defineProperty(keyUpEvent, 'location', { value: locationVal, configurable: true });
+                    } catch (err) { }
+
+                    targets.forEach(t => {
+                        try { t.dispatchEvent(keyUpEvent); } catch (e) { }
+                    });
                 }
                 heldPhysicalKeys.clear();
             }
@@ -990,8 +1048,9 @@ async function injectClientInitScripts(browserCtx, clientIndex) {
                         clientX: lastMousePos.x,
                         clientY: lastMousePos.y
                     });
-                    try { target.dispatchEvent(mouseUpEvent); } catch (e) { }
-                    try { window.dispatchEvent(mouseUpEvent); } catch (e) { }
+                    targets.forEach(t => {
+                        try { t.dispatchEvent(mouseUpEvent); } catch (e) { }
+                    });
                 }
                 heldPhysicalButtons.clear();
             }
@@ -1002,6 +1061,7 @@ async function injectClientInitScripts(browserCtx, clientIndex) {
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) releaseAllStuckPhysicalInputs();
         }, true);
+        window.addEventListener('pagehide', releaseAllStuckPhysicalInputs, true);
     }, { index: clientIndex, initialPrefix });
 }
 
