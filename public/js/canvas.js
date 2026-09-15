@@ -3771,7 +3771,6 @@ class NodeCanvasEditor {
           { type: 'branch', icon: '🌿', name: this.getNodeTypeLabel('branch') },
           { type: 'var_set', icon: '📦', name: this.getNodeTypeLabel('var_set') },
           { type: 'var_get', icon: '📥', name: this.getNodeTypeLabel('var_get') },
-          { type: 'variable', icon: '📦', name: this.getNodeTypeLabel('variable') },
           { type: 'control', icon: '🎛️', name: this.getNodeTypeLabel('control') },
           { type: 'delay', icon: '⏳', name: this.getNodeTypeLabel('delay') }
         ]
