@@ -676,8 +676,8 @@ class NodeCanvasEditor {
     this.nodes.forEach(node => {
       const nodeEl = document.createElement('div');
       const isSelected = this.selectedNodeIds.has(node.id);
-      const isPure = (node.type === 'var_get' || node.isPure);
-      const pureTypeClass = isPure ? `pure-node pure-${node.data?.varType || 'string'}` : '';
+      const isPure = (node.type === 'var_get' || node.type === 'format_text' || node.isPure);
+      const pureTypeClass = isPure ? `pure-node pure-${node.data?.varType || (node.type === 'format_text' ? 'string' : 'string')}` : '';
       nodeEl.className = `canvas-node ${isSelected ? 'selected' : ''} ${pureTypeClass}`.trim();
       nodeEl.style.left = `${node.position.x}px`;
       nodeEl.style.top = `${node.position.y}px`;
@@ -1221,15 +1221,11 @@ class NodeCanvasEditor {
         `).join('');
 
         pinsHTML = `
-          <div class="node-pins-section">
+          <div class="node-pins-section pure-pins">
             ${inputPinsHTML}
             <div class="node-pin-row">
               <span class="node-pin-label port-string">Result (msg_out) ●</span>
               <div class="node-port port-out port-data port-string" data-node="${node.id}" data-port="msg_out" title="Formatted Text (String - Pink)"></div>
-            </div>
-            <div class="node-pin-row">
-              <span class="node-pin-label onComplete">${canvasT('port_onComplete', 'On Complete')} ▶</span>
-              <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="next" title="${canvasT('port_onComplete', 'On Complete')}"></div>
             </div>
           </div>
         `;
@@ -1730,7 +1726,7 @@ class NodeCanvasEditor {
     const node = this.nodes.find(n => n.id === nodeId);
     if (!node) return { x: 0, y: 0 };
 
-    const isOutput = !(portName === 'exec_in' || portName === 'msg_in' || portName === 'val_in' || (node.type === 'format_text' && portName !== 'msg_out' && portName !== 'next' && portName !== 'onComplete'));
+    const isOutput = !(portName === 'exec_in' || portName === 'msg_in' || portName === 'val_in' || (node.type === 'format_text' && portName !== 'msg_out'));
     const x = isOutput ? node.position.x + 221 : node.position.x - 1;
     let y = node.position.y + 38;
     if (portName === 'onBeforeStart') y = node.position.y + 75;
@@ -1808,7 +1804,7 @@ class NodeCanvasEditor {
         conn.fromPort === 'info_out' || 
         conn.toPort === 'val_in' || 
         conn.toPort === 'msg_in' ||
-        (toNode && toNode.type === 'format_text' && conn.toPort !== 'exec_in')
+        (toNode && toNode.type === 'format_text')
       );
       let wireTypeClass = '';
       if (isDataWire) {
@@ -1887,7 +1883,7 @@ class NodeCanvasEditor {
         pName === 'info_out' || 
         toPName === 'val_in' || 
         toPName === 'msg_in' ||
-        (toNode && toNode.type === 'format_text' && toPName !== 'exec_in')
+        (toNode && toNode.type === 'format_text')
       );
 
       if (isDataWire) {

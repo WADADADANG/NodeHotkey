@@ -20,9 +20,9 @@ module.exports = {
   title: 'Format Text',
   category: 'Utility & Debug',
   icon: '🧩',
-  color: '#ec4899',
-  inputs: ['in'],
-  outputs: ['onComplete'],
+  isPure: true,
+  inputs: [],
+  outputs: ['msg_out'],
   dataOutputs: [
     { name: 'msg_out', type: 'string', label: 'Formatted Text' }
   ],
@@ -174,21 +174,6 @@ module.exports = {
   },
 
   async execute(context, action, callStack = []) {
-    if (global.isSuspended) return false;
-
-    // 1. Compute formatted text
-    const result = this.computeFormattedText(action);
-
-    // 2. Emit signal for visual pulse
-    if (typeof global.emitSignal === 'function') {
-      global.emitSignal(action.id, 'onComplete');
-    }
-
-    // 3. Fire execution chain to connected downstream nodes
-    if (typeof global.fireChain === 'function') {
-      await global.fireChain(action, 'onComplete', callStack);
-    }
-
-    return result;
+    return this.computeFormattedText(action);
   }
 };
