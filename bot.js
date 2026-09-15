@@ -3644,15 +3644,16 @@ async function fireChain(sourceAction, eventName, callStack = new Set()) {
     const safeStack = (callStack instanceof Set) ? callStack : new Set(Array.isArray(callStack) ? callStack : []);
 
     const executeChain = async () => {
-        for (const targetAction of targetActionsToRun) {
+        const promises = targetActionsToRun.map(async (targetAction) => {
             if (safeStack.has(targetAction.id)) {
                 console.warn(`[Graph Chain] Circular chain detected: ${Array.from(safeStack).join(' -> ')} -> ${targetAction.id}. Aborting branch.`);
-                continue;
+                return;
             }
             console.log(`[Graph Chain] "${sourceAction.name}" [${eventName}] -> "${targetAction.name}"`);
             emitSignal(sourceAction.id, eventName, targetAction.id);
             await runChainedAction(targetAction, new Set([...safeStack, targetAction.id]));
-        }
+        });
+        await Promise.all(promises);
     };
 
     await executeChain().catch(err => console.error(`[Graph Chain Error] executeChain:`, err));
