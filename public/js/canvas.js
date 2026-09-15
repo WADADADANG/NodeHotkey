@@ -1104,7 +1104,7 @@ class NodeCanvasEditor {
         const stepTag = node.data?.stepTag || 'STEP 1';
         const msg = node.data?.message || '';
         const showClient = node.data?.showClient === true;
-        const msgConn = this.connections.find(c => c.toNodeId === node.id && (c.toPort === 'msg_in' || !c.toPort));
+        const msgConn = this.connections.find(c => c.toNodeId === node.id && c.toPort === 'msg_in');
         let srcTitle = '';
         if (msgConn) {
           const srcNode = this.nodes.find(n => n.id === msgConn.fromNodeId);
@@ -1209,10 +1209,10 @@ class NodeCanvasEditor {
       ` : '';
 
       if (node.type === 'step_log') {
-        const msgConn = this.connections.find(c => c.toNodeId === node.id && (c.toPort === 'msg_in' || !c.toPort));
-        const pinLabelText = msgConn ? '◀ Msg In (Active 🔗)' : '◀ Msg In';
+        const msgConn = this.connections.find(c => c.toNodeId === node.id && c.toPort === 'msg_in');
+        const pinLabelText = '◀ Msg In';
         const pinLabelStyle = msgConn ? 'color:#ec4899; font-weight:700;' : '';
-        const pinTitle = msgConn ? 'กำลังรับข้อความผ่านสายสีชมพู (มีลำดับความสำคัญสูงสุด เหนือข้อความพิมพ์)' : 'Message Data Input (String - Pink) - เสียบสายเพื่อรับข้อความไดนามิก';
+        const pinTitle = 'Message Data Input (String - Pink)';
         pinsHTML = `
           <div class="node-pins-section">
             <div class="node-pin-row pin-row-in">
@@ -2269,7 +2269,8 @@ class NodeCanvasEditor {
       }
     } else {
       // Incoming port (port-in)
-      const conns = this.connections.filter(c => c.toNodeId === nodeId && (c.toPort === portName || !c.toPort || c.toPort === 'exec_in'));
+      const isFlow = portName === 'exec_in' || portName === 'in';
+      const conns = this.connections.filter(c => c.toNodeId === nodeId && (isFlow ? (c.toPort === 'exec_in' || c.toPort === 'in' || !c.toPort) : c.toPort === portName));
       if (conns.length === 0) {
         this.hidePortContextMenu();
         return;
@@ -2345,10 +2346,11 @@ class NodeCanvasEditor {
   }
 
   disconnectAllToPort(nodeId, portName) {
-    const toRemove = this.connections.filter(c => c.toNodeId === nodeId && (c.toPort === portName || !c.toPort || c.toPort === 'exec_in'));
+    const isFlow = portName === 'exec_in' || portName === 'in';
+    const toRemove = this.connections.filter(c => c.toNodeId === nodeId && (isFlow ? (c.toPort === 'exec_in' || c.toPort === 'in' || !c.toPort) : c.toPort === portName));
     if (toRemove.length === 0) return;
 
-    this.connections = this.connections.filter(c => !(c.toNodeId === nodeId && (c.toPort === portName || !c.toPort || c.toPort === 'exec_in')));
+    this.connections = this.connections.filter(c => !(c.toNodeId === nodeId && (isFlow ? (c.toPort === 'exec_in' || c.toPort === 'in' || !c.toPort) : c.toPort === portName)));
     this.hidePortContextMenu();
     this.render();
     this.addHistory('✂️', `ตัดสายรับเข้า [${portName}] ทั้งหมด (${toRemove.length} เส้น)`);
