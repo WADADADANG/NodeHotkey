@@ -422,12 +422,68 @@
     const message = node.data?.message || '';
     const showClient = node.data?.showClient === true;
 
+    const msgConn = this.connections.find(c => c.toNodeId === node.id && (c.toPort === 'msg_in' || !c.toPort));
+    let srcTitle = '';
+    if (msgConn) {
+      const srcNode = this.nodes.find(n => n.id === msgConn.fromNodeId);
+      srcTitle = srcNode ? (srcNode.title || srcNode.type) : 'Wire';
+    }
+
+    let modeBannerHTML = '';
+    let messageInputHTML = '';
+
+    if (msgConn) {
+      modeBannerHTML = `
+        <div style="background:rgba(236,72,153,0.12); border:1px solid rgba(236,72,153,0.4); border-radius:8px; padding:10px 12px; margin-bottom:12px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+            <div style="display:flex; align-items:center; gap:6px; font-weight:700; color:#ec4899; font-size:12px;">
+              <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ec4899; box-shadow:0 0 6px #ec4899;"></span>
+              <span>${window.currentLang === 'en' ? 'Active: Dynamic Wire Connected' : 'กำลังทำงาน: โหมดสายข้อมูลไดนามิก'}</span>
+            </div>
+            <span style="font-size:10px; background:#ec4899; color:#fff; padding:1px 6px; border-radius:4px; font-weight:700;">PRIORITY #1</span>
+          </div>
+          <div style="font-size:11px; color:var(--text); line-height:1.4;">
+            ${window.currentLang === 'en' ? 'Sourced from:' : 'รับข้อความสดจาก:'} <strong style="color:#f472b6; font-family:'JetBrains Mono',monospace;">${srcTitle}</strong>
+          </div>
+          <div style="font-size:10px; color:#fbcfe8; opacity:0.85; margin-top:4px;">
+            💡 ${window.currentLang === 'en' ? 'System prioritizes text from this wire. The box below serves as a fallback only.' : 'ระบบจะนำข้อความจากสายสีชมพูนี้ไปแสดงเป็นหลักเสมอ (ช่องด้านล่างจะกลายเป็นข้อความสำรอง)'}
+          </div>
+        </div>
+      `;
+
+      messageInputHTML = `
+        <div class="inspector-field-group">
+          <label class="inspector-label" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>${canvasT('inspector_fallback_message', window.currentLang === 'en' ? 'Fallback Message (Backup)' : 'ข้อความสำรอง (Fallback Message)')}</span>
+            <span style="font-size:10px; color:#a855f7; font-weight:600;">(ใช้เฉพาะกรณีสายไม่มีค่า)</span>
+          </label>
+          <textarea class="inspector-input" rows="2" placeholder="${window.currentLang === 'en' ? 'Backup message if wire returns empty...' : 'ข้อความสำรอง (จะใช้เมื่อสายส่งค่าว่างมา)...'}" oninput="window.nodeCanvas.updateNodeData('${node.id}', 'message', this.value); window.nodeCanvas.renderNodes();" style="resize:vertical; min-height:50px; font-family:inherit; padding:8px 10px; line-height:1.4; opacity:0.85; border-color:rgba(255,255,255,0.15);">${message}</textarea>
+        </div>
+      `;
+    } else {
+      modeBannerHTML = `
+        <div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:8px; padding:10px 12px; margin-bottom:12px;">
+          <div style="display:flex; align-items:center; gap:6px; font-weight:700; color:#10b981; font-size:12px; margin-bottom:3px;">
+            <span>✏️ ${window.currentLang === 'en' ? 'Active: Static Text Input' : 'กำลังทำงาน: โหมดข้อความพิมพ์เอง (Static Text)'}</span>
+          </div>
+          <div style="font-size:10px; color:var(--muted); line-height:1.4;">
+            ${window.currentLang === 'en' ? 'No wire connected to ◀ Msg In. The text below will be logged directly.' : 'ยังไม่มีสายเสียบที่ขา <b>◀ Msg In</b> ระบบจะพิมพ์ข้อความในช่องด้านล่างนี้ลง Log โดยตรง'}
+          </div>
+        </div>
+      `;
+
+      messageInputHTML = `
+        <div class="inspector-field-group">
+          <label class="inspector-label">${canvasT('inspector_log_message', window.currentLang === 'en' ? 'Log Message to Print' : 'ข้อความที่จะแสดงใน Log')}</label>
+          <textarea class="inspector-input" rows="3" placeholder="${window.currentLang === 'en' ? 'Type message to print in terminal...' : 'พิมพ์ข้อความที่ต้องการแสดงใน Log...'}" oninput="window.nodeCanvas.updateNodeData('${node.id}', 'message', this.value); window.nodeCanvas.renderNodes();" style="resize:vertical; min-height:60px; font-family:inherit; padding:8px 10px; line-height:1.4;">${message}</textarea>
+          <span style="font-size:10px; color:var(--muted); margin-top:4px; display:block; line-height:1.4;">💡 <b>Tip:</b> เชื่อมสายสีชมพูจากโหนด <b>Format Text</b> หรือ <b>Get Variable</b> เข้าขา <b>◀ Msg In</b> เพื่อให้สลับเป็นโหมดสายอัตโนมัติ</span>
+        </div>
+      `;
+    }
+
     return `
-      <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_log_message', window.currentLang === 'en' ? 'Log Message to Print' : 'ข้อความที่จะแสดงใน Log')}</label>
-        <textarea class="inspector-input" rows="3" placeholder="${window.currentLang === 'en' ? 'Type message to print in terminal (or connect via pink Message pin)...' : 'พิมพ์ข้อความที่ต้องการแสดงใน Log (หรือต่อสายสีชมพูจากตัวแปร)...'}" oninput="window.nodeCanvas.updateNodeData('${node.id}', 'message', this.value); window.nodeCanvas.renderNodes();" style="resize:vertical; min-height:60px; font-family:inherit; padding:8px 10px; line-height:1.4;">${message}</textarea>
-        <span style="font-size:10px; color:var(--muted); margin-top:4px; display:block; line-height:1.4;">💡 <b>Dynamic Wire Tip:</b> เชื่อมสายสีชมพูจากโหนด <b>Get Variable</b> เข้าขา <b>◀ Message</b> เพื่อนำค่าตัวแปรมาแสดงใน Log ได้</span>
-      </div>
+      ${modeBannerHTML}
+      ${messageInputHTML}
       <div class="inspector-field-group">
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; color:var(--text);">
           <input type="checkbox" ${showClient ? 'checked' : ''} onchange="window.nodeCanvas.updateNodeData('${node.id}', 'showClient', this.checked); window.nodeCanvas.renderNodes();" style="accent-color:#10b981; cursor:pointer;" />

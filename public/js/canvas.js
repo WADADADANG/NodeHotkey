@@ -1104,12 +1104,22 @@ class NodeCanvasEditor {
         const stepTag = node.data?.stepTag || 'STEP 1';
         const msg = node.data?.message || '';
         const showClient = node.data?.showClient === true;
+        const msgConn = this.connections.find(c => c.toNodeId === node.id && (c.toPort === 'msg_in' || !c.toPort));
+        let srcTitle = '';
+        if (msgConn) {
+          const srcNode = this.nodes.find(n => n.id === msgConn.fromNodeId);
+          srcTitle = srcNode ? (srcNode.title || srcNode.type) : 'Wire';
+        }
+        const msgDisplayHTML = msgConn 
+          ? `<span class="node-info-value" style="color:#ec4899; font-weight:700; max-width:115px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="🔗 รับข้อความจากสาย: ${srcTitle} (แทนที่ข้อความพิมพ์)">🔗 [${srcTitle}]</span>`
+          : `<span class="node-info-value" style="color:#10b981; font-weight:600; max-width:115px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${msg || '(ว่างเปล่า)'}">${msg || '(ว่างเปล่า)'}</span>`;
+
         bodyHTML = `
           <div class="node-info-row">
             <span>Tag:</span> <span class="node-info-value" style="color:#10b981; font-weight:700;">${stepTag}</span>
           </div>
           <div class="node-info-row">
-            <span>Msg:</span> <span class="node-info-value" style="color:#ec4899; font-weight:600; max-width:115px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${msg || '(dynamic wire input)'}">${msg || '🔗 (Dynamic Wire)'}</span>
+            <span>Msg:</span> ${msgDisplayHTML}
           </div>
           <div class="node-info-row">
             <span>Client:</span> <span class="node-info-value" style="color:${showClient ? '#38bdf8' : 'var(--muted)'};">${showClient ? 'Client ' + (node.data?.targetClient || '1') : 'Off'}</span>
@@ -1199,11 +1209,15 @@ class NodeCanvasEditor {
       ` : '';
 
       if (node.type === 'step_log') {
+        const msgConn = this.connections.find(c => c.toNodeId === node.id && (c.toPort === 'msg_in' || !c.toPort));
+        const pinLabelText = msgConn ? '◀ Msg In (Active 🔗)' : '◀ Msg In';
+        const pinLabelStyle = msgConn ? 'color:#ec4899; font-weight:700;' : '';
+        const pinTitle = msgConn ? 'กำลังรับข้อความผ่านสายสีชมพู (มีลำดับความสำคัญสูงสุด เหนือข้อความพิมพ์)' : 'Message Data Input (String - Pink) - เสียบสายเพื่อรับข้อความไดนามิก';
         pinsHTML = `
           <div class="node-pins-section">
             <div class="node-pin-row pin-row-in">
-              <div class="node-port port-in port-data port-string" data-node="${node.id}" data-port="msg_in" title="Message Data Input (String - Pink)"></div>
-              <span class="node-pin-label port-string">◀ Message</span>
+              <div class="node-port port-in port-data port-string" data-node="${node.id}" data-port="msg_in" title="${pinTitle}"></div>
+              <span class="node-pin-label port-string" style="${pinLabelStyle}">${pinLabelText}</span>
             </div>
             <div class="node-pin-row">
               <span class="node-pin-label onComplete">${canvasT('port_onComplete', 'On Complete')} ▶</span>
