@@ -43,7 +43,13 @@ module.exports = {
     const clientPrefix = action.showClient && action.targetClient ? `[Client ${action.targetClient}] ` : '';
 
     // 3. Emit formatted Log to stdout (classified by Launcher as level: 'log')
-    console.log(`📝 [Log] ${clientPrefix}${resolvedMsg}`.trim());
+    // Support multiline logs (e.g. from Format Text) so each line is tagged and visible in the Log filter
+    const lines = String(resolvedMsg).split(/\r?\n/);
+    for (const line of lines) {
+      if (line.trim().length > 0) {
+        console.log(`📝 [Log] ${clientPrefix}${line}`.trim());
+      }
+    }
 
     // 4. Emit onComplete signal to trigger subsequent execution flow
     if (typeof global.emitSignal === 'function') {

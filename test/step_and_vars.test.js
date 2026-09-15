@@ -263,7 +263,15 @@ console.log = originalLog;
 
 const foundLog = logs.find(l => typeof l === 'string' && l.includes('สวัสดีครับ'));
 assert.strictEqual(foundLog, '📝 [Log] [Client 1] สวัสดีครับ', 'Step log should print actual message with client prefix');
-console.log('✅ Test 7 Passed: Step Log Static Message correctly resolved and printed!\n');
+
+// Test multiline formatting
+const multiLogs = [];
+console.log = (msg) => { if (typeof msg === 'string' && msg.includes('Line')) multiLogs.push(msg); };
+stepNode.execute({}, { message: 'Line 1\nLine 2\nLine 3' }, []);
+console.log = originalLog;
+assert.strictEqual(multiLogs.length, 3, 'Multiline log should produce 3 distinct lines');
+assert.ok(multiLogs.every(l => l.startsWith('📝 [Log]')), 'All multiline log lines should start with 📝 [Log]');
+console.log('✅ Test 7 Passed: Step Log Static Message & Multiline formatting correctly resolved and printed!\n');
 
 // 8. Test Party Buff & Party Scanner Data Output Pins
 console.log('Test 8: Testing Party Buff & Party Scanner Data Output Pins...');
