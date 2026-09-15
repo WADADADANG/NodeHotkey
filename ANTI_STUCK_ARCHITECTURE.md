@@ -153,14 +153,24 @@ window.addEventListener('focusout', releaseAllStuckPhysicalInputs, true);
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) releaseAllStuckPhysicalInputs();
 }, true);
+
+// 3.3 High-frequency OS Window Defocus Sentinel (ตรวจจับทันทีเมื่อคลิกโปรแกรมอื่นใน Windows)
+setInterval(() => {
+    if (!document.hasFocus() && (heldPhysicalKeys.size > 0 || heldPhysicalButtons.size > 0)) {
+        releaseAllStuckPhysicalInputs();
+    }
+}, 50);
 ```
 
 ---
 
-## 🎯 จุดเด่นของการแก้ไขด้วยวิธีนี้
+## 🎯 จุดเด่นของการแก้ไขด้วยวิธีนี้ (Multi-Layer Defense)
 
-1. **ครอบคลุมทั้งคีย์บอร์ดและเมาส์ 100%**: ปัญหาวิ่งไม่หยุด หรือมุมกล้องหมุนค้างจากการคลิกขวา ถูกแก้ไขพร้อมกัน
-2. **ความเร็วระดับ 0 ms**: ทำงานภายใน JavaScript Runtime ของหน้าเกมทันทีที่หลุด Focus ไม่ต้องรอรับส่งข้อมูลผ่าน IPC หรือ CDP ข้าม Process
-3. **ไม่กระทบต่อการกดค้างของบอท (`⚓ Key Hold`)**:
-   - การตรวจสอบ `e.isTrusted === true` ทำให้ระบบตัดเฉพาะ **ปุ่มที่ผู้ใช้กดด้วยมือตนเอง**
-   - คำสั่งที่บอทสั่งกดค้างไว้ผ่าน CDP จะไม่มี `e.isTrusted` จึงไม่ถูกสั่งปลดปล่อย ทำให้บอทยังคงกดค้างปุ่มหรือทำตามเงื่อนไขต่อไปได้อย่างราบรื่น 100%
+1. **Layer 1: In-Page High-Frequency Defocus Sentinel (`document.hasFocus()`)**:
+   - ทำงานทุกๆ 50ms ภายในเบราว์เซอร์ ตรวจสอบสถานะ OS Focus หากผู้ใช้คลิกสลับไปโปรแกรมอื่น (เช่น Discord, Notepad, จอสอง) ตัวเช็คจะตรวจพบว่า `document.hasFocus() === false` และสั่งปลดปุ่ม Space, Arrows, Numpad 0-9 และเมาส์ทันที แม้นิ้วจะยังกดค้างอยู่
+2. **Layer 2: Native CDP Key & Mouse Release (`isTrusted: true`)**:
+   - ส่งตรงคำสั่ง `keyUp` และ `mouseReleased` ผ่าน Chrome DevTools Protocol (CDP) เข้าไปยัง WebGL / Canvas โดยตรง รองรับทั้ง Numpad (NumLock ON/OFF), Space, ลูกศร, และตัวอักษร A-Z
+3. **Layer 3: Global OS Window Switch & Click-Outside Sentinel**:
+   - ดักจับการกด `Alt + Tab`, ปุ่ม `Windows (Meta)`, หรือการคลิกเมาส์นอกกรอบหน้าต่างเกม (`clientWindowBounds`) ที่ระดับ OS เพื่อสั่ง Auto-Release ป้องกันปุ่มค้างทุกกรณี
+4. **ไม่กระทบต่อการกดค้างของบอท (`⚓ Key Hold`)**:
+   - มีการตรวจสอบ `activeHoldStates` ก่อนปล่อยปุ่มเสมอ ทำให้หากมี Action ของบอทที่สั่งกดค้างไว้ จะไม่ถูกปลดปล่อยโดยเด็ดขาด 100%
