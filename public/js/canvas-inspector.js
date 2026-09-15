@@ -307,15 +307,25 @@
   },
 
   renderFormatTextHelper(node) {
-    const template = node.data?.template !== undefined ? node.data.template : '{val_a} {val_b}';
-    const pins = (Array.isArray(node.data?.pins) && node.data.pins.length > 0) ? node.data.pins : ['val_a', 'val_b'];
+    const template = node.data?.template !== undefined ? node.data.template : '{val_a}';
+    const pins = Array.isArray(node.data?.pins) ? node.data.pins : ['val_a'];
     const boolFormat = node.data?.boolFormat || 'true_false';
-    const separator = node.data?.separator !== undefined ? node.data.separator : ' ';
+
+    // Auto-calculate the next sequential letter pin (val_a -> val_b -> val_c ...)
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+    let nextPin = 'val_b';
+    for (const char of alphabet) {
+      const candidate = `val_${char}`;
+      if (!pins.includes(candidate)) {
+        nextPin = candidate;
+        break;
+      }
+    }
 
     const pinBadgesHTML = pins.map(p => `
-      <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.04); border:1px solid rgba(236,72,153,0.3); border-radius:6px; padding:4px 8px; margin-bottom:4px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(236,72,153,0.06); border:1px solid rgba(236,72,153,0.25); border-radius:6px; padding:5px 10px; margin-bottom:4px;">
         <span style="font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; color:#ec4899;">◀ {${p}}</span>
-        <button type="button" class="btn btn-ghost" style="padding:2px 6px; font-size:11px; color:#ef4444; height:auto; line-height:1;" onclick="window.nodeCanvas.removeFormatTextPin('${node.id}', '${p}')" title="ลบ Pin นี้">✖</button>
+        <button type="button" class="btn btn-ghost" style="padding:2px 6px; font-size:11px; color:#ef4444; height:auto; line-height:1;" onclick="window.nodeCanvas.removeFormatTextPin('${node.id}', '${p}')" title="${window.currentLang === 'en' ? 'Delete this pin' : 'ลบ Pin นี้'}">✖</button>
       </div>
     `).join('');
 
@@ -323,27 +333,24 @@
       <div class="inspector-field-group">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
           <label class="inspector-label" style="margin-bottom:0;">${canvasT('inspector_format_template', window.currentLang === 'en' ? 'Text Template' : 'รูปแบบข้อความ (Template)')}</label>
-          <button type="button" class="btn btn-ghost" style="padding:2px 8px; font-size:10px; color:#38bdf8; border-color:rgba(56,189,248,0.4); height:auto;" onclick="window.nodeCanvas.autoDetectFormatTextPins('${node.id}')" title="ตรวจหา {token} ใน Template แล้วสร้าง Pin ให้อัตโนมัติ">
-            ⚡ ${window.currentLang === 'en' ? 'Auto-detect Pins' : 'ตรวจหา Pin อัตโนมัติ'}
+          <button type="button" class="btn btn-ghost" style="padding:2px 8px; font-size:10px; color:#38bdf8; border-color:rgba(56,189,248,0.4); height:auto;" onclick="window.nodeCanvas.autoDetectFormatTextPins('${node.id}')" title="ตรวจหา {token} ในข้อความแล้วสร้าง Pin ให้อัตโนมัติ">
+            ⚡ ${window.currentLang === 'en' ? 'Auto-detect Pins' : 'ตรวจหา Pin จากข้อความ'}
           </button>
         </div>
-        <textarea class="inspector-input" rows="3" placeholder="e.g. Slot {slot}: {name} (Active: {active})" oninput="window.nodeCanvas.updateNodeData('${node.id}', 'template', this.value); window.nodeCanvas.renderNodes();" style="resize:vertical; min-height:65px; font-family:'JetBrains Mono',monospace; padding:8px 10px; line-height:1.4;">${template}</textarea>
+        <textarea class="inspector-input" rows="3" placeholder="e.g. ข้อความ {${pins[0] || 'val_a'}}" oninput="window.nodeCanvas.updateNodeData('${node.id}', 'template', this.value); window.nodeCanvas.renderNodes();" style="resize:vertical; min-height:65px; font-family:'JetBrains Mono',monospace; padding:8px 10px; line-height:1.4;">${template}</textarea>
         <span style="font-size:10px; color:var(--muted); margin-top:4px; display:block; line-height:1.4;">
-          💡 ใส่ชื่อพินในวงเล็บปีกกา เช่น <code>{name}</code>, <code>{slot}</code>, <code>{val_a}</code> เมื่อเชื่อมสายเข้ามา ระบบจะนำข้อความมาแทนที่ให้อัตโนมัติ
+          💡 ใส่ชื่อพินในวงเล็บปีกกา เช่น <code>{${pins[0] || 'val_a'}}</code> เมื่อเชื่อมสายเข้ามา ระบบจะแทนที่ข้อความให้อัตโนมัติ
         </span>
       </div>
 
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_format_pins', window.currentLang === 'en' ? 'Input Data Pins' : 'ขาเชื่อมข้อมูลนำเข้า (Data Pins)')}</label>
         <div style="max-height:140px; overflow-y:auto; margin-bottom:6px;">
-          ${pinBadgesHTML || '<div style="font-size:11px; color:var(--muted); text-align:center; padding:6px 0;">ไม่มี Pin (กดเพิ่มด้านล่าง)</div>'}
+          ${pinBadgesHTML || '<div style="font-size:11px; color:var(--muted); text-align:center; padding:6px 0;">ไม่มี Pin (กดปุ่มเพิ่มด้านล่าง)</div>'}
         </div>
-        <div style="display:flex; gap:6px;">
-          <input type="text" id="new-pin-input-${node.id}" class="inspector-input" placeholder="e.g. val_c, slot, name" style="flex:1; font-family:'JetBrains Mono',monospace; font-size:11px;" onkeydown="if(event.key==='Enter'){window.nodeCanvas.addFormatTextPin('${node.id}', this.value); this.value='';}" />
-          <button type="button" class="btn btn-primary" style="padding:4px 10px; font-size:11px;" onclick="const inp=document.getElementById('new-pin-input-${node.id}'); if(inp){window.nodeCanvas.addFormatTextPin('${node.id}', inp.value); inp.value='';}">
-            ➕ ${window.currentLang === 'en' ? 'Add' : 'เพิ่ม'}
-          </button>
-        </div>
+        <button type="button" class="btn btn-ghost" style="width:100%; border-radius:6px; border-color:rgba(236,72,153,0.4); color:#f472b6; font-weight:600; padding:6px 12px; font-size:11.5px; display:flex; align-items:center; justify-content:center; gap:6px;" onclick="window.nodeCanvas.addFormatTextPin('${node.id}')">
+          ➕ ${window.currentLang === 'en' ? `Add Next Pin ({${nextPin}})` : `เพิ่มพินถัดไป ({${nextPin}})`}
+        </button>
       </div>
 
       <div class="inspector-field-group">
@@ -354,19 +361,6 @@
           <option value="on_off" ${boolFormat === 'on_off' ? 'selected' : ''}>ON / OFF (เปิด / ปิด)</option>
           <option value="thai" ${boolFormat === 'thai' ? 'selected' : ''}>จริง / เท็จ (ภาษาไทย)</option>
         </select>
-        <span style="font-size:10px; color:var(--muted); margin-top:4px; display:block;">หากข้อมูลที่ต่อเข้ามาเป็น Boolean ระบบจะแปลงเป็นข้อความตามรูปแบบนี้</span>
-      </div>
-
-      <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_format_separator', window.currentLang === 'en' ? 'Fallback Separator' : 'ตัวคั่นสำรอง (กรณีไม่มี Template)')}</label>
-        <input type="text" class="inspector-input" value="${separator}" placeholder="เว้นวรรค เช่น เคาะ space หรือ คอมม่า (, )" oninput="window.nodeCanvas.updateNodeData('${node.id}', 'separator', this.value);" />
-      </div>
-
-      <div style="background:rgba(236,72,153,0.08); border:1px solid rgba(236,72,153,0.25); border-radius:6px; padding:8px 10px; margin-top:10px;">
-        <div style="font-size:11px; font-weight:700; color:#ec4899; margin-bottom:4px;">🧩 ขาต่อออก Result (msg_out):</div>
-        <div style="font-size:10px; color:var(--text); line-height:1.4;">
-          ต่อสายสีชมพูจาก <b>Result (msg_out)</b> เข้าหา <b>Log Message (◀ Message)</b>, <b>TTS</b> หรือ <b>Variable</b> เพื่อส่งข้อความที่รวมแล้วไปใช้งานต่อได้ทันที
-        </div>
       </div>
     `;
   },
@@ -374,16 +368,34 @@
   addFormatTextPin(nodeId, pinName) {
     const node = this.nodes.find(n => n.id === nodeId);
     if (!node) return;
-    const cleanPin = (pinName || '').trim().replace(/[{}]/g, '');
-    if (!cleanPin) return;
-
     if (!node.data) node.data = {};
-    if (!Array.isArray(node.data.pins)) node.data.pins = ['val_a', 'val_b'];
+    if (!Array.isArray(node.data.pins)) node.data.pins = ['val_a'];
+
+    let cleanPin = (pinName || '').trim().replace(/[{}]/g, '');
+    if (!cleanPin) {
+      // Auto-increment sequence: val_a -> val_b -> val_c -> ...
+      const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+      for (const char of alphabet) {
+        const candidate = `val_${char}`;
+        if (!node.data.pins.includes(candidate)) {
+          cleanPin = candidate;
+          break;
+        }
+      }
+      if (!cleanPin) {
+        cleanPin = `val_${node.data.pins.length + 1}`;
+      }
+    }
 
     if (!node.data.pins.includes(cleanPin)) {
       node.data.pins.push(cleanPin);
-      this.renderNodes();
-      this.renderWires();
+
+      // Automatically append {${cleanPin}} into template if not already present
+      if (typeof node.data.template === 'string' && !node.data.template.includes(`{${cleanPin}}`)) {
+        node.data.template = (node.data.template.trim() ? `${node.data.template} ` : '') + `{${cleanPin}}`;
+      }
+
+      this.render();
       this.openInspector(nodeId);
       this.onProfileChanged();
     }
@@ -391,12 +403,19 @@
 
   removeFormatTextPin(nodeId, pinName) {
     const node = this.nodes.find(n => n.id === nodeId);
-    if (!node || !node.data || !Array.isArray(node.data.pins)) return;
+    if (!node) return;
+    if (!node.data) node.data = {};
+    if (!Array.isArray(node.data.pins)) node.data.pins = ['val_a'];
 
     node.data.pins = node.data.pins.filter(p => p !== pinName);
     this.connections = this.connections.filter(c => !(c.toNodeId === nodeId && c.toPort === pinName));
-    this.renderNodes();
-    this.renderWires();
+
+    // Also remove {${pinName}} from template if present
+    if (typeof node.data.template === 'string') {
+      node.data.template = node.data.template.replace(new RegExp(`\\{${pinName}\\}\\s*`, 'g'), '').trim();
+    }
+
+    this.render();
     this.openInspector(nodeId);
     this.onProfileChanged();
   },
@@ -405,16 +424,18 @@
     const node = this.nodes.find(n => n.id === nodeId);
     if (!node) return;
     const template = node.data?.template || '';
-    const matches = template.match(/\{([a-zA-Z0-9_\-]+)\}/g);
+    // Support any characters inside {...}
+    const matches = template.match(/\{([^}]+)\}/g);
+    if (!node.data) node.data = {};
     if (matches && matches.length > 0) {
-      const uniquePins = Array.from(new Set(matches.map(m => m.slice(1, -1).trim())));
-      if (!node.data) node.data = {};
-      node.data.pins = uniquePins;
-      this.renderNodes();
-      this.renderWires();
-      this.openInspector(nodeId);
-      this.onProfileChanged();
+      const uniquePins = Array.from(new Set(matches.map(m => m.slice(1, -1).trim()).filter(Boolean)));
+      node.data.pins = uniquePins.length > 0 ? uniquePins : ['val_a'];
+    } else {
+      node.data.pins = ['val_a'];
     }
+    this.render();
+    this.openInspector(nodeId);
+    this.onProfileChanged();
   },
 
 

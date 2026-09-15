@@ -162,8 +162,8 @@
         cleanData.prefix = d.prefix || 'error_snap';
         cleanData.annotate = d.annotate === true;
       } else if (type === 'format_text') {
-        cleanData.template = d.template !== undefined ? d.template : '{val_a} {val_b}';
-        cleanData.pins = Array.isArray(d.pins) ? d.pins : ['val_a', 'val_b'];
+        cleanData.template = d.template !== undefined ? d.template : '{val_a}';
+        cleanData.pins = Array.isArray(d.pins) ? d.pins : ['val_a'];
         cleanData.boolFormat = d.boolFormat || 'true_false';
         cleanData.separator = d.separator !== undefined ? d.separator : ' ';
       }

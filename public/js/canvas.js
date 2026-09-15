@@ -1126,8 +1126,8 @@ class NodeCanvasEditor {
           </div>
         `;
       } else if (node.type === 'format_text') {
-        const template = node.data?.template !== undefined ? node.data.template : '{val_a} {val_b}';
-        const pins = (Array.isArray(node.data?.pins) && node.data.pins.length > 0) ? node.data.pins : ['val_a', 'val_b'];
+        const template = node.data?.template !== undefined ? node.data.template : '{val_a}';
+        const pins = Array.isArray(node.data?.pins) ? node.data.pins : ['val_a'];
         const boolFmt = node.data?.boolFormat || 'true_false';
         bodyHTML = `
           <div class="node-info-row">
@@ -1135,9 +1135,6 @@ class NodeCanvasEditor {
           </div>
           <div class="node-info-row">
             <span>Pins:</span> <span class="node-info-value" style="color:#a855f7; font-weight:700;">${pins.length} inputs</span>
-          </div>
-          <div class="node-info-row">
-            <span>Bool:</span> <span class="node-info-value" style="color:#38bdf8; font-size:10px;">${boolFmt}</span>
           </div>
         `;
       } else if (node.type === 'var_get') {
@@ -1226,7 +1223,7 @@ class NodeCanvasEditor {
           </div>
         `;
       } else if (node.type === 'format_text') {
-        const pins = (Array.isArray(node.data?.pins) && node.data.pins.length > 0) ? node.data.pins : ['val_a', 'val_b'];
+        const pins = Array.isArray(node.data?.pins) ? node.data.pins : ['val_a'];
         const inputPinsHTML = pins.map(p => `
           <div class="node-pin-row pin-row-in">
             <div class="node-port port-in port-data port-string" data-node="${node.id}" data-port="${p}" title="Input: {${p}} (String / Number / Bool)"></div>
@@ -2452,8 +2449,8 @@ class NodeCanvasEditor {
       };
     } else if (type === 'format_text') {
       initialData = {
-        template: '{val_a} {val_b}',
-        pins: ['val_a', 'val_b'],
+        template: '{val_a}',
+        pins: ['val_a'],
         boolFormat: 'true_false',
         separator: ' ',
         enabled: true

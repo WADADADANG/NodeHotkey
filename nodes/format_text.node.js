@@ -27,8 +27,8 @@ module.exports = {
     { name: 'msg_out', type: 'string', label: 'Formatted Text' }
   ],
   defaultData: {
-    template: '{val_a} {val_b}',
-    pins: ['val_a', 'val_b'],
+    template: '{val_a}',
+    pins: ['val_a'],
     boolFormat: 'true_false', // 'true_false' | 'yes_no' | 'on_off' | 'thai'
     separator: ' ',
     enabled: true
