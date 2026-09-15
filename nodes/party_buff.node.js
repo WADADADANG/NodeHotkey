@@ -16,6 +16,11 @@ module.exports = {
   color: '#14b8a6',
   inputs: ['in'],
   outputs: ['onNextMember', 'onComplete', 'onError'],
+  dataOutputs: [
+    { name: 'name_out', type: 'string', label: 'Member Name' },
+    { name: 'slot_out', type: 'number', label: 'Slot Number' },
+    { name: 'info_out', type: 'string', label: 'Summary' }
+  ],
   defaultData: {
     targetClient: '1',
     scanRegion: 'auto',

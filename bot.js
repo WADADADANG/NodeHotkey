@@ -3291,7 +3291,7 @@ function resolveNodeInputData(targetAction, inputPortName) {
     const targetId = targetAction.id || targetAction.nodeId;
     if (global.activeProfileConnections && Array.isArray(global.activeProfileConnections)) {
         const conn = global.activeProfileConnections.find(c => 
-            (c.toNodeId === targetId || c.toNodeId === `node_${targetId}`) && 
+            (c.toNodeId === targetId || c.toNodeId === `node_${targetId}` || (targetAction.nodeId && c.toNodeId === targetAction.nodeId)) && 
             (c.toPort === inputPortName || (!c.toPort && (inputPortName === 'msg_in' || inputPortName === 'val_in')))
         );
         if (conn) {
@@ -3306,8 +3306,24 @@ function resolveNodeInputData(targetAction, inputPortName) {
                     return getNamedVariableValue(sourceAction.varName || sourceAction.name, sourceAction);
                 } else if (sourceAction.mode === 'variable' || sourceAction.mode === 'var_set') {
                     return getVariableValue(sourceAction);
+                } else if (conn.fromPort && sourceAction[conn.fromPort] !== undefined) {
+                    return sourceAction[conn.fromPort];
+                } else if (conn.fromPort === 'name_out' && sourceAction.name_out !== undefined) {
+                    return sourceAction.name_out;
+                } else if (conn.fromPort === 'slot_out' && sourceAction.slot_out !== undefined) {
+                    return sourceAction.slot_out;
+                } else if (conn.fromPort === 'names_out' && sourceAction.names_out !== undefined) {
+                    return sourceAction.names_out;
+                } else if (conn.fromPort === 'count_out' && sourceAction.count_out !== undefined) {
+                    return sourceAction.count_out;
+                } else if (conn.fromPort === 'info_out' && sourceAction.info_out !== undefined) {
+                    return sourceAction.info_out;
                 } else if (sourceAction.value !== undefined) {
                     return sourceAction.value;
+                } else if (sourceAction.info_out !== undefined) {
+                    return sourceAction.info_out;
+                } else if (sourceAction.name_out !== undefined) {
+                    return sourceAction.name_out;
                 }
             }
         }

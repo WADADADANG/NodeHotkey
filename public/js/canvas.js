@@ -1320,6 +1320,18 @@ class NodeCanvasEditor {
               <span class="node-pin-label" style="color:#f59e0b;">⚠️ Error ▶</span>
               <div class="node-port port-out" data-node="${node.id}" data-port="onError" title="Error / Window not found"></div>
             </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label port-string">Names (String) ●</span>
+              <div class="node-port port-out port-data port-string" data-node="${node.id}" data-port="names_out" title="All Member Names (String - Pink)"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label port-number">Count (Number) ●</span>
+              <div class="node-port port-out port-data port-number" data-node="${node.id}" data-port="count_out" title="Member Count (Number - Cyan)"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label port-string">Summary (String) ●</span>
+              <div class="node-port port-out port-data port-string" data-node="${node.id}" data-port="info_out" title="Party Summary Information (String - Pink)"></div>
+            </div>
           </div>
         `;
       } else if (node.type === 'party_slot') {
@@ -1366,6 +1378,18 @@ class NodeCanvasEditor {
             <div class="node-pin-row">
               <span class="node-pin-label" style="color:#f59e0b;">⚠️ Error ▶</span>
               <div class="node-port port-out" data-node="${node.id}" data-port="onError" title="Error / Party not found"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label port-string">Name (String) ●</span>
+              <div class="node-port port-out port-data port-string" data-node="${node.id}" data-port="name_out" title="Target Member Name (String - Pink)"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label port-number">Slot (Number) ●</span>
+              <div class="node-port port-out port-data port-number" data-node="${node.id}" data-port="slot_out" title="Target Member Slot Index (Number - Cyan)"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label port-string">Summary (String) ●</span>
+              <div class="node-port port-out port-data port-string" data-node="${node.id}" data-port="info_out" title="Target Member Summary (String - Pink)"></div>
             </div>
           </div>
         `;
@@ -1730,12 +1754,24 @@ class NodeCanvasEditor {
       const pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
 
       const fromNode = this.nodes.find(n => n.id === conn.fromNodeId);
-      const isDataWire = (conn.fromPort === 'val_out' || conn.toPort === 'val_in' || conn.toPort === 'msg_in');
+      const isDataWire = (
+        conn.fromPort === 'val_out' || 
+        conn.fromPort === 'name_out' || 
+        conn.fromPort === 'slot_out' || 
+        conn.fromPort === 'names_out' || 
+        conn.fromPort === 'count_out' || 
+        conn.fromPort === 'info_out' || 
+        conn.toPort === 'val_in' || 
+        conn.toPort === 'msg_in'
+      );
       let wireTypeClass = '';
       if (isDataWire) {
         let vType = fromNode?.data?.varType;
-        if (!vType && conn.toPort === 'msg_in') vType = 'string';
-        if (!vType) vType = 'string';
+        if (!vType) {
+          if (conn.fromPort === 'slot_out' || conn.fromPort === 'count_out') vType = 'number';
+          else if (conn.fromPort === 'name_out' || conn.fromPort === 'names_out' || conn.fromPort === 'info_out' || conn.toPort === 'msg_in') vType = 'string';
+          else vType = 'string';
+        }
         wireTypeClass = `wire-data wire-${vType}`;
       }
 
@@ -1794,12 +1830,24 @@ class NodeCanvasEditor {
       const pName = conn.fromPort || '';
       const toPName = conn.toPort || '';
       const fromNode = this.nodes.find(n => n.id === conn.fromNodeId);
-      const isDataWire = (pName === 'val_out' || toPName === 'val_in' || toPName === 'msg_in');
+      const isDataWire = (
+        pName === 'val_out' || 
+        pName === 'name_out' || 
+        pName === 'slot_out' || 
+        pName === 'names_out' || 
+        pName === 'count_out' || 
+        pName === 'info_out' || 
+        toPName === 'val_in' || 
+        toPName === 'msg_in'
+      );
 
       if (isDataWire) {
         let vType = fromNode?.data?.varType;
-        if (!vType && toPName === 'msg_in') vType = 'string';
-        if (!vType) vType = 'string';
+        if (!vType) {
+          if (pName === 'slot_out' || pName === 'count_out') vType = 'number';
+          else if (pName === 'name_out' || pName === 'names_out' || pName === 'info_out' || toPName === 'msg_in') vType = 'string';
+          else vType = 'string';
+        }
         if (vType === 'number') {
           colorKey = 'cyan';
           orbColor = '#06b6d4';

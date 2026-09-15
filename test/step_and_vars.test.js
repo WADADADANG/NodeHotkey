@@ -265,5 +265,49 @@ const foundLog = logs.find(l => typeof l === 'string' && l.includes('สวั�
 assert.strictEqual(foundLog, '📝 [Log] [Client 1] สวัสดีครับ', 'Step log should print actual message with client prefix');
 console.log('✅ Test 7 Passed: Step Log Static Message correctly resolved and printed!\n');
 
+// 8. Test Party Buff & Party Scanner Data Output Pins
+console.log('Test 8: Testing Party Buff & Party Scanner Data Output Pins...');
+const partyBuffAction = {
+  id: 'act_party_buff_1',
+  nodeId: 'node_party_buff_1',
+  mode: 'party_buff',
+  name: 'Party Buff',
+  name_out: 'HeroSlayer',
+  slot_out: 2,
+  info_out: 'Slot 2: HeroSlayer [1/4]'
+};
+
+const partyScannerAction = {
+  id: 'act_party_scanner_1',
+  nodeId: 'node_party_scanner_1',
+  mode: 'party_scanner',
+  name: 'Party Scanner',
+  names_out: 'Alice, Bob, Charlie',
+  count_out: 3,
+  info_out: 'สแกนพบ 3 คน: Slot 1: Alice, Slot 2: Bob, Slot 3: Charlie'
+};
+
+const consumerLogName = { id: 'act_log_name', nodeId: 'node_log_name', mode: 'step_log' };
+const consumerLogSlot = { id: 'act_log_slot', nodeId: 'node_log_slot', mode: 'step_log' };
+const consumerLogScannerInfo = { id: 'act_log_scan', nodeId: 'node_log_scan', mode: 'step_log' };
+
+global.activeActions = [partyBuffAction, partyScannerAction, consumerLogName, consumerLogSlot, consumerLogScannerInfo];
+global.activeProfileConnections = [
+  { id: 'c_name', fromNodeId: 'node_party_buff_1', fromPort: 'name_out', toNodeId: 'node_log_name', toPort: 'msg_in' },
+  { id: 'c_slot', fromNodeId: 'node_party_buff_1', fromPort: 'slot_out', toNodeId: 'node_log_slot', toPort: 'msg_in' },
+  { id: 'c_scan', fromNodeId: 'node_party_scanner_1', fromPort: 'info_out', toNodeId: 'node_log_scan', toPort: 'msg_in' }
+];
+
+const resolvedName = bot.resolveNodeInputData(consumerLogName, 'msg_in');
+assert.strictEqual(resolvedName, 'HeroSlayer', 'Should resolve member name from party_buff name_out');
+
+const resolvedSlot = bot.resolveNodeInputData(consumerLogSlot, 'msg_in');
+assert.strictEqual(resolvedSlot, 2, 'Should resolve slot index from party_buff slot_out');
+
+const resolvedScanInfo = bot.resolveNodeInputData(consumerLogScannerInfo, 'msg_in');
+assert.strictEqual(resolvedScanInfo, 'สแกนพบ 3 คน: Slot 1: Alice, Slot 2: Bob, Slot 3: Charlie', 'Should resolve party info from party_scanner info_out');
+
+console.log('✅ Test 8 Passed: Party Buff & Party Scanner Data Output Pins verified!\n');
+
 console.log('🎉 All Step Log & Unreal Blueprint Variable Tests Passed Successfully!');
 process.exit(0);

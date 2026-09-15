@@ -69,6 +69,28 @@ async function runPartyScannerAction(action, callStack) {
             await visionService.VisualOverlay.render(page, partyState);
         }
 
+        // เตรียมข้อมูลผลลัพธ์ Data Outputs
+        const count = partyState.members.length;
+        const namesList = partyState.members.map(m => m.name || `Slot_${m.slot}`);
+        const namesStr = namesList.join(', ');
+        const memberSummaries = partyState.members.map(m => {
+            const hpStr = m.hpPercent !== null ? `${m.hpPercent}%` : (m.isAlive ? '100%' : 'Dead');
+            const statusStr = m.statusCode === 'active' ? '' : ` [${m.statusCode}]`;
+            return `Slot ${m.slot}: ${m.name || 'Slot_' + m.slot} (${hpStr}${statusStr})`;
+        });
+        const summaryInfo = `สแกนพบ ${count} คน: ${memberSummaries.join(', ')}`;
+
+        // กำหนดข้อมูล Data Outputs ลงใน Action Object สำหรับเชื่อมต่อ Data Wires
+        action.names_out = namesStr;
+        action.count_out = count;
+        action.info_out = summaryInfo;
+        action.slot_out = count;
+        action.name_out = namesStr;
+        action.value = summaryInfo;
+        action.members_out = partyState.members;
+
+        console.log(`👁️ [PartyScanner] Client ${targetClientId}: ${summaryInfo}`);
+
         // ตรวจสอบว่ามีคนเลือดต่ำกว่าเกณฑ์หรือไม่ เพื่อส่งสัญญาณ onLowHp
         const lowHpThresh = parseInt(action.lowHpThreshold, 10) || 70;
         const lowHpMembers = partyState.members.filter(m => m.isAlive && m.hpPercent !== null && m.hpPercent <= lowHpThresh);
@@ -351,7 +373,15 @@ async function runPartyBuffAction(action, callStack) {
             continue;
         }
 
-        console.log(`🎯 [PartyBuff] Client ${targetClientId}: [บัฟคนที่ ${i + 1}/${totalToBuff}] เลือก "${memberName}" ${isLeader ? '👑 (หัวตี้)' : ''} ที่ (${target.click.x}, ${target.click.y})`);
+        console.log(`🎯 [PartyBuff] Client ${targetClientId}: [บัฟคนที่ ${i + 1}/${totalToBuff}] ลำดับที่ ${targetSlot} ชื่อ "${memberName}" ${isLeader ? '👑 (หัวตี้)' : ''} ที่ (${target.click.x}, ${target.click.y})`);
+
+        // กำหนดข้อมูล Data Outputs สำหรับสมาชิกรอบนี้ (เพื่อให้โหนดถัดไปดึงไปใช้งานได้ทันที)
+        action.slot_out = targetSlot;
+        action.name_out = memberName;
+        action.info_out = `Slot ${targetSlot}: ${memberName} [${i + 1}/${totalToBuff}]`;
+        action.index_out = i + 1;
+        action.total_out = totalToBuff;
+        action.value = memberName;
 
         // วาด HUD Overlay
         if (showOverlay && visionService.VisualOverlay) {
@@ -391,7 +421,11 @@ async function runPartyBuffAction(action, callStack) {
         if (!ok || global.isSuspended) break;
     }
 
-    console.log(`🏁 [PartyBuff] Client ${targetClientId}: วนแจกบัฟครบทุกคนแล้ว! (บัฟสำเร็จทั้งหมด ${buffedSlots.size}/${totalToBuff} คน: ${buffedMemberSummaries.join(', ')})`);
+    const completeSummary = `วนแจกบัฟครบทุกคนแล้ว! (${buffedSlots.size}/${totalToBuff} คน: ${buffedMemberSummaries.join(', ')})`;
+    action.info_out = completeSummary;
+    action.value = `Complete (${buffedSlots.size}/${totalToBuff})`;
+
+    console.log(`🏁 [PartyBuff] Client ${targetClientId}: ${completeSummary}`);
     if (typeof global.fireChain === 'function') {
         await global.fireChain(action, 'onComplete', callStack);
     }

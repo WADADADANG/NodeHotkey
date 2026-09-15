@@ -16,6 +16,11 @@ module.exports = {
   color: '#0ea5e9',
   inputs: ['in'],
   outputs: ['onScanned', 'onError'],
+  dataOutputs: [
+    { name: 'names_out', type: 'string', label: 'Member Names' },
+    { name: 'count_out', type: 'number', label: 'Member Count' },
+    { name: 'info_out', type: 'string', label: 'Party Summary' }
+  ],
   defaultData: {
     targetClient: '1',
     scanRegion: 'auto',
