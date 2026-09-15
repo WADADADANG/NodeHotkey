@@ -17,8 +17,7 @@ module.exports = {
   inputs: ['in', 'msg_in'],
   outputs: ['onComplete'],
   defaultData: {
-    message: '',
-    showClient: false
+    message: ''
   },
 
   async execute(context, action, callStack = []) {

@@ -153,8 +153,6 @@
         cleanData.volume = d.volume !== undefined ? parseInt(d.volume, 10) : 100;
       } else if (type === 'step_log') {
         cleanData.message = d.message !== undefined ? d.message : '';
-        cleanData.showClient = d.showClient === true;
-        cleanData.targetClient = d.targetClient || '1';
       } else if (type === 'screenshot') {
         cleanData.targetClient = d.targetClient || '1';
         cleanData.captureRegion = d.captureRegion || 'active_client';

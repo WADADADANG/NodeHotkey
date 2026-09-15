@@ -1103,7 +1103,6 @@ class NodeCanvasEditor {
       } else if (node.type === 'step_log') {
         const stepTag = node.data?.stepTag || 'STEP 1';
         const msg = node.data?.message || '';
-        const showClient = node.data?.showClient === true;
         const msgConn = this.connections.find(c => c.toNodeId === node.id && c.toPort === 'msg_in');
         let srcTitle = '';
         if (msgConn) {
@@ -1120,9 +1119,6 @@ class NodeCanvasEditor {
           </div>
           <div class="node-info-row">
             <span>Msg:</span> ${msgDisplayHTML}
-          </div>
-          <div class="node-info-row">
-            <span>Client:</span> <span class="node-info-value" style="color:${showClient ? '#38bdf8' : 'var(--muted)'};">${showClient ? 'Client ' + (node.data?.targetClient || '1') : 'Off'}</span>
           </div>
         `;
       } else if (node.type === 'format_text') {
@@ -2443,8 +2439,6 @@ class NodeCanvasEditor {
     } else if (type === 'step_log') {
       initialData = {
         message: '',
-        showClient: false,
-        targetClient: '1',
         enabled: true
       };
     } else if (type === 'format_text') {

@@ -441,7 +441,6 @@
 
   renderStepLogHelper(node) {
     const message = node.data?.message || '';
-    const showClient = node.data?.showClient === true;
 
     const msgConn = this.connections.find(c => c.toNodeId === node.id && c.toPort === 'msg_in');
     let srcTitle = '';
@@ -450,7 +449,7 @@
       srcTitle = srcNode ? (srcNode.title || srcNode.type) : 'Wire';
     }
 
-    const messageFieldHTML = msgConn ? `
+    return msgConn ? `
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_log_message', window.currentLang === 'en' ? 'Log Message' : 'ข้อความใน Log')}</label>
         <div style="background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.3); border-radius:6px; padding:8px 12px; font-size:12px; color:#f472b6; display:flex; align-items:center; justify-content:space-between; gap:8px;">
@@ -465,20 +464,6 @@
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_log_message', window.currentLang === 'en' ? 'Log Message' : 'ข้อความใน Log')}</label>
         <textarea class="inspector-input" rows="3" placeholder="${window.currentLang === 'en' ? 'Type message to print in terminal...' : 'พิมพ์ข้อความที่ต้องการแสดงใน Log...'}" oninput="window.nodeCanvas.updateNodeData('${node.id}', 'message', this.value); window.nodeCanvas.renderNodes();" style="resize:vertical; min-height:60px; font-family:inherit; padding:8px 10px; line-height:1.4;">${message}</textarea>
-      </div>
-    `;
-
-    return `
-      ${messageFieldHTML}
-      <div class="inspector-field-group">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; color:var(--text);">
-          <input type="checkbox" ${showClient ? 'checked' : ''} onchange="window.nodeCanvas.updateNodeData('${node.id}', 'showClient', this.checked); window.nodeCanvas.renderNodes();" style="accent-color:#10b981; cursor:pointer;" />
-          <span>${canvasT('inspector_step_show_client', window.currentLang === 'en' ? 'Show [Client 1] tag in log' : 'แสดงป้ายระบุเลขจอ [Client 1] ใน Log')}</span>
-        </label>
-      </div>
-      <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen')}</label>
-        ${this.renderClientButtonSelector(node)}
       </div>
     `;
   },
