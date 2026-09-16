@@ -1220,7 +1220,7 @@ class NodeCanvasEditor {
       let pinsHTML = '';
 
       if (node.type !== 'trigger' && !isPure) {
-        portsHTML += `<div class="node-port port-in" data-node="${node.id}" data-port="exec_in" title="Input (exec_in)"></div>`;
+        portsHTML += `<div class="node-port port-in port-flow" data-node="${node.id}" data-port="exec_in" title="Input (exec_in)"></div>`;
       }
 
       const hasCooldown = this.hasCooldownGuard(node);
@@ -1579,11 +1579,11 @@ class NodeCanvasEditor {
           </div>
         `;
       } else if (node.type === 'trigger') {
-        portsHTML += `<div class="node-port port-out" data-node="${node.id}" data-port="exec_out" title="Output (exec_out)"></div>`;
+        portsHTML += `<div class="node-port port-out port-flow" data-node="${node.id}" data-port="exec_out" title="Output (exec_out)"></div>`;
       } else if (node.type === 'step_log' || node.type === 'format_text' || node.type === 'var_get' || node.type === 'var_set' || node.type === 'variable' || node.type === 'tts') {
         // Output pins explicitly handled in pinsHTML
       } else {
-        portsHTML += `<div class="node-port port-out" data-node="${node.id}" data-port="next" title="Output (next)"></div>`;
+        portsHTML += `<div class="node-port port-out port-flow" data-node="${node.id}" data-port="next" title="Output (next)"></div>`;
       }
 
       const issue = this.getNodeValidationIssue(node);

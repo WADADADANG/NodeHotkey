@@ -775,13 +775,13 @@
   left: -8px;
   top: 38px;
   transform: translateY(-50%);
-  border-color: var(--port-in, #3b82f6);
-  background: #0f172a;
+  border-color: var(--port-in, #38bdf8);
+  background: #0284c7;
 }
 
 .node-port.port-in:hover {
-  background: #3b82f6;
-  box-shadow: 0 0 10px #3b82f6;
+  background: #38bdf8;
+  box-shadow: 0 0 10px #38bdf8;
 }
 
 .node-port.port-out {
@@ -789,7 +789,7 @@
   top: 38px;
   transform: translateY(-50%);
   border-color: var(--port-out, #10b981);
-  background: #064e3b;
+  background: #059669;
 }
 
 .node-port.port-out:hover {
@@ -985,6 +985,97 @@
   clip-path: polygon(0% 12%, 60% 12%, 100% 50%, 60% 88%, 0% 88%);
   width: 14px;
   height: 14px;
+  border: none !important;
+  background: #38bdf8;
+  filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.7));
+}
+
+/* Input Flow Port (exec_in) - Bright Luminous Electric Blue */
+.node-port.port-flow.port-in,
+.node-port.port-flow[data-port="exec_in"],
+.node-port[data-port="exec_in"] {
+  background: #38bdf8 !important;
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.95)) !important;
+}
+
+.node-port.port-flow.port-in:hover,
+.node-port.port-flow[data-port="exec_in"]:hover,
+.node-port[data-port="exec_in"]:hover {
+  background: #7dd3fc !important;
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 1)) !important;
+  transform: translateY(-50%) scale(1.35) !important;
+}
+
+/* Output Flow Ports - Default (next) & Events */
+.node-port.port-flow.port-out,
+.node-port.port-flow[data-port="next"],
+.node-port[data-port="next"] {
+  background: #10b981 !important;
+  filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.9)) !important;
+}
+
+.node-port.port-flow.port-out:hover,
+.node-port.port-flow[data-port="next"]:hover,
+.node-port[data-port="next"]:hover {
+  background: #34d399 !important;
+  filter: drop-shadow(0 0 10px rgba(52, 211, 153, 1)) !important;
+  transform: translateY(-50%) scale(1.35) !important;
+}
+
+/* Trigger Output Flow Port (exec_out) - Bright Luminous Emerald Green */
+.node-port.port-flow[data-port="exec_out"],
+.node-port.port-out[data-port="exec_out"],
+.node-port[data-port="exec_out"] {
+  background: #10b981 !important;
+  filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.95)) !important;
+}
+
+.node-port.port-flow[data-port="exec_out"]:hover,
+.node-port.port-out[data-port="exec_out"]:hover,
+.node-port[data-port="exec_out"]:hover {
+  background: #34d399 !important;
+  filter: drop-shadow(0 0 10px rgba(52, 211, 153, 1)) !important;
+  transform: translateY(-50%) scale(1.35) !important;
+}
+
+.node-port.port-flow.port-onComplete,
+.node-port.port-flow.port-on-complete,
+.node-port.port-flow.port-onTrue,
+.node-port.port-flow.port-on-true {
+  background: #10b981 !important;
+  filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.85)) !important;
+}
+
+.node-port.port-flow.port-onStop,
+.node-port.port-flow.port-on-stop,
+.node-port.port-flow.port-onFalse,
+.node-port.port-flow.port-on-false,
+.node-port.port-flow.port-onLowHp {
+  background: #ef4444 !important;
+  filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.85)) !important;
+}
+
+.node-port.port-flow.port-onCooldown,
+.node-port.port-flow.port-on-cooldown {
+  background: #f59e0b !important;
+  filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.85)) !important;
+}
+
+.node-port.port-flow.port-onEachCycle,
+.node-port.port-flow.port-on-interval {
+  background: #06b6d4 !important;
+  filter: drop-shadow(0 0 5px rgba(6, 182, 212, 0.85)) !important;
+}
+
+.node-port.port-flow.port-onBeforeStart {
+  background: #a855f7 !important;
+  filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.85)) !important;
+}
+
+.node-port.port-flow.port-onAfterStart,
+.node-port.port-flow.port-onKeyDown {
+  background: #38bdf8 !important;
+  filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.85)) !important;
 }
 
 /* Interactive Target States during Wire Dragging */
