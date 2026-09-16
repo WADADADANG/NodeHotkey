@@ -59,42 +59,119 @@ async function synthesize(text, voice = 'th-TH-PremwadeeNeural') {
   }
 
   const hash = getCacheKey(cleanText, selectedVoice);
-  const targetPath = path.join(CACHE_DIR, `${hash}.mp3`);
+  const mp3Path = path.join(CACHE_DIR, `${hash}.mp3`);
+  const wavPath = path.join(CACHE_DIR, `${hash}.wav`);
 
   // 1. Check cache first (0ms latency if already generated)
-  if (fs.existsSync(targetPath)) {
-    return targetPath;
+  if (fs.existsSync(mp3Path)) {
+    return mp3Path;
+  }
+  if (fs.existsSync(wavPath)) {
+    return wavPath;
   }
 
-  // 2. Synthesize using EdgeTTS
-  try {
-    const tts = new EdgeTTS();
-    await tts.synthesize(cleanText, selectedVoice);
-    
-    // toFile automatically appends .mp3 if target doesn't end with it
-    const baseTarget = path.join(CACHE_DIR, hash);
-    const createdPath = await tts.toFile(baseTarget);
+  // 2. Synthesize using EdgeTTS with auto-retry
+  let lastErr = null;
+  const maxRetries = 2;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const tts = new EdgeTTS();
+      await tts.synthesize(cleanText, selectedVoice);
 
-    // If createdPath ends up with .mp3.mp3, rename it cleanly
-    if (createdPath && createdPath !== targetPath && fs.existsSync(createdPath)) {
-      try {
-        fs.renameSync(createdPath, targetPath);
-      } catch {
-        return createdPath;
+      if (!tts.audio_stream || tts.audio_stream.length === 0) {
+        throw new Error('EdgeTTS returned empty audio stream');
+      }
+
+      // toFile automatically appends .mp3 if target doesn't end with it
+      const baseTarget = path.join(CACHE_DIR, hash);
+      const createdPath = await tts.toFile(baseTarget);
+
+      // If createdPath ends up with .mp3.mp3, rename it cleanly
+      if (createdPath && createdPath !== mp3Path && fs.existsSync(createdPath)) {
+        try {
+          fs.renameSync(createdPath, mp3Path);
+        } catch {
+          return createdPath;
+        }
+      }
+
+      return mp3Path;
+    } catch (err) {
+      lastErr = err;
+      if (attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 150 * attempt));
       }
     }
-
-    return targetPath;
-  } catch (err) {
-    console.warn(`[TTS] EdgeTTS failed: ${err.message}. Attempting Windows SAPI fallback...`);
-    return fallbackWindowsSpeech(cleanText);
   }
+
+  console.warn(`[TTS] EdgeTTS failed (${lastErr?.message || 'unknown'}). Attempting Windows Native Speech fallback...`);
+  return fallbackWindowsSpeech(cleanText, hash, hasThai);
 }
 
 /**
- * Fallback synthesizer using Windows native speech synthesis
+ * Fallback synthesizer using Windows native speech synthesis:
+ * - Uses Windows OneCore (Microsoft Pattara for Thai, David for English) to generate WAV audio file
+ * - Falls back to legacy SAPI System.Speech if OneCore is unavailable
+ * @param {string} text - Clean text to speak
+ * @param {string} hash - MD5 cache hash
+ * @param {boolean} hasThai - Whether text contains Thai characters
+ * @returns {Promise<string|null>} Path to generated WAV or null
  */
-function fallbackWindowsSpeech(text) {
+function fallbackWindowsSpeech(text, hash, hasThai) {
+  const targetWav = path.join(CACHE_DIR, `${hash}.wav`).replace(/\\/g, '/');
+  const b64Text = Buffer.from(text, 'utf8').toString('base64');
+  const targetLang = hasThai ? 'th-TH' : 'en-US';
+
+  const psScript = `
+[System.Reflection.Assembly]::LoadWithPartialName('System.Runtime.WindowsRuntime') | Out-Null
+[Windows.Media.SpeechSynthesis.SpeechSynthesizer, Windows.Media, ContentType = WindowsRuntime] | Out-Null
+
+$rawText = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${b64Text}'))
+$synth = New-Object Windows.Media.SpeechSynthesis.SpeechSynthesizer
+
+$voice = [Windows.Media.SpeechSynthesis.SpeechSynthesizer]::AllVoices | Where-Object { $_.Language -eq '${targetLang}' } | Select-Object -First 1
+if ($voice) { $synth.Voice = $voice }
+
+$asyncOp = $synth.SynthesizeTextToStreamAsync($rawText)
+$asTaskGeneric = [System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { 
+    $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.IsGenericMethod 
+} | Select-Object -First 1
+$asTask = $asTaskGeneric.MakeGenericMethod([Windows.Media.SpeechSynthesis.SpeechSynthesisStream])
+$task = $asTask.Invoke($null, @($asyncOp))
+$stream = $task.GetAwaiter().GetResult()
+
+$inStream = [System.IO.WindowsRuntimeStreamExtensions]::AsStreamForRead($stream)
+$outStream = [System.IO.File]::OpenWrite('${targetWav}')
+$inStream.CopyTo($outStream)
+$inStream.Close()
+$outStream.Close()
+`;
+
+  return new Promise((resolve) => {
+    try {
+      const b64 = Buffer.from(psScript, 'utf16le').toString('base64');
+      const ps = spawn('powershell', ['-NoProfile', '-NonInteractive', '-EncodedCommand', b64], { windowsHide: true });
+
+      ps.on('close', () => {
+        if (fs.existsSync(targetWav) && fs.statSync(targetWav).size > 0) {
+          resolve(targetWav);
+        } else {
+          legacySapiFallback(text).then(() => resolve(null));
+        }
+      });
+      ps.on('error', () => {
+        legacySapiFallback(text).then(() => resolve(null));
+      });
+    } catch {
+      legacySapiFallback(text).then(() => resolve(null));
+    }
+  });
+}
+
+/**
+ * Secondary legacy SAPI fallback (for Windows versions without OneCore)
+ */
+function legacySapiFallback(text) {
   return new Promise((resolve) => {
     try {
       const ps = spawn('powershell', [
