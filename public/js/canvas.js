@@ -424,6 +424,15 @@ class NodeCanvasEditor {
       if (this.draftWire) {
         this.draftWire.x2 = worldPos.x;
         this.draftWire.y2 = worldPos.y;
+
+        const elemUnder = document.elementFromPoint(e.clientX, e.clientY);
+        const portUnder = elemUnder ? elemUnder.closest('.node-port.port-in') : null;
+        if (portUnder && portUnder.classList.contains('port-invalid-target')) {
+          this.draftWire.isInvalid = true;
+        } else {
+          this.draftWire.isInvalid = false;
+        }
+
         this.renderWires();
       }
     });
@@ -515,6 +524,7 @@ class NodeCanvasEditor {
       // Finalize Wire Drafting
       if (this.draftWire) {
         this.draftWire = null;
+        this.clearPortHighlights();
         this.renderWires();
       }
     });
@@ -539,6 +549,7 @@ class NodeCanvasEditor {
       }
       if (this.draftWire) {
         this.draftWire = null;
+        this.clearPortHighlights();
         this.renderWires();
       }
     };
@@ -1658,14 +1669,29 @@ class NodeCanvasEditor {
         }
       });
 
-      // Bind port wiring drag events
+      // Bind port wiring drag events & auto-apply port metadata and classes
       nodeEl.querySelectorAll('.node-port').forEach(portEl => {
+        const pType = portEl.classList.contains('port-in') ? 'in' : 'out';
+        const portName = portEl.dataset.port;
+        const nodeId = portEl.dataset.node;
+
+        // Auto-apply port metadata and styling classes
+        const meta = this.getPortMeta(nodeId, portName, pType);
+        portEl.dataset.kind = meta.kind;
+        portEl.dataset.type = meta.type;
+        if (meta.kind === 'flow') {
+          portEl.classList.add('port-flow');
+          portEl.classList.remove('port-data');
+        } else {
+          portEl.classList.add('port-data');
+          portEl.classList.remove('port-flow');
+          if (meta.type && meta.type !== 'flow') {
+            portEl.classList.add(`port-${meta.type}`);
+          }
+        }
+
         portEl.addEventListener('mousedown', (e) => {
           e.stopPropagation();
-          const pType = portEl.classList.contains('port-in') ? 'in' : 'out';
-          const portName = portEl.dataset.port;
-          const nodeId = portEl.dataset.node;
-
           if (pType === 'out' && e.button === 0) {
             const portRect = portEl.getBoundingClientRect();
             const portPos = this.clientToWorld(
@@ -1673,25 +1699,21 @@ class NodeCanvasEditor {
               portRect.top + portRect.height / 2
             );
 
-            let wireType = null;
-            if (portName === 'val_out') {
-              const srcNode = this.nodes.find(n => n.id === nodeId);
-              wireType = srcNode?.data?.varType || 'string';
-            } else if (portName === 'msg_out' || portName === 'name_out' || portName === 'names_out' || portName === 'info_out') {
-              wireType = 'string';
-            } else if (portName === 'slot_out' || portName === 'count_out') {
-              wireType = 'number';
-            }
+            const wireType = meta.kind === 'data' ? meta.type : null;
 
             this.draftWire = {
               fromNodeId: nodeId,
               fromPort: portName,
               wireType,
+              meta,
+              isInvalid: false,
               x1: portPos.x,
               y1: portPos.y,
               x2: portPos.x,
               y2: portPos.y
             };
+
+            this.highlightCompatiblePorts(nodeId, portName);
           }
         });
 
@@ -1700,11 +1722,18 @@ class NodeCanvasEditor {
           if (this.draftWire && portEl.classList.contains('port-in')) {
             const toNodeId = portEl.dataset.node;
             const toPort = portEl.dataset.port;
-            if (toNodeId !== this.draftWire.fromNodeId) {
+            const check = this.canConnectPorts(this.draftWire.fromNodeId, this.draftWire.fromPort, toNodeId, toPort);
+            if (check.allowed) {
               this.addConnection(this.draftWire.fromNodeId, this.draftWire.fromPort, toNodeId, toPort);
+            } else {
+              const msg = window.currentLang === 'en' ? check.reasonEn : check.reasonTh;
+              if (typeof window.toast === 'function') {
+                window.toast(`⚠️ ${msg}`, 'warning');
+              }
             }
           }
           this.draftWire = null;
+          this.clearPortHighlights();
           this.renderWires();
         });
 
@@ -1712,9 +1741,6 @@ class NodeCanvasEditor {
         portEl.addEventListener('contextmenu', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          const pType = portEl.classList.contains('port-in') ? 'in' : 'out';
-          const portName = portEl.dataset.port;
-          const nodeId = portEl.dataset.node;
           this.showPortContextMenu(e.clientX, e.clientY, nodeId, portName, pType);
         });
       });
@@ -1723,6 +1749,7 @@ class NodeCanvasEditor {
       nodeEl.addEventListener('mouseup', () => {
         if (this.draftWire) {
           this.draftWire = null;
+          this.clearPortHighlights();
           this.renderWires();
         }
       });
@@ -1863,7 +1890,12 @@ class NodeCanvasEditor {
     if (this.draftWire) {
       const dx = Math.max(30, Math.abs(this.draftWire.x2 - this.draftWire.x1) * 0.5);
       const pathData = `M ${this.draftWire.x1} ${this.draftWire.y1} C ${this.draftWire.x1 + dx} ${this.draftWire.y1}, ${this.draftWire.x2 - dx} ${this.draftWire.y2}, ${this.draftWire.x2} ${this.draftWire.y2}`;
-      const draftClass = this.draftWire.wireType ? `wire-draft wire-data wire-${this.draftWire.wireType}` : 'wire-draft';
+      let draftClass = 'wire-draft';
+      if (this.draftWire.isInvalid) {
+        draftClass += ' wire-draft-invalid';
+      } else if (this.draftWire.wireType) {
+        draftClass += ` wire-data wire-${this.draftWire.wireType}`;
+      }
       svgContent += `<path class="wire-path ${draftClass}" d="${pathData}" />`;
     }
 
@@ -2353,6 +2385,179 @@ class NodeCanvasEditor {
     }
   }
 
+  getPortMeta(nodeId, portName, direction = 'out') {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node) return { kind: 'flow', type: 'flow', label: portName };
+
+    const def = (typeof window !== 'undefined' && window.clientNodeRegistry)
+      ? window.clientNodeRegistry.get(node.type)
+      : (typeof global !== 'undefined' && global.nodeRegistry ? global.nodeRegistry.get(node.type) : null);
+
+    // 1. Flow Input: exec_in or in
+    if (portName === 'exec_in' || portName === 'in') {
+      return { kind: 'flow', type: 'flow', label: 'exec_in' };
+    }
+
+    // 2. Data Inputs: msg_in, text_in, val_in, format_text pin inputs
+    if (portName === 'msg_in' || portName === 'text_in') {
+      return { kind: 'data', type: 'string', label: portName };
+    }
+    if (portName === 'val_in') {
+      return { kind: 'data', type: node.data?.varType || 'string', label: 'val_in' };
+    }
+    if (node.type === 'format_text' && portName !== 'msg_out') {
+      return { kind: 'data', type: 'any', label: portName };
+    }
+
+    // 3. Flow Outputs:
+    const knownFlowOutputs = [
+      'next', 'exec_out', 'onComplete', 'onError', 'onScanned', 'onLowHp',
+      'onHealTarget', 'onNoTarget', 'onNextMember', 'onKeyDown', 'onActivated',
+      'onStep', 'onEachCycle', 'onStop', 'onCooldown', 'onBeforeStart',
+      'onAfterStart', 'onTrue', 'onFalse', 'onEnable', 'onDisable'
+    ];
+    if (knownFlowOutputs.includes(portName) || portName.startsWith('item_')) {
+      return { kind: 'flow', type: 'flow', label: portName };
+    }
+
+    // 4. Data Outputs:
+    if (portName === 'val_out') {
+      return { kind: 'data', type: node.data?.varType || 'string', label: 'val_out' };
+    }
+    if (portName === 'msg_out') {
+      return { kind: 'data', type: 'string', label: 'msg_out' };
+    }
+    if (portName === 'names_out' || portName === 'name_out' || portName === 'info_out') {
+      return { kind: 'data', type: 'string', label: portName };
+    }
+    if (portName === 'slot_out' || portName === 'count_out') {
+      return { kind: 'data', type: 'number', label: portName };
+    }
+
+    // 5. Check Registry dataOutputs or outputs
+    if (def && Array.isArray(def.dataOutputs)) {
+      const dOut = def.dataOutputs.find(d => d.name === portName);
+      if (dOut) {
+        return { kind: 'data', type: dOut.type || 'string', label: dOut.label || portName };
+      }
+    }
+    if (def && Array.isArray(def.outputs) && def.outputs.includes(portName)) {
+      return { kind: 'flow', type: 'flow', label: portName };
+    }
+
+    // Default fallback based on naming convention
+    const isData = portName.includes('_out') || portName.includes('_in') || portName.startsWith('val_');
+    return {
+      kind: isData ? 'data' : 'flow',
+      type: isData ? 'string' : 'flow',
+      label: portName
+    };
+  }
+
+  canConnectPorts(fromNodeId, fromPort, toNodeId, toPort) {
+    if (fromNodeId === toNodeId) {
+      return {
+        allowed: false,
+        reasonKey: 'wire_err_same_node',
+        reasonTh: 'ไม่สามารถเชื่อมต่อสายเข้าหาโหนดเดียวกันได้',
+        reasonEn: 'Cannot connect a node to itself.'
+      };
+    }
+
+    const fromMeta = this.getPortMeta(fromNodeId, fromPort, 'out');
+    const toMeta = this.getPortMeta(toNodeId, toPort, 'in');
+
+    // Rule 1: Flow to Data is FORBIDDEN
+    if (fromMeta.kind === 'flow' && toMeta.kind === 'data') {
+      return {
+        allowed: false,
+        reasonKey: 'wire_err_flow_to_data',
+        reasonTh: `ไม่สามารถเชื่อมสายสั่งการ [${fromPort}] เข้ากับช่องรับข้อมูล [${toPort}] ได้`,
+        reasonEn: `Cannot connect Execution Flow [${fromPort}] to Data Input pin [${toPort}].`,
+        fromMeta,
+        toMeta
+      };
+    }
+
+    // Rule 2: Data to Flow is FORBIDDEN
+    if (fromMeta.kind === 'data' && toMeta.kind === 'flow') {
+      return {
+        allowed: false,
+        reasonKey: 'wire_err_data_to_flow',
+        reasonTh: `ไม่สามารถเชื่อมสายข้อมูล [${fromPort}] เข้ากับขาสั่งการทำงาน [${toPort}] ได้`,
+        reasonEn: `Cannot connect Data output [${fromPort}] to Execution Flow input [${toPort}].`,
+        fromMeta,
+        toMeta
+      };
+    }
+
+    // Rule 3: Data to Data Type Matrix
+    if (fromMeta.kind === 'data' && toMeta.kind === 'data') {
+      const fType = fromMeta.type || 'any';
+      const tType = toMeta.type || 'any';
+
+      let compatible = false;
+      if (fType === 'any' || tType === 'any') {
+        compatible = true;
+      } else if (fType === tType) {
+        compatible = true;
+      } else if (tType === 'string' && (fType === 'number' || fType === 'boolean')) {
+        compatible = true; // Auto-coercion into string
+      }
+
+      if (!compatible) {
+        return {
+          allowed: false,
+          reasonKey: 'wire_err_type_mismatch',
+          reasonTh: `ชนิดข้อมูลไม่เข้ากัน: ไม่สามารถส่ง [${fType}] เข้าช่อง [${tType}] ได้`,
+          reasonEn: `Incompatible data types: cannot feed [${fType}] into [${tType}].`,
+          fromMeta,
+          toMeta
+        };
+      }
+    }
+
+    // Rule 4: Duplicate connection
+    const existing = this.connections.find(c => c.fromNodeId === fromNodeId && c.fromPort === fromPort && c.toNodeId === toNodeId && c.toPort === toPort);
+    if (existing) {
+      return {
+        allowed: false,
+        reasonKey: 'wire_err_already_connected',
+        reasonTh: 'พอร์ตคู่นี้ถูกเชื่อมต่ออยู่แล้ว',
+        reasonEn: 'These pins are already connected.',
+        fromMeta,
+        toMeta
+      };
+    }
+
+    return { allowed: true, fromMeta, toMeta };
+  }
+
+  highlightCompatiblePorts(fromNodeId, fromPort) {
+    if (!this.nodesLayer) return;
+    const inputPorts = this.nodesLayer.querySelectorAll('.node-port.port-in');
+    inputPorts.forEach(portEl => {
+      const toNodeId = portEl.dataset.node;
+      const toPort = portEl.dataset.port;
+      const check = this.canConnectPorts(fromNodeId, fromPort, toNodeId, toPort);
+      if (check.allowed) {
+        portEl.classList.add('port-valid-target');
+        portEl.classList.remove('port-invalid-target');
+      } else {
+        portEl.classList.add('port-invalid-target');
+        portEl.classList.remove('port-valid-target');
+      }
+    });
+  }
+
+  clearPortHighlights() {
+    if (!this.nodesLayer) return;
+    const ports = this.nodesLayer.querySelectorAll('.node-port');
+    ports.forEach(p => {
+      p.classList.remove('port-valid-target', 'port-invalid-target');
+    });
+  }
+
   disconnectAllFromPort(nodeId, portName) {
     const toRemove = this.connections.filter(c => c.fromNodeId === nodeId && c.fromPort === portName);
     if (toRemove.length === 0) return;
@@ -2384,14 +2589,21 @@ class NodeCanvasEditor {
 
   addConnection(fromNodeId, fromPort, toNodeId, toPort) {
     this.draftWire = null;
-    const existing = this.connections.find(c => c.fromNodeId === fromNodeId && c.fromPort === fromPort && c.toNodeId === toNodeId && c.toPort === toPort);
-    if (existing) {
+    this.clearPortHighlights();
+
+    const check = this.canConnectPorts(fromNodeId, fromPort, toNodeId, toPort);
+    if (!check.allowed) {
+      const msg = (typeof window !== 'undefined' && window.currentLang === 'en') ? check.reasonEn : check.reasonTh;
+      if (typeof window !== 'undefined' && typeof window.toast === 'function') {
+        window.toast(`⚠️ ${msg}`, 'warning');
+      }
       this.render();
       return;
     }
 
-    // For single-input data pins (text_in, msg_in, val_in), automatically prune previous incoming connection to that port
-    if (toPort === 'text_in' || toPort === 'msg_in' || toPort === 'val_in') {
+    // For any data input pin, automatically prune previous incoming connection to that port
+    const toMeta = this.getPortMeta(toNodeId, toPort, 'in');
+    if (toMeta.kind === 'data') {
       this.connections = this.connections.filter(c => !(c.toNodeId === toNodeId && c.toPort === toPort));
     }
 
@@ -2404,9 +2616,10 @@ class NodeCanvasEditor {
     });
 
     this.render();
-    this.addHistory('🔗', `เชื่อมสาย [${fromPort}] ➔ [${toPort}]`);
-    if (typeof window.toast === 'function') {
-      window.toast('🔗 เชื่อมต่อ Action เรียบร้อยแล้ว', 'success');
+    const isEn = (typeof window !== 'undefined' && window.currentLang === 'en');
+    this.addHistory('🔗', isEn ? `Connected [${fromPort}] ➔ [${toPort}]` : `เชื่อมสาย [${fromPort}] ➔ [${toPort}]`);
+    if (typeof window !== 'undefined' && typeof window.toast === 'function') {
+      window.toast(isEn ? `🔗 Connected [${fromPort}] ➔ [${toPort}]` : '🔗 เชื่อมต่อ Action เรียบร้อยแล้ว', 'success');
     }
     this.onProfileChanged();
   }
@@ -3715,11 +3928,26 @@ class NodeCanvasEditor {
       return null;
     }
 
+    // Check for illegal wire connections connected to this node
+    const attachedConns = this.connections.filter(c => c.fromNodeId === node.id || c.toNodeId === node.id);
+    for (const conn of attachedConns) {
+      const fromMeta = this.getPortMeta(conn.fromNodeId, conn.fromPort, 'out');
+      const toMeta = this.getPortMeta(conn.toNodeId, conn.toPort || 'exec_in', 'in');
+      if (fromMeta.kind !== toMeta.kind) {
+        return {
+          severity: 'error',
+          messageTh: `สายต่อผิดประเภท [${conn.fromPort}] ➔ [${conn.toPort || 'exec_in'}]`,
+          messageEn: `Illegal Wire [${conn.fromPort}] ➔ [${conn.toPort || 'exec_in'}]`
+        };
+      }
+    }
+
     // 2. Action Nodes: Check if unconnected from inputs (exec_in)
     // Validate that action nodes (including emergency_stop) receive an incoming trigger or remote reference
+    const isPure = (node.type === 'var_get' || node.type === 'format_text');
     const isReferenced = this.isNodeReferencedRemotely(node);
 
-    if (!isReferenced) {
+    if (!isPure && !isReferenced) {
       const hasIncoming = this.connections.some(c => c.toNodeId === node.id);
       if (!hasIncoming) {
         return {
@@ -4094,12 +4322,17 @@ class NodeCanvasEditor {
   }
 }
 
-window.NodeCanvasEditor = NodeCanvasEditor;
+if (typeof window !== 'undefined') {
+  window.NodeCanvasEditor = NodeCanvasEditor;
+  window.triggerCanvasNodePulse = (actionIdOrNodeId, fromPort = null) => {
+    if (!window.nodeCanvas) return;
+    const node = window.nodeCanvas.nodes.find(n => n.id === actionIdOrNodeId || n.data?.actionId === actionIdOrNodeId);
+    if (node) {
+      window.nodeCanvas.triggerSignalPulse(node.id, fromPort);
+    }
+  };
+}
 
-window.triggerCanvasNodePulse = (actionIdOrNodeId, fromPort = null) => {
-  if (!window.nodeCanvas) return;
-  const node = window.nodeCanvas.nodes.find(n => n.id === actionIdOrNodeId || n.data?.actionId === actionIdOrNodeId);
-  if (node) {
-    window.nodeCanvas.triggerSignalPulse(node.id, fromPort);
-  }
-};
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { NodeCanvasEditor };
+}

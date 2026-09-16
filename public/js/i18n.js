@@ -416,7 +416,16 @@ export const TRANSLATIONS = {
     cat_actions: "Actions & Macros",
     cat_triggers: "Triggers & Events",
     cat_flow: "Logic & Flow",
-    cat_utilities: "Safety & Utilities"
+    cat_utilities: "Safety & Utilities",
+    wire_err_same_node: "Cannot connect a node to itself.",
+    wire_err_flow_to_data: "Cannot connect Execution Flow ({fromPort}) to Data Input pin ({toPort}).",
+    wire_err_data_to_flow: "Cannot connect Data output ({fromPort}) to Execution Flow input ({toPort}).",
+    wire_err_type_mismatch: "Incompatible data types: cannot feed {fromType} into {toType}.",
+    wire_err_already_connected: "These pins are already connected.",
+    wire_connected_success: "Connected [{fromPort}] ➔ [{toPort}]",
+    validator_invalid_connection_type: "Illegal connection: Flow and Data pins cannot be wired together between \"{fromNode}\" [{fromPort}] and \"{toNode}\" [{toPort}].",
+    validator_incompatible_data_wire: "Type mismatch: Data wire from \"{fromNode}\" [{fromPort}] ({fromType}) is incompatible with \"{toNode}\" [{toPort}] ({toType}).",
+    validator_auto_fixed_wires: "Removed {count} illegal or incompatible wire connection(s)!"
   },
   th: {
     appTitle: "ศูนย์ควบคุมบอทอัตโนมัติ",
@@ -837,7 +846,16 @@ export const TRANSLATIONS = {
     cat_actions: "คำสั่ง & มาโคร (Actions)",
     cat_triggers: "ทริกเกอร์ & สัญญาณ (Triggers)",
     cat_flow: "ตรรกะ & โฟลว์ (Logic & Flow)",
-    cat_utilities: "ความปลอดภัย & เครื่องมือ (Utilities)"
+    cat_utilities: "ความปลอดภัย & เครื่องมือ (Utilities)",
+    wire_err_same_node: "ไม่สามารถเชื่อมต่อสายเข้าหาโหนดเดียวกันได้",
+    wire_err_flow_to_data: "ไม่สามารถเชื่อมสายสัญญาณสั่งการ ({fromPort}) เข้ากับช่องรับข้อมูล ({toPort}) ได้",
+    wire_err_data_to_flow: "ไม่สามารถเชื่อมสายข้อมูล ({fromPort}) เข้ากับขาสั่งการทำงาน ({toPort}) ได้",
+    wire_err_type_mismatch: "ชนิดข้อมูลไม่เข้ากัน: ไม่สามารถส่ง {fromType} เข้าช่อง {toType} ได้",
+    wire_err_already_connected: "พอร์ตคู่นี้ถูกเชื่อมต่ออยู่แล้ว",
+    wire_connected_success: "เชื่อมต่อสาย [{fromPort}] ➔ [{toPort}] สำเร็จ",
+    validator_invalid_connection_type: "พบสายเชื่อมผิดประเภท: ไม่สามารถต่อสาย Flow ข้ามกับ Data ระหว่าง \"{fromNode}\" [{fromPort}] และ \"{toNode}\" [{toPort}] ได้",
+    validator_incompatible_data_wire: "ชนิดข้อมูลไม่ตรงกัน: สายข้อมูลจาก \"{fromNode}\" [{fromPort}] ({fromType}) ไม่สามารถส่งเข้า \"{toNode}\" [{toPort}] ({toType}) ได้",
+    validator_auto_fixed_wires: "ตัดสายเชื่อมต่อที่ผิดประเภทหรือชนิดข้อมูลไม่เข้ากันออก {count} เส้นเรียบร้อยแล้ว!"
   }
 };
 

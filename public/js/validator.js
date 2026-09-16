@@ -268,11 +268,12 @@ export function validateProfile(actions) {
         }
       } else {
         // 7.2 Unconnected Action Check (No input connection for all action types including emergency_stop)
+        const isPure = (node.type === 'var_get' || node.type === 'format_text');
         const isReferenced = window.nodeCanvas && typeof window.nodeCanvas.isNodeReferencedRemotely === 'function'
           ? window.nodeCanvas.isNodeReferencedRemotely(node)
           : false;
 
-        if (!isReferenced) {
+        if (!isPure && !isReferenced) {
           const hasIncoming = canvasConns.some(c => c.toNodeId === node.id);
           if (!hasIncoming) {
             issues.push({
@@ -288,6 +289,84 @@ export function validateProfile(actions) {
         }
       }
     });
+
+    // 7.3 Invalid Connection Type & Incompatible Wire Check
+    if (Array.isArray(canvasConns) && canvasConns.length > 0) {
+      canvasConns.forEach(conn => {
+        const fromNode = canvasNodes.find(n => n.id === conn.fromNodeId);
+        const toNode = canvasNodes.find(n => n.id === conn.toNodeId);
+        if (!fromNode || !toNode) return;
+
+        // Port metadata lookup
+        const getMeta = (node, pName, dir) => {
+          if (window.nodeCanvas && typeof window.nodeCanvas.getPortMeta === 'function') {
+            return window.nodeCanvas.getPortMeta(node.id, pName, dir);
+          }
+          const isFlowOut = [
+            'next', 'exec_out', 'onComplete', 'onError', 'onScanned', 'onLowHp',
+            'onHealTarget', 'onNoTarget', 'onNextMember', 'onKeyDown', 'onActivated',
+            'onStep', 'onEachCycle', 'onStop', 'onCooldown', 'onBeforeStart',
+            'onAfterStart', 'onTrue', 'onFalse', 'onEnable', 'onDisable'
+          ].includes(pName) || String(pName).startsWith('item_');
+          const isFlowIn = pName === 'exec_in' || pName === 'in';
+
+          if (dir === 'in') {
+            if (isFlowIn) return { kind: 'flow', type: 'flow' };
+            return {
+              kind: 'data',
+              type: pName === 'val_in' ? (node.data?.varType || 'string') : (node.type === 'format_text' ? 'any' : 'string')
+            };
+          } else {
+            if (isFlowOut) return { kind: 'flow', type: 'flow' };
+            let dType = 'string';
+            if (pName === 'val_out') dType = node.data?.varType || 'string';
+            else if (pName === 'slot_out' || pName === 'count_out') dType = 'number';
+            return { kind: 'data', type: dType };
+          }
+        };
+
+        const fromMeta = getMeta(fromNode, conn.fromPort, 'out');
+        const toMeta = getMeta(toNode, conn.toPort || 'exec_in', 'in');
+
+        if (fromMeta.kind !== toMeta.kind) {
+          issues.push({
+            type: 'invalid_connection_type',
+            severity: 'error',
+            connectionId: conn.id,
+            actionId: fromNode.id,
+            actionName: `${fromNode.title || fromNode.type} ➔ ${toNode.title || toNode.type}`,
+            autoFixable: true,
+            fromPort: conn.fromPort,
+            toPort: conn.toPort || 'exec_in',
+            messageEn: `Illegal connection: Flow and Data pins cannot be wired together between "${fromNode.title || fromNode.type}" [${conn.fromPort}] and "${toNode.title || toNode.type}" [${conn.toPort || 'exec_in'}].`,
+            messageTh: `พบสายเชื่อมผิดประเภท: ไม่สามารถต่อสาย Flow ข้ามกับ Data ระหว่าง "${fromNode.title || fromNode.type}" [${conn.fromPort}] และ "${toNode.title || toNode.type}" [${conn.toPort || 'exec_in'}] ได้`
+          });
+        } else if (fromMeta.kind === 'data' && toMeta.kind === 'data') {
+          const fType = fromMeta.type || 'any';
+          const tType = toMeta.type || 'any';
+          let compatible = false;
+          if (fType === 'any' || tType === 'any' || fType === tType) {
+            compatible = true;
+          } else if (tType === 'string' && (fType === 'number' || fType === 'boolean')) {
+            compatible = true;
+          }
+          if (!compatible) {
+            issues.push({
+              type: 'incompatible_data_wire',
+              severity: 'warning',
+              connectionId: conn.id,
+              actionId: fromNode.id,
+              actionName: `${fromNode.title || fromNode.type} ➔ ${toNode.title || toNode.type}`,
+              autoFixable: true,
+              fromPort: conn.fromPort,
+              toPort: conn.toPort,
+              messageEn: `Type mismatch: Data wire from "${fromNode.title || fromNode.type}" [${conn.fromPort}] (${fType}) is incompatible with "${toNode.title || toNode.type}" [${conn.toPort}] (${tType}).`,
+              messageTh: `ชนิดข้อมูลไม่ตรงกัน: สายข้อมูลจาก "${fromNode.title || fromNode.type}" [${conn.fromPort}] (${fType}) ไม่สามารถส่งเข้า "${toNode.title || toNode.type}" [${conn.toPort}] (${tType}) ได้`
+            });
+          }
+        }
+      });
+    }
   }
 
   const errorCount = issues.filter(i => i.severity === 'error').length;
@@ -306,6 +385,19 @@ export function autoFixProfile() {
   issues.forEach(issue => {
     if (!issue.autoFixable) return;
 
+    if (issue.type === 'invalid_connection_type' || issue.type === 'incompatible_data_wire') {
+      if (issue.connectionId) {
+        if (window.nodeCanvas && Array.isArray(window.nodeCanvas.connections)) {
+          window.nodeCanvas.connections = window.nodeCanvas.connections.filter(c => c.id !== issue.connectionId);
+        }
+        if (profile && Array.isArray(profile.connections)) {
+          profile.connections = profile.connections.filter(c => c.id !== issue.connectionId);
+        }
+        fixedCount++;
+      }
+      return;
+    }
+
     const act = profile.actions.find(a => a.id === issue.actionId);
     if (!act) return;
 
@@ -323,6 +415,9 @@ export function autoFixProfile() {
   if (fixedCount > 0) {
     saveCurrentProfile();
     renderActions(profile.actions);
+    if (window.nodeCanvas && typeof window.nodeCanvas.render === 'function') {
+      window.nodeCanvas.render();
+    }
   }
 
   return fixedCount;

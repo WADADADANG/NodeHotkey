@@ -97,6 +97,12 @@
   animation: dash 1s linear infinite;
 }
 
+.wire-path.wire-draft-invalid {
+  stroke: #ef4444 !important;
+  stroke-dasharray: 4 4 !important;
+  filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.85)) !important;
+}
+
 /* Unreal Blueprint Data Wires */
 .wire-path.wire-data {
   stroke-width: 3.5px;
@@ -971,6 +977,40 @@
 .node-port.port-boolean:hover {
   background: #ef4444 !important;
   box-shadow: 0 0 10px #ef4444 !important;
+}
+
+/* Flow Execution Ports (Chevrons / Arrows) */
+.node-port.port-flow {
+  border-radius: 2px !important;
+  clip-path: polygon(0% 12%, 60% 12%, 100% 50%, 60% 88%, 0% 88%);
+  width: 14px;
+  height: 14px;
+}
+
+/* Interactive Target States during Wire Dragging */
+.node-port.port-valid-target {
+  box-shadow: 0 0 14px #38bdf8, 0 0 4px #ffffff !important;
+  transform: translateY(-50%) scale(1.35) !important;
+  animation: validPortPulse 0.9s infinite alternate cubic-bezier(0.16, 1, 0.3, 1) !important;
+  z-index: 25 !important;
+}
+
+@keyframes validPortPulse {
+  0% {
+    box-shadow: 0 0 8px #38bdf8, 0 0 2px #fff;
+    transform: translateY(-50%) scale(1.2);
+  }
+  100% {
+    box-shadow: 0 0 18px #38bdf8, 0 0 8px #fff;
+    transform: translateY(-50%) scale(1.45);
+  }
+}
+
+.node-port.port-invalid-target {
+  opacity: 0.18 !important;
+  filter: grayscale(1) !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
 }
 
 /* Unreal Engine Blueprint Style Pure Node (Get Variable) */

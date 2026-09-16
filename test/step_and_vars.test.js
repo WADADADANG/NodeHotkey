@@ -584,6 +584,113 @@ assert(ttsDef.schema.some(f => f.key === 'text' && f.component === 'textarea'), 
 
 console.log('✅ Test 12 Passed: Modular Node Schema & Component-Based Metadata verified!\n');
 
+// ==========================================
+// Test 13: Wire Connection Constraints, Pin Taxonomy & Type Validation
+// ==========================================
+console.log('Test 13: Testing Wire Connection Constraints, Pin Taxonomy & Type Validation...');
+
+// Mock Minimal Canvas Instance with NodeCanvasEditor Prototype
+const { NodeCanvasEditor } = require('../public/js/canvas.js');
+const mockCanvas = Object.create(NodeCanvasEditor.prototype);
+mockCanvas.nodes = [
+  { id: 'node_scanner', type: 'party_scanner', title: 'Party Scanner', data: {} },
+  { id: 'node_buff', type: 'party_buff', title: 'Party Buff', data: {} },
+  { id: 'node_log', type: 'step_log', title: 'Step Log', data: {} },
+  { id: 'node_key', type: 'key_press', title: 'Key Press', data: { keys: ['1'] } },
+  { id: 'node_var_num', type: 'variable', title: 'Num Var', data: { varType: 'number', operation: 'set_value' } },
+  { id: 'node_fmt', type: 'format_text', title: 'Format Text', data: { pins: ['val_a'] } }
+];
+mockCanvas.connections = [];
+
+// 1. Port Metadata check
+const execInMeta = mockCanvas.getPortMeta('node_key', 'exec_in', 'in');
+assert.strictEqual(execInMeta.kind, 'flow', 'exec_in must be flow kind');
+
+const nextMeta = mockCanvas.getPortMeta('node_key', 'next', 'out');
+assert.strictEqual(nextMeta.kind, 'flow', 'next must be flow kind');
+
+const msgInMeta = mockCanvas.getPortMeta('node_log', 'msg_in', 'in');
+assert.strictEqual(msgInMeta.kind, 'data', 'msg_in must be data kind');
+assert.strictEqual(msgInMeta.type, 'string', 'msg_in must accept string type');
+
+const namesOutMeta = mockCanvas.getPortMeta('node_scanner', 'names_out', 'out');
+assert.strictEqual(namesOutMeta.kind, 'data', 'names_out must be data kind');
+assert.strictEqual(namesOutMeta.type, 'string', 'names_out must be string type');
+
+const slotOutMeta = mockCanvas.getPortMeta('node_buff', 'slot_out', 'out');
+assert.strictEqual(slotOutMeta.kind, 'data', 'slot_out must be data kind');
+assert.strictEqual(slotOutMeta.type, 'number', 'slot_out must be number type');
+
+// 2. canConnectPorts checks:
+// 2.1 Flow -> Flow is ALLOWED
+const flowToFlow = mockCanvas.canConnectPorts('node_key', 'next', 'node_log', 'exec_in');
+assert.strictEqual(flowToFlow.allowed, true, 'Flow next -> exec_in must be ALLOWED');
+
+// 2.2 Data -> Data (same type) is ALLOWED
+const dataToDataSame = mockCanvas.canConnectPorts('node_scanner', 'names_out', 'node_log', 'msg_in');
+assert.strictEqual(dataToDataSame.allowed, true, 'names_out (string) -> msg_in (string) must be ALLOWED');
+
+// 2.3 Data -> Data (number auto-cast to string) is ALLOWED
+const dataNumberToString = mockCanvas.canConnectPorts('node_buff', 'slot_out', 'node_log', 'msg_in');
+assert.strictEqual(dataNumberToString.allowed, true, 'slot_out (number) -> msg_in (string) must be ALLOWED via auto-cast');
+
+// 2.4 Flow -> Data is STRICTLY FORBIDDEN
+const flowToData = mockCanvas.canConnectPorts('node_key', 'next', 'node_log', 'msg_in');
+assert.strictEqual(flowToData.allowed, false, 'Flow -> Data must be FORBIDDEN');
+assert.strictEqual(flowToData.reasonKey, 'wire_err_flow_to_data', 'Should fail with wire_err_flow_to_data');
+
+// 2.5 Data -> Flow is STRICTLY FORBIDDEN
+const dataToFlow = mockCanvas.canConnectPorts('node_scanner', 'names_out', 'node_key', 'exec_in');
+assert.strictEqual(dataToFlow.allowed, false, 'Data -> Flow must be FORBIDDEN');
+assert.strictEqual(dataToFlow.reasonKey, 'wire_err_data_to_flow', 'Should fail with wire_err_data_to_flow');
+
+// 2.6 Data Type Mismatch (String -> Number) is FORBIDDEN
+const stringToNumber = mockCanvas.canConnectPorts('node_scanner', 'names_out', 'node_var_num', 'val_in');
+assert.strictEqual(stringToNumber.allowed, false, 'String -> Number val_in must be FORBIDDEN');
+assert.strictEqual(stringToNumber.reasonKey, 'wire_err_type_mismatch', 'Should fail with wire_err_type_mismatch');
+
+// 2.7 Self Connection is FORBIDDEN
+const selfConn = mockCanvas.canConnectPorts('node_key', 'next', 'node_key', 'exec_in');
+assert.strictEqual(selfConn.allowed, false, 'Self connection must be FORBIDDEN');
+assert.strictEqual(selfConn.reasonKey, 'wire_err_same_node', 'Should fail with wire_err_same_node');
+
+// 3. Single-input data pin auto-pruning in addConnection
+mockCanvas.render = function () {};
+mockCanvas.onProfileChanged = function () {};
+mockCanvas.addHistory = function () {};
+
+// Add first wire to msg_in
+mockCanvas.addConnection('node_scanner', 'names_out', 'node_log', 'msg_in');
+assert.strictEqual(mockCanvas.connections.length, 1, 'Should have 1 connection');
+assert.strictEqual(mockCanvas.connections[0].fromPort, 'names_out');
+
+// Add second wire from slot_out to msg_in: should auto-prune first wire
+mockCanvas.addConnection('node_buff', 'slot_out', 'node_log', 'msg_in');
+assert.strictEqual(mockCanvas.connections.length, 1, 'Should prune previous incoming data wire to single input');
+assert.strictEqual(mockCanvas.connections[0].fromPort, 'slot_out', 'New wire slot_out should replace names_out');
+
+// Attempt illegal connection: should NOT be added
+mockCanvas.addConnection('node_key', 'next', 'node_log', 'msg_in');
+assert.strictEqual(mockCanvas.connections.length, 1, 'Illegal Flow -> Data connection must NOT be added');
+
+// 4. Test getNodeValidationIssue on illegal connection attached to node
+mockCanvas.connections.push({
+  id: 'c_illegal',
+  fromNodeId: 'node_key',
+  fromPort: 'next',
+  toNodeId: 'node_log',
+  toPort: 'msg_in'
+});
+const issue = mockCanvas.getNodeValidationIssue(mockCanvas.nodes.find(n => n.id === 'node_log'));
+assert.ok(issue, 'Node with illegal wire should return validation issue');
+assert.strictEqual(issue.severity, 'error', 'Illegal wire should have error severity');
+assert.ok(issue.messageTh.includes('สายต่อผิดประเภท'), 'Issue message should mention illegal wire type');
+
+// Clean up
+mockCanvas.connections = mockCanvas.connections.filter(c => c.id !== 'c_illegal');
+
+console.log('✅ Test 13 Passed: Wire Connection Constraints, Pin Taxonomy & Type Validation verified!\n');
+
 console.log('🎉 All Step Log & Unreal Blueprint Variable Tests Passed Successfully!');
 process.exit(0);
 })();
