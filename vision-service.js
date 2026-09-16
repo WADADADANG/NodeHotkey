@@ -135,8 +135,8 @@ class ClientScreencastManager {
 
             await cdp.send('Page.startScreencast', {
                 format: 'jpeg',
-                quality: 85,
-                everyNthFrame: 1
+                quality: 80,
+                everyNthFrame: 3
             });
 
             session.isStreaming = true;
@@ -181,12 +181,14 @@ class ClientPartyScanner {
         this.consecutiveMisses = 0;
         this.lastViewportW = 0;
         this.lastViewportH = 0;
+        this.cachedNames = new Map(); // slot -> { name, level, isLeader }
     }
 
     resetCalibration() {
         this.lockedCol = null;
         this.lastSlots = null;
         this.consecutiveMisses = 0;
+        this.cachedNames.clear();
     }
 
     static isHpPixel(r, g, b) {
@@ -486,6 +488,10 @@ class ClientPartyScanner {
                     } else {
                         m.name = `Slot_${m.slot}`;
                     }
+
+                    if (m.name && m.name !== `Slot_${m.slot}`) {
+                        this.cachedNames.set(m.slot, { name: m.name, level: m.level, isLeader: m.isLeader });
+                    }
                 } else {
                     m.name = `Slot_${m.slot}`;
                 }
@@ -674,11 +680,12 @@ class ClientPartyScanner {
                 const clickX = Math.round(startX + Math.min(barWidth * 0.48, 70));
                 const clickY = Math.round(barY);
 
+                const cached = this.cachedNames ? this.cachedNames.get(s.slot) : null;
                 members.push({
                     slot: s.slot,
-                    name: `Slot_${s.slot}`,
-                    level: null,
-                    isLeader: false,
+                    name: cached ? cached.name : `Slot_${s.slot}`,
+                    level: cached ? cached.level : null,
+                    isLeader: cached ? cached.isLeader : false,
                     barY,
                     startX,
                     barWidth,

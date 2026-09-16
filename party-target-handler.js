@@ -48,8 +48,8 @@ async function runPartyScannerAction(action, callStack) {
     }
 
     try {
-        // Scan live page once via VisionService
-        const readNames = action.readNames !== false;
+        // Scan live page once via VisionService (OCR readNames defaults to false to eliminate 100% CPU bottleneck)
+        const readNames = action.readNames === true;
         const partyState = await visionService.scanClientPage(page, targetClientId, action.scanRegion, { readNames });
 
         if (!partyState || !Array.isArray(partyState.members) || partyState.members.length === 0) {

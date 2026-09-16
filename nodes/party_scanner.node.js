@@ -25,7 +25,7 @@ module.exports = {
     targetClient: '1',
     scanRegion: 'auto',
     scanIntervalMs: 250,
-    readNames: true,
+    readNames: false,
     showOverlay: true
   },
 

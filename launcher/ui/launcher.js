@@ -793,6 +793,10 @@
     if (overlayCb) {
       overlayCb.checked = !!gs.enableOverlay;
     }
+    const gpuCb = document.getElementById('setting-gpu-acceleration');
+    if (gpuCb) {
+      gpuCb.checked = gs.gpuAcceleration !== false;
+    }
     if (jitterCb) {
       const gmj = gs.ghostMouseJitter || {};
       jitterCb.checked = !!gmj.enabled;
@@ -821,6 +825,7 @@
     try {
       const suspendKeyInput = document.getElementById('setting-suspend-key');
       const overlayCb = document.getElementById('setting-enable-overlay');
+      const gpuCb = document.getElementById('setting-gpu-acceleration');
       const jitterCb = document.getElementById('setting-enable-jitter');
       const jitterMin = document.getElementById('setting-jitter-min');
       const jitterMax = document.getElementById('setting-jitter-max');
@@ -831,6 +836,7 @@
       const newSettings = {};
       if (suspendKeyInput) newSettings.suspendHotkey = suspendKeyInput.value.trim() || 'END';
       if (overlayCb) newSettings.enableOverlay = overlayCb.checked;
+      if (gpuCb) newSettings.gpuAcceleration = gpuCb.checked;
       if (jitterCb) {
         newSettings.ghostMouseJitter = {
           enabled: jitterCb.checked,

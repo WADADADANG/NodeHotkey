@@ -307,6 +307,18 @@
             </div>
           </div>
 
+          <!-- 2.1 Hardware & GPU Acceleration -->
+          <div class="settings-card-box">
+            <div class="setting-row-head" id="lbl-setting-head-gpu">🚀 Hardware & GPU Acceleration</div>
+            <div class="setting-row-body" style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+              <div>
+                <div class="setting-label" id="lbl-setting-gpu-title">เร่งความเร็วด้วยการ์ดจอแยก (High-Performance GPU / D3D11)</div>
+                <div class="setting-desc" id="lbl-setting-gpu-desc">บังคับให้เบราว์เซอร์ใช้การ์ดจอแยก (NVIDIA/AMD) และ Direct3D 11 Canvas Acceleration ช่วยลดโหลด CPU และลดอาการแลค</div>
+              </div>
+              <input type="checkbox" id="setting-gpu-acceleration" class="setting-checkbox" onchange="window.saveSettingsFromUI()" style="width:18px; height:18px; cursor:pointer; accent-color:#10b981;" />
+            </div>
+          </div>
+
           <!-- 3. Human Random Jitter -->
           <div class="settings-card-box">
             <div class="setting-row-head" id="lbl-setting-head-jitter">🛡️ Anti-Detect & Ghost Mouse Jitter</div>

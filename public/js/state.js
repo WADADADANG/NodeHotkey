@@ -237,6 +237,11 @@ export function syncGlobalSettingsFromDOM() {
     gs.enableOverlay = !!checkbox.checked;
   }
 
+  const gpuCb = document.getElementById('enable-gpu-checkbox');
+  if (gpuCb) {
+    gs.gpuAcceleration = !!gpuCb.checked;
+  }
+
   const appModeCb = document.getElementById('enable-app-mode-checkbox');
   if (appModeCb) {
     gs.useAppMode = !!appModeCb.checked;
@@ -925,6 +930,9 @@ export function loadGlobalSettingsToUI() {
 
   const checkbox = document.getElementById('enable-overlay-checkbox');
   if (checkbox) checkbox.checked = !!gs.enableOverlay;
+
+  const gpuCb = document.getElementById('enable-gpu-checkbox');
+  if (gpuCb) gpuCb.checked = gs.gpuAcceleration !== false;
 
   const appModeCb = document.getElementById('enable-app-mode-checkbox');
   if (appModeCb) appModeCb.checked = gs.useAppMode !== false;

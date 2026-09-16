@@ -190,6 +190,7 @@ function parseProxyString(rawStr) {
     return { server: str.startsWith('http') ? str : `http://${str}` };
 }
 let suspendHotkey = "";
+let gpuAcceleration = true;
 global.isSuspended = false;
 let pressedRemapKeys = {};
 let activeHoldStates = {};
@@ -410,6 +411,7 @@ function loadConfigFromFile() {
         // Load target URL keyword
         targetUrlKeyword = globalSet.targetUrlKeyword || primaryProfile.targetUrlKeyword || 'universe.flyff.com';
         suspendHotkey = globalSet.suspendHotkey || primaryProfile.suspendHotkey || '';
+        gpuAcceleration = globalSet.gpuAcceleration !== false;
 
         // Load & initialize active Node Workflow execution engine with all active profiles
         activeWorkflowEngine.loadProfiles(activeProfileObjs);
@@ -1344,6 +1346,12 @@ async function launchBrowser(activeClientsList, choice) {
             '--enable-zero-copy',
             '--ignore-gpu-blocklist',
             '--disable-gpu-process-crash-limit',
+            ...(gpuAcceleration !== false ? [
+                '--force_high_performance_gpu',
+                '--use-gl=angle',
+                '--use-angle=d3d11',
+                '--enable-accelerated-2d-canvas'
+            ] : []),
 
             // === Reduce CPU/Memory Overhead ===
             '--disable-extensions',
@@ -1691,6 +1699,12 @@ async function launchSingleClient(clientIndexInput, choiceParam) {
             '--enable-zero-copy',
             '--ignore-gpu-blocklist',
             '--disable-gpu-process-crash-limit',
+            ...(gpuAcceleration !== false ? [
+                '--force_high_performance_gpu',
+                '--use-gl=angle',
+                '--use-angle=d3d11',
+                '--enable-accelerated-2d-canvas'
+            ] : []),
             '--disable-extensions',
             '--disable-sync',
             '--disable-default-apps',

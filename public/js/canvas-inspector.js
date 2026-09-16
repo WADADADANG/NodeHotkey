@@ -664,6 +664,15 @@
           <span>👁️ ${canvasT('inspector_party_show_overlay', 'Visual Overlay')}</span>
         </label>
       </div>
+      <div class="inspector-field-group" style="margin-top:6px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+          <input type="checkbox" ${node.data?.readNames === true ? 'checked' : ''} onchange="window.nodeCanvas.updateNodeData('${node.id}', 'readNames', this.checked)" style="accent-color:#38bdf8; cursor:pointer;" />
+          <span>🔤 ${canvasT('inspector_party_read_names', isEn ? 'Read Member Names (OCR - High CPU)' : 'อ่านชื่อสมาชิกด้วย OCR (กิน CPU สูง)')}</span>
+        </label>
+        <div style="font-size:10.5px; opacity:0.6; margin-top:2px; margin-left:22px;">
+          ${isEn ? 'Tip: Leave disabled for real-time HP healing loops to save CPU. Enable only if needed for TTS or Webhook.' : 'คำแนะนำ: ปิดไว้เพื่อให้ลูปฮีลเลือดทำงานรวดเร็วและประหยัด CPU แนะนำเปิดเฉพาะตอนต้องดึงชื่อไปส่ง TTS/Webhook'}
+        </div>
+      </div>
     `;
   },
 
