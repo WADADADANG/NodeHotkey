@@ -418,5 +418,66 @@ assert.strictEqual(
 
 console.log('✅ Test 9 Passed: Format Text Node, Type Conversion & Data Pin Resolution verified!\n');
 
+// 10. Test Text to Speech (TTS) Dynamic Data Pin (text_in)
+console.log('Test 10: Testing Text to Speech (TTS) dynamic text_in data pin resolution...');
+
+const ttsDef = nodeRegistry.get('tts');
+assert.ok(ttsDef, 'TTS node must be registered in nodeRegistry');
+assert.ok(ttsDef.inputs.includes('text_in'), 'TTS node inputs must include text_in');
+assert.ok(ttsDef.outputs.includes('next'), 'TTS node outputs must include next');
+
+const ttsAction = {
+  id: 'node_tts_1',
+  name: 'Alert TTS',
+  type: 'tts',
+  text: 'Default static fallback message',
+  voice: 'th-TH-PremwadeeNeural',
+  volume: 100
+};
+
+// 10.1 Fallback when no wire connected
+global.resolveNodeInputData = bot.resolveNodeInputData;
+let resolvedTtsNoWire = bot.resolveNodeInputData(ttsAction, 'text_in');
+assert.strictEqual(resolvedTtsNoWire, null, 'Unconnected text_in should resolve to null');
+
+// 10.2 Connect format_text -> tts (text_in)
+const ttsWireConn = {
+  id: 'c_fmt_to_tts',
+  fromNodeId: 'node_format_text_1',
+  fromPort: 'msg_out',
+  toNodeId: 'node_tts_1',
+  toPort: 'text_in'
+};
+global.activeActions.push(ttsAction);
+global.activeProfileConnections.push(ttsWireConn);
+
+const resolvedTtsFromFormat = bot.resolveNodeInputData(ttsAction, 'text_in');
+assert.strictEqual(
+  resolvedTtsFromFormat,
+  'Buffing HeroSlayer at Slot 2 (Leader: No)',
+  'TTS text_in should dynamically resolve formatted text from upstream format_text node'
+);
+
+// 10.3 Connect party_buff (name_out) -> tts (text_in)
+global.activeProfileConnections = global.activeProfileConnections.filter(c => c.id !== 'c_fmt_to_tts');
+const ttsBuffConn = {
+  id: 'c_buff_to_tts',
+  fromNodeId: 'node_party_buff_1',
+  fromPort: 'name_out',
+  toNodeId: 'node_tts_1',
+  toPort: 'text_in'
+};
+global.activeProfileConnections.push(ttsBuffConn);
+
+const resolvedTtsFromName = bot.resolveNodeInputData(ttsAction, 'text_in');
+assert.strictEqual(
+  resolvedTtsFromName,
+  'HeroSlayer',
+  'TTS text_in should dynamically resolve member name from party_buff name_out'
+);
+
+console.log('✅ Test 10 Passed: TTS text_in Dynamic Data Pin & Upstream Action Node Resolution verified!\n');
+
 console.log('🎉 All Step Log & Unreal Blueprint Variable Tests Passed Successfully!');
 process.exit(0);
+

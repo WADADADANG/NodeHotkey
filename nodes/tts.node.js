@@ -13,7 +13,7 @@ module.exports = {
   category: 'Utility / Alert',
   icon: '🗣️',
   color: '#ec4899',
-  inputs: ['in'],
+  inputs: ['in', 'text_in'],
   outputs: ['next', 'onError'],
   defaultData: {
     text: '',
@@ -24,7 +24,22 @@ module.exports = {
   async execute(context, action, callStack = []) {
     try {
       const tts = require('../tts-service');
-      const text = String(action.text || action.message || '').trim();
+
+      // 1. Resolve dynamic text from incoming data wire ('text_in' or 'msg_in') if available
+      let resolvedText = null;
+      if (typeof global.resolveNodeInputData === 'function') {
+        resolvedText = global.resolveNodeInputData(action, 'text_in');
+        if (resolvedText === null || resolvedText === undefined || resolvedText === '') {
+          resolvedText = global.resolveNodeInputData(action, 'msg_in');
+        }
+      }
+
+      // 2. Fallback to static text configured in Inspector
+      if (resolvedText === null || resolvedText === undefined || resolvedText === '') {
+        resolvedText = action.text !== undefined ? action.text : (action.message || '');
+      }
+
+      const text = String(resolvedText || '').trim();
       if (!text) {
         if (typeof global.fireChain === 'function') {
           await global.fireChain(action, 'next', callStack);

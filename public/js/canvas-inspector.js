@@ -770,15 +770,38 @@
     const voice = node.data?.voice || 'th-TH-PremwadeeNeural';
     const volume = node.data?.volume !== undefined ? node.data.volume : 100;
 
-    return `
+    const textConn = this.connections.find(c => c.toNodeId === node.id && (c.toPort === 'text_in' || c.toPort === 'msg_in'));
+    let srcTitle = '';
+    if (textConn) {
+      const srcNode = this.nodes.find(n => n.id === textConn.fromNodeId);
+      srcTitle = srcNode ? (srcNode.title || srcNode.type) : 'Wire';
+    }
+
+    const messageFieldHTML = textConn ? `
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_tts_message', isEn ? 'TTS Message to Speak' : 'ข้อความที่ต้องการให้พูด (TTS Message)')}</label>
-        <textarea class="inspector-input" rows="3" placeholder="${isEn ? 'e.g. Party HP is critically low!' : 'เช่น เลือดในตี้ต่ำกว่าเกณฑ์'}" oninput="window.nodeCanvas.updateNodeData('${node.id}', 'text', this.value)" style="resize:vertical; min-height:65px; font-family:inherit; padding:8px 10px; line-height:1.4;">${text}</textarea>
-        <span style="font-size:10px; color:var(--muted); margin-top:2px;">${canvasT('inspector_tts_message_hint', isEn ? 'Synthesized with realistic Neural AI voice' : 'ข้อความจะถูกสังเคราะห์ด้วย Neural AI เสียงเหมือนคนจริง')}</span>
+        <div style="background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.3); border-radius:6px; padding:8px 12px; font-size:12px; color:#f472b6; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span>🔗</span>
+            <span>${isEn ? 'Dynamic text from:' : 'รับข้อความเสียงจากสาย:'} <b>${srcTitle}</b></span>
+          </div>
+          <button type="button" class="btn btn-ghost" style="padding:2px 8px; font-size:11px; height:24px; color:#f472b6; border-color:rgba(236,72,153,0.4);" onclick="window.nodeCanvas.disconnectAllToPort('${node.id}', '${textConn.toPort || 'text_in'}'); window.nodeCanvas.openInspector('${node.id}');" title="${isEn ? 'Disconnect wire' : 'ปลดสายเชื่อมต่อ'}">✂️ ${isEn ? 'Disconnect' : 'ปลดสาย'}</button>
+        </div>
+        <span style="font-size:10px; color:var(--muted); margin-top:4px; display:block;">${isEn ? 'Receiving dynamic text directly from upstream action wire' : 'รับข้อความเสียงแบบ Real-time จากสายสัญญาณ Action ก่อนหน้า'}</span>
       </div>
+    ` : `
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_tts_message', isEn ? 'TTS Message to Speak' : 'ข้อความที่ต้องการให้พูด (TTS Message)')}</label>
+        <textarea class="inspector-input" rows="3" placeholder="${isEn ? 'e.g. Party HP is critically low!' : 'เช่น เลือดในตี้ต่ำกว่าเกณฑ์'}" oninput="window.nodeCanvas.updateNodeData('${node.id}', 'text', this.value); window.nodeCanvas.renderNodes();" style="resize:vertical; min-height:65px; font-family:inherit; padding:8px 10px; line-height:1.4;">${text}</textarea>
+        <span style="font-size:10px; color:var(--muted); margin-top:2px;">${canvasT('inspector_tts_message_hint', isEn ? 'Synthesized with realistic Neural AI voice (or connect wire to Text In)' : 'ข้อความจะถูกสังเคราะห์ด้วยเสียง Neural AI หรือต่อสายเข้า Text In')}</span>
+      </div>
+    `;
+
+    return `
+      ${messageFieldHTML}
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_tts_voice', isEn ? 'Voice Model' : 'เสียงพูด (Voice Model)')}</label>
-        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'voice', this.value);">
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'voice', this.value); window.nodeCanvas.renderNodes();">
           <optgroup label="${isEn ? '🇹🇭 Thai (TH)' : '🇹🇭 ภาษาไทย'}">
             <option value="th-TH-PremwadeeNeural" ${voice === 'th-TH-PremwadeeNeural' ? 'selected' : ''}>👩 ${isEn ? 'Premwadee (Female)' : 'เปรมวดี (หญิง)'}</option>
             <option value="th-TH-NiwatNeural" ${voice === 'th-TH-NiwatNeural' ? 'selected' : ''}>👨 ${isEn ? 'Niwat (Male)' : 'นิวัต (ชาย)'}</option>

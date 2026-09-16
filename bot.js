@@ -3292,7 +3292,9 @@ function resolveNodeInputData(targetAction, inputPortName) {
     if (global.activeProfileConnections && Array.isArray(global.activeProfileConnections)) {
         const conn = global.activeProfileConnections.find(c => 
             (c.toNodeId === targetId || c.toNodeId === `node_${targetId}` || (targetAction.nodeId && c.toNodeId === targetAction.nodeId)) && 
-            (c.toPort === inputPortName || (!c.toPort && (inputPortName === 'msg_in' || inputPortName === 'val_in')))
+            (c.toPort === inputPortName || 
+             (!c.toPort && (inputPortName === 'msg_in' || inputPortName === 'val_in' || inputPortName === 'text_in')) ||
+             ((inputPortName === 'text_in' || inputPortName === 'msg_in') && (c.toPort === 'text_in' || c.toPort === 'msg_in' || c.toPort === 'text-in')))
         );
         if (conn) {
             const actionPool = (global.activeActions && global.activeActions.length > 0) ? global.activeActions : (typeof activeActions !== 'undefined' ? activeActions : []);

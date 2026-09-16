@@ -967,7 +967,16 @@ class NodeCanvasEditor {
         `;
       } else if (node.type === 'tts') {
         const isEn = window.currentLang === 'en';
+        const textConn = this.connections.find(c => c.toNodeId === node.id && (c.toPort === 'text_in' || c.toPort === 'msg_in'));
+        let srcTitle = '';
+        if (textConn) {
+          const srcNode = this.nodes.find(n => n.id === textConn.fromNodeId);
+          srcTitle = srcNode ? (srcNode.title || srcNode.type) : 'Wire';
+        }
         const text = node.data?.text || (isEn ? 'Voice alert message...' : 'ข้อความเสียง...');
+        const textDisplayHTML = textConn
+          ? `<span class="node-info-value" style="color:#ec4899; font-weight:700; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${isEn ? `🔗 Dynamic text from: ${srcTitle}` : `🔗 รับข้อความจากสาย: ${srcTitle}`}">🔗 [${srcTitle}]</span>`
+          : `<span class="node-info-value" style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${text}">"${text}"</span>`;
         const v = node.data?.voice || 'th-TH-PremwadeeNeural';
         const vLabel = v.includes('Niwat') ? (isEn ? 'Niwat (Male)' : 'นิวัต (ชาย)') : (v.includes('Jenny') ? 'Jenny' : (v.includes('Guy') ? 'Guy' : (isEn ? 'Premwadee (Female)' : 'เปรมวดี (หญิง)')));
         const vol = node.data?.volume !== undefined ? node.data.volume : 100;
@@ -976,7 +985,7 @@ class NodeCanvasEditor {
             <span>Voice:</span> <span class="node-info-value" style="color:#c084fc; font-weight:700;">${vLabel}</span>
           </div>
           <div class="node-info-row">
-            <span>Text:</span> <span class="node-info-value" style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">"${text}"</span>
+            <span>Text:</span> ${textDisplayHTML}
           </div>
           <div class="node-info-row">
             <span>Vol:</span> <span class="node-info-value">${vol}%</span>
@@ -1437,8 +1446,16 @@ class NodeCanvasEditor {
         `;
       } else if (node.type === 'tts') {
         const isEn = window.currentLang === 'en';
+        const textConn = this.connections.find(c => c.toNodeId === node.id && (c.toPort === 'text_in' || c.toPort === 'msg_in'));
+        const pinLabelText = isEn ? '◀ Text In' : '◀ ข้อความเข้า';
+        const pinLabelStyle = textConn ? 'color:#ec4899; font-weight:700;' : '';
+        const pinTitle = isEn ? 'Text Data Input (String - Pink)' : 'รับข้อความเสียง (String - สีชมพู)';
         pinsHTML = `
           <div class="node-pins-section">
+            <div class="node-pin-row pin-row-in">
+              <div class="node-port port-in port-data port-string" data-node="${node.id}" data-port="text_in" title="${pinTitle}"></div>
+              <span class="node-pin-label port-string" style="${pinLabelStyle}">${pinLabelText}</span>
+            </div>
             <div class="node-pin-row">
               <span class="node-pin-label onComplete" style="color:#c084fc;">🏁 ${isEn ? 'Spoken (next)' : 'พูดสำเร็จ (next)'} ▶</span>
               <div class="node-port port-out port-onComplete" data-node="${node.id}" data-port="next" title="${isEn ? 'Triggered when voice alert begins' : 'ส่งสัญญาณเมื่อเริ่มเล่นเสียงแจ้งเตือน'}"></div>
@@ -1542,7 +1559,7 @@ class NodeCanvasEditor {
         `;
       } else if (node.type === 'trigger') {
         portsHTML += `<div class="node-port port-out" data-node="${node.id}" data-port="exec_out" title="Output (exec_out)"></div>`;
-      } else if (node.type === 'step_log' || node.type === 'format_text' || node.type === 'var_get' || node.type === 'var_set' || node.type === 'variable') {
+      } else if (node.type === 'step_log' || node.type === 'format_text' || node.type === 'var_get' || node.type === 'var_set' || node.type === 'variable' || node.type === 'tts') {
         // Output pins explicitly handled in pinsHTML
       } else {
         portsHTML += `<div class="node-port port-out" data-node="${node.id}" data-port="next" title="Output (next)"></div>`;
@@ -1733,7 +1750,7 @@ class NodeCanvasEditor {
     const node = this.nodes.find(n => n.id === nodeId);
     if (!node) return { x: 0, y: 0 };
 
-    const isOutput = !(portName === 'exec_in' || portName === 'msg_in' || portName === 'val_in' || (node.type === 'format_text' && portName !== 'msg_out'));
+    const isOutput = !(portName === 'exec_in' || portName === 'msg_in' || portName === 'val_in' || portName === 'text_in' || (node.type === 'format_text' && portName !== 'msg_out'));
     const x = isOutput ? node.position.x + 221 : node.position.x - 1;
     let y = node.position.y + 38;
     if (portName === 'onBeforeStart') y = node.position.y + 75;
@@ -1811,6 +1828,7 @@ class NodeCanvasEditor {
         conn.fromPort === 'info_out' || 
         conn.toPort === 'val_in' || 
         conn.toPort === 'msg_in' ||
+        conn.toPort === 'text_in' ||
         (toNode && toNode.type === 'format_text')
       );
       let wireTypeClass = '';
@@ -1818,7 +1836,7 @@ class NodeCanvasEditor {
         let vType = fromNode?.data?.varType;
         if (!vType) {
           if (conn.fromPort === 'slot_out' || conn.fromPort === 'count_out') vType = 'number';
-          else if (conn.fromPort === 'msg_out' || conn.fromPort === 'name_out' || conn.fromPort === 'names_out' || conn.fromPort === 'info_out' || conn.toPort === 'msg_in') vType = 'string';
+          else if (conn.fromPort === 'msg_out' || conn.fromPort === 'name_out' || conn.fromPort === 'names_out' || conn.fromPort === 'info_out' || conn.toPort === 'msg_in' || conn.toPort === 'text_in') vType = 'string';
           else vType = 'string';
         }
         wireTypeClass = `wire-data wire-${vType}`;
@@ -1890,6 +1908,7 @@ class NodeCanvasEditor {
         pName === 'info_out' || 
         toPName === 'val_in' || 
         toPName === 'msg_in' ||
+        toPName === 'text_in' ||
         (toNode && toNode.type === 'format_text')
       );
 
@@ -1897,7 +1916,7 @@ class NodeCanvasEditor {
         let vType = fromNode?.data?.varType;
         if (!vType) {
           if (pName === 'slot_out' || pName === 'count_out') vType = 'number';
-          else if (pName === 'msg_out' || pName === 'name_out' || pName === 'names_out' || pName === 'info_out' || toPName === 'msg_in') vType = 'string';
+          else if (pName === 'msg_out' || pName === 'name_out' || pName === 'names_out' || pName === 'info_out' || toPName === 'msg_in' || toPName === 'text_in') vType = 'string';
           else vType = 'string';
         }
         if (vType === 'number') {
@@ -2355,10 +2374,15 @@ class NodeCanvasEditor {
 
   addConnection(fromNodeId, fromPort, toNodeId, toPort) {
     this.draftWire = null;
-    const existing = this.connections.find(c => c.fromNodeId === fromNodeId && c.fromPort === fromPort && c.toNodeId === toNodeId);
+    const existing = this.connections.find(c => c.fromNodeId === fromNodeId && c.fromPort === fromPort && c.toNodeId === toNodeId && c.toPort === toPort);
     if (existing) {
       this.render();
       return;
+    }
+
+    // For single-input data pins (text_in, msg_in, val_in), automatically prune previous incoming connection to that port
+    if (toPort === 'text_in' || toPort === 'msg_in' || toPort === 'val_in') {
+      this.connections = this.connections.filter(c => !(c.toNodeId === toNodeId && c.toPort === toPort));
     }
 
     this.connections.push({
