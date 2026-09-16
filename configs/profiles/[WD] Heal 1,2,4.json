@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 0.7049539258012572,
     "pan": {
-      "x": -678,
-      "y": -286
+      "x": -725,
+      "y": -452
     }
   },
   "nodes": [
@@ -58,7 +58,7 @@
         "keys": [
           "2"
         ],
-        "interval": 800,
+        "interval": 900,
         "jitter": 100,
         "executeImmediately": true,
         "actionId": "1786680432366"
@@ -78,7 +78,7 @@
         "keys": [
           "2"
         ],
-        "interval": 800,
+        "interval": 900,
         "jitter": 100,
         "executeImmediately": true,
         "actionId": "1786680465713_967"
@@ -98,7 +98,7 @@
         "keys": [
           "2"
         ],
-        "interval": 800,
+        "interval": 900,
         "jitter": 100,
         "executeImmediately": true,
         "actionId": "1786680473923_7676"
@@ -224,7 +224,7 @@
         "keys": [
           "3"
         ],
-        "interval": 4300,
+        "interval": 4400,
         "executeImmediately": false,
         "actionId": "1786684545395_4783"
       }

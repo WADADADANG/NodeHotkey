@@ -294,16 +294,18 @@ class ClientPartyScanner {
                 const bodyY = y + 4;
                 if (bodyY < h) {
                     let bodyCount = 0;
+                    let redCount = 0;
                     for (let x = startX; x < startX + barWidth; x++) {
                         if (x >= w) break;
                         const idx = (bodyY * w + x) * ch;
                         const r = data[idx], g = data[idx + 1], b = data[idx + 2];
                         const isRed = (r > 140 && g < 70 && r > g * 2.5 && r > b * 1.3);
                         const isBlack = (r < 25 && g < 25 && b < 25);
+                        if (isRed) redCount++;
                         if (isRed || isBlack) bodyCount++;
                     }
                     if (bodyCount >= barWidth * 0.50) {
-                        candidates.push({ y: bodyY, score: borderCount + bodyCount });
+                        candidates.push({ y: bodyY, score: borderCount + bodyCount + (redCount >= 4 ? 100 : 0), redCount, hasRed: redCount >= 4 });
                     }
                 }
             }
@@ -319,7 +321,7 @@ class ClientPartyScanner {
                 if (r > 140 && g < 70 && r > g * 2.5 && r > b * 1.3) redCount++;
             }
             if (redCount >= barWidth * 0.45) {
-                candidates.push({ y, score: redCount * 2 });
+                candidates.push({ y, score: redCount * 3 + 200, redCount, hasRed: true });
             }
         }
 
@@ -336,18 +338,36 @@ class ClientPartyScanner {
             }
         }
 
-        const rawSlots = clusters.map(cl => {
-            cl.sort((a, b) => b.score - a.score);
-            return cl[0].y;
+        // 3.1 Prune Non-Red Shadow Candidates: ตัด candidate สีดำล้วนที่อยู่ใกล้หลอดเลือดแดงจริง (<= 25px)
+        // เพื่อป้องกันเส้นแบ่งใต้กล่องไอคอนบัฟ หรือช่องไฟป้ายชื่อ มาแย่งคิวสล็อตจริง
+        const redYPositions = [];
+        clusters.forEach(cl => {
+            if (cl.some(x => x.hasRed)) {
+                redYPositions.push(cl[0].y);
+            }
         });
 
-        // 4. Longest Chain Selection: ค้นหาห่วงโซ่สล็อตต่อเนื่อง (ระยะห่าง 24-120px)
+        const validClusters = clusters.filter(cl => {
+            const hasRed = cl.some(x => x.hasRed);
+            if (hasRed) return true;
+            const nearRed = redYPositions.some(ry => Math.abs(ry - cl[0].y) <= 25);
+            return !nearRed;
+        });
+
+        const rawSlots = validClusters.map(cl => {
+            cl.sort((a, b) => b.score - a.score);
+            const top = cl[0];
+            const hasAnyRed = cl.some(x => x.hasRed);
+            return { y: top.y, score: top.score, hasRed: hasAnyRed };
+        });
+
+        // 4. Longest & Red-Prioritized Chain Selection: ค้นหาห่วงโซ่สล็อตต่อเนื่อง (ระยะห่าง 29-120px)
         const chains = [];
         for (let i = 0; i < rawSlots.length; i++) {
             const currentChain = [rawSlots[i]];
             for (let j = i + 1; j < rawSlots.length; j++) {
-                const diff = rawSlots[j] - currentChain[currentChain.length - 1];
-                if (diff >= 24 && diff <= 120) {
+                const diff = rawSlots[j].y - currentChain[currentChain.length - 1].y;
+                if (diff >= 29 && diff <= 120) {
                     currentChain.push(rawSlots[j]);
                 } else if (diff > 120) {
                     break;
@@ -358,13 +378,16 @@ class ClientPartyScanner {
 
         chains.sort((a, b) => {
             if (b.length !== a.length) return b.length - a.length;
-            return b[0] - a[0];
+            const bRed = b.filter(x => x.hasRed).length;
+            const aRed = a.filter(x => x.hasRed).length;
+            if (bRed !== aRed) return bRed - aRed;
+            return b[0].y - a[0].y;
         });
 
         const bestChain = chains[0] || [];
-        return bestChain.slice(0, 8).map((barY, idx) => ({
+        return bestChain.slice(0, 8).map((slotItem, idx) => ({
             slot: idx + 1,
-            barY
+            barY: slotItem.y
         }));
     }
 
@@ -384,8 +407,9 @@ class ClientPartyScanner {
 
             try {
                 const textTop = Math.max(0, m.barY - 18);
-                const textLeft = Math.max(0, startX - 2);
-                const textW = Math.min(w - textLeft, Math.max(140, barWidth + 10));
+                // ขยายกรอบอ่านชื่อไปทางซ้าย 58px เพื่อให้อ่านครอบคลุมทั้ง Level (เช่น 147.) และชื่อตัวละครสั้นๆ ที่อยู่เยื้องซ้ายของหลอดเลือด
+                const textLeft = Math.max(0, startX - 58);
+                const textW = Math.min(w - textLeft, Math.max(160, barWidth + 58));
                 const textH = 16;
 
                 if (textW < 20 || textH < 10) continue;
@@ -425,7 +449,7 @@ class ClientPartyScanner {
                 // ในเกม Flyff Universe หัวหน้าปาร์ตี้ (Leader) คือ Slot 1 (แถวบนสุด) เท่านั้น ส่วน Slot อื่นเป็นลูกตี้ทั้งหมด
                 m.isLeader = (m.slot === 1);
 
-                if (textPixelCount < 40) {
+                if (textPixelCount < 30) {
                     m.name = `Slot_${m.slot}`;
                     continue;
                 }
@@ -490,33 +514,42 @@ class ClientPartyScanner {
 
             // ก. ตรวจสอบ lockedCol ก่อนเป็นอันดับแรกเพื่อความเร็วและความนิ่ง
             if (this.lockedCol) {
-                const isStd = (this.lockedCol.barWidth >= 90 && this.lockedCol.barWidth <= 165);
-                if (isStd) {
-                    const slots = this.detectPartySlots(data, w, h, ch, this.lockedCol.startX, this.lockedCol.barWidth);
-                    if (slots && slots.length >= 2) {
-                        chosenCol = this.lockedCol;
-                        chosenSlots = slots;
-                    }
-                } else {
-                    this.lockedCol = null; // คอลัมน์ที่เคยล็อกไว้กว้างผิดปกติ ให้รีเซ็ตใหม่
+                const slots = this.detectPartySlots(data, w, h, ch, this.lockedCol.startX, this.lockedCol.barWidth);
+                if (slots && slots.length >= 2) {
+                    chosenCol = this.lockedCol;
+                    chosenSlots = slots;
                 }
             }
 
             // ข. หากยังไม่มี lockedCol หรือ lockedCol ตรวจไม่เจอ ให้ทดสอบจาก candidates ทั้งหมด
+            // เลือกล็อกคอลัมน์ที่ตรวจพบจำนวนสมาชิกที่มีหลอดเลือดแดงจริง (Active Members) มากที่สุด
             if (!chosenSlots && candidates && candidates.length > 0) {
+                let maxRedMembers = -1;
+
                 for (const col of candidates) {
                     const slots = this.detectPartySlots(data, w, h, ch, col.startX, col.barWidth);
                     if (slots && slots.length >= 1) {
-                        const isStdWidth = (col.barWidth >= 90 && col.barWidth <= 165);
-                        const chosenIsStd = chosenCol ? (chosenCol.barWidth >= 90 && chosenCol.barWidth <= 165) : false;
+                        let redMembers = 0;
+                        for (const s of slots) {
+                            let hasR = false;
+                            for (let y = s.barY - 2; y <= s.barY + 2; y++) {
+                                if (y < 0 || y >= h) continue;
+                                let rCount = 0;
+                                for (let x = col.startX; x < col.startX + col.barWidth; x++) {
+                                    if (x >= w) break;
+                                    const idx = (y * w + x) * ch;
+                                    const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+                                    if (r > 140 && g < 70 && r > g * 2.5) rCount++;
+                                }
+                                if (rCount >= 4) { hasR = true; break; }
+                            }
+                            if (hasR) redMembers++;
+                        }
 
-                        if (!chosenSlots || 
-                            (isStdWidth && !chosenIsStd) || 
-                            (slots.length > chosenSlots.length && (!chosenIsStd || isStdWidth)) ||
-                            (slots.length === chosenSlots.length && isStdWidth && !chosenIsStd)) {
-                            chosenSlots = slots;
+                        if (redMembers > maxRedMembers || (redMembers === maxRedMembers && slots.length > (chosenSlots?.length || 0))) {
+                            maxRedMembers = redMembers;
                             chosenCol = col;
-                            if (slots.length >= 4 && isStdWidth) break; // พบ 4 สล็อตขึ้นไปและขนาดหลอดเลือดถูกต้องเป๊ะ ค่อย break!
+                            chosenSlots = slots;
                         }
                     }
                 }

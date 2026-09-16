@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Full Buff",
   "canvas": {
-    "zoom": 0.6807017712286445,
+    "zoom": 0.719025697218173,
     "pan": {
-      "x": -1188,
-      "y": -154
+      "x": -934,
+      "y": 51
     }
   },
   "nodes": [
@@ -14,8 +14,8 @@
       "type": "trigger",
       "title": "Btn Full Buff",
       "position": {
-        "x": 3600,
-        "y": 1020
+        "x": 940,
+        "y": 3100
       },
       "data": {
         "enabled": true,
@@ -29,8 +29,8 @@
       "type": "trigger",
       "title": "Btn First Buff",
       "position": {
-        "x": 3630,
-        "y": 460
+        "x": 970,
+        "y": 2540
       },
       "data": {
         "enabled": true,
@@ -44,8 +44,8 @@
       "type": "branch",
       "title": "Check Full Buff",
       "position": {
-        "x": 3970,
-        "y": 1020
+        "x": 1310,
+        "y": 3100
       },
       "data": {
         "enabled": true,
@@ -59,8 +59,8 @@
       "type": "sequencer",
       "title": "Full Buff",
       "position": {
-        "x": 4370,
-        "y": 1120
+        "x": 1710,
+        "y": 3200
       },
       "data": {
         "enabled": true,
@@ -144,8 +144,8 @@
       "type": "control",
       "title": "Action Controller",
       "position": {
-        "x": 4370,
-        "y": 1010
+        "x": 1710,
+        "y": 3090
       },
       "data": {
         "enabled": true,
@@ -161,8 +161,8 @@
       "type": "branch",
       "title": "Check First Buff",
       "position": {
-        "x": 3960,
-        "y": 460
+        "x": 1300,
+        "y": 2540
       },
       "data": {
         "enabled": true,
@@ -176,8 +176,8 @@
       "type": "control",
       "title": "AC Stop First Buff",
       "position": {
-        "x": 4340,
-        "y": 450
+        "x": 1680,
+        "y": 2530
       },
       "data": {
         "enabled": true,
@@ -193,8 +193,8 @@
       "type": "sequencer",
       "title": "First Buff",
       "position": {
-        "x": 4340,
-        "y": 560
+        "x": 1680,
+        "y": 2640
       },
       "data": {
         "enabled": true,
@@ -253,7 +253,7 @@
       "type": "sequencer",
       "title": "First Buff",
       "position": {
-        "x": 1370,
+        "x": 1600,
         "y": 20
       },
       "data": {
@@ -298,8 +298,8 @@
       "type": "sequencer",
       "title": "Full Buff",
       "position": {
-        "x": 2700,
-        "y": 40
+        "x": 4050,
+        "y": 30
       },
       "data": {
         "enabled": true,
@@ -383,8 +383,8 @@
       "type": "tts",
       "title": "Text to Speech (TTS)",
       "position": {
-        "x": 1720,
-        "y": 480
+        "x": 2980,
+        "y": 740
       },
       "data": {
         "enabled": true,
@@ -399,8 +399,8 @@
       "type": "tts",
       "title": "Text to Speech (TTS)",
       "position": {
-        "x": 2100,
-        "y": 610
+        "x": 3780,
+        "y": 1300
       },
       "data": {
         "enabled": true,
@@ -415,8 +415,8 @@
       "type": "key_press",
       "title": "Single Key Press",
       "position": {
-        "x": 3010,
-        "y": 830
+        "x": 4100,
+        "y": 1000
       },
       "data": {
         "enabled": true,
@@ -432,8 +432,8 @@
       "type": "party_slot",
       "title": "party_slot",
       "position": {
-        "x": 2700,
-        "y": 730
+        "x": 3790,
+        "y": 900
       },
       "data": {
         "enabled": true,
@@ -449,8 +449,8 @@
       "type": "tts",
       "title": "Text to Speech (TTS)",
       "position": {
-        "x": 2700,
-        "y": 920
+        "x": 3790,
+        "y": 1090
       },
       "data": {
         "enabled": true,
@@ -465,8 +465,8 @@
       "type": "sound",
       "title": "Sound Alert",
       "position": {
-        "x": 2980,
-        "y": 420
+        "x": 4700,
+        "y": 270
       },
       "data": {
         "enabled": true,
@@ -481,8 +481,8 @@
       "type": "screenshot",
       "title": "screenshot",
       "position": {
-        "x": 1720,
-        "y": 680
+        "x": 2980,
+        "y": 930
       },
       "data": {
         "enabled": true,
@@ -499,8 +499,8 @@
       "type": "tts",
       "title": "Text to Speech (TTS)",
       "position": {
-        "x": 1370,
-        "y": 340
+        "x": 1910,
+        "y": 360
       },
       "data": {
         "enabled": true,
@@ -515,7 +515,7 @@
       "type": "party_scanner",
       "title": "party_scanner",
       "position": {
-        "x": 1720,
+        "x": 2190,
         "y": 260
       },
       "data": {
@@ -532,8 +532,8 @@
       "type": "party_buff",
       "title": "party_buff",
       "position": {
-        "x": 2100,
-        "y": 330
+        "x": 2970,
+        "y": 370
       },
       "data": {
         "enabled": true,
@@ -548,8 +548,8 @@
       "type": "screenshot",
       "title": "screenshot",
       "position": {
-        "x": 2700,
-        "y": 500
+        "x": 4050,
+        "y": 490
       },
       "data": {
         "enabled": true,
@@ -566,8 +566,8 @@
       "type": "screenshot",
       "title": "screenshot",
       "position": {
-        "x": 2100,
-        "y": 810
+        "x": 3780,
+        "y": 1500
       },
       "data": {
         "enabled": true,
@@ -577,6 +577,178 @@
         "prefix": "error_snap",
         "annotate": false,
         "actionId": "1789256875566"
+      }
+    },
+    {
+      "id": "node_1789502082674",
+      "type": "step_log",
+      "title": "Buff Party Scanner",
+      "position": {
+        "x": 1300,
+        "y": 180
+      },
+      "data": {
+        "enabled": true,
+        "message": "เริ่มต้นทำงาน",
+        "actionId": "1789502082674"
+      }
+    },
+    {
+      "id": "node_1789502115194",
+      "type": "step_log",
+      "title": "Buff Party Scanner",
+      "position": {
+        "x": 1910,
+        "y": 550
+      },
+      "data": {
+        "enabled": true,
+        "message": "กำลังเริ่มต้นสแกนปาร์ตี้",
+        "actionId": "1789502115194"
+      }
+    },
+    {
+      "id": "node_1789502173367_551",
+      "type": "step_log",
+      "title": "Buff Party Scanner",
+      "position": {
+        "x": 2980,
+        "y": 1140
+      },
+      "data": {
+        "enabled": true,
+        "message": "สวัสดีครับ",
+        "actionId": "1789502173367_551"
+      }
+    },
+    {
+      "id": "node_1789502209845_677",
+      "type": "step_log",
+      "title": "Buff Party Scanner",
+      "position": {
+        "x": 3310,
+        "y": 850
+      },
+      "data": {
+        "enabled": true,
+        "message": "การสแกน party_buff มีปัญหา",
+        "actionId": "1789502209845_677"
+      }
+    },
+    {
+      "id": "node_1789502244539_4116",
+      "type": "step_log",
+      "title": "Buff Party Scanner",
+      "position": {
+        "x": 4050,
+        "y": 700
+      },
+      "data": {
+        "enabled": true,
+        "message": "กำลังเริ่ม Full Buff ให้กับสมาชิกในปาร์ตี้",
+        "actionId": "1789502244539_4116"
+      }
+    },
+    {
+      "id": "node_1789502319028_2067",
+      "type": "step_log",
+      "title": "Buff Party Scanner",
+      "position": {
+        "x": 4700,
+        "y": 380
+      },
+      "data": {
+        "enabled": true,
+        "message": "",
+        "actionId": "1789502319028_2067"
+      }
+    },
+    {
+      "id": "node_1789505455498_7378",
+      "type": "format_text",
+      "title": "Format Text",
+      "position": {
+        "x": 2670,
+        "y": 170
+      },
+      "data": {
+        "enabled": true,
+        "template": "สแกนสำเร็จ party_scanner Count: {val_b} | Names: {val_a}",
+        "pins": [
+          "val_a",
+          "val_b"
+        ],
+        "boolFormat": "true_false",
+        "separator": " ",
+        "actionId": "1789505455498_7378"
+      }
+    },
+    {
+      "id": "node_1789505455498_9349",
+      "type": "step_log",
+      "title": "Buff Party Scanner",
+      "position": {
+        "x": 2970,
+        "y": 200
+      },
+      "data": {
+        "enabled": true,
+        "message": "",
+        "actionId": "1789505455498_9349"
+      }
+    },
+    {
+      "id": "node_1789506769036",
+      "type": "format_text",
+      "title": "Format Text",
+      "position": {
+        "x": 2570,
+        "y": 1090
+      },
+      "data": {
+        "enabled": true,
+        "template": "สแกนมีปัญหา party_scanner Count: {val_a} | Names: {val_b} | Summary: {val_c}",
+        "pins": [
+          "val_a",
+          "val_b",
+          "val_c"
+        ],
+        "boolFormat": "true_false",
+        "separator": " ",
+        "actionId": "1789506769036"
+      }
+    },
+    {
+      "id": "node_1789509627624",
+      "type": "format_text",
+      "title": "Format Text",
+      "position": {
+        "x": 4420,
+        "y": 490
+      },
+      "data": {
+        "enabled": true,
+        "template": "บัฟให้ผู้เล่น: {val_a} แล้ว",
+        "pins": [
+          "val_a"
+        ],
+        "boolFormat": "true_false",
+        "separator": " ",
+        "actionId": "1789509627624"
+      }
+    },
+    {
+      "id": "node_1789510442701",
+      "type": "step_log",
+      "title": "Buff Party Scanner",
+      "position": {
+        "x": 3780,
+        "y": 1720
+      },
+      "data": {
+        "enabled": true,
+        "message": "บัฟทั้งหมดเสร็จแล้ว",
+        "actionId": "1789510442701"
       }
     }
   ],
@@ -719,6 +891,125 @@
       "fromNodeId": "node_1789159615592",
       "fromPort": "onComplete",
       "toNodeId": "node_1789256875566",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789502093217",
+      "fromNodeId": "node_1788958982230",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1789502082674",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789502121301",
+      "fromNodeId": "node_1788970148217_3228",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1789502115194",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789502178553",
+      "fromNodeId": "node_1789159465925",
+      "fromPort": "onError",
+      "toNodeId": "node_1789502173367_551",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789502217170",
+      "fromNodeId": "node_1789159615592",
+      "fromPort": "onError",
+      "toNodeId": "node_1789502209845_677",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789502251548",
+      "fromNodeId": "node_1789159615592",
+      "fromPort": "onNextMember",
+      "toNodeId": "node_1789502244539_4116",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789502323378",
+      "fromNodeId": "node_1788970211279_2906",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1789502319028_2067",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789505559671",
+      "fromNodeId": "node_1789159465925",
+      "fromPort": "onScanned",
+      "toNodeId": "node_1789505455498_9349",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789506776679",
+      "fromNodeId": "node_1789159465925",
+      "fromPort": "names_out",
+      "toNodeId": "node_1789506769036",
+      "toPort": "val_a"
+    },
+    {
+      "id": "conn_1789506782589",
+      "fromNodeId": "node_1789159465925",
+      "fromPort": "count_out",
+      "toNodeId": "node_1789506769036",
+      "toPort": "val_b"
+    },
+    {
+      "id": "conn_1789506788459",
+      "fromNodeId": "node_1789159465925",
+      "fromPort": "info_out",
+      "toNodeId": "node_1789506769036",
+      "toPort": "val_c"
+    },
+    {
+      "id": "conn_1789506830497",
+      "fromNodeId": "node_1789159465925",
+      "fromPort": "names_out",
+      "toNodeId": "node_1789505455498_7378",
+      "toPort": "val_a"
+    },
+    {
+      "id": "conn_1789507260660",
+      "fromNodeId": "node_1789506769036",
+      "fromPort": "msg_out",
+      "toNodeId": "node_1789502173367_551",
+      "toPort": "msg_in"
+    },
+    {
+      "id": "conn_1789509634903",
+      "fromNodeId": "node_1789509627624",
+      "fromPort": "msg_out",
+      "toNodeId": "node_1789502319028_2067",
+      "toPort": "msg_in"
+    },
+    {
+      "id": "conn_1789509656746",
+      "fromNodeId": "node_1789159615592",
+      "fromPort": "name_out",
+      "toNodeId": "node_1789509627624",
+      "toPort": "val_a"
+    },
+    {
+      "id": "conn_1789509831783",
+      "fromNodeId": "node_1789505455498_7378",
+      "fromPort": "msg_out",
+      "toNodeId": "node_1789505455498_9349",
+      "toPort": "msg_in"
+    },
+    {
+      "id": "conn_1789510142133",
+      "fromNodeId": "node_1789159465925",
+      "fromPort": "count_out",
+      "toNodeId": "node_1789505455498_7378",
+      "toPort": "val_b"
+    },
+    {
+      "id": "conn_1789510456432",
+      "fromNodeId": "node_1789159615592",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1789510442701",
       "toPort": "exec_in"
     }
   ]

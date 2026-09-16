@@ -4,50 +4,10 @@
   "canvas": {
     "zoom": 1,
     "pan": {
-      "x": -1350,
-      "y": 55
+      "x": -1173,
+      "y": 128
     }
   },
-  "nodes": [
-    {
-      "id": "node_1789422795868",
-      "type": "trigger",
-      "title": "Global Trigger",
-      "position": {
-        "x": 1371,
-        "y": 218
-      },
-      "data": {
-        "enabled": true,
-        "triggerType": "keyboard",
-        "triggerValue": "1",
-        "actionId": "1789422795868"
-      }
-    },
-    {
-      "id": "node_1789423658868",
-      "type": "step_log",
-      "title": "Log Message (📝)",
-      "position": {
-        "x": 1700,
-        "y": 220
-      },
-      "data": {
-        "enabled": true,
-        "message": "สวัสดีครับ",
-        "showClient": false,
-        "targetClient": "1",
-        "actionId": "1789423658868"
-      }
-    }
-  ],
-  "connections": [
-    {
-      "id": "conn_1789423663119",
-      "fromNodeId": "node_1789422795868",
-      "fromPort": "exec_out",
-      "toNodeId": "node_1789423658868",
-      "toPort": "exec_in"
-    }
-  ]
+  "nodes": [],
+  "connections": []
 }
