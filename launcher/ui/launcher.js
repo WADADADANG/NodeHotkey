@@ -345,6 +345,9 @@
       settingOverlayHead: "🖥️ Desktop Overlay HUD",
       settingOverlay: "เปิดใช้งาน Desktop Overlay HUD",
       settingOverlayDesc: "แสดงแถบสถานะโปร่งแสงบนหน้าจอเกมแบบ Real-time (เปิด/ปิด อัตโนมัติตามบอท)",
+      settingGpuHead: "🚀 Hardware & GPU Acceleration",
+      settingGpuTitle: "เร่งความเร็วด้วยการ์ดจอแยก (High-Performance GPU / D3D11)",
+      settingGpuDesc: "บังคับให้เบราว์เซอร์ใช้การ์ดจอแยก (NVIDIA/AMD) และ Direct3D 11 Canvas Acceleration ช่วยลดโหลด CPU และลดอาการแลค",
       settingJitterHead: "🛡️ Anti-Detect & Ghost Mouse Jitter",
       settingJitter: "สุ่มหน่วงเวลาการกดปุ่มและขยับเมาส์ (Human Random Jitter)",
       settingJitterDesc: "จำลองพฤติกรรมมนุษย์ด้วยการสุ่มขยับเมาส์เล็กน้อยและหน่วงเวลากดปุ่มเพื่อป้องกันการตรวจจับ",
@@ -469,6 +472,9 @@
       settingOverlayHead: "🖥️ Desktop Overlay HUD",
       settingOverlay: "Enable Desktop Status Overlay",
       settingOverlayDesc: "Render transparent real-time status overlay HUD over game clients",
+      settingGpuHead: "🚀 Hardware & GPU Acceleration",
+      settingGpuTitle: "High-Performance GPU Acceleration (Discrete GPU / D3D11)",
+      settingGpuDesc: "Force browsers to use dedicated discrete GPU (NVIDIA/AMD) and Direct3D 11 Canvas Acceleration to reduce CPU load and eliminate lag",
       settingJitterHead: "🛡️ Anti-Detect & Ghost Mouse Jitter",
       settingJitter: "Human Random Jitter (Anti-Detect)",
       settingJitterDesc: "Add natural ±15ms human jitter and subtle mouse shifts to prevent bot detection",
@@ -631,6 +637,12 @@
     if (lblHeadOv) lblHeadOv.textContent = t.settingOverlayHead;
     if (lblOvTitle) lblOvTitle.textContent = t.settingOverlay;
     if (lblOvDesc) lblOvDesc.textContent = t.settingOverlayDesc;
+    const lblHeadGpu = document.getElementById('lbl-setting-head-gpu');
+    const lblGpuTitle = document.getElementById('lbl-setting-gpu-title');
+    const lblGpuDesc = document.getElementById('lbl-setting-gpu-desc');
+    if (lblHeadGpu) lblHeadGpu.textContent = t.settingGpuHead;
+    if (lblGpuTitle) lblGpuTitle.textContent = t.settingGpuTitle;
+    if (lblGpuDesc) lblGpuDesc.textContent = t.settingGpuDesc;
     if (lblHeadJit) lblHeadJit.textContent = t.settingJitterHead;
     if (lblJitTitle) lblJitTitle.textContent = t.settingJitter;
     if (lblJitDesc) lblJitDesc.textContent = t.settingJitterDesc;
