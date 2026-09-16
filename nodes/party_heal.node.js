@@ -19,7 +19,8 @@ module.exports = {
     targetClient: '1',
     scanRegion: 'auto',
     lowHpThreshold: 70,
-    delayAfterClick: 80
+    delayAfterClick: 80,
+    showOverlay: true
   },
 
   async execute(context, action, callStack = new Set()) {

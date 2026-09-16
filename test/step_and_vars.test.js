@@ -478,6 +478,85 @@ assert.strictEqual(
 
 console.log('✅ Test 10 Passed: TTS text_in Dynamic Data Pin & Upstream Action Node Resolution verified!\n');
 
+(async () => {
+// ==========================================
+// Test 11: Testing Party Scanner & Party Buff showOverlay disabled suppression
+// ==========================================
+console.log('Test 11: Testing Party Scanner & Party Buff showOverlay disabled suppression...');
+
+const visionService = require('../vision-service');
+const partyHandler = require('../party-target-handler');
+
+let renderCalls = 0;
+let clearCalls = 0;
+
+const origRender = visionService.VisualOverlay.render;
+const origClear = visionService.VisualOverlay.clear;
+
+visionService.VisualOverlay.render = async () => { renderCalls++; };
+visionService.VisualOverlay.clear = async () => { clearCalls++; };
+
+const mockPage = {
+  isClosed: () => false,
+  mouse: {
+    click: async () => {},
+    move: async () => {}
+  },
+  evaluate: async () => {}
+};
+
+global.clientPages = { '1': mockPage };
+
+// Mock scanClientPage to test showOverlay handling
+const origScanClientPage = visionService.scanClientPage;
+visionService.scanClientPage = async (page, clientId, scanRegion, options = {}) => {
+  if (options.showOverlay === true) {
+    await visionService.VisualOverlay.render(page, {});
+  } else if (options.showOverlay === false) {
+    await visionService.VisualOverlay.clear(page);
+  }
+  return {
+    timestamp: Date.now(),
+    members: [
+      { slot: 1, name: 'Tanker', isAlive: true, statusCode: 'active', click: { x: 100, y: 100 }, hpPercent: 100 },
+      { slot: 2, name: 'DamageDealer', isAlive: true, statusCode: 'active', click: { x: 100, y: 150 }, hpPercent: 80 }
+    ]
+  };
+};
+
+// 11.1 party_scanner with showOverlay: false
+renderCalls = 0;
+clearCalls = 0;
+await partyHandler.runPartyScannerAction({
+  targetClient: '1',
+  showOverlay: false,
+  readNames: false
+}, new Set());
+
+assert.strictEqual(renderCalls, 0, 'VisualOverlay.render must NOT be called when showOverlay is false in party_scanner');
+assert(clearCalls >= 1, 'VisualOverlay.clear MUST be called when showOverlay is false in party_scanner');
+
+// 11.2 party_buff with showOverlay: false
+renderCalls = 0;
+clearCalls = 0;
+await partyHandler.runPartyBuffAction({
+  targetClient: '1',
+  showOverlay: false,
+  delayAfterClick: 0,
+  readNames: false
+}, new Set());
+
+assert.strictEqual(renderCalls, 0, 'VisualOverlay.render must NOT be called during party_buff when showOverlay is false');
+assert(clearCalls >= 1, 'VisualOverlay.clear MUST be called when party_buff has showOverlay: false');
+
+// Restore original methods
+visionService.VisualOverlay.render = origRender;
+visionService.VisualOverlay.clear = origClear;
+visionService.scanClientPage = origScanClientPage;
+
+console.log('✅ Test 11 Passed: party_scanner and party_buff correctly suppress and clear Visual Overlay when disabled!\n');
+
 console.log('🎉 All Step Log & Unreal Blueprint Variable Tests Passed Successfully!');
 process.exit(0);
+})();
 

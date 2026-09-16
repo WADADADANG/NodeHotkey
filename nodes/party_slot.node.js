@@ -18,7 +18,8 @@ module.exports = {
   defaultData: {
     targetClient: '1',
     targetSlot: 1,
-    delayAfterClick: 80
+    delayAfterClick: 80,
+    showOverlay: true
   },
 
   async execute(context, action, callStack = new Set()) {

@@ -624,6 +624,18 @@ global.toggleSuspendState = function (forcedState) {
                 delete forwardHoldTimers[key];
             }
         }
+
+        // Clear all Visual Overlays on active game clients
+        try {
+            const vs = require('./vision-service');
+            if (vs && vs.VisualOverlay && clientPages) {
+                for (let t in clientPages) {
+                    if (clientPages[t]) {
+                        vs.VisualOverlay.clear(clientPages[t]).catch(() => {});
+                    }
+                }
+            }
+        } catch (e) {}
     } else {
         // Resumed from suspend
         syncGhostMouseJitter();

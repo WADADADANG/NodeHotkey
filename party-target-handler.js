@@ -48,14 +48,18 @@ async function runPartyScannerAction(action, callStack) {
     }
 
     try {
+        if (!showOverlay && visionService.VisualOverlay) {
+            await visionService.VisualOverlay.clear(page).catch(() => {});
+        }
+
         // Scan live page once via VisionService (OCR readNames defaults to false to eliminate 100% CPU bottleneck)
         const readNames = action.readNames === true;
-        const partyState = await visionService.scanClientPage(page, targetClientId, action.scanRegion, { readNames });
+        const partyState = await visionService.scanClientPage(page, targetClientId, action.scanRegion, { readNames, showOverlay });
 
         if (!partyState || !Array.isArray(partyState.members) || partyState.members.length === 0) {
             console.warn(`[PartyScanner] Client ${targetClientId}: Party window not found on screen.`);
             visionService.saveVisionDebugDump(targetClientId, 'party_not_found').catch(() => {});
-            if (showOverlay && visionService.VisualOverlay) {
+            if (visionService.VisualOverlay) {
                 await visionService.VisualOverlay.clear(page).catch(() => {});
             }
             if (typeof global.fireChain === 'function') {
@@ -64,9 +68,11 @@ async function runPartyScannerAction(action, callStack) {
             return;
         }
 
-        // Render HUD overlay if enabled
+        // Render HUD overlay if enabled, otherwise clear
         if (showOverlay && visionService.VisualOverlay) {
             await visionService.VisualOverlay.render(page, partyState);
+        } else if (!showOverlay && visionService.VisualOverlay) {
+            await visionService.VisualOverlay.clear(page).catch(() => {});
         }
 
         // Prepare data outputs
@@ -128,6 +134,10 @@ async function runSelectPartySlotAction(action, callStack) {
         return;
     }
 
+    if (!showOverlay && visionService.VisualOverlay) {
+        await visionService.VisualOverlay.clear(page).catch(() => {});
+    }
+
     const targetSlotNum = parseInt(action.targetSlot || '1', 10);
     const slotIndex = Math.max(0, targetSlotNum - 1);
     const delayAfterClick = parseInt(action.delayAfterClick, 10) || 80;
@@ -135,11 +145,14 @@ async function runSelectPartySlotAction(action, callStack) {
     // Check central cache first
     let partyState = visionService.getLatestPartyState(targetClientId);
     if (!partyState || !Array.isArray(partyState.members) || partyState.members.length <= slotIndex || (Date.now() - (partyState.timestamp || 0)) > 2000) {
-        partyState = await visionService.scanClientPage(page, targetClientId);
+        partyState = await visionService.scanClientPage(page, targetClientId, 'auto', { showOverlay });
     }
 
     if (!partyState || !Array.isArray(partyState.members) || partyState.members.length === 0) {
         console.warn(`[SelectPartySlot] Client ${targetClientId}: Party window not found on screen.`);
+        if (visionService.VisualOverlay) {
+            await visionService.VisualOverlay.clear(page).catch(() => {});
+        }
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
@@ -156,12 +169,14 @@ async function runSelectPartySlotAction(action, callStack) {
 
     console.log(`[SelectPartySlot] Client ${targetClientId}: Selected Slot ${targetSlotNum} at (${target.click.x}, ${target.click.y})`);
 
-    // Draw click target on game overlay
+    // Draw click target on game overlay if enabled, else clear
     if (showOverlay && visionService.VisualOverlay) {
         await visionService.VisualOverlay.render(page, {
             ...partyState,
             lastClick: { x: target.click.x, y: target.click.y }
         });
+    } else if (!showOverlay && visionService.VisualOverlay) {
+        await visionService.VisualOverlay.clear(page).catch(() => {});
     }
 
     // Click on target slot
@@ -203,16 +218,23 @@ async function runPartyHealAction(action, callStack) {
         return;
     }
 
+    if (!showOverlay && visionService.VisualOverlay) {
+        await visionService.VisualOverlay.clear(page).catch(() => {});
+    }
+
     const lowHpThreshold = parseInt(action.lowHpThreshold, 10) || 70;
     const delayAfterClick = parseInt(action.delayAfterClick, 10) || 80;
 
     let partyState = visionService.getLatestPartyState(targetClientId);
     if (!partyState || !Array.isArray(partyState.members) || (Date.now() - (partyState.timestamp || 0)) > 1500) {
-        partyState = await visionService.scanClientPage(page, targetClientId);
+        partyState = await visionService.scanClientPage(page, targetClientId, 'auto', { showOverlay });
     }
 
     if (!partyState || !Array.isArray(partyState.members) || partyState.members.length === 0) {
         console.warn(`[PartyHeal] Client ${targetClientId}: No party members found.`);
+        if (visionService.VisualOverlay) {
+            await visionService.VisualOverlay.clear(page).catch(() => {});
+        }
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
@@ -240,6 +262,8 @@ async function runPartyHealAction(action, callStack) {
             ...partyState,
             lastClick: { x: target.click.x, y: target.click.y }
         });
+    } else if (!showOverlay && visionService.VisualOverlay) {
+        await visionService.VisualOverlay.clear(page).catch(() => {});
     }
 
     // คลิกเลือกเป้าหมาย
@@ -285,6 +309,10 @@ async function runPartyBuffAction(action, callStack) {
         return;
     }
 
+    if (!showOverlay && visionService.VisualOverlay) {
+        await visionService.VisualOverlay.clear(page).catch(() => {});
+    }
+
     const delayAfterClick = parseInt(action.delayAfterClick, 10) || 80;
     const scanRegion = action.scanRegion || 'auto';
     const readNames = action.readNames === true;
@@ -295,11 +323,14 @@ async function runPartyBuffAction(action, callStack) {
 
     if (!isCacheFresh) {
         // Fallback: Scan live page if central cache is not present or stale
-        initialScan = await visionService.scanClientPage(page, targetClientId, scanRegion, { readNames });
+        initialScan = await visionService.scanClientPage(page, targetClientId, scanRegion, { readNames, showOverlay });
     }
 
     if (!initialScan || !Array.isArray(initialScan.members) || initialScan.members.length === 0) {
         console.warn(`[PartyBuff] Client ${targetClientId}: Party window not found on screen.`);
+        if (visionService.VisualOverlay) {
+            await visionService.VisualOverlay.clear(page).catch(() => {});
+        }
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
@@ -352,7 +383,7 @@ async function runPartyBuffAction(action, callStack) {
             } catch (e) {}
             await new Promise(r => setTimeout(r, 60));
 
-            const freshState = await visionService.scanClientPage(page, targetClientId, scanRegion, { readNames: false });
+            const freshState = await visionService.scanClientPage(page, targetClientId, scanRegion, { readNames: false, showOverlay });
             if (freshState && Array.isArray(freshState.members) && freshState.members.length > 0) {
                 currentPartyState = freshState;
             }
@@ -388,6 +419,8 @@ async function runPartyBuffAction(action, callStack) {
                 ...currentPartyState,
                 lastClick: { x: target.click.x, y: target.click.y }
             });
+        } else if (!showOverlay && visionService.VisualOverlay) {
+            await visionService.VisualOverlay.clear(page).catch(() => {});
         }
 
         await simulateRealisticClick(page, target.click.x, target.click.y);

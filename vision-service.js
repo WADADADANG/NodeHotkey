@@ -912,8 +912,12 @@ class VisionService {
                 this.clientStates.set(id, state);
                 this.lastScanTimes.set(id, Date.now());
 
-                // วาด HUD Overlay เส้นสแกนและกรอบลงบนหน้าต่างเกมสดๆ
-                await VisualOverlay.render(page, { party: scaledMembers, autoAnchor: state.autoAnchor });
+                // วาด HUD Overlay เส้นสแกนและกรอบลงบนหน้าต่างเกมสดๆ หากเปิด showOverlay
+                if (options.showOverlay === true) {
+                    await VisualOverlay.render(page, { party: scaledMembers, autoAnchor: state.autoAnchor });
+                } else if (options.showOverlay === false) {
+                    await VisualOverlay.clear(page);
+                }
 
                 return state;
             }
@@ -1098,6 +1102,7 @@ class VisualOverlay {
                 overlay.style.height = '100vh';
                 overlay.style.pointerEvents = 'none';
                 overlay.style.zIndex = '2147483647';
+                overlay.style.display = 'none';
                 document.body.appendChild(overlay);
 
                 function resizeCanvas() {
@@ -1114,10 +1119,19 @@ class VisualOverlay {
         if (!page || (typeof page.isClosed === 'function' && page.isClosed())) return;
         try {
             await page.evaluate(() => {
+                if (window._nodehotkeyOverlayRaf) {
+                    window.cancelAnimationFrame(window._nodehotkeyOverlayRaf);
+                    window._nodehotkeyOverlayRaf = null;
+                }
+                if (window._nodehotkeyOverlayTimer) {
+                    clearTimeout(window._nodehotkeyOverlayTimer);
+                    window._nodehotkeyOverlayTimer = null;
+                }
                 const canvas = document.getElementById('unitbot-hud-overlay');
                 if (canvas) {
                     const ctx = canvas.getContext('2d');
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    canvas.style.display = 'none';
                 }
             });
         } catch (e) {}
@@ -1143,6 +1157,7 @@ class VisualOverlay {
                     canvas.width = window.innerWidth;
                     canvas.height = window.innerHeight;
                 }
+                canvas.style.display = 'block';
 
                 if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
                     canvas.width = window.innerWidth;
@@ -1151,7 +1166,13 @@ class VisualOverlay {
 
                 const ctx = canvas.getContext('2d');
 
-                window.requestAnimationFrame(() => {
+                if (window._nodehotkeyOverlayRaf) {
+                    window.cancelAnimationFrame(window._nodehotkeyOverlayRaf);
+                    window._nodehotkeyOverlayRaf = null;
+                }
+
+                window._nodehotkeyOverlayRaf = window.requestAnimationFrame(() => {
+                    window._nodehotkeyOverlayRaf = null;
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                     // Auto-clear timer: 2.5 วินาทีหากไม่มีการสแกนใหม่
@@ -1161,6 +1182,7 @@ class VisualOverlay {
                         if (c) {
                             const cx = c.getContext('2d');
                             cx.clearRect(0, 0, c.width, c.height);
+                            c.style.display = 'none';
                         }
                     }, 2500);
 

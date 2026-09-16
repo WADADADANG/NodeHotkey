@@ -25,7 +25,8 @@ module.exports = {
     targetClient: '1',
     scanRegion: 'auto',
     delayAfterClick: 80,
-    readNames: false
+    readNames: false,
+    showOverlay: true
   },
 
   async execute(context, action, callStack = new Set()) {
