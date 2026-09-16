@@ -17,6 +17,12 @@ module.exports = {
   defaultData: {
     delayMs: 1000
   },
+  schema: [
+    { key: 'delayMs', component: 'number_input', labelKey: 'inspector_delay_ms', label: 'Delay Duration (ms)', min: 10, max: 60000, step: 50, unit: 'ms' }
+  ],
+  summaryFields: [
+    { key: 'delayMs', label: 'Wait', format: '{value}ms' }
+  ],
 
   async execute(context, action, callStack = []) {
     if (global.isSuspended) return false;

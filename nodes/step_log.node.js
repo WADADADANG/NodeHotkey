@@ -19,6 +19,12 @@ module.exports = {
   defaultData: {
     message: ''
   },
+  schema: [
+    { key: 'message', component: 'textarea', labelKey: 'inspector_log_message', label: 'Log Message to Print (ข้อความบันทึก Log)', placeholder: 'ระบุข้อความที่ต้องการแสดงในแท็บ Log หรือรับผ่าน Data Wire (msg_in)' }
+  ],
+  summaryFields: [
+    { key: 'message', label: 'Message', format: val => val ? (val.length > 20 ? val.substring(0, 18) + '...' : val) : '(From Pin)' }
+  ],
 
   async execute(context, action, callStack = []) {
     if (global.isSuspended) return false;

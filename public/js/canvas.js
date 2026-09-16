@@ -714,9 +714,18 @@ class NodeCanvasEditor {
         format_text: '🧩'
       };
 
-      const icon = iconMap[node.type] || '📦';
+      const def = window.clientNodeRegistry ? window.clientNodeRegistry.get(node.type) : null;
+      const icon = (def && def.icon) || iconMap[node.type] || '📦';
 
       let bodyHTML = '';
+      if (window.CanvasComponents && typeof window.CanvasComponents.renderCardSummary === 'function') {
+        const autoSummary = window.CanvasComponents.renderCardSummary(node, def);
+        if (autoSummary) {
+          bodyHTML = autoSummary;
+        }
+      }
+
+      if (!bodyHTML) {
       if (node.type === 'trigger') {
         const isEventTrigger = node.data?.triggerType === 'event';
         const isWebhookTrigger = node.data?.triggerType === 'webhook';
@@ -1194,6 +1203,7 @@ class NodeCanvasEditor {
           </div>
         `;
       }
+      } // End if (!bodyHTML)
 
       let portsHTML = '';
       let pinsHTML = '';
@@ -2457,8 +2467,12 @@ class NodeCanvasEditor {
       format_text: 'Format Text'
     };
 
+    const def = window.clientNodeRegistry ? window.clientNodeRegistry.get(type) : null;
     let initialData = { enabled: true };
-    if (type === 'trigger') {
+    if (def && def.defaultData && Object.keys(def.defaultData).length > 0) {
+      initialData = JSON.parse(JSON.stringify(def.defaultData));
+      if (initialData.enabled === undefined) initialData.enabled = true;
+    } else if (type === 'trigger') {
       initialData = { triggerType: 'keyboard', triggerValue: '1', enabled: true };
     } else if (type === 'step_log') {
       initialData = {
@@ -2611,7 +2625,7 @@ class NodeCanvasEditor {
     const newNode = {
       id,
       type,
-      title: titleNames[type] || type,
+      title: (def && def.title) || titleNames[type] || type,
       position: { x, y },
       data: initialData
     };

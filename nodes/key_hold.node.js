@@ -19,6 +19,15 @@ module.exports = {
     targetClient: '1',
     targetKey: 'w'
   },
+  schema: [
+    { key: 'targetClient', component: 'client_selector', labelKey: 'inspector_target_clients', label: 'Target Client Screen' },
+    { key: 'targetKey', component: 'key_recorder', labelKey: 'inspector_key_hold_target', label: 'Key to Hold / Release (ปุ่มที่ต้องการกดค้าง)' },
+    { key: 'cooldownPresetId', component: 'cooldown_guard' }
+  ],
+  summaryFields: [
+    { key: 'targetClient', label: 'Target', format: 'Client {value}' },
+    { key: 'targetKey', label: 'Key', format: 'Hold [{value}]' }
+  ],
 
   async execute(context, action, callStack = new Set()) {
     if (global.isSuspended) return false;

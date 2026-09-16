@@ -26,6 +26,26 @@ module.exports = {
     prefix: 'error_snap',
     subfolder: 'client_1'
   },
+  schema: [
+    { key: 'targetClient', component: 'client_selector', labelKey: 'inspector_target_clients', label: 'Target Client Screen' },
+    {
+      key: 'captureRegion', component: 'select', labelKey: 'inspector_screenshot_region', label: 'Capture Area',
+      options: [
+        { value: 'full', labelKey: 'region_full', label: '🖥️ Full Viewport' },
+        { value: 'party', labelKey: 'region_party', label: '👥 Party Area' },
+        { value: 'right', labelKey: 'region_right', label: '👉 Right Half' },
+        { value: 'left', labelKey: 'region_left', label: '👈 Left Half' }
+      ]
+    },
+    { key: 'subfolder', component: 'text_input', labelKey: 'inspector_screenshot_folder', label: 'Storage Subfolder', placeholder: 'client_1' },
+    { key: 'prefix', component: 'text_input', labelKey: 'inspector_screenshot_prefix', label: 'File Prefix', placeholder: 'error_snap' },
+    { key: 'annotate', component: 'toggle', labelKey: 'inspector_screenshot_annotate', label: 'Draw Detection Overlays & Timestamps', default: true }
+  ],
+  summaryFields: [
+    { key: 'targetClient', label: 'Target', format: 'Client {value}' },
+    { key: 'captureRegion', label: 'Region', format: '{value}' },
+    { key: 'prefix', label: 'Prefix', format: '{value}' }
+  ],
 
   /**
    * Execution logic for Screenshot Node

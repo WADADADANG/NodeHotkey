@@ -20,6 +20,24 @@ module.exports = {
     voice: 'th-TH-PremwadeeNeural',
     volume: 100
   },
+  schema: [
+    { key: 'text', component: 'textarea', labelKey: 'inspector_tts_text', label: 'Speech Text (ข้อความพูด)', placeholder: 'เช่น บอสเกิดแล้ว, ฮีลเลือดด่วน' },
+    {
+      key: 'voice', component: 'select', labelKey: 'inspector_tts_voice', label: 'Voice Model (เสียงพูด)',
+      options: [
+        { value: 'th-TH-PremwadeeNeural', label: '🇹🇭 Premwadee (Thai - Female / ผู้หญิง)' },
+        { value: 'th-TH-NiwatNeural', label: '🇹🇭 Niwat (Thai - Male / ผู้ชาย)' },
+        { value: 'en-US-JennyNeural', label: '🇺🇸 Jenny (English - Female)' },
+        { value: 'en-US-GuyNeural', label: '🇺🇸 Guy (English - Male)' }
+      ]
+    },
+    { key: 'volume', component: 'slider', labelKey: 'inspector_tts_volume', label: 'Volume (ระดับเสียง %)', min: 10, max: 100, step: 5, unit: '%' }
+  ],
+  summaryFields: [
+    { key: 'text', label: 'Speech', format: val => val ? (val.length > 20 ? val.substring(0, 18) + '...' : val) : '(From Pin)' },
+    { key: 'voice', label: 'Voice', format: val => (val || '').includes('Premwadee') ? 'Premwadee' : ((val || '').includes('Niwat') ? 'Niwat' : (val || 'Default')) },
+    { key: 'volume', label: 'Vol', format: '{value}%' }
+  ],
 
   async execute(context, action, callStack = []) {
     try {

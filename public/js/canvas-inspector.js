@@ -31,7 +31,19 @@
       </div>
     `;
 
-    if (node.type === 'trigger') {
+    // 1. Check if node has a schema defined in ClientNodeRegistry (Component-Based Auto Generator)
+    const nodeDef = window.clientNodeRegistry ? window.clientNodeRegistry.get(node.type) : null;
+    let handledBySchema = false;
+
+    if (nodeDef && Array.isArray(nodeDef.schema) && nodeDef.schema.length > 0 && window.CanvasComponents) {
+      for (const field of nodeDef.schema) {
+        fieldsHTML += window.CanvasComponents.renderField(field, node);
+      }
+      handledBySchema = true;
+    }
+
+    if (!handledBySchema) {
+      if (node.type === 'trigger') {
       const trigType = node.data?.triggerType || 'keyboard';
       let triggerValueInputHTML = '';
       if (trigType === 'mouse') {
@@ -292,6 +304,7 @@
         </div>
       `;
     }
+    } // End if (!handledBySchema)
 
     fieldsHTML += `
       <div style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.08); padding-top:14px; display:flex; gap:8px;">

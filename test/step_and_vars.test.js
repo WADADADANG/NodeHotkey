@@ -556,6 +556,34 @@ visionService.scanClientPage = origScanClientPage;
 
 console.log('✅ Test 11 Passed: party_scanner and party_buff correctly suppress and clear Visual Overlay when disabled!\n');
 
+// ==========================================
+// Test 12: Testing Modular Node Schema & Component-Based Metadata
+// ==========================================
+console.log('Test 12: Testing Modular Node Schema & Component-Based Metadata...');
+
+const { nodeRegistry } = require('../node-registry');
+if (!nodeRegistry.isLoaded) nodeRegistry.loadAll();
+
+const pbDef = nodeRegistry.get('party_buff');
+assert(pbDef, 'party_buff node definition must be registered');
+assert(Array.isArray(pbDef.schema), 'party_buff must define UI schema');
+assert(Array.isArray(pbDef.summaryFields), 'party_buff must define summaryFields');
+
+const hasTargetClient = pbDef.schema.some(f => f.key === 'targetClient' && f.component === 'client_selector');
+const hasDelay = pbDef.schema.some(f => f.key === 'delayAfterClick' && f.component === 'number_input');
+const hasOverlay = pbDef.schema.some(f => f.key === 'showOverlay' && f.component === 'toggle');
+assert(hasTargetClient && hasDelay && hasOverlay, 'party_buff schema must declare client_selector, number_input, and toggle');
+
+const psDef = nodeRegistry.get('party_scanner');
+assert(psDef && Array.isArray(psDef.schema), 'party_scanner must define UI schema');
+assert(psDef.schema.some(f => f.key === 'lowHpThreshold' && f.component === 'slider'), 'party_scanner must have slider for lowHpThreshold');
+
+const ttsDef = nodeRegistry.get('tts');
+assert(ttsDef && Array.isArray(ttsDef.schema), 'tts must define UI schema');
+assert(ttsDef.schema.some(f => f.key === 'text' && f.component === 'textarea'), 'tts must have textarea for speech text');
+
+console.log('✅ Test 12 Passed: Modular Node Schema & Component-Based Metadata verified!\n');
+
 console.log('🎉 All Step Log & Unreal Blueprint Variable Tests Passed Successfully!');
 process.exit(0);
 })();

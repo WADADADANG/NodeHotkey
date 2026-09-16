@@ -597,7 +597,10 @@ const server = http.createServer((req, res) => {
         isPure: !!def.isPure,
         inputs: def.inputs || ['in'],
         outputs: def.outputs || ['onComplete', 'onError'],
-        defaultData: def.defaultData || {}
+        dataOutputs: def.dataOutputs || [],
+        defaultData: def.defaultData || {},
+        schema: def.schema || null,
+        summaryFields: def.summaryFields || null
       }));
       sendJSON(res, 200, { success: true, nodes: list });
     } catch (e) {

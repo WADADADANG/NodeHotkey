@@ -21,6 +21,29 @@ module.exports = {
     delayAfterClick: 80,
     showOverlay: true
   },
+  schema: [
+    { key: 'targetClient', component: 'client_selector', labelKey: 'inspector_target_clients', label: 'Target Client Screen (Vision)' },
+    {
+      key: 'targetSlot', component: 'select', labelKey: 'inspector_target_slot', label: 'Target Party Member Slot',
+      options: [
+        { value: 1, labelKey: 'slot_leader_desc', label: 'Slot 1 (Party Leader)' },
+        { value: 2, label: 'Slot 2' },
+        { value: 3, label: 'Slot 3' },
+        { value: 4, label: 'Slot 4' },
+        { value: 5, label: 'Slot 5' },
+        { value: 6, label: 'Slot 6' },
+        { value: 7, label: 'Slot 7' },
+        { value: 8, label: 'Slot 8' }
+      ]
+    },
+    { key: 'delayAfterClick', component: 'number_input', labelKey: 'inspector_party_delay_click', label: 'Delay After Click (ms)', min: 0, max: 2000, step: 20 },
+    { key: 'showOverlay', component: 'toggle', labelKey: 'inspector_party_show_overlay', label: 'Visual Overlay', icon: '👁️', color: '#06b6d4' }
+  ],
+  summaryFields: [
+    { key: 'targetClient', label: 'Target', format: 'Client {value}' },
+    { key: 'targetSlot', label: 'Slot', format: 'Slot {value}' },
+    { key: 'showOverlay', label: 'Overlay', format: 'boolean_on_off' }
+  ],
 
   async execute(context, action, callStack = new Set()) {
     if (global.isSuspended) return false;

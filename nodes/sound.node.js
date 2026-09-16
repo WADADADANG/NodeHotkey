@@ -22,6 +22,26 @@ module.exports = {
     repeatCount: 1,
     volume: 100
   },
+  schema: [
+    {
+      key: 'soundPreset', component: 'select', labelKey: 'inspector_sound_preset', label: 'Preset Sound Effect',
+      options: [
+        { value: 'ding', label: '🔔 Ding (Crystal High)' },
+        { value: 'chime', label: '✨ Chime (Ascending)' },
+        { value: 'alert', label: '⚠️ Alert (Attention Pulse)' },
+        { value: 'notification', label: '💬 Notification (Pop)' },
+        { value: 'success', label: '🎉 Success (Victory)' },
+        { value: 'error', label: '❌ Error (Low Tone)' }
+      ]
+    },
+    { key: 'volume', component: 'slider', labelKey: 'inspector_sound_volume', label: 'Volume (%)', min: 10, max: 100, step: 5, unit: '%' },
+    { key: 'repeatCount', component: 'number_input', labelKey: 'inspector_sound_repeat', label: 'Repeat Count (รอบเล่นซ้ำ)', min: 1, max: 10, step: 1 }
+  ],
+  summaryFields: [
+    { key: 'soundPreset', label: 'Sound', format: '{value}' },
+    { key: 'volume', label: 'Vol', format: '{value}%' },
+    { key: 'repeatCount', label: 'Repeat', format: '{value}x' }
+  ],
 
   async execute(context, action, callStack = []) {
     if (global.isSuspended) return false;

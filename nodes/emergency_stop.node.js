@@ -16,8 +16,24 @@ module.exports = {
   outputs: ['onFired'],
   defaultData: {
     stopScope: 'all',
-    targetClient: '1'
+    targetClient: '1',
+    showOverlayNotice: true
   },
+  schema: [
+    {
+      key: 'stopScope', component: 'select', labelKey: 'inspector_stop_scope', label: 'Stop Scope (ขอบเขตการหยุด)',
+      options: [
+        { value: 'all', labelKey: 'scope_all', label: '🌐 All Clients & Loops (หยุดทุกจอ)' },
+        { value: 'client', labelKey: 'scope_client', label: '🎯 Specific Client (เฉพาะจอเป้าหมาย)' }
+      ]
+    },
+    { key: 'targetClient', component: 'client_selector', labelKey: 'inspector_target_clients', label: 'Target Client Screen' },
+    { key: 'showOverlayNotice', component: 'toggle', labelKey: 'inspector_stop_overlay_notice', label: 'Display Stop Banner Notice on Game Screen', icon: '📢', color: '#ef4444' }
+  ],
+  summaryFields: [
+    { key: 'stopScope', label: 'Scope', format: val => val === 'client' ? 'Client Target' : 'All Clients' },
+    { key: 'showOverlayNotice', label: 'Notice', format: 'boolean_on_off' }
+  ],
 
   async execute(context, action, callStack = []) {
     if (typeof global.stopAllAudio === 'function') {

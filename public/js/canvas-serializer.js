@@ -12,7 +12,26 @@
       const type = node.type;
       let cleanData = { enabled: d.enabled !== false };
 
-      if (type === 'trigger') {
+      const def = window.clientNodeRegistry ? window.clientNodeRegistry.get(type) : null;
+      if (def && Array.isArray(def.schema) && def.schema.length > 0) {
+        for (const field of def.schema) {
+          const key = field.key;
+          if (d[key] !== undefined) {
+            if (field.component === 'number_input' || field.component === 'slider') {
+              cleanData[key] = field.isFloat ? parseFloat(d[key]) : parseInt(d[key], 10);
+              if (isNaN(cleanData[key])) cleanData[key] = field.default ?? 0;
+            } else if (field.component === 'toggle') {
+              cleanData[key] = d[key] !== false;
+            } else {
+              cleanData[key] = d[key];
+            }
+          } else if (def.defaultData && def.defaultData[key] !== undefined) {
+            cleanData[key] = def.defaultData[key];
+          }
+        }
+        if (d.cooldownPresetId) cleanData.cooldownPresetId = d.cooldownPresetId;
+        if (d.customCooldownMs) cleanData.customCooldownMs = parseInt(d.customCooldownMs, 10);
+      } else if (type === 'trigger') {
         cleanData.triggerType = d.triggerType || 'keyboard';
         cleanData.triggerValue = d.triggerValue || '1';
       } else if (type === 'key_press') {

@@ -18,6 +18,12 @@ module.exports = {
   defaultData: {
     eventName: 'party_heal'
   },
+  schema: [
+    { key: 'eventName', component: 'text_input', labelKey: 'inspector_event_name_label', label: 'Event Name to Emit (ชื่อเหตุการณ์ที่ต้องการส่ง)', placeholder: 'party_heal, boss_spawn, low_mana' }
+  ],
+  summaryFields: [
+    { key: 'eventName', label: 'Event', format: '{value}' }
+  ],
 
   async execute(context, action, callStack = new Set()) {
     if (global.isSuspended) return false;
