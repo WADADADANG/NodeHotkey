@@ -287,9 +287,16 @@ async function runPartyBuffAction(action, callStack) {
 
     const delayAfterClick = parseInt(action.delayAfterClick, 10) || 80;
     const scanRegion = action.scanRegion || 'auto';
+    const readNames = action.readNames === true;
 
-    // First scan to find party window and member names (readNames: true for initial scan)
-    const initialScan = await visionService.scanClientPage(page, targetClientId, scanRegion, { readNames: true });
+    // 1. Check central vision cache first (from party_scanner) to avoid duplicate capture/OCR
+    let initialScan = visionService.getLatestPartyState(targetClientId);
+    const isCacheFresh = initialScan && Array.isArray(initialScan.members) && initialScan.members.length > 0 && (Date.now() - (initialScan.timestamp || 0)) < 3000;
+
+    if (!isCacheFresh) {
+        // Fallback: Scan live page if central cache is not present or stale
+        initialScan = await visionService.scanClientPage(page, targetClientId, scanRegion, { readNames });
+    }
 
     if (!initialScan || !Array.isArray(initialScan.members) || initialScan.members.length === 0) {
         console.warn(`[PartyBuff] Client ${targetClientId}: Party window not found on screen.`);
