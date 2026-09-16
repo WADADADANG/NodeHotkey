@@ -1691,6 +1691,7 @@ class NodeCanvasEditor {
         }
 
         portEl.addEventListener('mousedown', (e) => {
+          e.preventDefault();
           e.stopPropagation();
           if (pType === 'out' && e.button === 0) {
             const portRect = portEl.getBoundingClientRect();

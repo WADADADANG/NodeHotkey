@@ -567,6 +567,8 @@
   z-index: 2;
   cursor: move;
   transition: border-color 0.2s, box-shadow 0.2s;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .canvas-node:hover {
@@ -1098,8 +1100,8 @@
 }
 
 .node-port.port-invalid-target {
-  opacity: 0.18 !important;
-  filter: grayscale(1) !important;
+  opacity: 0.38 !important;
+  filter: grayscale(0.7) !important;
   cursor: not-allowed !important;
   pointer-events: none !important;
 }
