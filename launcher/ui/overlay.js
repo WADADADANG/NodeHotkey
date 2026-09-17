@@ -66,10 +66,16 @@
         return { icon: '⚔️', text: 'Sequencer', className: 'sequencer' };
       case 'hold':
         return { icon: '⚓', text: 'Holding', className: 'hold' };
-      case 'party_heal':
-      case 'party_buff':
       case 'party_scanner':
+        return { icon: '👁️', text: 'Scanning', className: 'scanner' };
+      case 'party_buff':
+        return { icon: '🛡️', text: 'Party Buff', className: 'party' };
+      case 'party_heal':
+        return { icon: '🚑', text: 'Party Heal', className: 'heal' };
       case 'party_slot':
+        return { icon: '🎯', text: 'Party Slot', className: 'slot' };
+      case 'party_target':
+      case 'party_target_router':
         return { icon: '👥', text: 'Party Vision', className: 'party' };
       default:
         return { icon: '💤', text: 'Standby', className: 'standby' };

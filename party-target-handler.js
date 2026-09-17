@@ -35,12 +35,30 @@ async function simulateRealisticClick(page, x, y) {
 async function runPartyScannerAction(action, callStack) {
     if (global.isSuspended) return;
 
+    if (!global.activePartyTargetRouters) global.activePartyTargetRouters = {};
+    if (action && action.id) {
+        global.activePartyTargetRouters[action.id] = { type: 'party_scanner', detail: 'Scanning...' };
+        if (typeof global.sendOverlayUpdate === 'function') {
+            global.sendOverlayUpdate();
+        }
+    }
+
+    const clearStatus = () => {
+        if (action && action.id && global.activePartyTargetRouters && global.activePartyTargetRouters[action.id]) {
+            delete global.activePartyTargetRouters[action.id];
+            if (typeof global.sendOverlayUpdate === 'function') {
+                global.sendOverlayUpdate();
+            }
+        }
+    };
+
     const targetClientId = String(action.targetClient || '1');
     const page = global.clientPages ? global.clientPages[targetClientId] : null;
     const showOverlay = action.showOverlay !== false;
 
     if (!page || (typeof page.isClosed === 'function' && page.isClosed())) {
         console.warn(`[PartyScanner] Client ${targetClientId} is not active or closed.`);
+        clearStatus();
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
@@ -62,6 +80,7 @@ async function runPartyScannerAction(action, callStack) {
             if (visionService.VisualOverlay) {
                 await visionService.VisualOverlay.clear(page).catch(() => {});
             }
+            clearStatus();
             if (typeof global.fireChain === 'function') {
                 await global.fireChain(action, 'onError', callStack);
             }
@@ -101,6 +120,8 @@ async function runPartyScannerAction(action, callStack) {
         const lowHpThresh = parseInt(action.lowHpThreshold, 10) || 70;
         const lowHpMembers = partyState.members.filter(m => m.isAlive && m.hpPercent !== null && m.hpPercent <= lowHpThresh);
 
+        clearStatus();
+
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onScanned', callStack);
             if (lowHpMembers.length > 0) {
@@ -109,9 +130,12 @@ async function runPartyScannerAction(action, callStack) {
         }
     } catch (err) {
         console.error(`[PartyScanner Error] Client ${targetClientId}:`, err.message);
+        clearStatus();
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
+    } finally {
+        clearStatus();
     }
 }
 
@@ -122,80 +146,112 @@ async function runPartyScannerAction(action, callStack) {
 async function runSelectPartySlotAction(action, callStack) {
     if (global.isSuspended) return;
 
+    if (!global.activePartyTargetRouters) global.activePartyTargetRouters = {};
+    const targetSlotNum = parseInt(action.targetSlot || '1', 10);
+    if (action && action.id) {
+        global.activePartyTargetRouters[action.id] = { type: 'party_slot', detail: `Slot ${targetSlotNum}` };
+        if (typeof global.sendOverlayUpdate === 'function') {
+            global.sendOverlayUpdate();
+        }
+    }
+
+    const clearStatus = () => {
+        if (action && action.id && global.activePartyTargetRouters && global.activePartyTargetRouters[action.id]) {
+            delete global.activePartyTargetRouters[action.id];
+            if (typeof global.sendOverlayUpdate === 'function') {
+                global.sendOverlayUpdate();
+            }
+        }
+    };
+
     const targetClientId = String(action.targetClient || '1');
     const page = global.clientPages ? global.clientPages[targetClientId] : null;
     const showOverlay = action.showOverlay !== false;
 
     if (!page || (typeof page.isClosed === 'function' && page.isClosed())) {
         console.warn(`[SelectPartySlot] Client ${targetClientId} is not active or closed.`);
+        clearStatus();
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
         return;
     }
 
-    if (!showOverlay && visionService.VisualOverlay) {
-        await visionService.VisualOverlay.clear(page).catch(() => {});
-    }
-
-    const targetSlotNum = parseInt(action.targetSlot || '1', 10);
-    const slotIndex = Math.max(0, targetSlotNum - 1);
-    const delayAfterClick = parseInt(action.delayAfterClick, 10) || 80;
-
-    // Check central cache first
-    let partyState = visionService.getLatestPartyState(targetClientId);
-    if (!partyState || !Array.isArray(partyState.members) || partyState.members.length <= slotIndex || (Date.now() - (partyState.timestamp || 0)) > 2000) {
-        partyState = await visionService.scanClientPage(page, targetClientId, 'auto', { showOverlay });
-    }
-
-    if (!partyState || !Array.isArray(partyState.members) || partyState.members.length === 0) {
-        console.warn(`[SelectPartySlot] Client ${targetClientId}: Party window not found on screen.`);
-        if (visionService.VisualOverlay) {
+    try {
+        if (!showOverlay && visionService.VisualOverlay) {
             await visionService.VisualOverlay.clear(page).catch(() => {});
         }
+
+        const slotIndex = Math.max(0, targetSlotNum - 1);
+        const delayAfterClick = parseInt(action.delayAfterClick, 10) || 80;
+
+        // Check central cache first
+        let partyState = visionService.getLatestPartyState(targetClientId);
+        if (!partyState || !Array.isArray(partyState.members) || partyState.members.length <= slotIndex || (Date.now() - (partyState.timestamp || 0)) > 2000) {
+            partyState = await visionService.scanClientPage(page, targetClientId, 'auto', { showOverlay });
+        }
+
+        if (!partyState || !Array.isArray(partyState.members) || partyState.members.length === 0) {
+            console.warn(`[SelectPartySlot] Client ${targetClientId}: Party window not found on screen.`);
+            if (visionService.VisualOverlay) {
+                await visionService.VisualOverlay.clear(page).catch(() => {});
+            }
+            clearStatus();
+            if (typeof global.fireChain === 'function') {
+                await global.fireChain(action, 'onError', callStack);
+            }
+            return;
+        }
+
+        const target = (slotIndex < partyState.members.length) ? partyState.members[slotIndex] : partyState.members[partyState.members.length - 1];
+        if (!target || !target.click) {
+            clearStatus();
+            if (typeof global.fireChain === 'function') {
+                await global.fireChain(action, 'onError', callStack);
+            }
+            return;
+        }
+
+        console.log(`[SelectPartySlot] Client ${targetClientId}: Selected Slot ${targetSlotNum} at (${target.click.x}, ${target.click.y})`);
+
+        // Draw click target on game overlay if enabled, else clear
+        if (showOverlay && visionService.VisualOverlay) {
+            await visionService.VisualOverlay.render(page, {
+                ...partyState,
+                lastClick: { x: target.click.x, y: target.click.y }
+            });
+        } else if (!showOverlay && visionService.VisualOverlay) {
+            await visionService.VisualOverlay.clear(page).catch(() => {});
+        }
+
+        // Click on target slot
+        await simulateRealisticClick(page, target.click.x, target.click.y);
+
+        // Flick mouse cursor away by 250px to prevent tooltip staying open
+        try {
+            await page.mouse.move(target.click.x + 250, target.click.y);
+        } catch (e) {}
+
+        if (delayAfterClick > 0) {
+            await new Promise(r => setTimeout(r, delayAfterClick));
+        }
+
+        clearStatus();
+
+        // Trigger subsequent execution flow
+        if (typeof global.fireChain === 'function') {
+            await global.fireChain(action, 'next', callStack);
+            await global.fireChain(action, 'onSelected', callStack);
+            await global.fireChain(action, 'onComplete', callStack);
+        }
+    } catch (err) {
+        console.error(`[SelectPartySlot Error] Client ${targetClientId}:`, err.message);
+        clearStatus();
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
-        return;
-    }
-
-    const target = (slotIndex < partyState.members.length) ? partyState.members[slotIndex] : partyState.members[partyState.members.length - 1];
-    if (!target || !target.click) {
-        if (typeof global.fireChain === 'function') {
-            await global.fireChain(action, 'onError', callStack);
-        }
-        return;
-    }
-
-    console.log(`[SelectPartySlot] Client ${targetClientId}: Selected Slot ${targetSlotNum} at (${target.click.x}, ${target.click.y})`);
-
-    // Draw click target on game overlay if enabled, else clear
-    if (showOverlay && visionService.VisualOverlay) {
-        await visionService.VisualOverlay.render(page, {
-            ...partyState,
-            lastClick: { x: target.click.x, y: target.click.y }
-        });
-    } else if (!showOverlay && visionService.VisualOverlay) {
-        await visionService.VisualOverlay.clear(page).catch(() => {});
-    }
-
-    // Click on target slot
-    await simulateRealisticClick(page, target.click.x, target.click.y);
-
-    // Flick mouse cursor away by 250px to prevent tooltip staying open
-    try {
-        await page.mouse.move(target.click.x + 250, target.click.y);
-    } catch (e) {}
-
-    if (delayAfterClick > 0) {
-        await new Promise(r => setTimeout(r, delayAfterClick));
-    }
-
-    // Trigger subsequent execution flow
-    if (typeof global.fireChain === 'function') {
-        await global.fireChain(action, 'next', callStack);
-        await global.fireChain(action, 'onSelected', callStack);
-        await global.fireChain(action, 'onComplete', callStack);
+    } finally {
+        clearStatus();
     }
 }
 
@@ -206,82 +262,121 @@ async function runSelectPartySlotAction(action, callStack) {
 async function runPartyHealAction(action, callStack) {
     if (global.isSuspended) return;
 
+    if (!global.activePartyTargetRouters) global.activePartyTargetRouters = {};
+    if (action && action.id) {
+        global.activePartyTargetRouters[action.id] = { type: 'party_heal', detail: 'Targeting...' };
+        if (typeof global.sendOverlayUpdate === 'function') {
+            global.sendOverlayUpdate();
+        }
+    }
+
+    const clearStatus = () => {
+        if (action && action.id && global.activePartyTargetRouters && global.activePartyTargetRouters[action.id]) {
+            delete global.activePartyTargetRouters[action.id];
+            if (typeof global.sendOverlayUpdate === 'function') {
+                global.sendOverlayUpdate();
+            }
+        }
+    };
+
     const targetClientId = String(action.targetClient || '1');
     const page = global.clientPages ? global.clientPages[targetClientId] : null;
     const showOverlay = action.showOverlay !== false;
 
     if (!page || (typeof page.isClosed === 'function' && page.isClosed())) {
         console.warn(`[PartyHeal] Client ${targetClientId} is not active or closed.`);
+        clearStatus();
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
         return;
     }
 
-    if (!showOverlay && visionService.VisualOverlay) {
-        await visionService.VisualOverlay.clear(page).catch(() => {});
-    }
-
-    const lowHpThreshold = parseInt(action.lowHpThreshold, 10) || 70;
-    const delayAfterClick = parseInt(action.delayAfterClick, 10) || 80;
-
-    let partyState = visionService.getLatestPartyState(targetClientId);
-    if (!partyState || !Array.isArray(partyState.members) || (Date.now() - (partyState.timestamp || 0)) > 1500) {
-        partyState = await visionService.scanClientPage(page, targetClientId, 'auto', { showOverlay });
-    }
-
-    if (!partyState || !Array.isArray(partyState.members) || partyState.members.length === 0) {
-        console.warn(`[PartyHeal] Client ${targetClientId}: No party members found.`);
-        if (visionService.VisualOverlay) {
+    try {
+        if (!showOverlay && visionService.VisualOverlay) {
             await visionService.VisualOverlay.clear(page).catch(() => {});
         }
+
+        const lowHpThreshold = parseInt(action.lowHpThreshold, 10) || 70;
+        const delayAfterClick = parseInt(action.delayAfterClick, 10) || 80;
+
+        let partyState = visionService.getLatestPartyState(targetClientId);
+        if (!partyState || !Array.isArray(partyState.members) || (Date.now() - (partyState.timestamp || 0)) > 1500) {
+            partyState = await visionService.scanClientPage(page, targetClientId, 'auto', { showOverlay });
+        }
+
+        if (!partyState || !Array.isArray(partyState.members) || partyState.members.length === 0) {
+            console.warn(`[PartyHeal] Client ${targetClientId}: No party members found.`);
+            if (visionService.VisualOverlay) {
+                await visionService.VisualOverlay.clear(page).catch(() => {});
+            }
+            clearStatus();
+            if (typeof global.fireChain === 'function') {
+                await global.fireChain(action, 'onError', callStack);
+            }
+            return;
+        }
+
+        // Find damaged members
+        const damagedMembers = partyState.members.filter(m => m.isAlive && m.hpPercent !== null && m.hpPercent <= lowHpThreshold);
+
+        if (damagedMembers.length === 0) {
+            clearStatus();
+            if (typeof global.fireChain === 'function') {
+                await global.fireChain(action, 'onNoTarget', callStack);
+            }
+            return;
+        }
+
+        damagedMembers.sort((a, b) => (a.hpPercent ?? 100) - (b.hpPercent ?? 100));
+        const target = damagedMembers[0];
+
+        if (action && action.id && global.activePartyTargetRouters && global.activePartyTargetRouters[action.id]) {
+            global.activePartyTargetRouters[action.id].detail = `Slot ${target.slot} (${target.hpPercent}%)`;
+            if (typeof global.sendOverlayUpdate === 'function') {
+                global.sendOverlayUpdate();
+            }
+        }
+
+        console.log(`[PartyHeal] Client ${targetClientId}: Low HP detected on Slot ${target.slot} (${target.hpPercent}%), clicking target...`);
+
+        // วาดจุดคลิก
+        if (showOverlay && visionService.VisualOverlay) {
+            await visionService.VisualOverlay.render(page, {
+                ...partyState,
+                lastClick: { x: target.click.x, y: target.click.y }
+            });
+        } else if (!showOverlay && visionService.VisualOverlay) {
+            await visionService.VisualOverlay.clear(page).catch(() => {});
+        }
+
+        // คลิกเลือกเป้าหมาย
+        await simulateRealisticClick(page, target.click.x, target.click.y);
+
+        // สะบัดเมาส์หลบออกไปทางขวา 250px
+        try {
+            await page.mouse.move(target.click.x + 250, target.click.y);
+        } catch (e) {}
+
+        if (delayAfterClick > 0) {
+            await new Promise(r => setTimeout(r, delayAfterClick));
+        }
+
+        clearStatus();
+
+        // ส่งสัญญาณไปยิงสกิลฮีล
+        if (typeof global.fireChain === 'function') {
+            await global.fireChain(action, 'onHealTarget', callStack);
+            await global.fireChain(action, 'onMemberLowHp', callStack);
+        }
+    } catch (err) {
+        console.error(`[PartyHeal Error] Client ${targetClientId}:`, err.message);
+        clearStatus();
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
-        return;
-    }
-
-    // Find damaged members
-    const damagedMembers = partyState.members.filter(m => m.isAlive && m.hpPercent !== null && m.hpPercent <= lowHpThreshold);
-
-    if (damagedMembers.length === 0) {
-        if (typeof global.fireChain === 'function') {
-            await global.fireChain(action, 'onNoTarget', callStack);
-        }
-        return;
-    }
-
-    damagedMembers.sort((a, b) => (a.hpPercent ?? 100) - (b.hpPercent ?? 100));
-    const target = damagedMembers[0];
-
-    console.log(`[PartyHeal] Client ${targetClientId}: Low HP detected on Slot ${target.slot} (${target.hpPercent}%), clicking target...`);
-
-    // วาดจุดคลิก
-    if (showOverlay && visionService.VisualOverlay) {
-        await visionService.VisualOverlay.render(page, {
-            ...partyState,
-            lastClick: { x: target.click.x, y: target.click.y }
-        });
-    } else if (!showOverlay && visionService.VisualOverlay) {
-        await visionService.VisualOverlay.clear(page).catch(() => {});
-    }
-
-    // คลิกเลือกเป้าหมาย
-    await simulateRealisticClick(page, target.click.x, target.click.y);
-
-    // สะบัดเมาส์หลบออกไปทางขวา 250px
-    try {
-        await page.mouse.move(target.click.x + 250, target.click.y);
-    } catch (e) {}
-
-    if (delayAfterClick > 0) {
-        await new Promise(r => setTimeout(r, delayAfterClick));
-    }
-
-    // ส่งสัญญาณไปยิงสกิลฮีล
-    if (typeof global.fireChain === 'function') {
-        await global.fireChain(action, 'onHealTarget', callStack);
-        await global.fireChain(action, 'onMemberLowHp', callStack);
+    } finally {
+        clearStatus();
     }
 }
 
@@ -297,164 +392,202 @@ async function runPartyHealAction(action, callStack) {
 async function runPartyBuffAction(action, callStack) {
     if (global.isSuspended) return;
 
+    if (!global.activePartyTargetRouters) global.activePartyTargetRouters = {};
+    if (action && action.id) {
+        global.activePartyTargetRouters[action.id] = { type: 'party_buff', detail: 'Buffing...' };
+        if (typeof global.sendOverlayUpdate === 'function') {
+            global.sendOverlayUpdate();
+        }
+    }
+
+    const clearStatus = () => {
+        if (action && action.id && global.activePartyTargetRouters && global.activePartyTargetRouters[action.id]) {
+            delete global.activePartyTargetRouters[action.id];
+            if (typeof global.sendOverlayUpdate === 'function') {
+                global.sendOverlayUpdate();
+            }
+        }
+    };
+
     const targetClientId = String(action.targetClient || '1');
     const page = global.clientPages ? global.clientPages[targetClientId] : null;
     const showOverlay = action.showOverlay !== false;
 
     if (!page || (typeof page.isClosed === 'function' && page.isClosed())) {
         console.warn(`[PartyBuff] Client ${targetClientId} is not active or closed.`);
+        clearStatus();
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onError', callStack);
         }
         return;
     }
 
-    if (!showOverlay && visionService.VisualOverlay) {
-        await visionService.VisualOverlay.clear(page).catch(() => {});
-    }
-
-    const delayAfterClick = parseInt(action.delayAfterClick, 10) || 80;
-    const scanRegion = action.scanRegion || 'auto';
-    const readNames = action.readNames === true;
-
-    // 1. Check central vision cache first (from party_scanner) to avoid duplicate capture/OCR
-    let initialScan = visionService.getLatestPartyState(targetClientId);
-    const isCacheFresh = initialScan && Array.isArray(initialScan.members) && initialScan.members.length > 0 && (Date.now() - (initialScan.timestamp || 0)) < 3000;
-
-    if (!isCacheFresh) {
-        // Fallback: Scan live page if central cache is not present or stale
-        initialScan = await visionService.scanClientPage(page, targetClientId, scanRegion, { readNames, showOverlay });
-    }
-
-    if (!initialScan || !Array.isArray(initialScan.members) || initialScan.members.length === 0) {
-        console.warn(`[PartyBuff] Client ${targetClientId}: Party window not found on screen.`);
-        if (visionService.VisualOverlay) {
+    try {
+        if (!showOverlay && visionService.VisualOverlay) {
             await visionService.VisualOverlay.clear(page).catch(() => {});
         }
-        if (typeof global.fireChain === 'function') {
-            await global.fireChain(action, 'onError', callStack);
-        }
-        return;
-    }
 
-    // Cache initial member names and statuses
-    const slotNames = new Map();
-    const slotIsLeader = new Map();
-    initialScan.members.forEach(m => {
-        slotNames.set(m.slot, m.name || `Slot_${m.slot}`);
-        if (m.isLeader) slotIsLeader.set(m.slot, true);
-    });
+        const delayAfterClick = parseInt(action.delayAfterClick, 10) || 80;
+        const scanRegion = action.scanRegion || 'auto';
+        const readNames = action.readNames === true;
 
-    // Filter active members in range
-    const activeSlots = initialScan.members
-        .filter(m => m.isAlive && m.statusCode === 'active')
-        .map(m => m.slot);
-    const totalToBuff = activeSlots.length;
+        // 1. Check central vision cache first (from party_scanner) to avoid duplicate capture/OCR
+        let initialScan = visionService.getLatestPartyState(targetClientId);
+        const isCacheFresh = initialScan && Array.isArray(initialScan.members) && initialScan.members.length > 0 && (Date.now() - (initialScan.timestamp || 0)) < 3000;
 
-    console.log(`[PartyBuff] Client ${targetClientId}: Starting buff cycle (${totalToBuff} ready out of ${initialScan.members.length} total: ${activeSlots.map(s => slotNames.get(s)).join(', ')})...`);
-
-    if (totalToBuff === 0) {
-        console.warn(`[PartyBuff] Client ${targetClientId}: No members in range or ready for buff.`);
-        if (typeof global.fireChain === 'function') {
-            await global.fireChain(action, 'onComplete', callStack);
-        }
-        return;
-    }
-
-    const buffedSlots = new Set();
-    const buffedMemberSummaries = [];
-    let currentPartyState = initialScan;
-
-    for (let i = 0; i < activeSlots.length; i++) {
-        if (global.isSuspended) {
-            console.log(`[PartyBuff] Client ${targetClientId}: Paused.`);
-            break;
+        if (!isCacheFresh) {
+            // Fallback: Scan live page if central cache is not present or stale
+            initialScan = await visionService.scanClientPage(page, targetClientId, scanRegion, { readNames, showOverlay });
         }
 
-        const targetSlot = activeSlots[i];
-        const memberName = slotNames.get(targetSlot) || `Slot_${targetSlot}`;
-        const isLeader = slotIsLeader.get(targetSlot) || false;
-
-        // Refresh coordinates for subsequent members
-        if (i > 0) {
-            try {
-                const safeX = (currentPartyState?.startX && currentPartyState.startX > 500) ? currentPartyState.startX - 220 : 350;
-                await page.mouse.move(safeX, 250);
-            } catch (e) {}
-            await new Promise(r => setTimeout(r, 60));
-
-            const freshState = await visionService.scanClientPage(page, targetClientId, scanRegion, { readNames: false, showOverlay });
-            if (freshState && Array.isArray(freshState.members) && freshState.members.length > 0) {
-                currentPartyState = freshState;
+        if (!initialScan || !Array.isArray(initialScan.members) || initialScan.members.length === 0) {
+            console.warn(`[PartyBuff] Client ${targetClientId}: Party window not found on screen.`);
+            if (visionService.VisualOverlay) {
+                await visionService.VisualOverlay.clear(page).catch(() => {});
             }
+            clearStatus();
+            if (typeof global.fireChain === 'function') {
+                await global.fireChain(action, 'onError', callStack);
+            }
+            return;
         }
 
-        let target = currentPartyState.members.find(m => m.slot === targetSlot);
-        if (!target) {
-            target = initialScan.members.find(m => m.slot === targetSlot);
+        // Cache initial member names and statuses
+        const slotNames = new Map();
+        const slotIsLeader = new Map();
+        initialScan.members.forEach(m => {
+            slotNames.set(m.slot, m.name || `Slot_${m.slot}`);
+            if (m.isLeader) slotIsLeader.set(m.slot, true);
+        });
+
+        // Filter active members in range
+        const activeSlots = initialScan.members
+            .filter(m => m.isAlive && m.statusCode === 'active')
+            .map(m => m.slot);
+        const totalToBuff = activeSlots.length;
+
+        console.log(`[PartyBuff] Client ${targetClientId}: Starting buff cycle (${totalToBuff} ready out of ${initialScan.members.length} total: ${activeSlots.map(s => slotNames.get(s)).join(', ')})...`);
+
+        if (totalToBuff === 0) {
+            console.warn(`[PartyBuff] Client ${targetClientId}: No members in range or ready for buff.`);
+            clearStatus();
+            if (typeof global.fireChain === 'function') {
+                await global.fireChain(action, 'onComplete', callStack);
+            }
+            return;
         }
 
-        if (!target) {
-            console.warn(`[PartyBuff] Client ${targetClientId}: Coordinates not found for Slot ${targetSlot} ("${memberName}"), skipping.`);
-            continue;
-        }
+        const buffedSlots = new Set();
+        const buffedMemberSummaries = [];
+        let currentPartyState = initialScan;
 
-        if (target.statusCode && target.statusCode !== 'active') {
-            console.log(`[PartyBuff] Client ${targetClientId}: Skipping Slot ${targetSlot} ("${memberName}") - status: ${target.statusCode}`);
-            continue;
-        }
+        for (let i = 0; i < activeSlots.length; i++) {
+            if (global.isSuspended) {
+                console.log(`[PartyBuff] Client ${targetClientId}: Paused.`);
+                break;
+            }
 
-        console.log(`[PartyBuff] Client ${targetClientId}: [Buffing ${i + 1}/${totalToBuff}] Slot ${targetSlot} "${memberName}" ${isLeader ? '(Leader)' : ''} at (${target.click.x}, ${target.click.y})`);
+            const targetSlot = activeSlots[i];
+            const memberName = slotNames.get(targetSlot) || `Slot_${targetSlot}`;
+            const isLeader = slotIsLeader.get(targetSlot) || false;
 
-        // Set action output values for downstream nodes
-        action.slot_out = targetSlot;
-        action.name_out = memberName;
-        action.info_out = `Slot ${targetSlot}: ${memberName} [${i + 1}/${totalToBuff}]`;
-        action.index_out = i + 1;
-        action.total_out = totalToBuff;
-        action.value = memberName;
+            if (action && action.id && global.activePartyTargetRouters && global.activePartyTargetRouters[action.id]) {
+                global.activePartyTargetRouters[action.id].detail = `Slot ${targetSlot} (${i + 1}/${totalToBuff})`;
+                if (typeof global.sendOverlayUpdate === 'function') {
+                    global.sendOverlayUpdate();
+                }
+            }
 
-        if (showOverlay && visionService.VisualOverlay) {
-            await visionService.VisualOverlay.render(page, {
-                ...currentPartyState,
-                lastClick: { x: target.click.x, y: target.click.y }
-            });
-        } else if (!showOverlay && visionService.VisualOverlay) {
-            await visionService.VisualOverlay.clear(page).catch(() => {});
-        }
+            // Refresh coordinates for subsequent members
+            if (i > 0) {
+                try {
+                    const safeX = (currentPartyState?.startX && currentPartyState.startX > 500) ? currentPartyState.startX - 220 : 350;
+                    await page.mouse.move(safeX, 250);
+                } catch (e) {}
+                await new Promise(r => setTimeout(r, 60));
 
-        await simulateRealisticClick(page, target.click.x, target.click.y);
+                const freshState = await visionService.scanClientPage(page, targetClientId, scanRegion, { readNames: false, showOverlay });
+                if (freshState && Array.isArray(freshState.members) && freshState.members.length > 0) {
+                    currentPartyState = freshState;
+                }
+            }
 
-        try {
-            const awayX = target.click.x > 500 ? target.click.x - 220 : target.click.x + 220;
-            await page.mouse.move(awayX, target.click.y);
-        } catch (e) {}
+            let target = currentPartyState.members.find(m => m.slot === targetSlot);
+            if (!target) {
+                target = initialScan.members.find(m => m.slot === targetSlot);
+            }
 
-        if (delayAfterClick > 0) {
-            const ok = await (global.abortableSleep ? global.abortableSleep(delayAfterClick) : new Promise(r => setTimeout(r, delayAfterClick)));
+            if (!target) {
+                console.warn(`[PartyBuff] Client ${targetClientId}: Coordinates not found for Slot ${targetSlot} ("${memberName}"), skipping.`);
+                continue;
+            }
+
+            if (target.statusCode && target.statusCode !== 'active') {
+                console.log(`[PartyBuff] Client ${targetClientId}: Skipping Slot ${targetSlot} ("${memberName}") - status: ${target.statusCode}`);
+                continue;
+            }
+
+            console.log(`[PartyBuff] Client ${targetClientId}: [Buffing ${i + 1}/${totalToBuff}] Slot ${targetSlot} "${memberName}" ${isLeader ? '(Leader)' : ''} at (${target.click.x}, ${target.click.y})`);
+
+            // Set action output values for downstream nodes
+            action.slot_out = targetSlot;
+            action.name_out = memberName;
+            action.info_out = `Slot ${targetSlot}: ${memberName} [${i + 1}/${totalToBuff}]`;
+            action.index_out = i + 1;
+            action.total_out = totalToBuff;
+            action.value = memberName;
+
+            if (showOverlay && visionService.VisualOverlay) {
+                await visionService.VisualOverlay.render(page, {
+                    ...currentPartyState,
+                    lastClick: { x: target.click.x, y: target.click.y }
+                });
+            } else if (!showOverlay && visionService.VisualOverlay) {
+                await visionService.VisualOverlay.clear(page).catch(() => {});
+            }
+
+            await simulateRealisticClick(page, target.click.x, target.click.y);
+
+            try {
+                const awayX = target.click.x > 500 ? target.click.x - 220 : target.click.x + 220;
+                await page.mouse.move(awayX, target.click.y);
+            } catch (e) {}
+
+            if (delayAfterClick > 0) {
+                const ok = await (global.abortableSleep ? global.abortableSleep(delayAfterClick) : new Promise(r => setTimeout(r, delayAfterClick)));
+                if (!ok || global.isSuspended) break;
+            }
+
+            if (typeof global.fireChain === 'function' && !global.isSuspended) {
+                await global.fireChain(action, 'onNextMember', new Set());
+            }
+
+            buffedSlots.add(targetSlot);
+            buffedMemberSummaries.push(memberName);
+
+            if (global.isSuspended) break;
+
+            const ok = await (global.abortableSleep ? global.abortableSleep(200) : new Promise(r => setTimeout(r, 200)));
             if (!ok || global.isSuspended) break;
         }
 
-        if (typeof global.fireChain === 'function' && !global.isSuspended) {
-            await global.fireChain(action, 'onNextMember', new Set());
+        const completeSummary = `Completed buff cycle (${buffedSlots.size}/${totalToBuff} members: ${buffedMemberSummaries.join(', ')})`;
+        action.info_out = completeSummary;
+        action.value = `Complete (${buffedSlots.size}/${totalToBuff})`;
+
+        console.log(`[PartyBuff] Client ${targetClientId}: ${completeSummary}`);
+        clearStatus();
+        if (typeof global.fireChain === 'function') {
+            await global.fireChain(action, 'onComplete', callStack);
         }
-
-        buffedSlots.add(targetSlot);
-        buffedMemberSummaries.push(memberName);
-
-        if (global.isSuspended) break;
-
-        const ok = await (global.abortableSleep ? global.abortableSleep(200) : new Promise(r => setTimeout(r, 200)));
-        if (!ok || global.isSuspended) break;
-    }
-
-    const completeSummary = `Completed buff cycle (${buffedSlots.size}/${totalToBuff} members: ${buffedMemberSummaries.join(', ')})`;
-    action.info_out = completeSummary;
-    action.value = `Complete (${buffedSlots.size}/${totalToBuff})`;
-
-    console.log(`[PartyBuff] Client ${targetClientId}: ${completeSummary}`);
-    if (typeof global.fireChain === 'function') {
-        await global.fireChain(action, 'onComplete', callStack);
+    } catch (err) {
+        console.error(`[PartyBuff Error] Client ${targetClientId}:`, err.message);
+        clearStatus();
+        if (typeof global.fireChain === 'function') {
+            await global.fireChain(action, 'onError', callStack);
+        }
+    } finally {
+        clearStatus();
     }
 }
 

@@ -218,6 +218,8 @@ global.profileVariables = profileVariables;
 global.activeSchedulerStates = activeSchedulerStates;
 global.schedulerTokens = schedulerTokens;
 global.sequencerTokens = sequencerTokens;
+let activePartyTargetRouters = {};
+global.activePartyTargetRouters = activePartyTargetRouters;
 let isSystemInitialized = false;
 let overlayProcess = null;
 let lastEnableOverlaySetting = true;
@@ -283,14 +285,30 @@ function getClientStatuses() {
                     icon: '⚡',
                     detail: `${a.trigger?.value || 'Key'} ➜ ${a.targetKey || '1'}`
                 });
-            } else if ((a.mode === 'party_heal' || a.mode === 'party_buff' || a.mode === 'party_scanner' || a.mode === 'party_slot') && global.activePartyTargetRouters && global.activePartyTargetRouters[a.id]) {
+            } else if ((a.mode === 'party_heal' || a.mode === 'party_buff' || a.mode === 'party_scanner' || a.mode === 'party_slot' || a.mode === 'party_target_router' || a.mode === 'party_target') && global.activePartyTargetRouters && global.activePartyTargetRouters[a.id]) {
                 const info = global.activePartyTargetRouters[a.id];
+                let pIcon = '👥';
+                let pDefaultName = 'Party Vision';
+                if (a.mode === 'party_scanner') {
+                    pIcon = '👁️';
+                    pDefaultName = 'Party Scanner';
+                } else if (a.mode === 'party_buff') {
+                    pIcon = '🛡️';
+                    pDefaultName = 'Party Buff';
+                } else if (a.mode === 'party_heal') {
+                    pIcon = '🚑';
+                    pDefaultName = 'Party Heal';
+                } else if (a.mode === 'party_slot') {
+                    pIcon = '🎯';
+                    pDefaultName = 'Party Slot';
+                }
+                const displayName = (a.name && a.name !== a.mode) ? a.name : pDefaultName;
                 runningActions.push({
                     id: a.id,
-                    name: a.name || 'Party Vision',
+                    name: displayName,
                     type: a.mode,
-                    icon: '👥',
-                    detail: info.detail || 'Vision active...'
+                    icon: pIcon,
+                    detail: (typeof info === 'object' ? info.detail : null) || 'Active'
                 });
             }
         });
@@ -2471,6 +2489,8 @@ function stopAllLoops() {
     Object.keys(isSequencerRunning).forEach(cIdx => {
         delete isSequencerRunning[cIdx];
     });
+    activePartyTargetRouters = {};
+    global.activePartyTargetRouters = activePartyTargetRouters;
 }
 
 // Stop active loops, schedulers, and sequences for a specific client
@@ -3146,6 +3166,8 @@ async function runEmergencyStopAction(action, callStack) {
         Object.keys(isSequencerRunning).forEach(cIdx => {
             delete isSequencerRunning[cIdx];
         });
+        activePartyTargetRouters = {};
+        global.activePartyTargetRouters = activePartyTargetRouters;
         Object.keys(activeSequencerLoops).forEach(seqId => {
             stopCastSequencerAction(seqId, 'Emergency Stop');
         });

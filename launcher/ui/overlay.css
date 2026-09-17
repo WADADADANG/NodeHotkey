@@ -302,9 +302,24 @@ html, body {
   color: #a78bfa;
 }
 
+.client-status.scanner,
+.sub-action-item.scanner .sub-action-name {
+  color: #06b6d4;
+}
+
 .client-status.party,
 .sub-action-item.party .sub-action-name {
-  color: #06b6d4;
+  color: #14b8a6;
+}
+
+.client-status.heal,
+.sub-action-item.heal .sub-action-name {
+  color: #f43f5e;
+}
+
+.client-status.slot,
+.sub-action-item.slot .sub-action-name {
+  color: #a855f7;
 }
 
 .client-status.suspended,
