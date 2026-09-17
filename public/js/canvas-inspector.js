@@ -1887,8 +1887,16 @@
     const canonicalTargetId = rawTargetId.startsWith('node_') ? rawTargetId.replace('node_', '') : rawTargetId;
     const rule = node.data?.conditionRule || 'is_running';
     const condVal = node.data?.conditionValue !== undefined ? node.data.conditionValue : '';
-    const nonCheckableTypes = ['trigger', 'branch', 'control', 'emergency_stop'];
-    const checkableNodes = this.nodes.filter(n => n.id !== node.id && !nonCheckableTypes.includes(n.type));
+    // Whitelist checkable types: variables and stateful actions only (filter out log, tts, webhook, format, etc.)
+    const checkableVariableTypes = ['variable'];
+    const checkableActionTypes = [
+      'loop', 'sequencer', 'cast_sequence', 'buff_sequence', 
+      'key_hold', 'loop_scheduler', 'party_scanner', 'party_buff', 'party_heal', 'party_slot'
+    ];
+
+    const variableNodes = this.nodes.filter(n => n.id !== node.id && checkableVariableTypes.includes(n.type));
+    const actionNodes = this.nodes.filter(n => n.id !== node.id && checkableActionTypes.includes(n.type));
+    const checkableNodes = [...variableNodes, ...actionNodes];
 
     const selectedTargetNode = this.nodes.find(n => {
       let actId = n.data?.actionId || (n.id.startsWith('node_') ? n.id.replace('node_', '') : n.id);
@@ -1961,12 +1969,30 @@
         <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionTargetId', this.value); window.nodeCanvas.openInspector('${node.id}');">
           <option value="">${canvasT('inspector_select_action_check', '-- Select Action / Variable to Check --')}</option>
           ${checkableNodes.length === 0 ? `
-            <option value="" disabled>(${canvasT('inspector_no_other_actions', 'No other actions on canvas')})</option>
-          ` : checkableNodes.map(n => {
-      let actId = n.data?.actionId || (n.id.startsWith('node_') ? n.id.replace('node_', '') : n.id);
-      if (actId.startsWith('node_')) actId = actId.replace('node_', '');
-      return `<option value="${actId}" ${actId === canonicalTargetId || n.id === rawTargetId ? 'selected' : ''}>${n.title || n.type} (${this.getNodeTypeLabel(n.type)})</option>`;
-    }).join('')}
+            <option value="" disabled>(${canvasT('inspector_no_other_actions', 'No checkable actions or variables on canvas')})</option>
+          ` : `
+            ${variableNodes.length > 0 ? `
+              <optgroup label="📦 ${canvasT('inspector_group_variables', 'Variables (ตัวแปร)')}">
+                ${variableNodes.map(n => {
+                  let actId = n.data?.actionId || (n.id.startsWith('node_') ? n.id.replace('node_', '') : n.id);
+                  if (actId.startsWith('node_')) actId = actId.replace('node_', '');
+                  const vType = n.data?.varType || 'boolean';
+                  const typeIcon = vType === 'boolean' ? '🔘' : (vType === 'number' ? '🔢' : '🔤');
+                  const varName = n.title || n.data?.varName || 'Variable';
+                  return `<option value="${actId}" ${actId === canonicalTargetId || n.id === rawTargetId ? 'selected' : ''}>${typeIcon} ${varName} [${vType}]</option>`;
+                }).join('')}
+              </optgroup>
+            ` : ''}
+            ${actionNodes.length > 0 ? `
+              <optgroup label="⚡ ${canvasT('inspector_group_actions', 'Action Status (สถานะการทำงาน)')}">
+                ${actionNodes.map(n => {
+                  let actId = n.data?.actionId || (n.id.startsWith('node_') ? n.id.replace('node_', '') : n.id);
+                  if (actId.startsWith('node_')) actId = actId.replace('node_', '');
+                  return `<option value="${actId}" ${actId === canonicalTargetId || n.id === rawTargetId ? 'selected' : ''}>${n.title || n.type} (${this.getNodeTypeLabel(n.type)})</option>`;
+                }).join('')}
+              </optgroup>
+            ` : ''}
+          `}
         </select>
       </div>
       <div class="inspector-field-group">

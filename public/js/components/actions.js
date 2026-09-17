@@ -764,8 +764,15 @@ export function renderModeSpecificFields(act) {
       </div>
     `;
   } else if (normalizeMode(act.mode) === 'branch') {
-    const statefulModes = ['loop', 'buff_sequence', 'key_hold'];
-    const checkableActions = (fullConfig.profiles[currentEditProfile].actions || []).filter(a => a.id !== act.id && statefulModes.includes(normalizeMode(a.mode)));
+    const checkableVariableModes = ['variable'];
+    const checkableActionModes = [
+      'loop', 'sequencer', 'cast_sequence', 'buff_sequence', 
+      'key_hold', 'loop_scheduler', 'party_scanner', 'party_buff', 'party_heal', 'party_slot'
+    ];
+    const allActions = fullConfig.profiles[currentEditProfile].actions || [];
+    const variableActions = allActions.filter(a => a.id !== act.id && checkableVariableModes.includes(normalizeMode(a.mode)));
+    const runningActions = allActions.filter(a => a.id !== act.id && checkableActionModes.includes(normalizeMode(a.mode)));
+    const checkableActions = [...variableActions, ...runningActions];
     const targetId = act.conditionTargetId || '';
     const rule = act.conditionRule || 'is_running';
 
@@ -778,7 +785,18 @@ export function renderModeSpecificFields(act) {
               <option value="">${currentLang === 'en' ? '-- Select Action to Check --' : '-- เลือก Action อ้างอิง --'}</option>
               ${checkableActions.length === 0 ? `
                 <option value="" disabled>${currentLang === 'en' ? '(No checkable active actions available)' : '(ไม่มี Action ที่มีสถานะให้เช็ค)'}</option>
-              ` : checkableActions.map(a => `<option value="${a.id}" ${a.id === targetId ? 'selected' : ''}>${escapeHtml(a.name)} (${a.mode})</option>`).join('')}
+              ` : `
+                ${variableActions.length > 0 ? `
+                  <optgroup label="${currentLang === 'en' ? '📦 Variables' : '📦 ตัวแปร'}">
+                    ${variableActions.map(a => `<option value="${a.id}" ${a.id === targetId ? 'selected' : ''}>🔘 ${escapeHtml(a.name || a.varName || 'Variable')} [${a.varType || 'boolean'}]</option>`).join('')}
+                  </optgroup>
+                ` : ''}
+                ${runningActions.length > 0 ? `
+                  <optgroup label="${currentLang === 'en' ? '⚡ Action Status' : '⚡ สถานะการทำงาน'}">
+                    ${runningActions.map(a => `<option value="${a.id}" ${a.id === targetId ? 'selected' : ''}>${escapeHtml(a.name)} (${a.mode})</option>`).join('')}
+                  </optgroup>
+                ` : ''}
+              `}
             </select>
           </div>
           <div class="field">
