@@ -88,11 +88,11 @@ class NodeCanvasEditor {
       key_press: canvasT('canvas_key_press', isEn ? 'Key Press' : 'กดปุ่ม (Key)'),
       forwarder: canvasT('canvas_forwarder', isEn ? 'Key Forwarder' : 'ส่งต่อปุ่ม (Forward)'),
       macro_group: canvasT('canvas_macro_group', isEn ? 'Macro Queue' : 'มาโคร (Macro)'),
-      branch: canvasT('canvas_branch', isEn ? 'Action Branch' : 'เงื่อนไขสถานะ Action (Action Branch)'),
-      action_branch: canvasT('canvas_action_branch', isEn ? 'Action Branch' : 'เงื่อนไขสถานะ Action (Action Branch)'),
-      var_branch: canvasT('canvas_var_branch', isEn ? 'Variable Branch' : 'เงื่อนไขตัวแปร (Variable Branch)'),
-      variable_branch: canvasT('canvas_var_branch', isEn ? 'Variable Branch' : 'เงื่อนไขตัวแปร (Variable Branch)'),
-      condition: canvasT('canvas_condition', isEn ? 'Action Branch' : 'เงื่อนไขสถานะ Action (Action Branch)'),
+      branch: canvasT('canvas_branch', isEn ? 'Action Branch' : 'เงื่อนไขสถานะ Action'),
+      action_branch: canvasT('canvas_action_branch', isEn ? 'Action Branch' : 'เงื่อนไขสถานะ Action'),
+      var_branch: canvasT('canvas_var_branch', isEn ? 'Variable Branch' : 'เงื่อนไขตัวแปร'),
+      variable_branch: canvasT('canvas_var_branch', isEn ? 'Variable Branch' : 'เงื่อนไขตัวแปร'),
+      condition: canvasT('canvas_condition', isEn ? 'Action Branch' : 'เงื่อนไขสถานะ Action'),
       control: canvasT('canvas_control', isEn ? 'Action Control' : 'ควบคุม (Control)'),
       delay: canvasT('canvas_delay', isEn ? 'Delay Timer' : 'หน่วงเวลา (Delay)'),
       emergency_stop: canvasT('canvas_emergency_stop', isEn ? 'Emergency Stop' : 'หยุดฉุกเฉิน (Stop All)'),
@@ -919,30 +919,30 @@ class NodeCanvasEditor {
         `;
       } else if (node.type === 'action_branch' || node.type === 'branch' || node.type === 'condition') {
         const targetAction = this.nodes.find(n => n.id === node.data?.conditionTargetId);
-        const targetName = targetAction ? (targetAction.title || targetAction.type) : (node.data?.conditionTargetId ? 'Action' : '(None)');
+        const targetName = targetAction ? (targetAction.title || targetAction.type) : (node.data?.conditionTargetId ? 'Action' : (isEn ? '(None)' : '(ไม่มี)'));
         const rule = node.data?.conditionRule || 'is_running';
         const ruleMap = {
-          is_running: '🟢 Running',
-          is_stopped: '🔴 Stopped',
-          on_cooldown: '⏳ Cooldown',
-          is_ready: '🛡️ Ready'
+          is_running: isEn ? '🟢 Running' : '🟢 กำลังทำงาน',
+          is_stopped: isEn ? '🔴 Stopped' : '🔴 หยุดทำงาน',
+          on_cooldown: isEn ? '⏳ Cooldown' : '⏳ ติดคูลดาวน์',
+          is_ready: isEn ? '🛡️ Ready' : '🛡️ พร้อมใช้งาน'
         };
-        const ruleLabel = ruleMap[rule] || '🟢 Running';
+        const ruleLabel = ruleMap[rule] || (isEn ? '🟢 Running' : '🟢 กำลังทำงาน');
         bodyHTML = `
           <div class="node-info-row">
-            <span>Target:</span> <span class="node-info-value" style="max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${targetName}">${targetName}</span>
+            <span>${isEn ? 'Target:' : 'เป้าหมาย:'}</span> <span class="node-info-value" style="max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${targetName}">${targetName}</span>
           </div>
           <div class="node-info-row">
-            <span>Rule:</span> <span class="node-info-value">${ruleLabel}</span>
+            <span>${isEn ? 'Rule:' : 'เงื่อนไข:'}</span> <span class="node-info-value">${ruleLabel}</span>
           </div>
         `;
       } else if (node.type === 'var_branch' || node.type === 'variable_branch') {
         const targetId = node.data?.conditionTargetId || (node.data?.varName ? `var:${node.data.varName}` : '');
-        const varName = targetId.startsWith('var:') ? targetId.replace('var:', '') : (node.data?.varName || targetId || '(None)');
+        const varName = targetId.startsWith('var:') ? targetId.replace('var:', '') : (node.data?.varName || targetId || (isEn ? '(None)' : '(ไม่มี)'));
         const rule = node.data?.conditionRule || 'is_true';
         const ruleMap = {
-          is_true: '🟢 True',
-          is_false: '🔴 False',
+          is_true: isEn ? '🟢 True' : '🟢 เป็นจริง',
+          is_false: isEn ? '🔴 False' : '🔴 เป็นเท็จ',
           equals: '==',
           not_equals: '!=',
           greater_than: '>',
@@ -954,10 +954,10 @@ class NodeCanvasEditor {
         const valStr = (node.data?.conditionValue !== undefined && node.data?.conditionValue !== '') ? ` (${node.data.conditionValue})` : '';
         bodyHTML = `
           <div class="node-info-row">
-            <span>Var:</span> <span class="node-info-value" style="max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${varName}">${varName}</span>
+            <span>${isEn ? 'Var:' : 'ตัวแปร:'}</span> <span class="node-info-value" style="max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${varName}">${varName}</span>
           </div>
           <div class="node-info-row">
-            <span>Rule:</span> <span class="node-info-value">${ruleLabel}${valStr}</span>
+            <span>${isEn ? 'Rule:' : 'เงื่อนไข:'}</span> <span class="node-info-value">${ruleLabel}${valStr}</span>
           </div>
         `;
       } else if (node.type === 'party_scanner') {
