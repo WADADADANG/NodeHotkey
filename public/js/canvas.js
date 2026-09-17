@@ -687,6 +687,7 @@ class NodeCanvasEditor {
 
   renderNodes() {
     this.nodesLayer.innerHTML = '';
+    const isEn = (typeof window !== 'undefined' && window.currentLang === 'en');
     this.nodes.forEach(node => {
       const nodeEl = document.createElement('div');
       const isSelected = this.selectedNodeIds.has(node.id);
@@ -1016,7 +1017,6 @@ class NodeCanvasEditor {
           </div>
         `;
       } else if (node.type === 'tts') {
-        const isEn = window.currentLang === 'en';
         const textConn = this.connections.find(c => c.toNodeId === node.id && (c.toPort === 'text_in' || c.toPort === 'msg_in'));
         let srcTitle = '';
         if (textConn) {
