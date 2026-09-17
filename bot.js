@@ -2587,7 +2587,19 @@ async function runBuffSequenceAction(action, callStack) {
                 console.log(`⏳ [Action] Waiting Delay After: ${delayAfter}ms for "${action.name}"`);
                 await new Promise(res => setTimeout(res, delayAfter));
             }
+
+            // Clear active status & update overlay BEFORE triggering downstream onComplete chain
+            if (buffSequenceTokens[action.id] === myToken) {
+                delete activeOnceBuffSequences[action.id];
+            }
+            sendOverlayUpdate();
+
             await fireChain(action, 'onComplete', callStack);
+        } else {
+            if (buffSequenceTokens[action.id] === myToken) {
+                delete activeOnceBuffSequences[action.id];
+            }
+            sendOverlayUpdate();
         }
     } finally {
         if (buffSequenceTokens[action.id] === myToken) {
@@ -2838,10 +2850,28 @@ async function runCastSequencerOnce(action, callStack) {
 
             if (!wasInterrupted) {
                 console.log(`[Action] Cast Sequencer Finished: "${action.name}" on Client ${target}`);
+                // Clear active status & update overlay BEFORE triggering downstream onComplete chain
+                if (sequencerTokens[action.id] === myToken) {
+                    delete activeOnceSequencers[action.id];
+                    for (let t of targets) {
+                        delete isSequencerRunning[String(t)];
+                    }
+                }
+                sendOverlayUpdate();
+
                 await fireChain(action, 'onComplete', callStack);
             }
         } else {
             console.log(`[Action] Cast Sequencer Cancelled / Interrupted: "${action.name}"`);
+            // Clear active status & update overlay BEFORE triggering downstream onStop chain
+            if (sequencerTokens[action.id] === myToken) {
+                delete activeOnceSequencers[action.id];
+                for (let t of targets) {
+                    delete isSequencerRunning[String(t)];
+                }
+            }
+            sendOverlayUpdate();
+
             if (!global.isSuspended) {
                 await fireChain(action, 'onStop', callStack);
             }

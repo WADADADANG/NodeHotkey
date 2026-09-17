@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 0.5513684346952022,
     "pan": {
-      "x": -1040,
-      "y": -2301
+      "x": -970,
+      "y": -1896
     }
   },
   "nodes": [
@@ -40,7 +40,7 @@
           {
             "id": "item_0",
             "name": "Heal Rain 1",
-            "interval": 5000,
+            "interval": 4500,
             "jitter": 2000,
             "executeImmediately": true,
             "enabled": true
@@ -231,7 +231,7 @@
           {
             "id": "item_0",
             "name": "Heal Rain 2",
-            "interval": 5000,
+            "interval": 4500,
             "jitter": 2000,
             "executeImmediately": true,
             "enabled": true
@@ -351,7 +351,7 @@
           {
             "id": "item_0",
             "name": "Heal Rain 4",
-            "interval": 5000,
+            "interval": 4500,
             "jitter": 2000,
             "executeImmediately": true,
             "enabled": true

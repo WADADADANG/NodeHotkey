@@ -8,8 +8,7 @@
   "disabledClients": [],
   "globalSettings": {
     "targetUrlKeyword": "universe.flyff.com/play",
-    "gpuAcceleration": true,
-    "enableOverlay": false,
+    "enableOverlay": true,
     "suspendHotkey": "END",
     "ghostMouseJitter": {
       "enabled": false,
@@ -95,6 +94,7 @@
         "h": 712
       }
     },
-    "webPort": 3088
+    "webPort": 3088,
+    "gpuAcceleration": true
   }
 }

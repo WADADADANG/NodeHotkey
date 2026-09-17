@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Add-ons",
   "canvas": {
-    "zoom": 0.6875775466956006,
+    "zoom": 0.7338713865793143,
     "pan": {
-      "x": -77,
-      "y": -811
+      "x": -168,
+      "y": -937
     }
   },
   "nodes": [
@@ -134,8 +134,8 @@
       },
       "data": {
         "enabled": true,
-        "targetKey": "6",
         "targetClient": "3",
+        "targetKey": "6",
         "actionId": "1786882811325"
       }
     },
@@ -149,8 +149,8 @@
       },
       "data": {
         "enabled": true,
-        "targetKey": "1",
         "targetClient": "5",
+        "targetKey": "1",
         "actionId": "1786882832042"
       }
     },
@@ -207,13 +207,13 @@
       "type": "key_hold",
       "title": "Knight  PowerStomp 6",
       "position": {
-        "x": 690,
-        "y": 1650
+        "x": 1060,
+        "y": 1680
       },
       "data": {
         "enabled": true,
-        "targetKey": "1",
         "targetClient": "6",
+        "targetKey": "1",
         "actionId": "1786887562506_9436"
       }
     },
@@ -222,8 +222,8 @@
       "type": "loop",
       "title": "Knight Loop FP 6",
       "position": {
-        "x": 1090,
-        "y": 1750
+        "x": 1460,
+        "y": 1780
       },
       "data": {
         "enabled": true,
@@ -241,8 +241,8 @@
       "type": "control",
       "title": "AC Stop Knight Loop FP 6",
       "position": {
-        "x": 1090,
-        "y": 1960
+        "x": 1460,
+        "y": 1990
       },
       "data": {
         "enabled": true,
@@ -264,6 +264,7 @@
       "data": {
         "enabled": true,
         "stopScope": "profile",
+        "targetClient": "1",
         "showOverlayNotice": true,
         "actionId": "1786926322640"
       }
@@ -400,6 +401,24 @@
         ],
         "actionId": "1788519618159"
       }
+    },
+    {
+      "id": "node_1789523381451",
+      "type": "key_press",
+      "title": "Single Key Press",
+      "position": {
+        "x": 686,
+        "y": 1708
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "6",
+        "keys": [
+          "1"
+        ],
+        "cooldownPresetId": "skill_knight_power-stomp",
+        "actionId": "1789523381451"
+      }
     }
   ],
   "connections": [
@@ -509,7 +528,7 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1789242703859",
+      "id": "conn_1789607186260",
       "fromNodeId": "node_1786880252871",
       "fromPort": "exec_out",
       "toNodeId": "node_1786887562506_9436",

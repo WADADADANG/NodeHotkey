@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Full Buff",
   "canvas": {
-    "zoom": 0.719025697218173,
+    "zoom": 2,
     "pan": {
-      "x": -934,
-      "y": 51
+      "x": -3540,
+      "y": -398
     }
   },
   "nodes": [
@@ -298,7 +298,7 @@
       "type": "sequencer",
       "title": "Full Buff",
       "position": {
-        "x": 4050,
+        "x": 4010,
         "y": 30
       },
       "data": {
@@ -383,8 +383,8 @@
       "type": "tts",
       "title": "Text to Speech (TTS)",
       "position": {
-        "x": 2980,
-        "y": 740
+        "x": 2960,
+        "y": 710
       },
       "data": {
         "enabled": true,
@@ -415,8 +415,8 @@
       "type": "key_press",
       "title": "Single Key Press",
       "position": {
-        "x": 4100,
-        "y": 1000
+        "x": 4220,
+        "y": 1070
       },
       "data": {
         "enabled": true,
@@ -432,8 +432,8 @@
       "type": "party_slot",
       "title": "party_slot",
       "position": {
-        "x": 3790,
-        "y": 900
+        "x": 3910,
+        "y": 970
       },
       "data": {
         "enabled": true,
@@ -449,8 +449,8 @@
       "type": "tts",
       "title": "Text to Speech (TTS)",
       "position": {
-        "x": 3790,
-        "y": 1090
+        "x": 4220,
+        "y": 1180
       },
       "data": {
         "enabled": true,
@@ -465,14 +465,14 @@
       "type": "sound",
       "title": "Sound Alert",
       "position": {
-        "x": 4700,
-        "y": 270
+        "x": 4660,
+        "y": 300
       },
       "data": {
         "enabled": true,
-        "soundSource": "preset",
         "soundPreset": "success",
         "volume": 20,
+        "repeatCount": 1,
         "actionId": "1788992241098"
       }
     },
@@ -481,12 +481,12 @@
       "type": "screenshot",
       "title": "screenshot",
       "position": {
-        "x": 2980,
-        "y": 930
+        "x": 2960,
+        "y": 920
       },
       "data": {
         "enabled": true,
-        "targetClient": "1",
+        "targetClient": "4",
         "captureRegion": "active_client",
         "subfolder": "",
         "prefix": "error_snap",
@@ -500,7 +500,7 @@
       "title": "Text to Speech (TTS)",
       "position": {
         "x": 1910,
-        "y": 360
+        "y": 350
       },
       "data": {
         "enabled": true,
@@ -515,15 +515,17 @@
       "type": "party_scanner",
       "title": "party_scanner",
       "position": {
-        "x": 2190,
+        "x": 2180,
         "y": 260
       },
       "data": {
         "enabled": true,
         "targetClient": "4",
+        "scanRegion": "auto",
         "scanIntervalMs": 250,
         "lowHpThreshold": 70,
-        "showOverlay": true,
+        "showOverlay": false,
+        "readNames": false,
         "actionId": "1789159465925"
       }
     },
@@ -538,8 +540,10 @@
       "data": {
         "enabled": true,
         "targetClient": "4",
+        "scanRegion": "auto",
         "delayAfterClick": 80,
-        "showOverlay": true,
+        "showOverlay": false,
+        "readNames": false,
         "actionId": "1789159615592"
       }
     },
@@ -553,7 +557,7 @@
       },
       "data": {
         "enabled": true,
-        "targetClient": "1",
+        "targetClient": "4",
         "captureRegion": "active_client",
         "subfolder": "",
         "prefix": "error_snap",
@@ -571,7 +575,7 @@
       },
       "data": {
         "enabled": true,
-        "targetClient": "1",
+        "targetClient": "4",
         "captureRegion": "active_client",
         "subfolder": "",
         "prefix": "error_snap",
@@ -584,7 +588,7 @@
       "type": "step_log",
       "title": "Buff Party Scanner",
       "position": {
-        "x": 1300,
+        "x": 1290,
         "y": 180
       },
       "data": {
@@ -599,7 +603,7 @@
       "title": "Buff Party Scanner",
       "position": {
         "x": 1910,
-        "y": 550
+        "y": 580
       },
       "data": {
         "enabled": true,
@@ -612,8 +616,8 @@
       "type": "step_log",
       "title": "Buff Party Scanner",
       "position": {
-        "x": 2980,
-        "y": 1140
+        "x": 2960,
+        "y": 1130
       },
       "data": {
         "enabled": true,
@@ -654,8 +658,8 @@
       "type": "step_log",
       "title": "Buff Party Scanner",
       "position": {
-        "x": 4700,
-        "y": 380
+        "x": 4660,
+        "y": 410
       },
       "data": {
         "enabled": true,
@@ -669,7 +673,7 @@
       "title": "Format Text",
       "position": {
         "x": 2670,
-        "y": 170
+        "y": 150
       },
       "data": {
         "enabled": true,
@@ -702,8 +706,8 @@
       "type": "format_text",
       "title": "Format Text",
       "position": {
-        "x": 2570,
-        "y": 1090
+        "x": 2550,
+        "y": 1060
       },
       "data": {
         "enabled": true,
@@ -723,8 +727,8 @@
       "type": "format_text",
       "title": "Format Text",
       "position": {
-        "x": 4420,
-        "y": 490
+        "x": 4330,
+        "y": 590
       },
       "data": {
         "enabled": true,
@@ -749,6 +753,22 @@
         "enabled": true,
         "message": "บัฟทั้งหมดเสร็จแล้ว",
         "actionId": "1789510442701"
+      }
+    },
+    {
+      "id": "node_1789577251338",
+      "type": "tts",
+      "title": "Text to Speech (TTS)",
+      "position": {
+        "x": 4660,
+        "y": 580
+      },
+      "data": {
+        "enabled": true,
+        "text": "Party HP alert from bot",
+        "voice": "en-US-JennyNeural",
+        "volume": 100,
+        "actionId": "1789577251338"
       }
     }
   ],
@@ -971,13 +991,6 @@
       "toPort": "val_a"
     },
     {
-      "id": "conn_1789507260660",
-      "fromNodeId": "node_1789506769036",
-      "fromPort": "msg_out",
-      "toNodeId": "node_1789502173367_551",
-      "toPort": "msg_in"
-    },
-    {
       "id": "conn_1789509634903",
       "fromNodeId": "node_1789509627624",
       "fromPort": "msg_out",
@@ -1011,6 +1024,27 @@
       "fromPort": "onComplete",
       "toNodeId": "node_1789510442701",
       "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789577257943",
+      "fromNodeId": "node_1788970211279_2906",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1789577251338",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789599321251",
+      "fromNodeId": "node_1789506769036",
+      "fromPort": "msg_out",
+      "toNodeId": "node_1789502173367_551",
+      "toPort": "msg_in"
+    },
+    {
+      "id": "conn_1789600294597",
+      "fromNodeId": "node_1789509627624",
+      "fromPort": "msg_out",
+      "toNodeId": "node_1789577251338",
+      "toPort": "text_in"
     }
   ]
 }
