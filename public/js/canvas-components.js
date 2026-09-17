@@ -21,6 +21,28 @@
      */
     renderField(field, node) {
       if (!field || !field.component) return '';
+
+      // Check conditional visibility (showIf / dependsOn)
+      if (typeof field.showIf === 'function') {
+        if (!field.showIf(node.data || {})) return '';
+      } else if (typeof field.showIf === 'object' && field.showIf !== null) {
+        for (const [prop, targetVal] of Object.entries(field.showIf)) {
+          const actualVal = node.data ? node.data[prop] : undefined;
+          if (Array.isArray(targetVal)) {
+            if (!targetVal.includes(actualVal)) return '';
+          } else if (actualVal !== targetVal) {
+            return '';
+          }
+        }
+      } else if (field.dependsOn && field.showIf !== undefined) {
+        const actualVal = node.data ? node.data[field.dependsOn] : undefined;
+        if (Array.isArray(field.showIf)) {
+          if (!field.showIf.includes(actualVal)) return '';
+        } else if (actualVal !== field.showIf) {
+          return '';
+        }
+      }
+
       const renderer = this.components[field.component];
       if (typeof renderer !== 'function') {
         console.warn(`[CanvasComponents] Unknown component type: "${field.component}"`);
@@ -36,16 +58,41 @@
     components: {
       client_selector(field, value, node) {
         const isEn = window.currentLang === 'en';
-        const currentClient = String(value !== undefined ? value : (node.data?.targetClient || '1'));
-        const allowAll = field.allowAll === true;
+        const rawVal = String(value !== undefined ? value : (node.data?.[field.key || 'targetClient'] || '1'));
+        let selectedList = [];
+        const isAllSelected = rawVal === 'all' || rawVal === 'both';
+        if (isAllSelected) {
+          selectedList = ['1', '2', '3', '4', '5', '6', '7', '8'];
+        } else {
+          selectedList = rawVal.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        const allowAll = field.allowAll !== false;
         const label = canvasT(field.labelKey, field.label || (isEn ? 'Target Client Screen' : 'เลือกจอเป้าหมาย (Client)'));
+
+        let clientBadge = '';
+        if (rawVal === 'all') {
+          clientBadge = isEn ? 'All Clients' : 'ทุกจอเกม';
+        } else if (selectedList.length === 1) {
+          clientBadge = isEn ? `Client ${selectedList[0]}` : `จอที่ ${selectedList[0]}`;
+        } else if (selectedList.length > 1) {
+          clientBadge = isEn ? `Clients ${selectedList.join(',')}` : `จอที่ ${selectedList.join(',')}`;
+        } else {
+          clientBadge = isEn ? 'None' : 'ไม่มี';
+        }
 
         let buttonsHTML = '';
         for (let i = 1; i <= 8; i++) {
           const strI = String(i);
-          const isSelected = currentClient === strI;
+          const isSelected = isAllSelected || selectedList.includes(strI);
+          const bg = isSelected ? '#3b82f6' : 'rgba(15,23,42,0.8)';
+          const border = isSelected ? '#60a5fa' : 'rgba(255,255,255,0.12)';
+          const color = isSelected ? '#ffffff' : '#94a3b8';
+          const shadow = isSelected ? 'box-shadow: 0 0 10px rgba(59,130,246,0.45);' : '';
           buttonsHTML += `
-            <button type="button" class="btn-client-chip ${isSelected ? 'active' : ''}" onclick="window.nodeCanvas.updateNodeData('${node.id}', '${field.key || 'targetClient'}', '${strI}'); window.nodeCanvas.openInspector('${node.id}');" title="${isEn ? `Send to Client ${i}` : `ส่งคำสั่งไปยัง Client จอที่ ${i}`}">
+            <button type="button" class="btn-client-chip ${isSelected ? 'active' : ''}"
+              onclick="if(window.nodeCanvas?.toggleClientSelection){window.nodeCanvas.toggleClientSelection('${node.id}', '${strI}');}else{window.nodeCanvas.updateNodeData('${node.id}', '${field.key || 'targetClient'}', '${strI}'); window.nodeCanvas.openInspector('${node.id}');}"
+              style="background:${bg}; border:1px solid ${border}; color:${color}; width:28px; height:28px; border-radius:50%; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s ease; outline:none; font-family:inherit; ${shadow}"
+              title="${isEn ? `Client ${i}` : `Client จอที่ ${i}`}">
               ${i}
             </button>
           `;
@@ -53,10 +100,16 @@
 
         let allBtnHTML = '';
         if (allowAll) {
-          const isAllSelected = currentClient === 'all';
+          const allBg = isAllSelected ? '#3b82f6' : 'rgba(15,23,42,0.8)';
+          const allBorder = isAllSelected ? '#60a5fa' : 'rgba(255,255,255,0.12)';
+          const allColor = isAllSelected ? '#ffffff' : '#94a3b8';
+          const allShadow = isAllSelected ? 'box-shadow: 0 0 10px rgba(59,130,246,0.45);' : '';
           allBtnHTML = `
-            <button type="button" class="btn-client-chip ${isAllSelected ? 'active' : ''}" style="flex:1.5; font-size:10.5px;" onclick="window.nodeCanvas.updateNodeData('${node.id}', '${field.key || 'targetClient'}', 'all'); window.nodeCanvas.openInspector('${node.id}');" title="${isEn ? 'Send to All Clients' : 'ส่งคำสั่งไปยังทุกจอพร้อมกัน'}">
-              🌐 ${isEn ? 'All' : 'ทุกจอ'}
+            <button type="button" class="btn-client-chip btn-client-chip-all ${isAllSelected ? 'active' : ''}"
+              onclick="if(window.nodeCanvas?.toggleClientSelection){window.nodeCanvas.toggleClientSelection('${node.id}', 'all');}else{window.nodeCanvas.updateNodeData('${node.id}', '${field.key || 'targetClient'}', 'all'); window.nodeCanvas.openInspector('${node.id}');}"
+              style="background:${allBg}; border:1px solid ${allBorder}; color:${allColor}; padding:0 12px; height:28px; border-radius:14px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s ease; outline:none; font-family:inherit; ${allShadow}"
+              title="${isEn ? 'All Active Clients' : 'เลือกทุกจอ'}">
+              ${isEn ? 'ALL' : 'ทุกจอ'}
             </button>
           `;
         }
@@ -66,10 +119,10 @@
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
               <label class="inspector-label" style="margin:0;">${label}</label>
               <span style="font-size:10.5px; font-weight:700; color:#38bdf8;">
-                ${currentClient === 'all' ? (isEn ? 'All Clients' : 'ทุกจอเกม') : (isEn ? `Client ${currentClient}` : `จอที่ ${currentClient}`)}
+                ${clientBadge}
               </span>
             </div>
-            <div class="client-chips-grid">
+            <div class="client-chips-grid" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:4px;">
               ${buttonsHTML}
               ${allBtnHTML}
             </div>
@@ -147,7 +200,7 @@
         return `
           <div class="inspector-field-group">
             <label class="inspector-label">${label}</label>
-            <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', '${field.key}', this.value);">
+            <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', '${field.key}', this.value); if(window.nodeCanvas?.openInspector) window.nodeCanvas.openInspector('${node.id}');">
               ${optionsHTML}
             </select>
           </div>

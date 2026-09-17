@@ -21,13 +21,20 @@ module.exports = {
   },
   schema: [
     {
-      key: 'stopScope', component: 'select', labelKey: 'inspector_stop_scope', label: 'Stop Scope (ขอบเขตการหยุด)',
+      key: 'stopScope', component: 'select', labelKey: 'inspector_stop_scope_label', label: 'Stop Scope (ขอบเขตการหยุด)',
       options: [
-        { value: 'all', labelKey: 'scope_all', label: '🌐 All Clients & Loops (หยุดทุกจอ)' },
-        { value: 'client', labelKey: 'scope_client', label: '🎯 Specific Client (เฉพาะจอเป้าหมาย)' }
+        { value: 'all', labelKey: 'inspector_scope_all', label: '🌐 All Clients & Loops (หยุดทุกจอ)' },
+        { value: 'profile', labelKey: 'inspector_scope_profile', label: '📁 Current Profile Only (เฉพาะโปรไฟล์นี้)' },
+        { value: 'client', labelKey: 'inspector_scope_client', label: '🎯 Specific Client (เฉพาะจอเป้าหมาย)' }
       ]
     },
-    { key: 'targetClient', component: 'client_selector', labelKey: 'inspector_target_clients', label: 'Target Client Screen' },
+    { 
+      key: 'targetClient', 
+      component: 'client_selector', 
+      labelKey: 'inspector_target_clients', 
+      label: 'Target Client Screen',
+      showIf: { stopScope: 'client' }
+    },
     { key: 'showOverlayNotice', component: 'toggle', labelKey: 'inspector_stop_overlay_notice', label: 'Display Stop Banner Notice on Game Screen', icon: '📢', color: '#ef4444' }
   ],
   summaryFields: [
