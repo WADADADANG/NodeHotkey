@@ -88,8 +88,11 @@ class NodeCanvasEditor {
       key_press: canvasT('canvas_key_press', isEn ? 'Key Press' : 'กดปุ่ม (Key)'),
       forwarder: canvasT('canvas_forwarder', isEn ? 'Key Forwarder' : 'ส่งต่อปุ่ม (Forward)'),
       macro_group: canvasT('canvas_macro_group', isEn ? 'Macro Queue' : 'มาโคร (Macro)'),
-      branch: canvasT('canvas_branch', isEn ? 'Branch (If/Else)' : 'เงื่อนไข (Branch)'),
-      condition: canvasT('canvas_condition', isEn ? 'Branch (If/Else)' : 'เงื่อนไข (Branch)'),
+      branch: canvasT('canvas_branch', isEn ? 'Action Branch' : 'เงื่อนไขสถานะ Action (Action Branch)'),
+      action_branch: canvasT('canvas_action_branch', isEn ? 'Action Branch' : 'เงื่อนไขสถานะ Action (Action Branch)'),
+      var_branch: canvasT('canvas_var_branch', isEn ? 'Variable Branch' : 'เงื่อนไขตัวแปร (Variable Branch)'),
+      variable_branch: canvasT('canvas_var_branch', isEn ? 'Variable Branch' : 'เงื่อนไขตัวแปร (Variable Branch)'),
+      condition: canvasT('canvas_condition', isEn ? 'Action Branch' : 'เงื่อนไขสถานะ Action (Action Branch)'),
       control: canvasT('canvas_control', isEn ? 'Action Control' : 'ควบคุม (Control)'),
       delay: canvasT('canvas_delay', isEn ? 'Delay Timer' : 'หน่วงเวลา (Delay)'),
       emergency_stop: canvasT('canvas_emergency_stop', isEn ? 'Emergency Stop' : 'หยุดฉุกเฉิน (Stop All)'),
@@ -702,6 +705,9 @@ class NodeCanvasEditor {
         key_press: '⌨️',
         delay: '⏱️',
         branch: '🌿',
+        action_branch: '⚡',
+        var_branch: '📦',
+        variable_branch: '📦',
         condition: '🌿',
         control: '🎛️',
         forwarder: '🔗',
@@ -911,7 +917,7 @@ class NodeCanvasEditor {
             <span>Type:</span> <span class="node-info-value">Delay Timer</span>
           </div>
         `;
-      } else if (node.type === 'branch' || node.type === 'condition') {
+      } else if (node.type === 'action_branch' || node.type === 'branch' || node.type === 'condition') {
         const targetAction = this.nodes.find(n => n.id === node.data?.conditionTargetId);
         const targetName = targetAction ? (targetAction.title || targetAction.type) : (node.data?.conditionTargetId ? 'Action' : '(None)');
         const rule = node.data?.conditionRule || 'is_running';
@@ -928,6 +934,30 @@ class NodeCanvasEditor {
           </div>
           <div class="node-info-row">
             <span>Rule:</span> <span class="node-info-value">${ruleLabel}</span>
+          </div>
+        `;
+      } else if (node.type === 'var_branch' || node.type === 'variable_branch') {
+        const targetId = node.data?.conditionTargetId || (node.data?.varName ? `var:${node.data.varName}` : '');
+        const varName = targetId.startsWith('var:') ? targetId.replace('var:', '') : (node.data?.varName || targetId || '(None)');
+        const rule = node.data?.conditionRule || 'is_true';
+        const ruleMap = {
+          is_true: '🟢 True',
+          is_false: '🔴 False',
+          equals: '==',
+          not_equals: '!=',
+          greater_than: '>',
+          less_than: '<',
+          greater_or_equal: '>=',
+          less_or_equal: '<='
+        };
+        const ruleLabel = ruleMap[rule] || rule;
+        const valStr = (node.data?.conditionValue !== undefined && node.data?.conditionValue !== '') ? ` (${node.data.conditionValue})` : '';
+        bodyHTML = `
+          <div class="node-info-row">
+            <span>Var:</span> <span class="node-info-value" style="max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${varName}">${varName}</span>
+          </div>
+          <div class="node-info-row">
+            <span>Rule:</span> <span class="node-info-value">${ruleLabel}${valStr}</span>
           </div>
         `;
       } else if (node.type === 'party_scanner') {
@@ -1539,7 +1569,7 @@ class NodeCanvasEditor {
             ${cooldownPinRowHTML}
           </div>
         `;
-      } else if (node.type === 'branch' || node.type === 'condition') {
+      } else if (node.type === 'branch' || node.type === 'condition' || node.type === 'action_branch' || node.type === 'var_branch' || node.type === 'variable_branch') {
         pinsHTML = `
           <div class="node-pins-section">
             <div class="node-pin-row">
@@ -2135,7 +2165,7 @@ class NodeCanvasEditor {
         // When STOPPING: Flow terminates at this Control Node immediately!
         return;
       }
-    } else if (currentNode.type === 'branch') {
+    } else if (currentNode.type === 'branch' || currentNode.type === 'action_branch' || currentNode.type === 'var_branch' || currentNode.type === 'variable_branch') {
       // Condition Branch Nodes evaluate True/False in engine:
       // Do NOT auto-fire both wires! Engine will emit onTrue or onFalse.
       return;
@@ -2661,8 +2691,11 @@ class NodeCanvasEditor {
       buff_sequence: 'Buff Skill Queue',
       key_press: 'Single Key Press',
       delay: 'Delay Timer',
-      branch: 'Branch (If / Else)',
-      condition: 'Branch (If / Else)',
+      branch: 'Action Branch',
+      action_branch: 'Action Branch',
+      var_branch: 'Variable Branch',
+      variable_branch: 'Variable Branch',
+      condition: 'Action Branch',
       control: 'Action Controller',
       forwarder: 'Multi-Client Forwarder',
       macro_group: 'Combo Macro Group',
@@ -2803,8 +2836,10 @@ class NodeCanvasEditor {
       initialData = { targetClient: '1', keys: ['1'], delayAfter: 0, enabled: true };
     } else if (type === 'delay') {
       initialData = { delayMs: 1000, enabled: true };
-    } else if (type === 'branch' || type === 'condition') {
+    } else if (type === 'action_branch' || type === 'branch' || type === 'condition') {
       initialData = { conditionTargetId: '', conditionRule: 'is_running', enabled: true };
+    } else if (type === 'var_branch' || type === 'variable_branch') {
+      initialData = { conditionTargetId: '', varName: '', varType: 'boolean', conditionRule: 'is_true', conditionValue: '', enabled: true };
     } else if (type === 'control') {
       initialData = { controlOperation: 'toggle', controlTargetIds: [], enabled: true };
     } else if (type === 'forwarder') {
@@ -3888,7 +3923,7 @@ class NodeCanvasEditor {
         }
       }
       // 2. Check Branch / Condition Remote Target
-      if (n.type === 'branch' || n.type === 'condition') {
+      if (n.type === 'branch' || n.type === 'condition' || n.type === 'action_branch' || n.type === 'var_branch' || n.type === 'variable_branch') {
         if (n.data?.conditionTargetId && targetIds.includes(n.data.conditionTargetId)) {
           return true;
         }
@@ -4005,12 +4040,31 @@ class NodeCanvasEditor {
           messageEn: 'No Event Name specified'
         };
       }
-    } else if (node.type === 'branch' || node.type === 'condition') {
+    } else if (node.type === 'action_branch' || node.type === 'branch' || node.type === 'condition') {
       if (!node.data?.conditionTargetId) {
         return {
           severity: 'warning',
           messageTh: 'ยังไม่ได้เลือก Action อ้างอิง',
           messageEn: 'No Reference Action selected'
+        };
+      }
+      const hasBranchOutputs = this.connections.some(c => c.fromNodeId === node.id && (
+        c.fromPort === 'onTrue' || c.fromPort === 'on_true' ||
+        c.fromPort === 'onFalse' || c.fromPort === 'on_false'
+      ));
+      if (!hasBranchOutputs) {
+        return {
+          severity: 'warning',
+          messageTh: 'เงื่อนไขยังไม่ได้ต่อสาย Output (True/False)',
+          messageEn: 'Branch outputs (True/False) not connected'
+        };
+      }
+    } else if (node.type === 'var_branch' || node.type === 'variable_branch') {
+      if (!node.data?.conditionTargetId && !node.data?.varName) {
+        return {
+          severity: 'warning',
+          messageTh: 'ยังไม่ได้เลือกตัวแปรที่ต้องการตรวจสอบ',
+          messageEn: 'No Variable selected to evaluate'
         };
       }
       const hasBranchOutputs = this.connections.some(c => c.fromNodeId === node.id && (
@@ -4144,7 +4198,8 @@ class NodeCanvasEditor {
         icon: '🌿',
         name: canvasT('cat_flow', 'Logic & Flow'),
         items: [
-          { type: 'branch', icon: '🌿', name: this.getNodeTypeLabel('branch') },
+          { type: 'var_branch', icon: '📦', name: this.getNodeTypeLabel('var_branch') },
+          { type: 'action_branch', icon: '⚡', name: this.getNodeTypeLabel('action_branch') },
           { type: 'var_set', icon: '📦', name: this.getNodeTypeLabel('var_set') },
           { type: 'var_get', icon: '📥', name: this.getNodeTypeLabel('var_get') },
           { type: 'control', icon: '🎛️', name: this.getNodeTypeLabel('control') },

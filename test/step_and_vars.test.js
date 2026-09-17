@@ -691,6 +691,110 @@ mockCanvas.connections = mockCanvas.connections.filter(c => c.id !== 'c_illegal'
 
 console.log('✅ Test 13 Passed: Wire Connection Constraints, Pin Taxonomy & Type Validation verified!\n');
 
+// 14. Test Variable Branch (var_branch) and Action Branch (action_branch)
+console.log('Test 14: Testing Variable Branch (var_branch) and Action Branch (action_branch)...');
+assert.ok(nodeRegistry.has('var_branch'), 'NodeRegistry must contain var_branch');
+assert.ok(nodeRegistry.has('action_branch'), 'NodeRegistry must contain action_branch');
+assert.ok(nodeRegistry.has('branch'), 'NodeRegistry must resolve branch alias');
+
+const varBranchDef = nodeRegistry.get('var_branch');
+assert.deepStrictEqual(varBranchDef.inputs, ['in'], 'var_branch input should be in');
+assert.deepStrictEqual(varBranchDef.outputs, ['onTrue', 'onFalse'], 'var_branch outputs should be onTrue/onFalse');
+
+const actionBranchDef = nodeRegistry.get('action_branch');
+assert.deepStrictEqual(actionBranchDef.inputs, ['in'], 'action_branch input should be in');
+assert.deepStrictEqual(actionBranchDef.outputs, ['onTrue', 'onFalse'], 'action_branch outputs should be onTrue/onFalse');
+
+// Test Variable Branch evaluation via bot.runActionCondition
+let lastEmitted = null;
+// Reset executionSignals
+global.executionSignals = [];
+
+// Set variable isFullBuffPartyScanner = true
+bot.setVariableValue({ varName: 'isFullBuffPartyScanner', varType: 'boolean', scope: 'client', targetClient: '1' }, true, '1');
+
+// var_branch checking is_true -> should return true and emit onTrue
+const varBranchAct1 = {
+  id: 'act_var_branch_1',
+  name: 'Check FullBuff Scanner',
+  mode: 'var_branch',
+  conditionTargetId: 'var:isFullBuffPartyScanner',
+  conditionRule: 'is_true',
+  varType: 'boolean',
+  targetClient: '1'
+};
+const res1 = await bot.runActionCondition(varBranchAct1);
+assert.strictEqual(res1, true, 'isFullBuffPartyScanner is true -> is_true should evaluate true');
+const sig1 = global.executionSignals.find(s => s.actionId === 'act_var_branch_1');
+assert.ok(sig1, 'Should record signal for act_var_branch_1');
+assert.strictEqual(sig1.eventName, 'onTrue', 'isFullBuffPartyScanner is true -> onTrue expected');
+
+// var_branch checking is_false -> should return false and emit onFalse
+const varBranchAct2 = {
+  id: 'act_var_branch_2',
+  name: 'Check FullBuff Scanner False',
+  mode: 'var_branch',
+  conditionTargetId: 'var:isFullBuffPartyScanner',
+  conditionRule: 'is_false',
+  varType: 'boolean',
+  targetClient: '1'
+};
+const res2 = await bot.runActionCondition(varBranchAct2);
+assert.strictEqual(res2, false, 'isFullBuffPartyScanner is true -> is_false should evaluate false');
+const sig2 = global.executionSignals.find(s => s.actionId === 'act_var_branch_2');
+assert.ok(sig2, 'Should record signal for act_var_branch_2');
+assert.strictEqual(sig2.eventName, 'onFalse', 'isFullBuffPartyScanner is true so is_false check -> onFalse expected');
+
+// var_branch checking number comparison
+bot.setVariableValue({ varName: 'partyMemberCount', varType: 'number', scope: 'client', targetClient: '1' }, 4, '1');
+const varBranchAct3 = {
+  id: 'act_var_branch_3',
+  name: 'Check Party Size > 2',
+  mode: 'var_branch',
+  conditionTargetId: 'var:partyMemberCount',
+  conditionRule: 'greater_than',
+  conditionValue: 2,
+  varType: 'number',
+  targetClient: '1'
+};
+const res3 = await bot.runActionCondition(varBranchAct3);
+assert.strictEqual(res3, true, 'partyMemberCount 4 > 2 -> should evaluate true');
+const sig3 = global.executionSignals.find(s => s.actionId === 'act_var_branch_3');
+assert.strictEqual(sig3.eventName, 'onTrue', 'partyMemberCount 4 > 2 -> onTrue expected');
+
+// Action Branch checking action running status
+global.activeActions = [
+  { id: 'act_loop_1', name: 'Attack Loop', mode: 'loop' }
+];
+global.isActionRunning = (id) => id === 'act_loop_1';
+
+const actionBranchAct1 = {
+  id: 'act_action_branch_1',
+  name: 'Check Attack Loop Running',
+  mode: 'action_branch',
+  conditionTargetId: 'act_loop_1',
+  conditionRule: 'is_running'
+};
+const res4 = await bot.runActionCondition(actionBranchAct1);
+assert.strictEqual(res4, true, 'act_loop_1 is running -> should evaluate true');
+const sig4 = global.executionSignals.find(s => s.actionId === 'act_action_branch_1');
+assert.strictEqual(sig4.eventName, 'onTrue', 'act_loop_1 is running -> onTrue expected');
+
+// Backward compatibility: legacy mode 'branch' checking running status
+const legacyBranchAct = {
+  id: 'act_legacy_branch',
+  name: 'Legacy Branch Check',
+  mode: 'branch',
+  conditionTargetId: 'act_loop_1',
+  conditionRule: 'is_running'
+};
+const res5 = await bot.runActionCondition(legacyBranchAct);
+assert.strictEqual(res5, true, 'Legacy branch mode should evaluate running state as true');
+const sig5 = global.executionSignals.find(s => s.actionId === 'act_legacy_branch');
+assert.strictEqual(sig5.eventName, 'onTrue', 'Legacy branch mode should evaluate running state and emit onTrue');
+
+console.log('✅ Test 14 Passed: Variable Branch and Action Branch execution & signal routing verified!\n');
+
 console.log('🎉 All Step Log & Unreal Blueprint Variable Tests Passed Successfully!');
 process.exit(0);
 })();

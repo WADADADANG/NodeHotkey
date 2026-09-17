@@ -1,25 +1,24 @@
 /**
  * nodes/branch.node.js
- * Action Node: Branch (If / Else Condition)
+ * Action Node: Action Branch (Action Status Condition)
  * 
- * Evaluates conditions based on:
- * - Target action state (is_running / is_not_running)
- * - Variable values (is_true, is_false, equals, not_equals, greater_than, less_than, etc.)
+ * Evaluates live running state of other action nodes:
+ * - is_running / is_stopped / on_cooldown / is_ready
  * Routes execution flow dynamically to 'onTrue' or 'onFalse' port.
  */
 
 module.exports = {
-  type: 'branch',
-  aliases: ['condition', 'action_condition'],
-  title: 'Branch (If / Else)',
+  type: 'action_branch',
+  aliases: ['branch', 'condition', 'action_condition'],
+  title: 'Action Branch',
   category: 'Logic & Flow',
-  icon: '🔀',
+  icon: '⚡',
   color: '#eab308',
   inputs: ['in'],
   outputs: ['onTrue', 'onFalse'],
   defaultData: {
     conditionTargetId: '',
-    conditionRule: 'is_running', // 'is_running' | 'is_not_running' | 'is_true' | 'is_false' | 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'greater_or_equal' | 'less_or_equal'
+    conditionRule: 'is_running', // 'is_running' | 'is_stopped' | 'on_cooldown' | 'is_ready'
     conditionValue: ''
   },
 
@@ -32,7 +31,7 @@ module.exports = {
       return true;
     }
 
-    console.warn(`⚠️ [Branch Node] "${action.name}": global.runActionCondition not found.`);
+    console.warn(`⚠️ [Action Branch Node] "${action.name}": global.runActionCondition not found.`);
     return false;
   }
 };

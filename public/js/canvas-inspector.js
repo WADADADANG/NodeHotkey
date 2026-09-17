@@ -209,8 +209,10 @@
       fieldsHTML += this.renderLoopSchedulerHelper(node);
     } else if (node.type === 'delay') {
       fieldsHTML += this.renderDelayHelper(node);
-    } else if (node.type === 'branch' || node.type === 'condition') {
-      fieldsHTML += this.renderBranchHelper(node);
+    } else if (node.type === 'var_branch' || node.type === 'variable_branch') {
+      fieldsHTML += this.renderVariableBranchHelper(node);
+    } else if (node.type === 'action_branch' || node.type === 'branch' || node.type === 'condition') {
+      fieldsHTML += this.renderActionBranchHelper(node);
     } else if (node.type === 'emergency_stop') {
       fieldsHTML += this.renderEmergencyStopHelper(node);
     } else if (node.type === 'sound') {
@@ -1318,7 +1320,7 @@
   renderControlTargetsSelector(node) {
     const rawTargets = node.data?.controlTargetIds || (node.data?.controlTargetId ? [node.data?.controlTargetId] : []);
     const canonicalTargets = rawTargets.map(id => id.startsWith('node_') ? id.replace('node_', '') : id);
-    const nonControllableTypes = ['trigger', 'branch', 'control', 'emergency_stop'];
+    const nonControllableTypes = ['trigger', 'branch', 'action_branch', 'var_branch', 'variable_branch', 'condition', 'control', 'emergency_stop'];
     const availableNodes = this.nodes.filter(n => n.id !== node.id && !nonControllableTypes.includes(n.type));
 
     if (availableNodes.length === 0) {
@@ -1882,113 +1884,109 @@
     this.onProfileChanged();
   },
 
-  renderBranchHelper(node) {
-    const rawTargetId = node.data?.conditionTargetId || '';
-    const canonicalTargetId = rawTargetId.startsWith('node_') ? rawTargetId.replace('node_', '') : rawTargetId;
-    const rule = node.data?.conditionRule || 'is_running';
+  renderVariableBranchHelper(node) {
+    const rawTargetId = node.data?.conditionTargetId || (node.data?.varName ? ('var:' + node.data.varName) : '');
+    const rule = node.data?.conditionRule || 'is_true';
     const condVal = node.data?.conditionValue !== undefined ? node.data.conditionValue : '';
-    // Whitelist checkable types: variables and stateful actions only (filter out log, tts, webhook, format, etc.)
-    const checkableVariableTypes = ['variable'];
-    const checkableActionTypes = [
-      'loop', 'sequencer', 'cast_sequence', 'buff_sequence', 
-      'key_hold', 'loop_scheduler', 'party_scanner', 'party_buff', 'party_heal', 'party_slot'
-    ];
 
-    const variableNodes = this.nodes.filter(n => n.id !== node.id && checkableVariableTypes.includes(n.type));
-    const actionNodes = this.nodes.filter(n => n.id !== node.id && checkableActionTypes.includes(n.type));
-    const checkableNodes = [...variableNodes, ...actionNodes];
+    // 1. Gather all variables:
+    // Profile Blueprint variables (e.g. isFullBuffPartyScanner)
+    const blueprintVars = typeof this.getAvailableVariables === 'function' ? this.getAvailableVariables() : (this.variables || []);
 
-    const selectedTargetNode = this.nodes.find(n => {
-      let actId = n.data?.actionId || (n.id.startsWith('node_') ? n.id.replace('node_', '') : n.id);
-      if (actId.startsWith('node_')) actId = actId.replace('node_', '');
-      return actId === canonicalTargetId || n.id === rawTargetId;
-    });
+    // Canvas variable nodes (var_set, variable, var_get)
+    const canvasVarNodes = this.nodes.filter(n => n.id !== node.id && (n.type === 'var_set' || n.type === 'variable' || n.type === 'var_get'));
 
-    const isVariableTarget = selectedTargetNode && selectedTargetNode.type === 'variable';
-    const varType = selectedTargetNode?.data?.varType || 'boolean';
+    // Determine current selected variable & type
+    let varType = node.data?.varType || 'boolean';
+    let selectedVarName = node.data?.varName || '';
+
+    if (rawTargetId.startsWith('var:')) {
+      selectedVarName = rawTargetId.replace('var:', '');
+      const bpVar = blueprintVars.find(v => v.name === selectedVarName);
+      if (bpVar && bpVar.type) varType = bpVar.type;
+    } else if (rawTargetId) {
+      const vNode = this.nodes.find(n => n.id === rawTargetId || n.data?.actionId === rawTargetId);
+      if (vNode) {
+        varType = vNode.data?.varType || 'boolean';
+        selectedVarName = vNode.data?.varName || (vNode.title ? vNode.title.replace(/^(Get |Set )/, '') : '');
+      }
+    }
 
     let rulesHTML = '';
     let valueInputHTML = '';
 
-    if (isVariableTarget) {
-      if (varType === 'boolean') {
-        const booleanRule = (rule === 'is_false') ? 'is_false' : 'is_true';
-        rulesHTML = `
-          <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionRule', this.value)">
-            <option value="is_true" ${booleanRule === 'is_true' ? 'selected' : ''}>🟢 ${canvasT('conditionIsTrue', 'Is True (On)')}</option>
-            <option value="is_false" ${booleanRule === 'is_false' ? 'selected' : ''}>🔴 ${canvasT('conditionIsFalse', 'Is False (Off)')}</option>
-          </select>
-        `;
-      } else if (varType === 'number') {
-        const numRule = (rule === 'is_running' || rule === 'is_true') ? 'equals' : rule;
-        rulesHTML = `
-          <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionRule', this.value)">
-            <option value="equals" ${numRule === 'equals' ? 'selected' : ''}>${canvasT('conditionEquals', 'Equals (==)')}</option>
-            <option value="not_equals" ${numRule === 'not_equals' ? 'selected' : ''}>${canvasT('conditionNotEquals', 'Not Equals (!=)')}</option>
-            <option value="greater_than" ${numRule === 'greater_than' ? 'selected' : ''}>${canvasT('conditionGreaterThan', 'Greater Than (>)')}</option>
-            <option value="less_than" ${numRule === 'less_than' ? 'selected' : ''}>${canvasT('conditionLessThan', 'Less Than (<)')}</option>
-            <option value="greater_or_equal" ${numRule === 'greater_or_equal' ? 'selected' : ''}>${canvasT('conditionGreaterOrEqual', 'Greater or Equal (>=)')}</option>
-            <option value="less_or_equal" ${numRule === 'less_or_equal' ? 'selected' : ''}>${canvasT('conditionLessOrEqual', 'Less or Equal (<=)')}</option>
-          </select>
-        `;
-        valueInputHTML = `
-          <div class="inspector-field-group" style="margin-top:6px;">
-            <label class="inspector-label">${canvasT('inspector_condition_compare_value', 'Value to Compare')}</label>
-            <input type="number" class="inspector-input" value="${condVal !== '' ? condVal : 0}" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionValue', parseFloat(this.value) || 0)" />
-          </div>
-        `;
-      } else {
-        const strRule = (rule === 'not_equals') ? 'not_equals' : 'equals';
-        rulesHTML = `
-          <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionRule', this.value)">
-            <option value="equals" ${strRule === 'equals' ? 'selected' : ''}>${canvasT('conditionEquals', 'Equals (==)')}</option>
-            <option value="not_equals" ${strRule === 'not_equals' ? 'selected' : ''}>${canvasT('conditionNotEquals', 'Not Equals (!=)')}</option>
-          </select>
-        `;
-        valueInputHTML = `
-          <div class="inspector-field-group" style="margin-top:6px;">
-            <label class="inspector-label">${canvasT('inspector_condition_compare_value', 'Text to Compare')}</label>
-            <input type="text" class="inspector-input" value="${condVal}" placeholder="e.g. phase_1" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionValue', this.value)" />
-          </div>
-        `;
-      }
-    } else {
+    if (varType === 'boolean') {
+      const booleanRule = (rule === 'is_false') ? 'is_false' : 'is_true';
       rulesHTML = `
         <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionRule', this.value)">
-          <option value="is_running" ${rule === 'is_running' ? 'selected' : ''}>🟢 ${canvasT('conditionRunning', 'Is Running')}</option>
-          <option value="is_stopped" ${rule === 'is_stopped' ? 'selected' : ''}>🔴 ${canvasT('conditionStopped', 'Is Stopped')}</option>
-          <option value="on_cooldown" ${rule === 'on_cooldown' ? 'selected' : ''}>⏳ ${canvasT('conditionCooldown', 'Is on Cooldown')}</option>
-          <option value="is_ready" ${rule === 'is_ready' ? 'selected' : ''}>🛡️ ${canvasT('conditionReady', 'Is Ready')}</option>
+          <option value="is_true" ${booleanRule === 'is_true' ? 'selected' : ''}>🟢 ${canvasT('conditionIsTrue', 'Is True (On / เป็นจริง)')}</option>
+          <option value="is_false" ${booleanRule === 'is_false' ? 'selected' : ''}>🔴 ${canvasT('conditionIsFalse', 'Is False (Off / เป็นเท็จ)')}</option>
         </select>
+      `;
+    } else if (varType === 'number') {
+      const numRule = (rule === 'is_running' || rule === 'is_true' || rule === 'is_false') ? 'equals' : rule;
+      rulesHTML = `
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionRule', this.value)">
+          <option value="equals" ${numRule === 'equals' ? 'selected' : ''}>${canvasT('conditionEquals', 'Equals (==)')}</option>
+          <option value="not_equals" ${numRule === 'not_equals' ? 'selected' : ''}>${canvasT('conditionNotEquals', 'Not Equals (!=)')}</option>
+          <option value="greater_than" ${numRule === 'greater_than' ? 'selected' : ''}>${canvasT('conditionGreaterThan', 'Greater Than (>)')}</option>
+          <option value="less_than" ${numRule === 'less_than' ? 'selected' : ''}>${canvasT('conditionLessThan', 'Less Than (<)')}</option>
+          <option value="greater_or_equal" ${numRule === 'greater_or_equal' ? 'selected' : ''}>${canvasT('conditionGreaterOrEqual', 'Greater or Equal (>=)')}</option>
+          <option value="less_or_equal" ${numRule === 'less_or_equal' ? 'selected' : ''}>${canvasT('conditionLessOrEqual', 'Less or Equal (<=)')}</option>
+        </select>
+      `;
+      valueInputHTML = `
+        <div class="inspector-field-group" style="margin-top:6px;">
+          <label class="inspector-label">${canvasT('inspector_condition_compare_value', 'Value to Compare')}</label>
+          <input type="number" class="inspector-input" value="${condVal !== '' ? condVal : 0}" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionValue', parseFloat(this.value) || 0)" />
+        </div>
+      `;
+    } else {
+      const strRule = (rule === 'not_equals') ? 'not_equals' : 'equals';
+      rulesHTML = `
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionRule', this.value)">
+          <option value="equals" ${strRule === 'equals' ? 'selected' : ''}>${canvasT('conditionEquals', 'Equals (==)')}</option>
+          <option value="not_equals" ${strRule === 'not_equals' ? 'selected' : ''}>${canvasT('conditionNotEquals', 'Not Equals (!=)')}</option>
+        </select>
+      `;
+      valueInputHTML = `
+        <div class="inspector-field-group" style="margin-top:6px;">
+          <label class="inspector-label">${canvasT('inspector_condition_compare_value', 'Text to Compare')}</label>
+          <input type="text" class="inspector-input" value="${condVal}" placeholder="e.g. active" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionValue', this.value)" />
+        </div>
       `;
     }
 
+    const hasAnyVars = blueprintVars.length > 0 || canvasVarNodes.length > 0;
+
     return `
       <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_condition_target_label', 'Target to Check')}</label>
-        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionTargetId', this.value); window.nodeCanvas.openInspector('${node.id}');">
-          <option value="">${canvasT('inspector_select_action_check', '-- Select Action / Variable to Check --')}</option>
-          ${checkableNodes.length === 0 ? `
-            <option value="" disabled>(${canvasT('inspector_no_other_actions', 'No checkable actions or variables on canvas')})</option>
+        <label class="inspector-label">${canvasT('inspector_variable_target_label', 'Target Variable to Check (ตัวแปรที่ต้องการเช็ค)')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.setVariableBranchTarget('${node.id}', this.value)">
+          <option value="">${canvasT('inspector_select_variable_check', '-- Select Variable to Check --')}</option>
+          ${!hasAnyVars ? `
+            <option value="" disabled>(${canvasT('inspector_no_variables_found', 'No variables found in profile or canvas')})</option>
           ` : `
-            ${variableNodes.length > 0 ? `
-              <optgroup label="📦 ${canvasT('inspector_group_variables', 'Variables (ตัวแปร)')}">
-                ${variableNodes.map(n => {
-                  let actId = n.data?.actionId || (n.id.startsWith('node_') ? n.id.replace('node_', '') : n.id);
-                  if (actId.startsWith('node_')) actId = actId.replace('node_', '');
-                  const vType = n.data?.varType || 'boolean';
-                  const typeIcon = vType === 'boolean' ? '🔘' : (vType === 'number' ? '🔢' : '🔤');
-                  const varName = n.title || n.data?.varName || 'Variable';
-                  return `<option value="${actId}" ${actId === canonicalTargetId || n.id === rawTargetId ? 'selected' : ''}>${typeIcon} ${varName} [${vType}]</option>`;
+            ${blueprintVars.length > 0 ? `
+              <optgroup label="📦 ${canvasT('inspector_group_blueprint_variables', 'Blueprint Variables (ตัวแปรโปรไฟล์)')}">
+                ${blueprintVars.map(v => {
+                  const typeIcon = v.type === 'boolean' ? '🔘' : (v.type === 'number' ? '🔢' : '🔤');
+                  const optVal = `var:${v.name}`;
+                  const isSel = (rawTargetId === optVal || rawTargetId === v.name || selectedVarName === v.name);
+                  return `<option value="${optVal}" ${isSel ? 'selected' : ''}>${typeIcon} ${v.name} (${v.type || 'boolean'})</option>`;
                 }).join('')}
               </optgroup>
             ` : ''}
-            ${actionNodes.length > 0 ? `
-              <optgroup label="⚡ ${canvasT('inspector_group_actions', 'Action Status (สถานะการทำงาน)')}">
-                ${actionNodes.map(n => {
+            ${canvasVarNodes.length > 0 ? `
+              <optgroup label="🏷️ ${canvasT('inspector_group_canvas_variables', 'Canvas Variable Nodes (โหนดตัวแปรบน Canvas)')}">
+                ${canvasVarNodes.map(n => {
                   let actId = n.data?.actionId || (n.id.startsWith('node_') ? n.id.replace('node_', '') : n.id);
                   if (actId.startsWith('node_')) actId = actId.replace('node_', '');
-                  return `<option value="${actId}" ${actId === canonicalTargetId || n.id === rawTargetId ? 'selected' : ''}>${n.title || n.type} (${this.getNodeTypeLabel(n.type)})</option>`;
+                  const vType = n.data?.varType || (n.type === 'var_get' ? 'string' : 'boolean');
+                  const typeIcon = vType === 'boolean' ? '🔘' : (vType === 'number' ? '🔢' : '🔤');
+                  const varName = n.title || n.data?.varName || 'Variable';
+                  const isSel = (rawTargetId === actId || rawTargetId === n.id || rawTargetId === `var:${n.data?.varName}`);
+                  return `<option value="${actId}" ${isSel ? 'selected' : ''}>${typeIcon} ${varName} [${vType}]</option>`;
                 }).join('')}
               </optgroup>
             ` : ''}
@@ -2001,6 +1999,105 @@
         ${valueInputHTML}
       </div>
     `;
+  },
+
+  renderActionBranchHelper(node) {
+    const rawTargetId = node.data?.conditionTargetId || '';
+    const canonicalTargetId = rawTargetId.startsWith('node_') ? rawTargetId.replace('node_', '') : rawTargetId;
+    const rule = node.data?.conditionRule || 'is_running';
+
+    // Whitelist only stateful action nodes (strictly filter out log, tts, webhook, variables, sound, delay, branch, etc.)
+    const checkableActionTypes = [
+      'loop', 'sequencer', 'cast_sequence', 'buff_sequence', 
+      'key_hold', 'loop_scheduler', 'party_scanner', 'party_buff', 'party_heal', 'party_slot'
+    ];
+
+    const actionNodes = this.nodes.filter(n => n.id !== node.id && checkableActionTypes.includes(n.type));
+
+    const rulesHTML = `
+      <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'conditionRule', this.value)">
+        <option value="is_running" ${rule === 'is_running' ? 'selected' : ''}>🟢 ${canvasT('conditionRunning', 'Is Running (กำลังทำงาน)')}</option>
+        <option value="is_stopped" ${rule === 'is_stopped' ? 'selected' : ''}>🔴 ${canvasT('conditionStopped', 'Is Stopped (หยุดทำงาน)')}</option>
+        <option value="on_cooldown" ${rule === 'on_cooldown' ? 'selected' : ''}>⏳ ${canvasT('conditionCooldown', 'Is on Cooldown (ติดคูลดาวน์)')}</option>
+        <option value="is_ready" ${rule === 'is_ready' ? 'selected' : ''}>🛡️ ${canvasT('conditionReady', 'Is Ready (พร้อมใช้งาน)')}</option>
+      </select>
+    `;
+
+    return `
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_action_target_label', 'Target Action to Check (Action ที่ต้องการตรวจสอบ)')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.setActionBranchTarget('${node.id}', this.value)">
+          <option value="">${canvasT('inspector_select_action_check', '-- Select Action to Check --')}</option>
+          ${actionNodes.length === 0 ? `
+            <option value="" disabled>(${canvasT('inspector_no_other_actions', 'No checkable actions on canvas')})</option>
+          ` : `
+            <optgroup label="⚡ ${canvasT('inspector_group_actions', 'Stateful Actions (สถานะการทำงาน)')}">
+              ${actionNodes.map(n => {
+                let actId = n.data?.actionId || (n.id.startsWith('node_') ? n.id.replace('node_', '') : n.id);
+                if (actId.startsWith('node_')) actId = actId.replace('node_', '');
+                return `<option value="${actId}" ${actId === canonicalTargetId || n.id === rawTargetId ? 'selected' : ''}>${n.title || n.type} (${this.getNodeTypeLabel(n.type)})</option>`;
+              }).join('')}
+            </optgroup>
+          `}
+        </select>
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_condition_rule_label', 'Condition Evaluation Rule')}</label>
+        ${rulesHTML}
+      </div>
+    `;
+  },
+
+  renderBranchHelper(node) {
+    if (node.type === 'var_branch' || node.type === 'variable_branch' || (node.data?.conditionTargetId && String(node.data.conditionTargetId).startsWith('var:'))) {
+      return this.renderVariableBranchHelper(node);
+    }
+    return this.renderActionBranchHelper(node);
+  },
+
+  setVariableBranchTarget(nodeId, targetVal) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node) return;
+    if (!node.data) node.data = {};
+    node.data.conditionTargetId = targetVal;
+
+    if (targetVal.startsWith('var:')) {
+      const varName = targetVal.replace('var:', '');
+      node.data.varName = varName;
+      const allVars = typeof this.getAvailableVariables === 'function' ? this.getAvailableVariables() : (this.variables || []);
+      const found = allVars.find(v => v.name === varName);
+      if (found && found.type) {
+        node.data.varType = found.type;
+        if (found.type === 'boolean' && node.data.conditionRule !== 'is_true' && node.data.conditionRule !== 'is_false') {
+          node.data.conditionRule = 'is_true';
+        } else if (found.type !== 'boolean' && (node.data.conditionRule === 'is_true' || node.data.conditionRule === 'is_false' || node.data.conditionRule === 'is_running')) {
+          node.data.conditionRule = 'equals';
+        }
+      }
+    } else {
+      const targetNode = this.nodes.find(n => n.id === targetVal || n.data?.actionId === targetVal);
+      if (targetNode) {
+        const vType = targetNode.data?.varType || 'boolean';
+        node.data.varType = vType;
+        node.data.varName = targetNode.data?.varName || (targetNode.title ? targetNode.title.replace(/^(Get |Set )/, '') : '');
+      }
+    }
+    this.render();
+    this.openInspector(nodeId);
+    this.onProfileChanged();
+  },
+
+  setActionBranchTarget(nodeId, targetVal) {
+    const node = this.nodes.find(n => n.id === nodeId);
+    if (!node) return;
+    if (!node.data) node.data = {};
+    node.data.conditionTargetId = targetVal;
+    if (!node.data.conditionRule || node.data.conditionRule === 'is_true' || node.data.conditionRule === 'is_false') {
+      node.data.conditionRule = 'is_running';
+    }
+    this.render();
+    this.openInspector(nodeId);
+    this.onProfileChanged();
   },
 
   renderEmergencyStopHelper(node) {

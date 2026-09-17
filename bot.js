@@ -3623,7 +3623,7 @@ function handleActionTrigger(act) {
         toggleKeyHoldAction(act).catch(err => console.error(`Error in toggleKeyHoldAction:`, err));
     } else if (act.mode === 'control' || act.mode === 'action_control') {
         runActionControl(act).catch(err => console.error(`Error in runActionControl:`, err));
-    } else if (act.mode === 'branch' || act.mode === 'action_condition') {
+    } else if (act.mode === 'branch' || act.mode === 'action_condition' || act.mode === 'action_branch' || act.mode === 'var_branch' || act.mode === 'variable_branch') {
         runActionCondition(act).catch(err => console.error(`Error in runActionCondition:`, err));
     } else if (act.mode === 'sound_alert' || act.mode === 'sound') {
         runSoundAlertAction(act).catch(err => console.error(`Error in runSoundAlertAction:`, err));
@@ -3774,7 +3774,7 @@ async function runChainedAction(action, callStack) {
         await toggleKeyHoldAction(action, callStack).catch(err => console.error(`[Chain Error] toggleKeyHoldAction:`, err));
     } else if (action.mode === 'control' || action.mode === 'action_control') {
         await runActionControl(action, callStack).catch(err => console.error(`[Chain Error] runActionControl:`, err));
-    } else if (action.mode === 'branch' || action.mode === 'action_condition') {
+    } else if (action.mode === 'branch' || action.mode === 'action_condition' || action.mode === 'action_branch' || action.mode === 'var_branch' || action.mode === 'variable_branch') {
         await runActionCondition(action, callStack).catch(err => console.error(`[Chain Error] runActionCondition:`, err));
     } else if (action.mode === 'sound_alert' || action.mode === 'sound') {
         await runSoundAlertAction(action, callStack).catch(err => console.error(`[Chain Error] runSoundAlertAction:`, err));
@@ -4008,7 +4008,7 @@ async function runActionControl(act, callStack) {
             await runVariableAction(targetAction, resolvedStack).catch(err => console.error(err));
         } else if (targetAction.mode === 'control' || targetAction.mode === 'action_control') {
             await runActionControl(targetAction, resolvedStack).catch(err => console.error(err));
-        } else if (targetAction.mode === 'branch' || targetAction.mode === 'action_condition') {
+        } else if (targetAction.mode === 'branch' || targetAction.mode === 'action_condition' || targetAction.mode === 'action_branch' || targetAction.mode === 'var_branch' || targetAction.mode === 'variable_branch') {
             await runActionCondition(targetAction, resolvedStack).catch(err => console.error(err));
         }
     }
@@ -4019,6 +4019,9 @@ async function runActionControl(act, callStack) {
 global.runActionControl = runActionControl;
 
 function isActionRunning(actionId) {
+    if (typeof global.isActionRunning === 'function' && global.isActionRunning !== isActionRunning) {
+        return global.isActionRunning(actionId);
+    }
     const act = activeActions.find(a => a.id === actionId || a.id === `node_${actionId}` || (a.nodeId && a.nodeId === actionId));
     if (!act) return false;
 
@@ -4041,10 +4044,10 @@ function isActionRunning(actionId) {
 }
 
 async function runActionCondition(act, callStack) {
-    const targetId = act.conditionTargetId;
-    const rule = act.conditionRule || 'is_running';
+    const targetId = act.conditionTargetId || act.varName;
+    const rule = act.conditionRule || (act.mode === 'var_branch' || act.mode === 'variable_branch' ? 'is_true' : 'is_running');
     if (!targetId) {
-        console.warn(`[Condition Check] "${act.name}" has no target action selected — skipping.`);
+        console.warn(`[Condition Check] "${act.name}" has no target action or variable selected — skipping.`);
         return;
     }
 
@@ -4056,13 +4059,25 @@ async function runActionCondition(act, callStack) {
     }
     resolvedStack.add(stackKey);
 
-    const targetAct = activeActions.find(a => a.id === targetId || a.id === `node_${targetId}` || (a.nodeId && a.nodeId === targetId));
-    const targetName = targetAct ? targetAct.name : targetId;
+    const isNamedVar = String(targetId).startsWith('var:');
+    const varName = isNamedVar ? String(targetId).replace('var:', '') : String(targetId);
+    const targetAct = activeActions.find(a => a.id === targetId || a.id === `node_${targetId}` || (a.nodeId && a.nodeId === targetId) || (a.varName && a.varName === varName));
+    const targetName = isNamedVar ? varName : (targetAct ? targetAct.name : targetId);
     let isTrue = false;
 
-    if (targetAct && targetAct.mode === 'variable') {
-        const varVal = getVariableValue(targetAct);
-        const vType = targetAct.varType || 'boolean';
+    // Check if this is a variable evaluation (var_branch mode, var: prefix, or targetAct is variable/var_set)
+    if (act.mode === 'var_branch' || act.mode === 'variable_branch' || isNamedVar || (targetAct && (targetAct.mode === 'variable' || targetAct.mode === 'var_set' || targetAct.mode === 'var_get'))) {
+        let varVal;
+        let vType = act.varType || (targetAct ? targetAct.varType : 'boolean');
+
+        if (isNamedVar) {
+            varVal = getNamedVariableValue(varName, act);
+        } else if (targetAct) {
+            varVal = getVariableValue(targetAct);
+        } else {
+            varVal = getNamedVariableValue(varName, act);
+        }
+
         const condVal = act.conditionValue;
 
         if (vType === 'boolean') {
@@ -4087,11 +4102,11 @@ async function runActionCondition(act, callStack) {
             else if (rule === 'not_equals') isTrue = (strVal !== compareStr);
             else isTrue = (strVal === compareStr);
         }
-        console.log(`[Condition Check] "${act.name}": Checking Variable "${targetName}" [Value: ${varVal}] (${rule} vs "${condVal !== undefined ? condVal : ''}") -> Result: ${isTrue ? 'TRUE' : 'FALSE'}`);
+        console.log(`[Variable Branch] "${act.name}": Checking Variable "${targetName}" [Value: ${varVal}] (${rule} vs "${condVal !== undefined ? condVal : ''}") -> Result: ${isTrue ? 'TRUE' : 'FALSE'}`);
     } else {
         const isRunning = isActionRunning(targetId);
         isTrue = (rule === 'is_running') ? isRunning : !isRunning;
-        console.log(`[Condition Check] "${act.name}": Checking target "${targetName}" (${rule}) -> Result: ${isTrue ? 'TRUE' : 'FALSE'}`);
+        console.log(`[Action Branch] "${act.name}": Checking target "${targetName}" (${rule}) -> Result: ${isTrue ? 'TRUE' : 'FALSE'}`);
     }
 
     if (isTrue) {
@@ -4101,6 +4116,7 @@ async function runActionCondition(act, callStack) {
         emitSignal(act.id, 'onFalse');
         await fireChain(act, 'onFalse', resolvedStack);
     }
+    return isTrue;
 }
 global.runActionCondition = runActionCondition;
 
@@ -4328,6 +4344,7 @@ if (typeof module !== 'undefined') {
         getVariableValue,
         getNamedVariableValue,
         resolveNodeInputData,
-        getVariableKey
+        getVariableKey,
+        runActionCondition
     };
 }

@@ -40,7 +40,7 @@ export function validateProfile(actions) {
         }
         const mNorm = normalizeMode(m.mode);
         if (mNorm === 'control' && (m.controlTargetIds || []).includes(act.id)) isMaster = true;
-        if (mNorm === 'branch' && m.conditionTargetId === act.id) isMaster = true;
+        if ((mNorm === 'branch' || mNorm === 'action_branch') && m.conditionTargetId === act.id) isMaster = true;
         return isMaster && m.trigger.type === act.trigger.type && m.trigger.value === act.trigger.value;
       });
 
@@ -99,7 +99,7 @@ export function validateProfile(actions) {
           messageTh: `โหมด Action Control ยังไม่ได้เลือก Action เป้าหมาย`
         });
       }
-    } else if (normMode === 'branch') {
+    } else if (normMode === 'branch' || normMode === 'action_branch') {
       if (!act.conditionTargetId || !actionIds.has(act.conditionTargetId)) {
         issues.push({
           type: 'unset_target',
@@ -107,8 +107,21 @@ export function validateProfile(actions) {
           actionId: act.id,
           actionName: act.name,
           autoFixable: false,
-          messageEn: `Branch mode has no target action selected to check.`,
-          messageTh: `โหมด Branch ยังไม่ได้เลือก Action อ้างอิงที่ต้องการเช็ค`
+          messageEn: `Action Branch mode has no target action selected to check.`,
+          messageTh: `โหมด Action Branch ยังไม่ได้เลือก Action อ้างอิงที่ต้องการเช็ค`
+        });
+      }
+    } else if (normMode === 'var_branch' || normMode === 'variable_branch') {
+      const hasVar = (act.conditionTargetId && String(act.conditionTargetId).trim()) || (act.varName && String(act.varName).trim());
+      if (!hasVar) {
+        issues.push({
+          type: 'unset_target',
+          severity: 'warning',
+          actionId: act.id,
+          actionName: act.name,
+          autoFixable: false,
+          messageEn: `Variable Branch mode has no variable selected to check.`,
+          messageTh: `โหมด Variable Branch ยังไม่ได้เลือกตัวแปรที่ต้องการเช็ค`
         });
       }
     } else if (normMode === 'key_hold') {

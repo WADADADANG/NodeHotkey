@@ -1520,8 +1520,10 @@ export function validateAndSanitizeImportedProfile(parsed) {
   // 2. Validate Nodes with Allowed Node Types
   const validNodeTypes = new Set([
     'trigger', 'loop', 'buff_sequence', 'key_press', 'delay',
-    'branch', 'condition', 'control', 'forwarder', 'macro_group',
-    'emergency_stop', 'sound', 'emit_event'
+    'branch', 'action_branch', 'var_branch', 'variable_branch', 'condition', 'control', 'forwarder', 'macro_group',
+    'emergency_stop', 'sound', 'emit_event', 'key_hold', 'sequencer', 'loop_scheduler', 'step_log',
+    'var_get', 'var_set', 'variable', 'party_scanner', 'party_slot', 'party_heal', 'party_buff',
+    'tts', 'screenshot', 'webhook_out', 'format_text'
   ]);
 
   if (Array.isArray(profileData.nodes)) {

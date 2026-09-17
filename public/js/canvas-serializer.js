@@ -73,9 +73,15 @@
         cleanData.scope = d.scope || 'client';
         cleanData.targetClient = d.targetClient || '1';
         cleanData.defaultValue = d.defaultValue !== undefined ? d.defaultValue : '';
-      } else if (type === 'branch' || type === 'condition') {
+      } else if (type === 'action_branch' || type === 'branch' || type === 'condition') {
         cleanData.conditionTargetId = d.conditionTargetId || '';
         cleanData.conditionRule = d.conditionRule || 'is_running';
+        if (d.conditionValue !== undefined) cleanData.conditionValue = d.conditionValue;
+      } else if (type === 'var_branch' || type === 'variable_branch') {
+        cleanData.conditionTargetId = d.conditionTargetId || (d.varName ? `var:${d.varName}` : '');
+        cleanData.varName = d.varName || (cleanData.conditionTargetId.startsWith('var:') ? cleanData.conditionTargetId.replace('var:', '') : '');
+        cleanData.varType = d.varType || 'boolean';
+        cleanData.conditionRule = d.conditionRule || (cleanData.varType === 'boolean' ? 'is_true' : 'equals');
         if (d.conditionValue !== undefined) cleanData.conditionValue = d.conditionValue;
       } else if (type === 'control') {
         cleanData.controlOperation = d.controlOperation || 'toggle';
