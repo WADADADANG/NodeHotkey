@@ -118,7 +118,28 @@
   
   const valProfileName = document.getElementById('val-profile-name');
   const subProfileCount = document.getElementById('sub-profile-count');
+  const cardProfileStatus = document.getElementById('card-profile-status');
   let cachedActiveProfiles = [];
+  let profileAutoScrollTimer = null;
+  let isHoveringProfileCard = false;
+
+  if (cardProfileStatus) {
+    cardProfileStatus.addEventListener('mouseenter', () => {
+      isHoveringProfileCard = true;
+    });
+    cardProfileStatus.addEventListener('mouseleave', () => {
+      isHoveringProfileCard = false;
+    });
+    // Allow mouse wheel anywhere on the card to smoothly scroll the active profiles list
+    cardProfileStatus.addEventListener('wheel', (e) => {
+      if (!valProfileName) return;
+      const listEl = valProfileName.querySelector('.active-profiles-list');
+      if (listEl && listEl.scrollHeight > listEl.clientHeight) {
+        listEl.scrollTop += e.deltaY;
+        e.preventDefault();
+      }
+    }, { passive: false });
+  }
 
   function escapeHtml(str) {
     return String(str || '')
@@ -130,20 +151,27 @@
 
   function renderActiveProfiles(profiles) {
     if (!valProfileName) return;
+    if (profileAutoScrollTimer) {
+      clearInterval(profileAutoScrollTimer);
+      profileAutoScrollTimer = null;
+    }
+
     const list = Array.isArray(profiles) ? profiles.filter(p => p && typeof p === 'string' && p.trim()) : [];
     cachedActiveProfiles = list;
 
     const count = list.length;
     const isEn = currentLang === 'en';
 
-    // Update subtitle count
+    // Update subtitle count and scroll hint when list exceeds card view
     if (subProfileCount) {
       if (count === 0) {
         subProfileCount.textContent = isEn ? '0 Active Profile' : 'ยังไม่ได้เปิดโปรไฟล์';
       } else if (count === 1) {
         subProfileCount.textContent = isEn ? '1 Active Profile' : 'เปิดใช้งาน 1 โปรไฟล์';
+      } else if (count === 2) {
+        subProfileCount.textContent = isEn ? '2 Active Profiles' : 'เปิดใช้งาน 2 โปรไฟล์';
       } else {
-        subProfileCount.textContent = isEn ? `${count} Active Profiles` : `เปิดใช้งาน ${count} โปรไฟล์`;
+        subProfileCount.textContent = isEn ? `${count} Profiles (Scroll ▾)` : `เปิด ${count} โปรไฟล์ (เลื่อนดู ▾)`;
       }
     }
 
@@ -154,59 +182,45 @@
 
     if (count === 1) {
       const p = list[0];
-      const len = p.length;
-      let fontSize = '12.5px';
-      if (len > 32) fontSize = '10px';
-      else if (len > 24) fontSize = '11px';
-      else if (len > 18) fontSize = '11.5px';
-
       valProfileName.innerHTML = `
-        <div class="active-profile-item" style="font-size:${fontSize}; font-weight:700; color:#fff;" title="${escapeHtml(p)}">
-          <span class="active-profile-text" style="font-size:${fontSize}; font-weight:700; color:#fff;">${escapeHtml(p)}</span>
+        <div class="active-profile-item" style="font-size:12px;" title="${escapeHtml(p)}">
+          <span class="active-profile-bullet">▸</span>
+          <span class="active-profile-text" style="font-size:12px; font-weight:700; color:#fff;">${escapeHtml(p)}</span>
         </div>
       `;
       return;
     }
 
-    // Determine font size & layout based on number of active profiles and max name length
-    const maxLen = Math.max(...list.map(p => p.length));
-    let fontSize = '11px';
-    let lineHeight = '1.3';
-    let gap = '2.5px';
-    let maxHeight = 'none';
-
-    if (count === 2) {
-      fontSize = (maxLen > 24) ? '10px' : '11px';
-      lineHeight = '1.3';
-      gap = '2px';
-    } else if (count === 3) {
-      fontSize = (maxLen > 24) ? '9.5px' : '10px';
-      lineHeight = '1.25';
-      gap = '2px';
-    } else if (count === 4) {
-      fontSize = (maxLen > 24) ? '8.5px' : '9px';
-      lineHeight = '1.2';
-      gap = '1.5px';
-      maxHeight = '65px';
-    } else {
-      fontSize = '8px';
-      lineHeight = '1.15';
-      gap = '1px';
-      maxHeight = '65px';
-    }
-
+    // 2 or more profiles: Keep readable font size (11.5px) in a scrollable list
     const itemsHtml = list.map(p => `
-      <div class="active-profile-item" style="font-size:${fontSize};" title="${escapeHtml(p)}">
-        <span class="active-profile-bullet" style="font-size:${fontSize};">▸</span>
-        <span class="active-profile-text" style="font-size:${fontSize};">${escapeHtml(p)}</span>
+      <div class="active-profile-item" title="${escapeHtml(p)}">
+        <span class="active-profile-bullet">▸</span>
+        <span class="active-profile-text">${escapeHtml(p)}</span>
       </div>
     `).join('');
 
     valProfileName.innerHTML = `
-      <div class="active-profiles-list" style="gap:${gap}; line-height:${lineHeight}; max-height:${maxHeight}; overflow-y:${maxHeight !== 'none' ? 'auto' : 'visible'};">
+      <div class="active-profiles-list">
         ${itemsHtml}
       </div>
     `;
+
+    // When 3+ profiles exist, enable a subtle ticker auto-scroll when idle (pauses on hover)
+    if (count > 2) {
+      profileAutoScrollTimer = setInterval(() => {
+        if (isHoveringProfileCard) return;
+        const listEl = valProfileName.querySelector('.active-profiles-list');
+        if (!listEl) return;
+        if (listEl.scrollHeight <= listEl.clientHeight) return;
+
+        // Loop back smoothly to top if near bottom
+        if (listEl.scrollTop + listEl.clientHeight >= listEl.scrollHeight - 2) {
+          listEl.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          listEl.scrollBy({ top: 22, behavior: 'smooth' });
+        }
+      }, 3000);
+    }
   }
   
   const valClientsCount = document.getElementById('val-clients-count');
@@ -686,6 +700,8 @@
     if (dClients) dClients.textContent = t.diagClientsTitle;
     if (cachedActiveProfiles && cachedActiveProfiles.length > 0) {
       renderActiveProfiles(cachedActiveProfiles);
+    } else {
+      renderActiveProfiles([]);
     }
 
     // Update Matrix Title & Buttons

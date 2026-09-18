@@ -538,7 +538,7 @@ body.app-root-body {
   color: var(--text-muted);
 }
 
-/* Active Profiles Dynamic List in Status Card */
+/* Active Profiles Scrollable List in Status Card */
 #card-profile-status .diag-value {
   min-height: 20px;
   overflow: hidden;
@@ -547,40 +547,67 @@ body.app-root-body {
 .active-profiles-list {
   display: flex;
   flex-direction: column;
-  width: 100%;
+  gap: 3px;
+  max-height: 42px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 3px;
+  scroll-behavior: smooth;
 }
 
 .active-profiles-list::-webkit-scrollbar {
-  width: 3px;
+  width: 4px;
+}
+
+.active-profiles-list::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.45);
+  border-radius: 4px;
 }
 
 .active-profiles-list::-webkit-scrollbar-thumb {
-  background: rgba(56, 189, 248, 0.4);
-  border-radius: 3px;
+  background: #38bdf8;
+  border-radius: 4px;
+  box-shadow: 0 0 5px rgba(56, 189, 248, 0.4);
+}
+
+.active-profiles-list::-webkit-scrollbar-thumb:hover {
+  background: #60a5fa;
 }
 
 .active-profile-item {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 5.5px;
   min-width: 0;
+  height: 19px;
+  min-height: 19px;
+  flex-shrink: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #f1f5f9;
+  cursor: default;
 }
 
 .active-profile-bullet {
   color: #38bdf8;
   flex-shrink: 0;
+  font-size: 9.5px;
   line-height: 1;
+  text-shadow: 0 0 4px rgba(56, 189, 248, 0.5);
 }
 
 .active-profile-text {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: #f1f5f9;
+  color: #f8fafc;
   font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
 }
 
 /* Client Control Matrix 4x2 Panel */
