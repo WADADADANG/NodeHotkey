@@ -1656,37 +1656,62 @@ async function launchBrowser(activeClientsList, choice) {
     sendOverlayUpdate();
 }
 
+const closingClients = new Set();
+
 function handleClientContextClosed(clientIndexInput) {
     const clientIndex = parseInt(clientIndexInput, 10);
     if (isNaN(clientIndex)) return;
-    console.log(`[System] 🔴 [Client ${clientIndex}] Browser closed/detached.`);
 
-    if (clientPages[clientIndex]) {
-        try {
-            clientPages[clientIndex].removeAllListeners('close');
-            clientPages[clientIndex].removeAllListeners('crash');
-        } catch (e) { }
-        clientPages[clientIndex] = null;
+    // Prevent duplicate close notifications (e.g. page.on('close') + browserCtx.on('close'))
+    if (closingClients.has(clientIndex)) return;
+
+    const isAlreadyInactive = !clientPages[clientIndex] && 
+                              !clientContexts[clientIndex] && 
+                              !activeClients.includes(clientIndex) && 
+                              !activeClients.includes(String(clientIndex));
+    if (isAlreadyInactive) return;
+
+    closingClients.add(clientIndex);
+
+    try {
+        console.log(`[System] 🔴 [Client ${clientIndex}] Browser closed/detached.`);
+
+        if (clientPages[clientIndex]) {
+            try {
+                clientPages[clientIndex].removeAllListeners('close');
+                clientPages[clientIndex].removeAllListeners('crash');
+            } catch (e) { }
+            clientPages[clientIndex] = null;
+        }
+
+        if (clientContexts[clientIndex]) {
+            const ctx = clientContexts[clientIndex];
+            clientContexts[clientIndex] = null;
+            try {
+                ctx.removeAllListeners('close');
+                ctx.close().catch(() => { });
+            } catch (e) { }
+        }
+
+        delete clientCDPSessions[clientIndex];
+        stopLoopsForClient(clientIndex);
+
+        const pos = activeClients.indexOf(clientIndex);
+        if (pos > -1) {
+            activeClients.splice(pos, 1);
+        }
+        const posStr = activeClients.indexOf(String(clientIndex));
+        if (posStr > -1) {
+            activeClients.splice(posStr, 1);
+        }
+
+        global.activeClients = activeClients;
+        sendOverlayUpdate();
+    } finally {
+        setTimeout(() => {
+            closingClients.delete(clientIndex);
+        }, 1000);
     }
-
-    if (clientContexts[clientIndex]) {
-        try { clientContexts[clientIndex].close().catch(() => { }); } catch (e) { }
-        clientContexts[clientIndex] = null;
-    }
-
-    stopLoopsForClient(clientIndex);
-
-    const pos = activeClients.indexOf(clientIndex);
-    if (pos > -1) {
-        activeClients.splice(pos, 1);
-    }
-    const posStr = activeClients.indexOf(String(clientIndex));
-    if (posStr > -1) {
-        activeClients.splice(posStr, 1);
-    }
-
-    global.activeClients = activeClients;
-    sendOverlayUpdate();
 }
 
 let boundsSaveTimer = null;
