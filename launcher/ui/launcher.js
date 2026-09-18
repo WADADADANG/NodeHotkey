@@ -1184,12 +1184,78 @@
     if (proxyInput) proxyInput.value = proxies[String(clientIdx)] || '';
     if (uaInput) uaInput.value = uas[String(clientIdx)] || '';
 
+    const boundsInfo = document.getElementById('modal-client-bounds-info');
+    const boundsMap = gs.clientWindowBounds || {};
+    const bounds = boundsMap[String(clientIdx)];
+    if (boundsInfo) {
+      if (bounds && typeof bounds.x === 'number' && typeof bounds.y === 'number') {
+        const w = bounds.width || bounds.w || 960;
+        const h = bounds.height || bounds.h || 540;
+        boundsInfo.textContent = `X: ${bounds.x}, Y: ${bounds.y} (${w}x${h})`;
+        boundsInfo.style.color = '#38bdf8';
+      } else {
+        boundsInfo.textContent = 'Default (Auto / กลางจอหลัก)';
+        boundsInfo.style.color = '#94a3b8';
+      }
+    }
+
     modal.style.display = 'flex';
   };
 
   window.closeClientSettingsModal = function() {
     const modal = document.getElementById('client-settings-modal');
     if (modal) modal.style.display = 'none';
+  };
+
+  window.resetModalWindowBounds = async function() {
+    const idxInput = document.getElementById('modal-client-idx');
+    const resetBtn = document.getElementById('btn-modal-reset-bounds');
+    const boundsInfo = document.getElementById('modal-client-bounds-info');
+    if (!idxInput) return;
+    const clientIdx = parseInt(idxInput.value, 10);
+
+    try {
+      if (!cachedConfig) {
+        const res = await fetch(getServerUrl('/api/config'));
+        cachedConfig = await res.json();
+      }
+      if (cachedConfig.globalSettings && cachedConfig.globalSettings.clientWindowBounds) {
+        delete cachedConfig.globalSettings.clientWindowBounds[String(clientIdx)];
+      }
+
+      await fetch(getServerUrl('/api/config'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cachedConfig)
+      });
+
+      await fetch(getServerUrl('/api/client/reset-bounds'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientIndex: clientIdx })
+      });
+
+      if (boundsInfo) {
+        boundsInfo.textContent = 'Default (Auto / กลางจอหลัก)';
+        boundsInfo.style.color = '#94a3b8';
+      }
+      if (resetBtn) {
+        const originalText = resetBtn.textContent;
+        resetBtn.textContent = '✓ Reset แล้ว!';
+        resetBtn.style.color = '#34d399';
+        resetBtn.style.borderColor = '#34d399';
+        setTimeout(() => {
+          resetBtn.textContent = originalText;
+          resetBtn.style.color = '#f59e0b';
+          resetBtn.style.borderColor = '#f59e0b';
+        }, 1800);
+      }
+    } catch (e) {
+      console.warn('Failed to reset bounds:', e);
+      if (boundsInfo) {
+        boundsInfo.textContent = 'Default (Auto / กลางจอหลัก)';
+      }
+    }
   };
 
   window.saveClientSettingsFromModal = async function() {
