@@ -97,7 +97,8 @@ import {
   randomizeClientModalUA,
   clearClientModalUA,
   clearClientModalProxy,
-  saveClientSettingsModal
+  saveClientSettingsModal,
+  resetClientModalWindowBounds
 } from './components/modal.js';
 import {
   toast,
@@ -230,6 +231,7 @@ window.randomizeClientModalUA = randomizeClientModalUA;
 window.clearClientModalUA = clearClientModalUA;
 window.clearClientModalProxy = clearClientModalProxy;
 window.saveClientSettingsModal = saveClientSettingsModal;
+window.resetClientModalWindowBounds = resetClientModalWindowBounds;
 
 window.toggleSuspendState = toggleSuspendState;
 window.toast = toast;

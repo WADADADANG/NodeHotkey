@@ -312,6 +312,25 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- POST /api/client/reset-bounds → reset saved bounds and reposition live window ---
+  if (urlPath === '/api/client/reset-bounds' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', async () => {
+      try {
+        const { clientIndex } = JSON.parse(body || '{}');
+        if (typeof global.resetClientWindowBounds === 'function') {
+          const resObj = await global.resetClientWindowBounds(clientIndex);
+          return sendJSON(res, 200, resObj);
+        }
+        return sendJSON(res, 200, { success: true });
+      } catch (e) {
+        return sendJSON(res, 400, { error: e.message });
+      }
+    });
+    return;
+  }
+
   // --- POST / GET /api/trigger/:eventName → Inbound Webhook Trigger ---
   if (urlPath.startsWith('/api/trigger/')) {
     const rawEvent = urlPath.replace('/api/trigger/', '').trim();

@@ -1337,6 +1337,31 @@ function clientInPageScript({ index, initialPrefix }) {
             releaseAllStuckPhysicalInputs();
         }
     }, 50);
+
+    // 5. 🪟 Real-time Window Bounds Tracker (Auto-syncs position on move, resize, blur & beforeunload)
+    let lastReportedBounds = null;
+    const syncWindowBounds = () => {
+        try {
+            if (typeof window.__nodeHotkeySaveBounds !== 'function') return;
+            const x = window.screenX;
+            const y = window.screenY;
+            const w = window.outerWidth;
+            const h = window.outerHeight;
+            if (typeof x === 'number' && typeof y === 'number' && w > 200 && h > 200) {
+                if (!lastReportedBounds || lastReportedBounds.x !== x || lastReportedBounds.y !== y || lastReportedBounds.w !== w || lastReportedBounds.h !== h) {
+                    lastReportedBounds = { x, y, w, h };
+                    window.__nodeHotkeySaveBounds({ x, y, w, h }).catch(() => {});
+                }
+            }
+        } catch (e) { }
+    };
+
+    window.addEventListener('resize', syncWindowBounds, true);
+    window.addEventListener('blur', syncWindowBounds, true);
+    window.addEventListener('beforeunload', syncWindowBounds, true);
+    window.addEventListener('pagehide', syncWindowBounds, true);
+    setInterval(syncWindowBounds, 2500);
+    setTimeout(syncWindowBounds, 1000);
 }
 
 async function injectClientInitScripts(browserCtx, clientIndex) {
@@ -1346,6 +1371,21 @@ async function injectClientInitScripts(browserCtx, clientIndex) {
     try {
         await browserCtx.exposeFunction('__nodeHotkeyOnBlur', async (payload) => {
             handleWindowBlurFromClient(payload).catch(() => { });
+        });
+    } catch (e) { }
+
+    // Expose Node.js window bounds updater to page
+    try {
+        await browserCtx.exposeFunction('__nodeHotkeySaveBounds', async (bounds) => {
+            if (bounds && typeof bounds.x === 'number' && typeof bounds.y === 'number' && bounds.w > 200 && bounds.h > 200) {
+                clientWindowBounds[String(clientIndex)] = {
+                    x: Math.round(bounds.x),
+                    y: Math.round(bounds.y),
+                    w: Math.round(bounds.w),
+                    h: Math.round(bounds.h)
+                };
+                scheduleSaveWindowBounds();
+            }
         });
     } catch (e) { }
 
@@ -1649,20 +1689,74 @@ function handleClientContextClosed(clientIndexInput) {
     sendOverlayUpdate();
 }
 
-async function saveWindowBoundsForClient(clientIndex) {
-    const page = clientPages[clientIndex];
-    if (!page || page.isClosed()) return;
+let boundsSaveTimer = null;
+function scheduleSaveWindowBounds() {
+    if (boundsSaveTimer) clearTimeout(boundsSaveTimer);
+    boundsSaveTimer = setTimeout(() => {
+        flushWindowBoundsToConfig();
+    }, 1200);
+}
+
+function flushWindowBoundsToConfig() {
+    if (boundsSaveTimer) {
+        clearTimeout(boundsSaveTimer);
+        boundsSaveTimer = null;
+    }
     try {
-        const bounds = await page.evaluate(() => ({
-            x: window.screenX,
-            y: window.screenY,
-            w: window.outerWidth,
-            h: window.outerHeight
-        })).catch(() => null);
-        if (bounds && typeof bounds.x === 'number' && bounds.x > -5000 && bounds.w > 200 && bounds.h > 200) {
-            clientWindowBounds[String(clientIndex)] = bounds;
+        const fullCfg = readConfig();
+        if (fullCfg && fullCfg.globalSettings) {
+            fullCfg.globalSettings.clientWindowBounds = clientWindowBounds;
+            writeConfig(fullCfg);
         }
     } catch (e) { }
+}
+
+async function resetClientWindowBounds(clientIndexInput) {
+    const clientIndex = parseInt(clientIndexInput, 10);
+    if (isNaN(clientIndex)) return { success: false, error: "Invalid client index" };
+
+    const sIdx = String(clientIndex);
+    delete clientWindowBounds[sIdx];
+    flushWindowBoundsToConfig();
+    console.log(`[System] [Client ${clientIndex}] Window position reset to default!`);
+
+    // If client is currently running, reposition live window to primary display
+    const page = clientPages[clientIndex];
+    if (page && !page.isClosed()) {
+        try {
+            const cdp = await getCDPSession(clientIndex);
+            if (cdp) {
+                const { windowId } = await cdp.send('Browser.getWindowForTarget').catch(() => ({}));
+                if (windowId) {
+                    await cdp.send('Browser.setWindowBounds', {
+                        windowId,
+                        bounds: { left: 100, top: 100, width: 974, height: 600, windowState: 'normal' }
+                    }).catch(() => {});
+                }
+            }
+        } catch (e) { }
+    }
+
+    return { success: true, clientIndex, bounds: null };
+}
+global.resetClientWindowBounds = resetClientWindowBounds;
+
+async function saveWindowBoundsForClient(clientIndex) {
+    const page = clientPages[clientIndex];
+    if (page && !page.isClosed()) {
+        try {
+            const bounds = await page.evaluate(() => ({
+                x: window.screenX,
+                y: window.screenY,
+                w: window.outerWidth,
+                h: window.outerHeight
+            })).catch(() => null);
+            if (bounds && typeof bounds.x === 'number' && bounds.x > -5000 && bounds.w > 200 && bounds.h > 200) {
+                clientWindowBounds[String(clientIndex)] = bounds;
+            }
+        } catch (e) { }
+    }
+    flushWindowBoundsToConfig();
 }
 
 async function saveActiveClientsWindowBounds() {
@@ -1909,6 +2003,7 @@ async function findAndAttachTabForClient(clientIndex, browserCtx) {
                 foundPage.removeAllListeners('crash');
 
                 foundPage.on('close', () => {
+                    flushWindowBoundsToConfig();
                     delete clientCDPSessions[clientIndex];
                     delete clientPages[clientIndex];
                     console.log(`\n🔴 [System] [Client ${clientIndex}] Game tab closed! Pausing actions for Client ${clientIndex}. You can re-launch it anytime from the Web Dashboard.`);
@@ -4436,6 +4531,7 @@ if (typeof module !== 'undefined') {
         runActionCondition,
         runEmergencyStopAction,
         stopAllLoops,
-        releaseAllHeldKeys
+        releaseAllHeldKeys,
+        resetClientWindowBounds
     };
 }

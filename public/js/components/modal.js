@@ -221,9 +221,50 @@ export function openClientSettingsModal(clientIdx) {
   const browserSelect = document.getElementById('client-modal-browser-select');
   if (browserSelect) browserSelect.value = browserVal;
 
-
+  // Window bounds info
+  const boundsInfoEl = document.getElementById('client-modal-bounds-info');
+  const bounds = gs.clientWindowBounds ? gs.clientWindowBounds[sIdx] : null;
+  if (boundsInfoEl) {
+    if (bounds && typeof bounds.x === 'number' && typeof bounds.y === 'number') {
+      boundsInfoEl.textContent = `X: ${bounds.x}, Y: ${bounds.y} (${bounds.w || '?'}x${bounds.h || '?'})`;
+      boundsInfoEl.style.color = '#38bdf8';
+    } else {
+      boundsInfoEl.textContent = 'Default (Auto / กลางจอหลัก)';
+      boundsInfoEl.style.color = '#94a3b8';
+    }
+  }
 
   modal.classList.add('show');
+}
+
+export function resetClientModalWindowBounds() {
+  const idxEl = document.getElementById('client-settings-idx');
+  if (!idxEl) return;
+  const sIdx = idxEl.value;
+
+  if (fullConfig.globalSettings && fullConfig.globalSettings.clientWindowBounds) {
+    delete fullConfig.globalSettings.clientWindowBounds[sIdx];
+  }
+
+  const boundsInfoEl = document.getElementById('client-modal-bounds-info');
+  if (boundsInfoEl) {
+    boundsInfoEl.textContent = 'Default (Auto / กลางจอหลัก)';
+    boundsInfoEl.style.color = '#94a3b8';
+  }
+
+  saveCurrentProfile();
+  commitConfigToBackend().catch(() => {});
+
+  // Reposition live running client to primary display if active
+  fetch('/api/client/reset-bounds', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ clientIndex: parseInt(sIdx, 10) })
+  }).catch(() => {});
+
+  if (typeof window.toast === 'function') {
+    window.toast(`✓ Reset window position for Client ${sIdx} to primary screen!`, 'success');
+  }
 }
 
 export function closeClientSettingsModal() {

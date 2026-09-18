@@ -837,6 +837,13 @@ assert.ok(global.partyActionTokens['act_pb_test'] > 0, 'Party buff token must be
 
 console.log('✅ Test 15 Passed: Emergency Stop All instantly aborts delay and invalidates tokens for modular action nodes!\n');
 
+// Test 16: Client Window Bounds Reset & Auto-Save Helper
+console.log('Test 16: Testing Client Window Bounds Reset and Auto-Save Helper...');
+assert.ok(typeof bot.resetClientWindowBounds === 'function', 'bot.resetClientWindowBounds must be a function');
+const testBoundsResult = await bot.resetClientWindowBounds(99);
+assert.strictEqual(testBoundsResult.success, true, 'resetClientWindowBounds must return success');
+console.log('✅ Test 16 Passed: Window Bounds Reset helper verified!\n');
+
 console.log('🎉 All Step Log & Unreal Blueprint Variable Tests Passed Successfully!');
 process.exit(0);
 })();
