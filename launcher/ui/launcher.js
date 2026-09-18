@@ -31,6 +31,11 @@
             }
           }
           loadSettingsToUI(cfg);
+          if (cfg.activeProfiles && cfg.activeProfiles.length > 0) {
+            renderActiveProfiles(cfg.activeProfiles);
+          } else if (cfg.activeProfile) {
+            renderActiveProfiles([cfg.activeProfile]);
+          }
         }
       } catch (e) {
         console.warn('initGlobalSettingsFromDisk error:', e);
@@ -113,6 +118,96 @@
   
   const valProfileName = document.getElementById('val-profile-name');
   const subProfileCount = document.getElementById('sub-profile-count');
+  let cachedActiveProfiles = [];
+
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function renderActiveProfiles(profiles) {
+    if (!valProfileName) return;
+    const list = Array.isArray(profiles) ? profiles.filter(p => p && typeof p === 'string' && p.trim()) : [];
+    cachedActiveProfiles = list;
+
+    const count = list.length;
+    const isEn = currentLang === 'en';
+
+    // Update subtitle count
+    if (subProfileCount) {
+      if (count === 0) {
+        subProfileCount.textContent = isEn ? '0 Active Profile' : 'ยังไม่ได้เปิดโปรไฟล์';
+      } else if (count === 1) {
+        subProfileCount.textContent = isEn ? '1 Active Profile' : 'เปิดใช้งาน 1 โปรไฟล์';
+      } else {
+        subProfileCount.textContent = isEn ? `${count} Active Profiles` : `เปิดใช้งาน ${count} โปรไฟล์`;
+      }
+    }
+
+    if (count === 0) {
+      valProfileName.innerHTML = `<span style="font-size:12px; font-weight:700; color:var(--text-dim);">-</span>`;
+      return;
+    }
+
+    if (count === 1) {
+      const p = list[0];
+      const len = p.length;
+      let fontSize = '12.5px';
+      if (len > 32) fontSize = '10px';
+      else if (len > 24) fontSize = '11px';
+      else if (len > 18) fontSize = '11.5px';
+
+      valProfileName.innerHTML = `
+        <div class="active-profile-item" style="font-size:${fontSize}; font-weight:700; color:#fff;" title="${escapeHtml(p)}">
+          <span class="active-profile-text" style="font-size:${fontSize}; font-weight:700; color:#fff;">${escapeHtml(p)}</span>
+        </div>
+      `;
+      return;
+    }
+
+    // Determine font size & layout based on number of active profiles and max name length
+    const maxLen = Math.max(...list.map(p => p.length));
+    let fontSize = '11px';
+    let lineHeight = '1.3';
+    let gap = '2.5px';
+    let maxHeight = 'none';
+
+    if (count === 2) {
+      fontSize = (maxLen > 24) ? '10px' : '11px';
+      lineHeight = '1.3';
+      gap = '2px';
+    } else if (count === 3) {
+      fontSize = (maxLen > 24) ? '9.5px' : '10px';
+      lineHeight = '1.25';
+      gap = '2px';
+    } else if (count === 4) {
+      fontSize = (maxLen > 24) ? '8.5px' : '9px';
+      lineHeight = '1.2';
+      gap = '1.5px';
+      maxHeight = '65px';
+    } else {
+      fontSize = '8px';
+      lineHeight = '1.15';
+      gap = '1px';
+      maxHeight = '65px';
+    }
+
+    const itemsHtml = list.map(p => `
+      <div class="active-profile-item" style="font-size:${fontSize};" title="${escapeHtml(p)}">
+        <span class="active-profile-bullet" style="font-size:${fontSize};">▸</span>
+        <span class="active-profile-text" style="font-size:${fontSize};">${escapeHtml(p)}</span>
+      </div>
+    `).join('');
+
+    valProfileName.innerHTML = `
+      <div class="active-profiles-list" style="gap:${gap}; line-height:${lineHeight}; max-height:${maxHeight}; overflow-y:${maxHeight !== 'none' ? 'auto' : 'visible'};">
+        ${itemsHtml}
+      </div>
+    `;
+  }
   
   const valClientsCount = document.getElementById('val-clients-count');
   const subClientsInfo = document.getElementById('sub-clients-info');
@@ -589,6 +684,9 @@
     if (dServer) dServer.textContent = t.diagServerTitle;
     if (dProfile) dProfile.textContent = t.diagProfileTitle;
     if (dClients) dClients.textContent = t.diagClientsTitle;
+    if (cachedActiveProfiles && cachedActiveProfiles.length > 0) {
+      renderActiveProfiles(cachedActiveProfiles);
+    }
 
     // Update Matrix Title & Buttons
     const matrixTitle = document.getElementById('matrix-title-label');
@@ -1466,11 +1564,11 @@
 
         // Update Active Profile Name
         if (data.activeProfiles && data.activeProfiles.length > 0) {
-          valProfileName.textContent = data.activeProfiles[0];
-          subProfileCount.textContent = `${data.activeProfiles.length} Active Profile(s)`;
+          renderActiveProfiles(data.activeProfiles);
         } else if (cachedConfig && cachedConfig.activeProfiles && cachedConfig.activeProfiles.length > 0) {
-          valProfileName.textContent = cachedConfig.activeProfiles[0];
-          subProfileCount.textContent = `${cachedConfig.activeProfiles.length} Active Profile(s)`;
+          renderActiveProfiles(cachedConfig.activeProfiles);
+        } else if (cachedConfig && cachedConfig.activeProfile) {
+          renderActiveProfiles([cachedConfig.activeProfile]);
         }
       }
     } catch (e) {
@@ -1701,8 +1799,7 @@
     }
 
     if (diag.activeProfiles && diag.activeProfiles.length > 0) {
-      valProfileName.textContent = diag.activeProfiles[0];
-      subProfileCount.textContent = `${diag.activeProfiles.length} Active Profile(s)`;
+      renderActiveProfiles(diag.activeProfiles);
     }
 
     if (diag.activeClientsCount !== undefined) {

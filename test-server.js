@@ -231,7 +231,9 @@ const server = http.createServer((req, res) => {
       clientAliases: global.clientAliases || {},
       isSuspended: !!global.isSuspended,
       disabledClients: global.disabledClients || [],
-      enableOverlay: gs.enableOverlay !== undefined ? !!gs.enableOverlay : true
+      enableOverlay: gs.enableOverlay !== undefined ? !!gs.enableOverlay : true,
+      activeProfiles: cfg.activeProfiles || (cfg.activeProfile ? [cfg.activeProfile] : ['Default']),
+      activeProfile: cfg.activeProfile || (cfg.activeProfiles && cfg.activeProfiles[0]) || 'Default'
     });
   }
 

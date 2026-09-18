@@ -538,6 +538,51 @@ body.app-root-body {
   color: var(--text-muted);
 }
 
+/* Active Profiles Dynamic List in Status Card */
+#card-profile-status .diag-value {
+  min-height: 20px;
+  overflow: hidden;
+}
+
+.active-profiles-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.active-profiles-list::-webkit-scrollbar {
+  width: 3px;
+}
+
+.active-profiles-list::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.4);
+  border-radius: 3px;
+}
+
+.active-profile-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.active-profile-bullet {
+  color: #38bdf8;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.active-profile-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #f1f5f9;
+  font-family: var(--font-mono);
+}
+
 /* Client Control Matrix 4x2 Panel */
 .client-matrix-panel {
   background: var(--bg-card);
