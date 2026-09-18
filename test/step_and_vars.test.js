@@ -795,6 +795,48 @@ assert.strictEqual(sig5.eventName, 'onTrue', 'Legacy branch mode should evaluate
 
 console.log('✅ Test 14 Passed: Variable Branch and Action Branch execution & signal routing verified!\n');
 
+// Test 15: Emergency Stop All Halts New Action Nodes & Abortable Delay
+console.log('Test 15: Testing Emergency Stop All halts new action nodes (delay, macro_group, party actions)...');
+assert.ok(nodeRegistry.has('emergency_stop'), 'NodeRegistry must contain emergency_stop');
+assert.ok(nodeRegistry.has('delay'), 'NodeRegistry must contain delay');
+assert.ok(nodeRegistry.has('macro_group'), 'NodeRegistry must contain macro_group');
+
+const delayDef = nodeRegistry.get('delay');
+assert.ok(delayDef, 'Delay definition must exist');
+
+// Setup mock action with macro_group and party_buff
+const testMacroAction = { id: 'act_macro_test', name: 'Macro Test', mode: 'macro_group' };
+const testPartyBuffAction = { id: 'act_pb_test', name: 'Party Buff Test', mode: 'party_buff' };
+global.activeActions = [testMacroAction, testPartyBuffAction];
+
+let delayFinished = false;
+let chainCompleted = false;
+global.fireChain = async (action, event) => {
+  if (event === 'onComplete') chainCompleted = true;
+};
+
+// Start delay in background
+const delayPromise = delayDef.execute({}, { id: 'act_delay_test', name: 'Test Delay', delayMs: 1500 }, []);
+delayPromise.then(res => {
+  delayFinished = res;
+});
+
+// Sleep briefly to ensure delay node is waiting
+await new Promise(r => setTimeout(r, 50));
+
+// Fire Emergency Stop All
+const prevPartyEpoch = global.partyBuffEpoch || 0;
+await bot.runEmergencyStopAction({ name: 'Stop All Test', stopScope: 'all' });
+
+// Await the delay execution result
+const delayResult = await delayPromise;
+assert.strictEqual(delayResult, false, 'Delay node must abort and return false on Emergency Stop');
+assert.strictEqual(chainCompleted, false, 'Delay node must NOT fire onComplete chain after Emergency Stop');
+assert.ok((global.partyBuffEpoch || 0) > prevPartyEpoch, 'Emergency Stop must bump partyBuffEpoch');
+assert.ok(global.partyActionTokens['act_pb_test'] > 0, 'Party buff token must be invalidated');
+
+console.log('✅ Test 15 Passed: Emergency Stop All instantly aborts delay and invalidates tokens for modular action nodes!\n');
+
 console.log('🎉 All Step Log & Unreal Blueprint Variable Tests Passed Successfully!');
 process.exit(0);
 })();

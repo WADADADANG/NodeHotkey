@@ -393,6 +393,13 @@ async function runPartyBuffAction(action, callStack) {
     if (global.isSuspended) return;
 
     if (!global.activePartyTargetRouters) global.activePartyTargetRouters = {};
+    if (!global.partyActionTokens) global.partyActionTokens = {};
+    const myToken = (global.partyActionTokens[action?.id] || 0) + 1;
+    if (action && action.id) {
+        global.partyActionTokens[action.id] = myToken;
+    }
+    const myEpoch = global.partyBuffEpoch || 0;
+
     if (action && action.id) {
         global.activePartyTargetRouters[action.id] = { type: 'party_buff', detail: 'Buffing...' };
         if (typeof global.sendOverlayUpdate === 'function') {
@@ -481,9 +488,11 @@ async function runPartyBuffAction(action, callStack) {
         const buffedMemberSummaries = [];
         let currentPartyState = initialScan;
 
+        let wasInterrupted = false;
         for (let i = 0; i < activeSlots.length; i++) {
-            if (global.isSuspended) {
-                console.log(`[PartyBuff] Client ${targetClientId}: Paused.`);
+            if (global.isSuspended || (action && action.id && global.partyActionTokens && global.partyActionTokens[action.id] !== myToken) || (global.partyBuffEpoch && global.partyBuffEpoch !== myEpoch)) {
+                console.log(`[PartyBuff] Client ${targetClientId}: Interrupted / Paused.`);
+                wasInterrupted = true;
                 break;
             }
 
@@ -554,21 +563,36 @@ async function runPartyBuffAction(action, callStack) {
             } catch (e) {}
 
             if (delayAfterClick > 0) {
-                const ok = await (global.abortableSleep ? global.abortableSleep(delayAfterClick) : new Promise(r => setTimeout(r, delayAfterClick)));
-                if (!ok || global.isSuspended) break;
+                const ok = await (global.abortableSleep ? global.abortableSleep(delayAfterClick, action?.id) : new Promise(r => setTimeout(r, delayAfterClick)));
+                if (!ok || global.isSuspended || (action && action.id && global.partyActionTokens && global.partyActionTokens[action.id] !== myToken) || (global.partyBuffEpoch && global.partyBuffEpoch !== myEpoch)) {
+                    wasInterrupted = true;
+                    break;
+                }
             }
 
-            if (typeof global.fireChain === 'function' && !global.isSuspended) {
+            if (typeof global.fireChain === 'function' && !global.isSuspended && !wasInterrupted) {
                 await global.fireChain(action, 'onNextMember', new Set());
             }
 
             buffedSlots.add(targetSlot);
             buffedMemberSummaries.push(memberName);
 
-            if (global.isSuspended) break;
+            if (global.isSuspended || (action && action.id && global.partyActionTokens && global.partyActionTokens[action.id] !== myToken) || (global.partyBuffEpoch && global.partyBuffEpoch !== myEpoch)) {
+                wasInterrupted = true;
+                break;
+            }
 
-            const ok = await (global.abortableSleep ? global.abortableSleep(200) : new Promise(r => setTimeout(r, 200)));
-            if (!ok || global.isSuspended) break;
+            const ok = await (global.abortableSleep ? global.abortableSleep(200, action?.id) : new Promise(r => setTimeout(r, 200)));
+            if (!ok || global.isSuspended || (action && action.id && global.partyActionTokens && global.partyActionTokens[action.id] !== myToken) || (global.partyBuffEpoch && global.partyBuffEpoch !== myEpoch)) {
+                wasInterrupted = true;
+                break;
+            }
+        }
+
+        if (wasInterrupted || (action && action.id && global.partyActionTokens && global.partyActionTokens[action.id] !== myToken) || (global.partyBuffEpoch && global.partyBuffEpoch !== myEpoch)) {
+            console.log(`[PartyBuff] Client ${targetClientId}: Buff cycle cancelled / stopped by Emergency Stop.`);
+            clearStatus();
+            return;
         }
 
         const completeSummary = `Completed buff cycle (${buffedSlots.size}/${totalToBuff} members: ${buffedMemberSummaries.join(', ')})`;

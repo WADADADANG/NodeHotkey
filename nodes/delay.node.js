@@ -35,8 +35,16 @@ module.exports = {
     }
 
     if (delay > 0) {
-      await new Promise(res => setTimeout(res, delay));
+      const ok = typeof global.abortableSleep === 'function'
+        ? await global.abortableSleep(delay, action.id)
+        : await new Promise(res => setTimeout(res, delay));
+      if (!ok || global.isSuspended) {
+        console.log(`[Delay Node] Interrupted / Aborted: "${action.name || 'Delay'}"`);
+        return false;
+      }
     }
+
+    if (global.isSuspended) return false;
 
     console.log(`[Delay Node] Finished: "${action.name || 'Delay'}" (${delay}ms complete)`);
 

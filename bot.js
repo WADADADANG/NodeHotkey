@@ -381,7 +381,19 @@ function releaseHeldKeyForAction(act) {
         for (let t of targets) {
             const page = clientPages[t];
             if (page) {
-                page.keyboard.up(targetKey).catch(e => { });
+                if (typeof getCDPSession === 'function') {
+                    getCDPSession(t).then(cdp => {
+                        if (cdp) {
+                            const formattedKey = formatKeyForPlaywright(targetKey);
+                            cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: formattedKey, code: formattedKey }).catch(() => { });
+                        }
+                    }).catch(() => { });
+                }
+                if (typeof pressKeyHoldUp === 'function') {
+                    pressKeyHoldUp(page, targetKey).catch(() => { });
+                } else {
+                    page.keyboard.up(targetKey).catch(() => { });
+                }
             }
         }
         activeHoldStates[act.id] = false;
@@ -391,8 +403,8 @@ function releaseHeldKeyForAction(act) {
 function releaseAllHeldKeys() {
     for (let actionId in activeHoldStates) {
         if (activeHoldStates[actionId]) {
-            const act = activeActions.find(a => a.id === actionId);
-            if (act && act.mode === 'key_hold') {
+            const act = activeActions.find(a => a.id === actionId || a.id === `node_${actionId}` || a.nodeId === actionId);
+            if (act && (act.mode === 'key_hold' || act.type === 'key_hold')) {
                 releaseHeldKeyForAction(act);
             }
             activeHoldStates[actionId] = false;
@@ -2425,7 +2437,8 @@ async function startLoopAction(action, callStack) {
             await sendKey(action, step.key);
             const stepDelay = parseInt(step.delay, 10);
             if (!isNaN(stepDelay) && stepDelay > 0) {
-                await new Promise(res => setTimeout(res, stepDelay));
+                const ok = await abortableSleep(stepDelay, action.id);
+                if (!ok || !activeLoopStates[action.id] || !activeLoopStates[action.id].running) return;
             }
         }
     }
@@ -2469,7 +2482,7 @@ function stopAllLoops() {
     for (let act of activeActions) {
         if (act.mode === 'loop') {
             stopLoopAction(act.id, act.name);
-        } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence') {
+        } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence' || act.mode === 'macro_group') {
             stopCastSequencerAction(act.id, act.name);
             sequencerTokens[act.id] = (sequencerTokens[act.id] || 0) + 1;
         } else if (act.mode === 'loop_scheduler') {
@@ -2477,6 +2490,10 @@ function stopAllLoops() {
             schedulerTokens[act.id] = (schedulerTokens[act.id] || 0) + 1;
         } else if (act.mode === 'buff_sequence') {
             buffSequenceTokens[act.id] = (buffSequenceTokens[act.id] || 0) + 1;
+        } else if (act.mode === 'party_buff' || act.mode === 'party_scanner' || act.mode === 'party_heal') {
+            if (global.partyActionTokens) {
+                global.partyActionTokens[act.id] = (global.partyActionTokens[act.id] || 0) + 1;
+            }
         }
     }
     activeOnceSequencers = {};
@@ -2491,6 +2508,7 @@ function stopAllLoops() {
     });
     activePartyTargetRouters = {};
     global.activePartyTargetRouters = activePartyTargetRouters;
+    global.partyBuffEpoch = (global.partyBuffEpoch || 0) + 1;
 }
 
 // Stop active loops, schedulers, and sequences for a specific client
@@ -2504,7 +2522,7 @@ function stopLoopsForClient(clientIndex) {
         if (targets.includes(clientIndex)) {
             if (act.mode === 'loop') {
                 stopLoopAction(act.id, act.name);
-            } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence') {
+            } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence' || act.mode === 'macro_group') {
                 stopCastSequencerAction(act.id, act.name);
                 sequencerTokens[act.id] = (sequencerTokens[act.id] || 0) + 1;
             } else if (act.mode === 'loop_scheduler') {
@@ -2512,6 +2530,10 @@ function stopLoopsForClient(clientIndex) {
                 schedulerTokens[act.id] = (schedulerTokens[act.id] || 0) + 1;
             } else if (act.mode === 'buff_sequence') {
                 buffSequenceTokens[act.id] = (buffSequenceTokens[act.id] || 0) + 1;
+            } else if (act.mode === 'party_buff' || act.mode === 'party_scanner' || act.mode === 'party_heal') {
+                if (global.partyActionTokens) {
+                    global.partyActionTokens[act.id] = (global.partyActionTokens[act.id] || 0) + 1;
+                }
             }
         }
     }
@@ -2587,7 +2609,11 @@ async function runBuffSequenceAction(action, callStack) {
                     wasInterrupted = true;
                     break;
                 }
-                await new Promise(res => setTimeout(res, delay));
+                const sleepOk = await abortableSleep(delay, action.id);
+                if (!sleepOk || buffSequenceTokens[action.id] !== myToken || global.isSuspended) {
+                    wasInterrupted = true;
+                    break;
+                }
             }
         }
 
@@ -2605,7 +2631,10 @@ async function runBuffSequenceAction(action, callStack) {
             const delayAfter = action.delayAfter !== undefined ? parseInt(action.delayAfter, 10) : 0;
             if (delayAfter > 0) {
                 console.log(`⏳ [Action] Waiting Delay After: ${delayAfter}ms for "${action.name}"`);
-                await new Promise(res => setTimeout(res, delayAfter));
+                const sleepOk = await abortableSleep(delayAfter, action.id);
+                if (!sleepOk || buffSequenceTokens[action.id] !== myToken || global.isSuspended) {
+                    wasInterrupted = true;
+                }
             }
 
             // Clear active status & update overlay BEFORE triggering downstream onComplete chain
@@ -2647,8 +2676,10 @@ async function runSinglePressAction(action, callStack) {
     if (!allPassed) return;
     const delayAfter = action.delayAfter !== undefined ? parseInt(action.delayAfter, 10) : 0;
     if (delayAfter > 0) {
-        await new Promise(res => setTimeout(res, delayAfter));
+        const ok = await abortableSleep(delayAfter, action.id);
+        if (!ok || global.isSuspended) return;
     }
+    if (global.isSuspended) return;
     await fireChain(action, 'onComplete', callStack);
 }
 
@@ -2659,8 +2690,13 @@ async function runDelayOnlyAction(action, callStack) {
     console.log(`⏳ [Action] Delay Only Started: "${action.name}" (Waiting ${delay}ms)...`);
     await fireChain(action, 'onBeforeStart', callStack);
     if (delay > 0) {
-        await new Promise(res => setTimeout(res, delay));
+        const ok = await abortableSleep(delay, action.id);
+        if (!ok || global.isSuspended) {
+            console.log(`⏳ [Action] Delay Only Cancelled / Interrupted: "${action.name}"`);
+            return;
+        }
     }
+    if (global.isSuspended) return;
     console.log(`⏳ [Action] Delay Only Finished: "${action.name}" (${delay}ms complete)`);
     await fireChain(action, 'onComplete', callStack);
 }
@@ -3146,6 +3182,30 @@ async function runEmergencyStopAction(action, callStack) {
     const scope = action.stopScope || 'all';
     console.log(`[Action] Emergency Stop Triggered: "${action.name}" (Scope: ${scope})`);
 
+    // 1. Instant abort of all in-flight abortable sleeps & active controllers across all nodes
+    if (typeof globalAbortController !== 'undefined' && globalAbortController) {
+        globalAbortController.abort();
+        globalAbortController = new AbortController();
+    }
+    if (typeof actionAbortControllers !== 'undefined' && actionAbortControllers) {
+        for (const [id, ctrl] of actionAbortControllers.entries()) {
+            try { ctrl.abort(); } catch (e) { }
+        }
+        actionAbortControllers.clear();
+    }
+
+    // 2. Clear VisualOverlay on all active game clients
+    try {
+        const vs = (typeof visionService !== 'undefined' ? visionService : null) || (typeof require !== 'undefined' ? require('./vision-service') : null);
+        if (vs && vs.VisualOverlay && global.clientPages) {
+            Object.values(global.clientPages).forEach(page => {
+                if (page && typeof page.isClosed === 'function' && !page.isClosed()) {
+                    vs.VisualOverlay.clear(page).catch(() => { });
+                }
+            });
+        }
+    } catch (e) { }
+
     if (scope === 'all') {
         // 1. Stop all active loops
         Object.keys(activeLoopStates).forEach(loopId => {
@@ -3168,56 +3228,71 @@ async function runEmergencyStopAction(action, callStack) {
         });
         activePartyTargetRouters = {};
         global.activePartyTargetRouters = activePartyTargetRouters;
+        global.partyBuffEpoch = (global.partyBuffEpoch || 0) + 1;
+
         Object.keys(activeSequencerLoops).forEach(seqId => {
             stopCastSequencerAction(seqId, 'Emergency Stop');
         });
         Object.keys(activeSchedulerStates).forEach(schId => {
             stopLoopSchedulerAction(schId, 'Emergency Stop');
         });
-        // Invalidate all tokens so running sequences abort immediately
-        activeActions.forEach(act => {
-            if (act.mode === 'buff_sequence') {
-                buffSequenceTokens[act.id] = (buffSequenceTokens[act.id] || 0) + 1;
-            } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence') {
-                sequencerTokens[act.id] = (sequencerTokens[act.id] || 0) + 1;
-            } else if (act.mode === 'loop_scheduler') {
-                schedulerTokens[act.id] = (schedulerTokens[act.id] || 0) + 1;
-            }
+
+        // Invalidate all tokens for EVERY action (covers macro_group, party_buff, sequencer, buff_sequence, scheduler)
+        if (!global.partyActionTokens) global.partyActionTokens = {};
+        const actionList = (global.activeActions && global.activeActions.length > 0) ? global.activeActions : activeActions;
+        actionList.forEach(act => {
+            buffSequenceTokens[act.id] = (buffSequenceTokens[act.id] || 0) + 1;
+            sequencerTokens[act.id] = (sequencerTokens[act.id] || 0) + 1;
+            schedulerTokens[act.id] = (schedulerTokens[act.id] || 0) + 1;
+            global.partyActionTokens[act.id] = (global.partyActionTokens[act.id] || 0) + 1;
         });
 
-        // 3. Release all held keys
-        Object.keys(activeHoldStates).forEach(actId => {
-            activeHoldStates[actId] = false;
-        });
+        // 3. Release all physically held keys and clear hold timers
+        if (typeof releaseAllHeldKeys === 'function') {
+            releaseAllHeldKeys();
+        } else {
+            Object.keys(activeHoldStates).forEach(actId => {
+                activeHoldStates[actId] = false;
+            });
+        }
 
-        console.log(`[Emergency Stop] All loops, buff sequences, sequencers, schedulers, and held keys stopped across all clients!`);
+        console.log(`[Emergency Stop] All loops, buff sequences, sequencers, macros, schedulers, party actions, and held keys stopped across all clients!`);
     } else if (scope === 'profile') {
         const profileName = action._profileName;
+        if (!global.partyActionTokens) global.partyActionTokens = {};
+        const actionList = (global.activeActions && global.activeActions.length > 0) ? global.activeActions : activeActions;
         // Stop all actions belonging to the same profile
-        activeActions.forEach(act => {
+        actionList.forEach(act => {
             const isSameProfile = !profileName || act._profileName === profileName;
             if (!isSameProfile) return;
+
+            // Invalidate tokens for this action (covers sequencers, macros, party buffs, schedulers)
+            buffSequenceTokens[act.id] = (buffSequenceTokens[act.id] || 0) + 1;
+            sequencerTokens[act.id] = (sequencerTokens[act.id] || 0) + 1;
+            schedulerTokens[act.id] = (schedulerTokens[act.id] || 0) + 1;
+            global.partyActionTokens[act.id] = (global.partyActionTokens[act.id] || 0) + 1;
 
             if (act.mode === 'loop' && activeLoopStates[act.id]?.running) {
                 stopLoopAction(act.id, act.name);
             } else if (act.mode === 'key_hold') {
                 releaseHeldKeyForAction(act);
             } else if (act.mode === 'buff_sequence') {
-                buffSequenceTokens[act.id] = (buffSequenceTokens[act.id] || 0) + 1;
                 const targets = getActionTargets(act.targetClient);
                 targets.forEach(t => {
                     isBuffSequenceRunning[String(t)] = false;
                 });
-            } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence') {
+            } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence' || act.mode === 'macro_group') {
                 stopCastSequencerAction(act.id, act.name);
-                sequencerTokens[act.id] = (sequencerTokens[act.id] || 0) + 1;
                 const targets = getActionTargets(act.targetClient);
                 targets.forEach(t => {
                     delete isSequencerRunning[String(t)];
                 });
             } else if (act.mode === 'loop_scheduler') {
                 stopLoopSchedulerAction(act.id, act.name);
-                schedulerTokens[act.id] = (schedulerTokens[act.id] || 0) + 1;
+            } else if (act.mode === 'party_buff' || act.mode === 'party_scanner' || act.mode === 'party_heal') {
+                if (global.activePartyTargetRouters && global.activePartyTargetRouters[act.id]) {
+                    delete global.activePartyTargetRouters[act.id];
+                }
             }
         });
         console.log(`[Emergency Stop] Stopped all actions in profile "${profileName || 'Current'}"!`);
@@ -3226,22 +3301,35 @@ async function runEmergencyStopAction(action, callStack) {
         targets.forEach(t => {
             isBuffSequenceRunning[String(t)] = false;
             delete isSequencerRunning[String(t)];
+            if (global.clientPages && global.clientPages[String(t)]) {
+                const vs = (typeof visionService !== 'undefined' ? visionService : null) || (typeof require !== 'undefined' ? require('./vision-service') : null);
+                if (vs && vs.VisualOverlay) {
+                    vs.VisualOverlay.clear(global.clientPages[String(t)]).catch(() => {});
+                }
+            }
         });
-        activeActions.forEach(act => {
+        if (!global.partyActionTokens) global.partyActionTokens = {};
+        const actionList = (global.activeActions && global.activeActions.length > 0) ? global.activeActions : activeActions;
+        actionList.forEach(act => {
             const actTargets = getActionTargets(act.targetClient);
             if (targets.some(t => actTargets.includes(t))) {
+                buffSequenceTokens[act.id] = (buffSequenceTokens[act.id] || 0) + 1;
+                sequencerTokens[act.id] = (sequencerTokens[act.id] || 0) + 1;
+                schedulerTokens[act.id] = (schedulerTokens[act.id] || 0) + 1;
+                global.partyActionTokens[act.id] = (global.partyActionTokens[act.id] || 0) + 1;
+
                 if (act.mode === 'loop' && activeLoopStates[act.id]?.running) {
                     stopLoopAction(act.id, act.name);
                 } else if (act.mode === 'key_hold') {
                     releaseHeldKeyForAction(act);
-                } else if (act.mode === 'buff_sequence') {
-                    buffSequenceTokens[act.id] = (buffSequenceTokens[act.id] || 0) + 1;
-                } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence') {
+                } else if (act.mode === 'sequencer' || act.mode === 'cast_sequence' || act.mode === 'macro_group') {
                     stopCastSequencerAction(act.id, act.name);
-                    sequencerTokens[act.id] = (sequencerTokens[act.id] || 0) + 1;
                 } else if (act.mode === 'loop_scheduler') {
                     stopLoopSchedulerAction(act.id, act.name);
-                    schedulerTokens[act.id] = (schedulerTokens[act.id] || 0) + 1;
+                } else if (act.mode === 'party_buff' || act.mode === 'party_scanner' || act.mode === 'party_heal') {
+                    if (global.activePartyTargetRouters && global.activePartyTargetRouters[act.id]) {
+                        delete global.activePartyTargetRouters[act.id];
+                    }
                 }
             }
         });
@@ -4345,6 +4433,9 @@ if (typeof module !== 'undefined') {
         getNamedVariableValue,
         resolveNodeInputData,
         getVariableKey,
-        runActionCondition
+        runActionCondition,
+        runEmergencyStopAction,
+        stopAllLoops,
+        releaseAllHeldKeys
     };
 }
