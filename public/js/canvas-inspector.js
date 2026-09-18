@@ -237,8 +237,8 @@
         <div class="inspector-field-group">
           <label class="inspector-label">${canvasT('inspector_hold_key', 'Hold Target Key')}</label>
           <div style="display:flex; align-items:center; gap:6px;">
-            <input type="text" class="inspector-input" value="${node.data?.targetKey || (node.data?.keys || [])[0] || '1'}" placeholder="e.g. 1 or F1" readonly onfocus="if(window.startRecordingKey) window.startRecordingKey(this, '${node.id}', 'single_key')" onblur="if(window.stopRecordingKey) window.stopRecordingKey(this)" style="flex:1; cursor:pointer; text-align:center; font-family:'JetBrains Mono'; font-weight:700; color:#60a5fa;" />
-            <button type="button" class="btn btn-ghost" onclick="if(window.openVirtualKeyboard) window.openVirtualKeyboard(this.previousElementSibling, '${node.id}', 'single_key')" style="height:36px; padding:0 10px; border-color:#3b82f6; color:#60a5fa; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="Virtual Keyboard">⌨️</button>
+            <input type="text" class="inspector-input" value="${node.data?.targetKey || (node.data?.keys || [])[0] || '1'}" placeholder="${window.currentLang === 'en' ? 'Click to record key...' : 'คลิกเพื่อบันทึกคีย์...'}" readonly onfocus="if(window.startRecordingKey) window.startRecordingKey(this, '${node.id}', 'targetKey')" onblur="if(window.stopRecordingKey) window.stopRecordingKey(this)" onchange="if(window.nodeCanvas?.updateNodeData) window.nodeCanvas.updateNodeData('${node.id}', 'targetKey', this.value.trim());" style="flex:1; cursor:pointer; text-align:center; font-family:'JetBrains Mono'; font-weight:700; color:#60a5fa;" />
+            <button type="button" class="btn btn-ghost" onclick="if(window.openVirtualKeyboard) window.openVirtualKeyboard(this.previousElementSibling, '${node.id}', 'targetKey')" style="height:36px; padding:0 10px; border-color:#3b82f6; color:#60a5fa; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="Virtual Keyboard">⌨️</button>
           </div>
         </div>
         <div class="inspector-field-group">

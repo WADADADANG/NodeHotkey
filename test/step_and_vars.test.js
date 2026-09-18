@@ -837,12 +837,41 @@ assert.ok(global.partyActionTokens['act_pb_test'] > 0, 'Party buff token must be
 
 console.log('✅ Test 15 Passed: Emergency Stop All instantly aborts delay and invalidates tokens for modular action nodes!\n');
 
-// Test 16: Client Window Bounds Reset & Auto-Save Helper
 console.log('Test 16: Testing Client Window Bounds Reset and Auto-Save Helper...');
 assert.ok(typeof bot.resetClientWindowBounds === 'function', 'bot.resetClientWindowBounds must be a function');
 const testBoundsResult = await bot.resetClientWindowBounds(99);
 assert.strictEqual(testBoundsResult.success, true, 'resetClientWindowBounds must return success');
 console.log('✅ Test 16 Passed: Window Bounds Reset helper verified!\n');
+
+// Test 17: Key Hold Node Schema, Target Key & Hold Execution
+console.log('Test 17: Testing Key Hold Node Schema, Target Key & Hold Execution...');
+assert.ok(nodeRegistry.has('key_hold'), 'NodeRegistry must contain key_hold');
+const keyHoldDef = nodeRegistry.get('key_hold');
+assert.ok(keyHoldDef, 'Key Hold definition must exist');
+assert.ok(Array.isArray(keyHoldDef.schema), 'Key Hold must define schema array');
+const targetKeyField = keyHoldDef.schema.find(f => f.key === 'targetKey');
+assert.ok(targetKeyField, 'Key Hold schema must include targetKey field');
+assert.strictEqual(targetKeyField.component, 'key_recorder', 'targetKey field must use key_recorder component');
+
+const keyHoldAction = {
+  id: 'act_hold_test_1',
+  name: 'Hold Key Test',
+  type: 'key_hold',
+  targetKey: 'w',
+  targetClient: '1'
+};
+
+let holdEventFired = null;
+global.toggleKeyHoldAction = async (act) => {
+  assert.strictEqual(act.targetKey, 'w', 'Action targetKey must be preserved');
+  holdEventFired = true;
+};
+
+const executed = await keyHoldDef.execute({}, keyHoldAction, new Set());
+assert.strictEqual(executed, true, 'Key Hold execute must succeed');
+assert.strictEqual(holdEventFired, true, 'global.toggleKeyHoldAction must be called');
+
+console.log('✅ Test 17 Passed: Key Hold Node Schema & Target Key verified!\n');
 
 console.log('🎉 All Step Log & Unreal Blueprint Variable Tests Passed Successfully!');
 process.exit(0);

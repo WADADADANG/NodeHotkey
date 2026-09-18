@@ -158,14 +158,17 @@ export function applyVirtualKeyboard() {
         if (act) {
           if (targetType === 'hotkey') {
             act.trigger.value = finalVal;
-          } else if (targetType === 'comma_keys' || targetType === 'single_key') {
+          } else if (targetType === 'comma_keys' || targetType === 'single_key' || targetType === 'targetKey') {
             if (targetType === 'comma_keys') {
               act.keys = finalVal.split(',').map(s => s.trim()).filter(Boolean);
-            } else if (act.mode === 'forward' || act.mode === 'key_hold') {
+            } else if (act.mode === 'forward' || act.mode === 'key_hold' || targetType === 'targetKey') {
               act.targetKey = finalVal;
+              act.keys = [finalVal];
             } else {
               act.keys = finalVal.split(',').map(s => s.trim()).filter(Boolean);
             }
+          } else if (targetType) {
+            act[targetType] = finalVal;
           }
         }
       }
@@ -176,11 +179,12 @@ export function applyVirtualKeyboard() {
           if (!node.data) node.data = {};
           if (targetType === 'hotkey') {
             node.data.triggerValue = finalVal;
-          } else if (targetType === 'comma_keys' || targetType === 'single_key') {
+          } else if (targetType === 'comma_keys' || targetType === 'single_key' || targetType === 'targetKey') {
             if (targetType === 'comma_keys') {
               node.data.keys = finalVal.split(',').map(s => s.trim()).filter(Boolean);
-            } else if (node.type === 'forwarder' || node.type === 'key_hold') {
+            } else if (node.type === 'forwarder' || node.type === 'key_hold' || targetType === 'targetKey') {
               node.data.targetKey = finalVal;
+              node.data.keys = [finalVal];
             } else {
               node.data.keys = finalVal ? [finalVal] : ['1'];
             }
@@ -189,6 +193,8 @@ export function applyVirtualKeyboard() {
             if (Array.isArray(node.data.steps) && node.data.steps[stepIdx]) {
               node.data.steps[stepIdx].key = finalVal;
             }
+          } else if (targetType && node.data) {
+            node.data[targetType] = finalVal;
           }
           window.nodeCanvas.renderNodes();
           window.nodeCanvas.renderOutliner();

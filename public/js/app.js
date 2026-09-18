@@ -395,17 +395,16 @@ async function initApp() {
             node.data.triggerValue = value;
           } else if (type === 'comma_keys') {
             node.data.keys = value.split(',').map(s => s.trim()).filter(Boolean);
-          } else if (type === 'single_key') {
-            if (node.type === 'forwarder' || node.type === 'key_hold') {
-              node.data.targetKey = value;
-            } else {
-              node.data.keys = value ? [value] : ['1'];
-            }
+          } else if (type === 'single_key' || type === 'targetKey') {
+            node.data.targetKey = value;
+            node.data.keys = value ? [value] : ['1'];
           } else if (type && (type.startsWith('sequencer_step_') || type.startsWith('macro_step_'))) {
             const stepIdx = parseInt(type.replace('sequencer_step_', '').replace('macro_step_', ''), 10);
             if (Array.isArray(node.data.steps) && node.data.steps[stepIdx]) {
               node.data.steps[stepIdx].key = value;
             }
+          } else if (type && node.data) {
+            node.data[type] = value;
           }
           window.nodeCanvas.renderNodes();
           window.nodeCanvas.renderOutliner();

@@ -237,12 +237,13 @@
       key_recorder(field, value, node) {
         const val = value || node.data?.[field.key] || '1';
         const label = canvasT(field.labelKey, field.label || 'Target Key');
+        const placeholderText = (typeof window !== 'undefined' && window.currentLang === 'en') ? 'Click to record key...' : 'คลิกเพื่อบันทึกคีย์...';
 
         return `
           <div class="inspector-field-group">
             <label class="inspector-label">${label}</label>
             <div style="display:flex; align-items:center; gap:6px;">
-              <input type="text" class="inspector-input" value="${val}" placeholder="Press key..." readonly onfocus="if(window.startRecordingKey) window.startRecordingKey(this, '${node.id}', '${field.key || 'targetKey'}')" onblur="if(window.stopRecordingKey) window.stopRecordingKey(this)" style="flex:1; cursor:pointer; text-align:center; font-family:'JetBrains Mono'; font-weight:700; color:#60a5fa;" />
+              <input type="text" class="inspector-input" value="${val}" placeholder="${placeholderText}" readonly onfocus="if(window.startRecordingKey) window.startRecordingKey(this, '${node.id}', '${field.key || 'targetKey'}')" onblur="if(window.stopRecordingKey) window.stopRecordingKey(this)" onchange="if(window.nodeCanvas?.updateNodeData) window.nodeCanvas.updateNodeData('${node.id}', '${field.key || 'targetKey'}', this.value.trim());" style="flex:1; cursor:pointer; text-align:center; font-family:'JetBrains Mono'; font-weight:700; color:#60a5fa;" />
               <button type="button" class="btn btn-ghost" onclick="if(window.openVirtualKeyboard) window.openVirtualKeyboard(this.previousElementSibling, '${node.id}', '${field.key || 'targetKey'}')" style="height:36px; padding:0 10px; border-color:#3b82f6; color:#60a5fa; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="Virtual Keyboard">⌨️</button>
             </div>
           </div>
