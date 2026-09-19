@@ -83,6 +83,10 @@ function createWindow() {
     broadcastStatus();
     checkBotHealth();
   });
+
+  mainWindow.on('focus', () => {
+    ensureOverlayAlwaysOnTop();
+  });
 }
 
 function createTray() {
@@ -129,7 +133,8 @@ function createTray() {
               overlayWindow.hide();
               isOverlayExplicitlyClosed = true;
             } else {
-              overlayWindow.show();
+              overlayWindow.showInactive();
+              ensureOverlayAlwaysOnTop();
             }
           } else {
             createOverlayWindow();
@@ -290,9 +295,18 @@ function broadcastLog(text, level = null) {
 let overlayWindow = null;
 let isOverlayExplicitlyClosed = false;
 
+function ensureOverlayAlwaysOnTop() {
+  if (!overlayWindow || overlayWindow.isDestroyed() || !overlayWindow.isVisible()) return;
+  try {
+    overlayWindow.setAlwaysOnTop(true, 'screen-saver');
+    overlayWindow.moveTop();
+  } catch (e) {}
+}
+
 function createOverlayWindow() {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
-    overlayWindow.show();
+    overlayWindow.showInactive();
+    ensureOverlayAlwaysOnTop();
     return;
   }
 
@@ -304,10 +318,12 @@ function createOverlayWindow() {
     frame: false,
     transparent: true,
     alwaysOnTop: true,
+    show: false, // Prevent focus stealing and white flash before ready
     skipTaskbar: true, // 100% hidden from Taskbar!
     resizable: false, // Disables manual cursor border resizing
     hasShadow: false,
     useContentSize: true,
+    focusable: true,
     icon: path.join(PROJECT_DIR, 'icon.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -316,7 +332,34 @@ function createOverlayWindow() {
     }
   });
 
+  // Ensure top-level Z-order across all desktop workspaces and full-screen games
+  try {
+    overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    overlayWindow.setAlwaysOnTop(true, 'screen-saver');
+    overlayWindow.moveTop();
+  } catch (e) {}
+
   overlayWindow.loadFile(path.join(__dirname, 'ui', 'overlay.html'));
+
+  overlayWindow.once('ready-to-show', () => {
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      overlayWindow.showInactive();
+      ensureOverlayAlwaysOnTop();
+    }
+  });
+
+  overlayWindow.on('show', () => {
+    ensureOverlayAlwaysOnTop();
+  });
+
+  // When user clicks another application or window, immediately re-assert topmost
+  overlayWindow.on('blur', () => {
+    ensureOverlayAlwaysOnTop();
+  });
+
+  overlayWindow.on('moved', () => {
+    ensureOverlayAlwaysOnTop();
+  });
 
   overlayWindow.on('closed', () => {
     overlayWindow = null;
@@ -342,7 +385,8 @@ function syncOverlayOnEngineState(running) {
     if (isEnabled && !isOverlayExplicitlyClosed) {
       createOverlayWindow();
       if (overlayWindow && !overlayWindow.isDestroyed() && !overlayWindow.isVisible()) {
-        overlayWindow.show();
+        overlayWindow.showInactive();
+        ensureOverlayAlwaysOnTop();
       }
     } else {
       if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
@@ -416,7 +460,10 @@ function checkBotHealth() {
             createOverlayWindow();
           }
           if (overlayWindow && !overlayWindow.isDestroyed()) {
-            if (!overlayWindow.isVisible()) overlayWindow.show();
+            if (!overlayWindow.isVisible()) {
+              overlayWindow.showInactive();
+            }
+            ensureOverlayAlwaysOnTop();
             overlayWindow.webContents.send('overlay:update', {
               port: resolvedPort,
               activeClients: json.activeClients || [],
@@ -486,6 +533,7 @@ function startBotProcess() {
             const rawJson = trimmed.slice('__OVERLAY_DATA__'.length);
             const overlayData = JSON.parse(rawJson);
             if (overlayWindow && !overlayWindow.isDestroyed()) {
+              ensureOverlayAlwaysOnTop();
               overlayWindow.webContents.send('overlay:update', overlayData);
             }
           } catch (e) {}
@@ -792,12 +840,16 @@ ipcMain.on('overlay:resize', (event, { width, height }) => {
     const targetW = Math.round(width) || 210;
     const targetH = Math.round(height) || 60;
     const bounds = overlayWindow.getBounds();
-    overlayWindow.setBounds({
-      x: bounds.x,
-      y: bounds.y,
-      width: targetW,
-      height: targetH
-    });
+    if (bounds.width !== targetW || bounds.height !== targetH) {
+      overlayWindow.setBounds({
+        x: bounds.x,
+        y: bounds.y,
+        width: targetW,
+        height: targetH
+      });
+    }
+    // Windows SetWindowPos drops HWND_TOPMOST when resizing; re-assert topmost!
+    ensureOverlayAlwaysOnTop();
   }
 });
 
@@ -808,7 +860,8 @@ ipcMain.handle('overlay:toggle', () => {
       overlayWindow.hide();
       isOverlayExplicitlyClosed = true;
     } else {
-      overlayWindow.show();
+      overlayWindow.showInactive();
+      ensureOverlayAlwaysOnTop();
     }
   } else {
     createOverlayWindow();
@@ -822,6 +875,7 @@ app.on('second-instance', () => {
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.show();
     mainWindow.focus();
+    ensureOverlayAlwaysOnTop();
   }
 });
 
