@@ -1112,9 +1112,17 @@ async function releaseAllStuckKeysForClient(clientIndex) {
     }
 }
 
+const lastBlurReleaseTimes = {};
+
 async function handleWindowBlurFromClient({ clientIndex, keys, buttons }) {
     const targetIdx = parseInt(clientIndex, 10);
     if (!clientPages[targetIdx]) return;
+
+    const now = Date.now();
+    if (lastBlurReleaseTimes[targetIdx] && (now - lastBlurReleaseTimes[targetIdx] < 600)) {
+        return; // Debounce simultaneous blur/focusout/visibilitychange/pagehide events
+    }
+    lastBlurReleaseTimes[targetIdx] = now;
 
     console.log(`[Anti-Stuck] 🛡️ [Client ${targetIdx}] Focus lost / window blur detected! Auto-releasing all held inputs via native CDP...`);
 
@@ -1234,7 +1242,12 @@ function clientInPageScript({ index, initialPrefix }) {
     }, true);
 
     // 4.3 Auto-release all held inputs on window blur / focus lost
+    let lastBlurTimestamp = 0;
     const releaseAllStuckPhysicalInputs = () => {
+        const now = Date.now();
+        if (now - lastBlurTimestamp < 400) return;
+        lastBlurTimestamp = now;
+
         const heldKeysList = Array.from(heldPhysicalKeys.values());
         const heldButtonsList = Array.from(heldPhysicalButtons.values());
 
