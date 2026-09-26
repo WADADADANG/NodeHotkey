@@ -611,9 +611,8 @@ const server = http.createServer((req, res) => {
   if (urlPath === '/api/nodes' && req.method === 'GET') {
     try {
       const { nodeRegistry } = require('./node-registry');
-      if (!nodeRegistry.isLoaded) {
-        nodeRegistry.loadAll();
-      }
+      // Force hot-reload node definitions so schema changes take effect immediately
+      nodeRegistry.loadAll(null, true);
       const list = nodeRegistry.getAll().map(def => ({
         type: def.type,
         aliases: def.aliases || [],

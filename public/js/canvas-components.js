@@ -58,7 +58,8 @@
     components: {
       client_selector(field, value, node) {
         const isEn = window.currentLang === 'en';
-        const isSingleSelect = field.allowMultiple === false || field.singleSelect === true;
+        const isVisionNode = ['party_slot', 'party_scanner', 'party_heal', 'party_buff', 'screenshot'].includes(node?.type);
+        const isSingleSelect = field.allowMultiple === false || field.singleSelect === true || isVisionNode;
         let rawVal = String(value !== undefined ? value : (node.data?.[field.key || 'targetClient'] || '1'));
         if (isSingleSelect && (rawVal === 'all' || rawVal === 'both' || rawVal.includes(','))) {
           rawVal = rawVal.split(',')[0].trim() || '1';

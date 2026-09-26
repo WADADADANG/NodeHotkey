@@ -647,8 +647,8 @@
 
     return `
       <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen (Vision)')}</label>
-        ${this.renderClientButtonSelector(node)}
+        <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen (Vision - Single)')}</label>
+        ${this.renderClientButtonSelector(node, false)}
       </div>
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_scan_region', isEn ? 'Scan Region (Screen Area)' : 'พื้นที่สแกนบนหน้าจอ')}</label>
@@ -695,11 +695,21 @@
     const isEn = window.currentLang === 'en';
     const targetSlot = node.data?.targetSlot ?? 1;
     const delayAfterClick = node.data?.delayAfterClick ?? 80;
+    const scanRegion = node.data?.scanRegion || 'auto';
 
     return `
       <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_target_clients', isEn ? 'Target Client Screen (Vision)' : 'เลือกหน้าจอเป้าหมาย (Client)')}</label>
-        ${this.renderClientButtonSelector(node)}
+        <label class="inspector-label">${canvasT('inspector_target_clients', isEn ? 'Target Client Screen (Vision - Single)' : 'เลือกหน้าจอเป้าหมาย (Client - จอเดียว)')}</label>
+        ${this.renderClientButtonSelector(node, false)}
+      </div>
+      <div class="inspector-field-group">
+        <label class="inspector-label">${canvasT('inspector_party_scan_region', isEn ? 'Party Window Position' : 'ตำแหน่งหน้าต่างปาร์ตี้บนจอ')}</label>
+        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'scanRegion', this.value);">
+          <option value="auto" ${scanRegion === 'auto' ? 'selected' : ''}>🔍 ${canvasT('region_auto', isEn ? 'Auto (Detect Left/Right)' : 'อัตโนมัติ (ตรวจจับซ้าย/ขวา Auto)')}</option>
+          <option value="right" ${scanRegion === 'right' ? 'selected' : ''}>👉 ${canvasT('region_right', isEn ? 'Right Half (Side by Side)' : 'ฝั่งขวาของจอ (แบ่งจอซ้าย-ขวา)')}</option>
+          <option value="left" ${scanRegion === 'left' ? 'selected' : ''}>👈 ${canvasT('region_left', isEn ? 'Left Half' : 'ฝั่งซ้ายของจอ')}</option>
+          <option value="full" ${scanRegion === 'full' ? 'selected' : ''}>🖥️ ${canvasT('region_full', isEn ? 'Full Screen' : 'เต็มหน้าจอ')}</option>
+        </select>
       </div>
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_target_slot', isEn ? 'Target Party Member Slot' : 'ช่องสมาชิกปาร์ตี้เป้าหมาย')}</label>
@@ -733,8 +743,8 @@
 
     return `
       <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen (Vision)')}</label>
-        ${this.renderClientButtonSelector(node)}
+        <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen (Vision - Single)')}</label>
+        ${this.renderClientButtonSelector(node, false)}
       </div>
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_party_low_hp', 'Low HP Threshold (%)')}</label>
@@ -763,8 +773,8 @@
 
     return `
       <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen (Vision)')}</label>
-        ${this.renderClientButtonSelector(node)}
+        <label class="inspector-label">${canvasT('inspector_target_clients', 'Target Client Screen (Vision - Single)')}</label>
+        ${this.renderClientButtonSelector(node, false)}
       </div>
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_party_scan_region', isEn ? 'Party Window Position' : 'ตำแหน่งหน้าต่างปาร์ตี้บนจอ')}</label>
@@ -865,8 +875,8 @@
 
     return `
       <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_target_clients', isEn ? 'Target Client Screen' : 'จอเป้าหมาย')}</label>
-        ${this.renderClientButtonSelector(node)}
+        <label class="inspector-label">${canvasT('inspector_target_clients', isEn ? 'Target Client Screen (Vision - Single)' : 'จอเป้าหมาย (จอเดียว)')}</label>
+        ${this.renderClientButtonSelector(node, false)}
       </div>
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_screenshot_region', isEn ? 'Capture Area' : 'พื้นที่ถ่ายภาพ')}</label>
@@ -1278,41 +1288,68 @@
     this.onProfileChanged();
   },
 
-  renderClientButtonSelector(node) {
-    const rawVal = node.data?.targetClient || '1';
+  renderClientButtonSelector(node, allowMultiple = null) {
+    const isEn = window.currentLang === 'en';
+    const isVisionNode = ['party_slot', 'party_scanner', 'party_heal', 'party_buff', 'screenshot'].includes(node.type);
+    const def = window.clientNodeRegistry ? window.clientNodeRegistry.get(node.type) : null;
+    const clientField = def && Array.isArray(def.schema) ? def.schema.find(f => f.key === 'targetClient') : null;
+    const isSingleSelect = allowMultiple === false ||
+                           isVisionNode ||
+                           (clientField && (clientField.allowMultiple === false || clientField.singleSelect === true));
+
+    let rawVal = String(node.data?.targetClient || '1');
+    if (isSingleSelect && (rawVal === 'all' || rawVal === 'both' || rawVal.includes(','))) {
+      rawVal = rawVal.split(',')[0].trim() || '1';
+      if (node.data) node.data.targetClient = rawVal;
+    }
+
     let selectedList = [];
-    const isAllSelected = rawVal === 'all' || rawVal === 'both';
+    const isAllSelected = !isSingleSelect && (rawVal === 'all' || rawVal === 'both');
     if (isAllSelected) {
       selectedList = ['1', '2', '3', '4', '5', '6', '7', '8'];
     } else {
-      selectedList = String(rawVal).split(',').map(s => s.trim()).filter(Boolean);
+      selectedList = rawVal.split(',').map(s => s.trim()).filter(Boolean);
+      if (isSingleSelect && selectedList.length > 1) {
+        selectedList = [selectedList[0]];
+      }
     }
 
-    let buttonsHTML = '<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">';
+    let buttonsHTML = '<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; align-items:center;">';
     for (let i = 1; i <= 8; i++) {
-      const isSelected = isAllSelected || selectedList.includes(String(i));
+      const strI = String(i);
+      const isSelected = isAllSelected || selectedList.includes(strI);
       const bg = isSelected ? '#3b82f6' : 'rgba(15,23,42,0.8)';
       const border = isSelected ? '#60a5fa' : 'rgba(255,255,255,0.12)';
       const color = isSelected ? '#fff' : 'var(--muted)';
+      const shadow = isSelected ? 'box-shadow: 0 0 10px rgba(59,130,246,0.45);' : '';
       buttonsHTML += `
-        <button type="button" onclick="window.nodeCanvas.toggleClientSelection('${node.id}', '${i}')"
-          style="background:${bg}; border:1px solid ${border}; color:${color}; width:28px; height:28px; border-radius:50%; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; outline:none;"
-          title="Client ${i}">
+        <button type="button" onclick="window.nodeCanvas.toggleClientSelection('${node.id}', '${strI}')"
+          style="background:${bg}; border:1px solid ${border}; color:${color}; width:28px; height:28px; border-radius:50%; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; outline:none; ${shadow}"
+          title="Client ${i}${isSingleSelect ? (isEn ? ' (Single Target)' : ' (จอเดียว)') : ''}">
           ${i}
         </button>
       `;
     }
 
-    const allBg = isAllSelected ? '#3b82f6' : 'rgba(15,23,42,0.8)';
-    const allBorder = isAllSelected ? '#60a5fa' : 'rgba(255,255,255,0.12)';
-    const allColor = isAllSelected ? '#fff' : 'var(--muted)';
-    buttonsHTML += `
-      <button type="button" onclick="window.nodeCanvas.toggleClientSelection('${node.id}', 'all')"
-        style="background:${allBg}; border:1px solid ${allBorder}; color:${allColor}; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; outline:none;"
-        title="All Active Clients">
-        ALL
-      </button>
-    `;
+    if (!isSingleSelect) {
+      const allBg = isAllSelected ? '#3b82f6' : 'rgba(15,23,42,0.8)';
+      const allBorder = isAllSelected ? '#60a5fa' : 'rgba(255,255,255,0.12)';
+      const allColor = isAllSelected ? '#fff' : 'var(--muted)';
+      buttonsHTML += `
+        <button type="button" onclick="window.nodeCanvas.toggleClientSelection('${node.id}', 'all')"
+          style="background:${allBg}; border:1px solid ${allBorder}; color:${allColor}; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; outline:none;"
+          title="${isEn ? 'All Active Clients' : 'ทุกจอเกม'}">
+          ALL
+        </button>
+      `;
+    } else {
+      const activeClient = selectedList[0] || '1';
+      buttonsHTML += `
+        <span style="font-size:11px; font-weight:700; color:#38bdf8; margin-left:4px; padding:2px 8px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3); border-radius:10px;">
+          🎯 ${isEn ? `Client ${activeClient} (Single)` : `จอที่ ${activeClient} (จอเดียว)`}
+        </span>
+      `;
+    }
     buttonsHTML += '</div>';
     return buttonsHTML;
   },
@@ -2288,9 +2325,10 @@
     if (!node) return;
     if (!node.data) node.data = {};
 
+    const isVisionNode = ['party_slot', 'party_scanner', 'party_heal', 'party_buff', 'screenshot'].includes(node.type);
     const def = window.clientNodeRegistry ? window.clientNodeRegistry.get(node.type) : null;
     const clientField = def && Array.isArray(def.schema) ? def.schema.find(f => f.key === 'targetClient') : null;
-    const isSingleSelect = clientField && (clientField.allowMultiple === false || clientField.singleSelect === true);
+    const isSingleSelect = isVisionNode || (clientField && (clientField.allowMultiple === false || clientField.singleSelect === true));
 
     if (isSingleSelect) {
       const targetStr = (val === 'all' || val === 'both') ? '1' : String(val);
