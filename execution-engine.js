@@ -97,6 +97,43 @@ class NodeExecutionEngine {
   }
 
   /**
+   * Check if a connection port matches the requested signal/event port (Strict Pin Dispatcher)
+   */
+  static matchPort(connPort, reqPort) {
+    if (!reqPort) return true; // Wildcard: matches any port
+    if (!connPort) return false;
+    if (connPort === reqPort) return true;
+
+    const normConn = String(connPort).toLowerCase().replace(/[-_]/g, '');
+    const normReq = String(reqPort).toLowerCase().replace(/[-_]/g, '');
+
+    if (normConn === normReq) return true;
+
+    // Generic Flow Continuation group (completion / next) - explicitly excludes onStop, onKeyDown, etc.
+    const genericCompletion = ['next', 'execout', 'oncomplete', 'onsuccess', 'onfired'];
+    const isConnGeneric = genericCompletion.includes(normConn);
+    const isReqGeneric = genericCompletion.includes(normReq);
+    if (isConnGeneric && isReqGeneric) return true;
+
+    // Interval / Cycle aliases
+    const intervalPorts = ['oneachcycle', 'oninterval', 'oncycle'];
+    if (intervalPorts.includes(normConn) && intervalPorts.includes(normReq)) return true;
+
+    // Party Heal aliases
+    const healTargetPorts = ['onhealtarget', 'ontargetselected', 'onmemberlowhp'];
+    if (healTargetPorts.includes(normConn) && healTargetPorts.includes(normReq)) return true;
+
+    const allHealthyPorts = ['onnotarget', 'onallhealthy'];
+    if (allHealthyPorts.includes(normConn) && allHealthyPorts.includes(normReq)) return true;
+
+    // Party Slot selection aliases
+    const slotSelectPorts = ['onselected', 'next', 'oncomplete'];
+    if (normReq === 'onselected' && slotSelectPorts.includes(normConn)) return true;
+
+    return false;
+  }
+
+  /**
    * Get downstream connected nodes from a specific output port
    */
   getDownstreamNodes(fromIdOrActionId, portName = null) {
@@ -107,25 +144,7 @@ class NodeExecutionEngine {
     const targetNodes = [];
 
     connections.forEach(conn => {
-      const isNextPort = conn.fromPort === 'next' || conn.fromPort === 'exec_out' || conn.fromPort === 'onComplete' || conn.fromPort === 'on_complete' || conn.fromPort === 'onFired' || conn.fromPort === 'onActivated' || conn.fromPort === 'onSuccess' || conn.fromPort === 'onStop' || conn.fromPort === 'on_stop';
-      const isReqNext = portName === 'onComplete' || portName === 'next' || portName === 'exec_out' || portName === 'on_complete' || portName === 'onFired' || portName === 'onActivated' || portName === 'onKeyDown' || portName === 'onSuccess' || portName === 'onStop' || portName === 'on_stop';
-
-      const matchesPort = !portName || 
-        conn.fromPort === portName || 
-        (isReqNext && isNextPort) ||
-        (portName === 'onError' && (conn.fromPort === 'onError' || conn.fromPort === 'on_error')) ||
-        (portName === 'onEachCycle' && (conn.fromPort === 'on_interval' || conn.fromPort === 'onInterval')) ||
-        ((portName === 'onStop' || portName === 'onComplete') && (conn.fromPort === 'on_stop' || conn.fromPort === 'onStop' || conn.fromPort === 'onComplete' || conn.fromPort === 'on_complete')) ||
-        (portName === 'onTrue' && conn.fromPort === 'on_true') ||
-        (portName === 'onFalse' && conn.fromPort === 'on_false') ||
-        (portName === 'onEnable' && conn.fromPort === 'on_enable') ||
-        (portName === 'onDisable' && conn.fromPort === 'on_disable') ||
-        (portName === 'onBeforeStart' && conn.fromPort === 'on_before_start') ||
-        (portName === 'onAfterStart' && conn.fromPort === 'on_after_start') ||
-        (portName === 'onStep' && (conn.fromPort === 'onStep' || conn.fromPort === 'on_step')) ||
-        (portName === 'onCooldown' && (conn.fromPort === 'onCooldown' || conn.fromPort === 'on_cooldown'));
-
-      if (matchesPort) {
+      if (NodeExecutionEngine.matchPort(conn.fromPort, portName)) {
         const targetNode = this.nodesMap.get(conn.toNodeId);
         if (targetNode) {
           targetNodes.push({

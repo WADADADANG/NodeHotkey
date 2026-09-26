@@ -349,7 +349,7 @@ function sendRealtimeOverlayState() {
     };
     try {
         console.log('__OVERLAY_DATA__' + JSON.stringify(payload));
-    } catch (e) {}
+    } catch (e) { }
 }
 global.sendRealtimeOverlayState = sendRealtimeOverlayState;
 global.sendOverlayUpdate = sendRealtimeOverlayState;
@@ -428,7 +428,7 @@ function loadConfigFromFile() {
         const activeProfileNames = Array.isArray(parsed.activeProfiles)
             ? parsed.activeProfiles
             : (parsed.activeProfile ? [parsed.activeProfile] : []);
-        
+
         console.log(`[Config] Active profiles (${activeProfileNames.length}): [${activeProfileNames.join(', ')}]`);
 
         const activeProfileObjs = activeProfileNames
@@ -532,6 +532,7 @@ function watchConfigChanges() {
 // Load config immediately on startup
 loadConfigFromFile();
 watchConfigChanges();
+global.loadConfigFromFile = loadConfigFromFile;
 
 // ============================================================================
 // SYSTEM STATE & TIMERS
@@ -661,11 +662,11 @@ global.toggleSuspendState = function (forcedState) {
             if (vs && vs.VisualOverlay && clientPages) {
                 for (let t in clientPages) {
                     if (clientPages[t]) {
-                        vs.VisualOverlay.clear(clientPages[t]).catch(() => {});
+                        vs.VisualOverlay.clear(clientPages[t]).catch(() => { });
                     }
                 }
             }
-        } catch (e) {}
+        } catch (e) { }
     } else {
         // Resumed from suspend
         syncGhostMouseJitter();
@@ -1363,7 +1364,7 @@ function clientInPageScript({ index, initialPrefix }) {
             if (typeof x === 'number' && typeof y === 'number' && w > 200 && h > 200) {
                 if (!lastReportedBounds || lastReportedBounds.x !== x || lastReportedBounds.y !== y || lastReportedBounds.w !== w || lastReportedBounds.h !== h) {
                     lastReportedBounds = { x, y, w, h };
-                    window.__nodeHotkeySaveBounds({ x, y, w, h }).catch(() => {});
+                    window.__nodeHotkeySaveBounds({ x, y, w, h }).catch(() => { });
                 }
             }
         } catch (e) { }
@@ -1408,7 +1409,7 @@ async function injectClientInitScripts(browserCtx, clientIndex) {
     try {
         const pages = browserCtx.pages();
         for (let p of pages) {
-            p.evaluate(clientInPageScript, { index: clientIndex, initialPrefix }).catch(() => {});
+            p.evaluate(clientInPageScript, { index: clientIndex, initialPrefix }).catch(() => { });
         }
     } catch (e) { }
 }
@@ -1678,10 +1679,10 @@ function handleClientContextClosed(clientIndexInput) {
     // Prevent duplicate close notifications (e.g. page.on('close') + browserCtx.on('close'))
     if (closingClients.has(clientIndex)) return;
 
-    const isAlreadyInactive = !clientPages[clientIndex] && 
-                              !clientContexts[clientIndex] && 
-                              !activeClients.includes(clientIndex) && 
-                              !activeClients.includes(String(clientIndex));
+    const isAlreadyInactive = !clientPages[clientIndex] &&
+        !clientContexts[clientIndex] &&
+        !activeClients.includes(clientIndex) &&
+        !activeClients.includes(String(clientIndex));
     if (isAlreadyInactive) return;
 
     closingClients.add(clientIndex);
@@ -1769,7 +1770,7 @@ async function resetClientWindowBounds(clientIndexInput) {
                     await cdp.send('Browser.setWindowBounds', {
                         windowId,
                         bounds: { left: 100, top: 100, width: 974, height: 600, windowState: 'normal' }
-                    }).catch(() => {});
+                    }).catch(() => { });
                 }
             }
         } catch (e) { }
@@ -2035,7 +2036,7 @@ async function findAndAttachTabForClient(clientIndex, browserCtx) {
 
                 // Ensure In-Page Anti-Stuck Engine is running immediately on attached tab
                 const initialPrefix = clientAliases[String(clientIndex)] ? `[${clientAliases[String(clientIndex)]}] ` : `[Client ${clientIndex}] `;
-                foundPage.evaluate(clientInPageScript, { index: clientIndex, initialPrefix }).catch(() => {});
+                foundPage.evaluate(clientInPageScript, { index: clientIndex, initialPrefix }).catch(() => { });
 
                 foundPage.removeAllListeners('close');
                 foundPage.removeAllListeners('crash');
@@ -3437,7 +3438,7 @@ async function runEmergencyStopAction(action, callStack) {
             if (global.clientPages && global.clientPages[String(t)]) {
                 const vs = (typeof visionService !== 'undefined' ? visionService : null) || (typeof require !== 'undefined' ? require('./vision-service') : null);
                 if (vs && vs.VisualOverlay) {
-                    vs.VisualOverlay.clear(global.clientPages[String(t)]).catch(() => {});
+                    vs.VisualOverlay.clear(global.clientPages[String(t)]).catch(() => { });
                 }
             }
         });
@@ -3487,10 +3488,10 @@ async function runEmitEventAction(action, callStack) {
     console.log(`[Event Bus] Broadcasting custom event: "${eventName}" (from "${action._profileName || 'Active'}" / "${action.name}")`);
 
     // Find all matching trigger actions in activeActions
-    const listeners = activeActions.filter(act => 
-        act.enabled && 
-        act.trigger && 
-        act.trigger.type === 'event' && 
+    const listeners = activeActions.filter(act =>
+        act.enabled &&
+        act.trigger &&
+        act.trigger.type === 'event' &&
         String(act.trigger.value || '').trim().toLowerCase() === cleanEventName
     );
 
@@ -3589,17 +3590,17 @@ function resolveNodeInputData(targetAction, inputPortName) {
     if (!targetAction) return null;
     const targetId = targetAction.id || targetAction.nodeId;
     if (global.activeProfileConnections && Array.isArray(global.activeProfileConnections)) {
-        const conn = global.activeProfileConnections.find(c => 
-            (c.toNodeId === targetId || c.toNodeId === `node_${targetId}` || (targetAction.nodeId && c.toNodeId === targetAction.nodeId)) && 
-            (c.toPort === inputPortName || 
-             (!c.toPort && (inputPortName === 'msg_in' || inputPortName === 'val_in' || inputPortName === 'text_in')) ||
-             ((inputPortName === 'text_in' || inputPortName === 'msg_in') && (c.toPort === 'text_in' || c.toPort === 'msg_in' || c.toPort === 'text-in')))
+        const conn = global.activeProfileConnections.find(c =>
+            (c.toNodeId === targetId || c.toNodeId === `node_${targetId}` || (targetAction.nodeId && c.toNodeId === targetAction.nodeId)) &&
+            (c.toPort === inputPortName ||
+                (!c.toPort && (inputPortName === 'msg_in' || inputPortName === 'val_in' || inputPortName === 'text_in')) ||
+                ((inputPortName === 'text_in' || inputPortName === 'msg_in') && (c.toPort === 'text_in' || c.toPort === 'msg_in' || c.toPort === 'text-in')))
         );
         if (conn) {
             const actionPool = (global.activeActions && global.activeActions.length > 0) ? global.activeActions : (typeof activeActions !== 'undefined' ? activeActions : []);
-            const sourceAction = actionPool.find(a => 
-                a.id === conn.fromNodeId || 
-                a.id === `node_${conn.fromNodeId}` || 
+            const sourceAction = actionPool.find(a =>
+                a.id === conn.fromNodeId ||
+                a.id === `node_${conn.fromNodeId}` ||
                 (a.nodeId && a.nodeId === conn.fromNodeId)
             );
             if (sourceAction) {
@@ -3782,10 +3783,10 @@ function triggerWebhookEvent(eventName, payload = null) {
     }
 
     // 2. ActiveActions Fallback Trigger Matching
-    const directListeners = activeActions.filter(act => 
-        act.enabled && 
-        act.trigger && 
-        act.trigger.type === 'webhook' && 
+    const directListeners = activeActions.filter(act =>
+        act.enabled &&
+        act.trigger &&
+        act.trigger.type === 'webhook' &&
         String(act.trigger.value || '').trim().toLowerCase() === cleanEventName &&
         !executedActions.includes(act.name || act.id)
     );
@@ -3921,7 +3922,13 @@ async function fireChain(sourceAction, eventName, callStack = new Set()) {
     if (downstreamGraphTargets.length > 0) {
         downstreamGraphTargets.forEach(({ node }) => {
             const actId = node.data?.actionId || (node.id.startsWith('node_') ? node.id.replace('node_', '') : node.id);
-            const targetAction = activeActions.find(a => a.id === actId || a.id === node.id);
+            const targetAction = activeActions.find(a => 
+                a.id === actId || 
+                a.id === node.id || 
+                a.nodeId === node.id || 
+                a.id === `node_${actId}` ||
+                (a.nodeId && (a.nodeId === actId || a.nodeId === `node_${actId}`))
+            );
             if (targetAction && targetAction.enabled) {
                 targetActionsToRun.push(targetAction);
             }
@@ -3932,7 +3939,12 @@ async function fireChain(sourceAction, eventName, callStack = new Set()) {
         if (chains && chains._enabled === true && chains[eventName] && chains[eventName].length) {
             const rawTargets = Array.isArray(chains[eventName]) ? chains[eventName] : [chains[eventName]];
             rawTargets.forEach(targetId => {
-                const targetAction = activeActions.find(a => a.id === targetId || a.id === `node_${targetId}`);
+                const targetAction = activeActions.find(a => 
+                    a.id === targetId || 
+                    a.id === `node_${targetId}` || 
+                    a.nodeId === targetId || 
+                    a.nodeId === `node_${targetId}`
+                );
                 if (targetAction && targetAction.enabled) {
                     targetActionsToRun.push(targetAction);
                 }
@@ -4155,7 +4167,7 @@ async function runActionControl(act, callStack) {
             const isOnce = targetAction.modeType === 'once';
             const target = targetAction.targetClient || '1';
             let targets = getActionTargets(target).map(x => parseInt(x, 10));
-            const isRunning = isOnce 
+            const isRunning = isOnce
                 ? targets.some(t => isSequencerRunning[String(t)])
                 : !!(activeSequencerLoops[targetAction.id] && activeSequencerLoops[targetAction.id].running);
 

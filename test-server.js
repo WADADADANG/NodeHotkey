@@ -456,6 +456,9 @@ const server = http.createServer((req, res) => {
         if (payload && payload.profiles) {
           writeConfig(payload);
           console.log(`[Server] Saved full config (active: ${payload.activeProfile})`);
+          if (typeof global.loadConfigFromFile === 'function') {
+            try { global.loadConfigFromFile(); } catch (err) { console.warn('[Server] Error calling loadConfigFromFile:', err.message); }
+          }
           sendJSON(res, 200, { success: true });
         } else if (payload && payload.profileName && payload.profileData) {
           const config = readConfig();
@@ -463,6 +466,9 @@ const server = http.createServer((req, res) => {
           config.profiles[payload.profileName] = payload.profileData;
           writeConfig(config);
           console.log(`[Server] Saved profile: ${payload.profileName}`);
+          if (typeof global.loadConfigFromFile === 'function') {
+            try { global.loadConfigFromFile(); } catch (err) { console.warn('[Server] Error calling loadConfigFromFile:', err.message); }
+          }
           sendJSON(res, 200, { success: true });
         } else {
           sendJSON(res, 400, { error: 'Invalid payload structure' });
@@ -851,13 +857,15 @@ server.listen(PORT, () => {
     // Hot-reload in bot engine if active profile
     try {
       const cfg = readConfig();
-      if (cfg && Array.isArray(cfg.activeProfiles) && cfg.activeProfiles.includes(change.profileName)) {
-        if (global.activeWorkflowEngine && typeof global.activeWorkflowEngine.loadProfile === 'function') {
-          const fresh = readSingleProfile(change.profileName);
-          if (fresh) {
-            global.activeWorkflowEngine.loadProfile(fresh);
-            console.log(`[Server] ⚡ Hot-reloaded active profile into Engine: "${change.profileName}"`);
-          }
+      const activeList = Array.isArray(cfg?.activeProfiles) ? cfg.activeProfiles : (cfg?.activeProfile ? [cfg.activeProfile] : []);
+      if (activeList.includes(change.profileName)) {
+        if (typeof global.loadConfigFromFile === 'function') {
+          global.loadConfigFromFile();
+          console.log(`[Server] ⚡ Hot-reloaded all active profiles in Bot Engine: "${change.profileName}"`);
+        } else if (global.activeWorkflowEngine) {
+          const freshProfiles = activeList.map(p => readSingleProfile(p)).filter(Boolean);
+          global.activeWorkflowEngine.loadProfiles(freshProfiles);
+          console.log(`[Server] ⚡ Hot-reloaded active profile into Engine: "${change.profileName}"`);
         }
       }
     } catch (e) {

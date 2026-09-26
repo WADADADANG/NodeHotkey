@@ -15,7 +15,7 @@ module.exports = {
   icon: '👁️',
   color: '#0ea5e9',
   inputs: ['in'],
-  outputs: ['onScanned', 'onError'],
+  outputs: ['onScanned', 'onLowHp', 'onError'],
   dataOutputs: [
     { name: 'names_out', type: 'string', label: 'Member Names' },
     { name: 'count_out', type: 'number', label: 'Member Count' },

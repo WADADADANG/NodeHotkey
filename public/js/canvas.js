@@ -14,7 +14,7 @@ function canvasT(key, fallback = '') {
     const val = window.t(key);
     if (val && val !== key) return val;
   }
-if (typeof window !== 'undefined') window.canvasT = canvasT;
+  if (typeof window !== 'undefined') window.canvasT = canvasT;
   return fallback || key;
 }
 
@@ -429,7 +429,8 @@ class NodeCanvasEditor {
         this.draftWire.y2 = worldPos.y;
 
         const elemUnder = document.elementFromPoint(e.clientX, e.clientY);
-        const portUnder = elemUnder ? elemUnder.closest('.node-port.port-in') : null;
+        const targetSelector = this.draftWire.startType === 'in' ? '.node-port.port-out, .node-port:not(.port-in)' : '.node-port.port-in';
+        const portUnder = elemUnder ? elemUnder.closest(targetSelector) : null;
         if (portUnder && portUnder.classList.contains('port-invalid-target')) {
           this.draftWire.isInvalid = true;
         } else {
@@ -744,16 +745,16 @@ class NodeCanvasEditor {
       }
 
       if (!bodyHTML) {
-      if (node.type === 'trigger') {
-        const isEventTrigger = node.data?.triggerType === 'event';
-        const isWebhookTrigger = node.data?.triggerType === 'webhook';
-        let trigTypeLabel = 'keyboard';
-        if (isWebhookTrigger) trigTypeLabel = 'Webhook (Inbound)';
-        else if (isEventTrigger) trigTypeLabel = 'Custom Event';
-        else trigTypeLabel = node.data?.triggerType || 'keyboard';
+        if (node.type === 'trigger') {
+          const isEventTrigger = node.data?.triggerType === 'event';
+          const isWebhookTrigger = node.data?.triggerType === 'webhook';
+          let trigTypeLabel = 'keyboard';
+          if (isWebhookTrigger) trigTypeLabel = 'Webhook (Inbound)';
+          else if (isEventTrigger) trigTypeLabel = 'Custom Event';
+          else trigTypeLabel = node.data?.triggerType || 'keyboard';
 
-        const colorStyle = isWebhookTrigger ? 'color:#38bdf8; font-weight:700;' : (isEventTrigger ? 'color:#06b6d4; font-weight:700;' : '');
-        bodyHTML = `
+          const colorStyle = isWebhookTrigger ? 'color:#38bdf8; font-weight:700;' : (isEventTrigger ? 'color:#06b6d4; font-weight:700;' : '');
+          bodyHTML = `
           <div class="node-info-row">
             <span>Type:</span> <span class="node-info-value" style="${colorStyle}">${trigTypeLabel}</span>
           </div>
@@ -761,11 +762,11 @@ class NodeCanvasEditor {
             <span>${isWebhookTrigger ? 'Endpoint:' : (isEventTrigger ? 'Event:' : 'Key/Val:')}</span> <span class="node-info-value" style="${colorStyle}">${node.data?.triggerValue || '-'}</span>
           </div>
         `;
-      } else if (node.type === 'webhook_out') {
-        const method = (node.data?.method || 'POST').toUpperCase();
-        let displayUrl = node.data?.url || '-';
-        if (displayUrl.length > 28) displayUrl = displayUrl.substring(0, 26) + '...';
-        bodyHTML = `
+        } else if (node.type === 'webhook_out') {
+          const method = (node.data?.method || 'POST').toUpperCase();
+          let displayUrl = node.data?.url || '-';
+          if (displayUrl.length > 28) displayUrl = displayUrl.substring(0, 26) + '...';
+          bodyHTML = `
           <div class="node-info-row">
             <span>Method:</span> <span class="node-info-value" style="color:#38bdf8; font-weight:700;">${method}</span>
           </div>
@@ -773,8 +774,8 @@ class NodeCanvasEditor {
             <span>URL:</span> <span class="node-info-value" title="${node.data?.url || ''}" style="color:#cbd5e1; font-family:'JetBrains Mono',monospace; font-size:10px;">${displayUrl}</span>
           </div>
         `;
-      } else if (node.type === 'emit_event') {
-        bodyHTML = `
+        } else if (node.type === 'emit_event') {
+          bodyHTML = `
           <div class="node-info-row">
             <span>Event:</span> <span class="node-info-value" style="color:#06b6d4; font-weight:700;">${node.data?.eventName || '-'}</span>
           </div>
@@ -782,10 +783,10 @@ class NodeCanvasEditor {
             <span>Scope:</span> <span class="node-info-value">Active Profiles</span>
           </div>
         `;
-      } else if (node.type === 'loop_scheduler') {
-        const items = Array.isArray(node.data?.items) ? node.data.items : [];
-        const guard = node.data?.collisionGuardMs !== undefined ? node.data.collisionGuardMs : 800;
-        bodyHTML = `
+        } else if (node.type === 'loop_scheduler') {
+          const items = Array.isArray(node.data?.items) ? node.data.items : [];
+          const guard = node.data?.collisionGuardMs !== undefined ? node.data.collisionGuardMs : 800;
+          bodyHTML = `
           <div class="node-info-row">
             <span>Target:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
           </div>
@@ -796,26 +797,26 @@ class NodeCanvasEditor {
             <span>Timers:</span> <span class="node-info-value" style="color:#38bdf8; font-weight:700;">${items.length} items</span>
           </div>
         `;
-      } else if (node.type === 'loop') {
-        let cdBadgeHTML = '';
-        if (node.data?.cooldownPresetId) {
-          const cdPreset = node.data.cooldownPresetId;
-          const customCd = node.data.customCooldownMs;
-          const presetsById = window.allCooldownPresetsById || {};
-          let cdLabel = 'Custom CD';
-          if (cdPreset === 'custom') {
-            cdLabel = customCd ? `${customCd / 1000}s` : 'Custom';
-          } else if (presetsById[cdPreset]) {
-            const eff = customCd > 0 ? customCd : (presetsById[cdPreset].cooldownMs || 0);
-            cdLabel = `${presetsById[cdPreset].name} (${eff / 1000}s)`;
-          }
-          cdBadgeHTML = `
+        } else if (node.type === 'loop') {
+          let cdBadgeHTML = '';
+          if (node.data?.cooldownPresetId) {
+            const cdPreset = node.data.cooldownPresetId;
+            const customCd = node.data.customCooldownMs;
+            const presetsById = window.allCooldownPresetsById || {};
+            let cdLabel = 'Custom CD';
+            if (cdPreset === 'custom') {
+              cdLabel = customCd ? `${customCd / 1000}s` : 'Custom';
+            } else if (presetsById[cdPreset]) {
+              const eff = customCd > 0 ? customCd : (presetsById[cdPreset].cooldownMs || 0);
+              cdLabel = `${presetsById[cdPreset].name} (${eff / 1000}s)`;
+            }
+            cdBadgeHTML = `
             <div class="node-info-row" style="color:#10b981; font-weight:700;">
               <span>🛡️ Guard:</span> <span class="node-info-value" style="color:#10b981; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${cdLabel}">${cdLabel}</span>
             </div>
           `;
-        }
-        bodyHTML = `
+          }
+          bodyHTML = `
           <div class="node-info-row">
             <span>Target:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
           </div>
@@ -824,26 +825,26 @@ class NodeCanvasEditor {
           </div>
           ${cdBadgeHTML}
         `;
-      } else if (node.type === 'buff_sequence') {
-        let cdBadgeHTML = '';
-        if (node.data?.cooldownPresetId) {
-          const cdPreset = node.data.cooldownPresetId;
-          const customCd = node.data.customCooldownMs;
-          const presetsById = window.allCooldownPresetsById || {};
-          let cdLabel = 'Custom CD';
-          if (cdPreset === 'custom') {
-            cdLabel = customCd ? `${customCd / 1000}s` : 'Custom';
-          } else if (presetsById[cdPreset]) {
-            const eff = customCd > 0 ? customCd : (presetsById[cdPreset].cooldownMs || 0);
-            cdLabel = `${presetsById[cdPreset].name} (${eff / 1000}s)`;
-          }
-          cdBadgeHTML = `
+        } else if (node.type === 'buff_sequence') {
+          let cdBadgeHTML = '';
+          if (node.data?.cooldownPresetId) {
+            const cdPreset = node.data.cooldownPresetId;
+            const customCd = node.data.customCooldownMs;
+            const presetsById = window.allCooldownPresetsById || {};
+            let cdLabel = 'Custom CD';
+            if (cdPreset === 'custom') {
+              cdLabel = customCd ? `${customCd / 1000}s` : 'Custom';
+            } else if (presetsById[cdPreset]) {
+              const eff = customCd > 0 ? customCd : (presetsById[cdPreset].cooldownMs || 0);
+              cdLabel = `${presetsById[cdPreset].name} (${eff / 1000}s)`;
+            }
+            cdBadgeHTML = `
             <div class="node-info-row" style="color:#10b981; font-weight:700;">
               <span>🛡️ Guard:</span> <span class="node-info-value" style="color:#10b981; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${cdLabel}">${cdLabel}</span>
             </div>
           `;
-        }
-        bodyHTML = `
+          }
+          bodyHTML = `
           <div class="node-info-row">
             <span>Target:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
           </div>
@@ -852,26 +853,26 @@ class NodeCanvasEditor {
           </div>
           ${cdBadgeHTML}
         `;
-      } else if (node.type === 'key_press') {
-        let cdBadgeHTML = '';
-        if (node.data?.cooldownPresetId) {
-          const cdPreset = node.data.cooldownPresetId;
-          const customCd = node.data.customCooldownMs;
-          const presetsById = window.allCooldownPresetsById || {};
-          let cdLabel = 'Custom CD';
-          if (cdPreset === 'custom') {
-            cdLabel = customCd ? `${customCd / 1000}s` : 'Custom';
-          } else if (presetsById[cdPreset]) {
-            const eff = customCd > 0 ? customCd : (presetsById[cdPreset].cooldownMs || 0);
-            cdLabel = `${presetsById[cdPreset].name} (${eff / 1000}s)`;
-          }
-          cdBadgeHTML = `
+        } else if (node.type === 'key_press') {
+          let cdBadgeHTML = '';
+          if (node.data?.cooldownPresetId) {
+            const cdPreset = node.data.cooldownPresetId;
+            const customCd = node.data.customCooldownMs;
+            const presetsById = window.allCooldownPresetsById || {};
+            let cdLabel = 'Custom CD';
+            if (cdPreset === 'custom') {
+              cdLabel = customCd ? `${customCd / 1000}s` : 'Custom';
+            } else if (presetsById[cdPreset]) {
+              const eff = customCd > 0 ? customCd : (presetsById[cdPreset].cooldownMs || 0);
+              cdLabel = `${presetsById[cdPreset].name} (${eff / 1000}s)`;
+            }
+            cdBadgeHTML = `
             <div class="node-info-row" style="color:#10b981; font-weight:700;">
               <span>🛡️ Guard:</span> <span class="node-info-value" style="color:#10b981; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${cdLabel}">${cdLabel}</span>
             </div>
           `;
-        }
-        bodyHTML = `
+          }
+          bodyHTML = `
           <div class="node-info-row">
             <span>Target:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
           </div>
@@ -880,26 +881,26 @@ class NodeCanvasEditor {
           </div>
           ${cdBadgeHTML}
         `;
-      } else if (node.type === 'key_hold') {
-        let cdBadgeHTML = '';
-        if (node.data?.cooldownPresetId) {
-          const cdPreset = node.data.cooldownPresetId;
-          const customCd = node.data.customCooldownMs;
-          const presetsById = window.allCooldownPresetsById || {};
-          let cdLabel = 'Custom CD';
-          if (cdPreset === 'custom') {
-            cdLabel = customCd ? `${customCd / 1000}s` : 'Custom';
-          } else if (presetsById[cdPreset]) {
-            const eff = customCd > 0 ? customCd : (presetsById[cdPreset].cooldownMs || 0);
-            cdLabel = `${presetsById[cdPreset].name} (${eff / 1000}s)`;
-          }
-          cdBadgeHTML = `
+        } else if (node.type === 'key_hold') {
+          let cdBadgeHTML = '';
+          if (node.data?.cooldownPresetId) {
+            const cdPreset = node.data.cooldownPresetId;
+            const customCd = node.data.customCooldownMs;
+            const presetsById = window.allCooldownPresetsById || {};
+            let cdLabel = 'Custom CD';
+            if (cdPreset === 'custom') {
+              cdLabel = customCd ? `${customCd / 1000}s` : 'Custom';
+            } else if (presetsById[cdPreset]) {
+              const eff = customCd > 0 ? customCd : (presetsById[cdPreset].cooldownMs || 0);
+              cdLabel = `${presetsById[cdPreset].name} (${eff / 1000}s)`;
+            }
+            cdBadgeHTML = `
             <div class="node-info-row" style="color:#10b981; font-weight:700;">
               <span>🛡️ Guard:</span> <span class="node-info-value" style="color:#10b981; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${cdLabel}">${cdLabel}</span>
             </div>
           `;
-        }
-        bodyHTML = `
+          }
+          bodyHTML = `
           <div class="node-info-row">
             <span>Target:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
           </div>
@@ -908,9 +909,9 @@ class NodeCanvasEditor {
           </div>
           ${cdBadgeHTML}
         `;
-      } else if (node.type === 'delay') {
-        const dMs = node.data?.delayMs !== undefined ? node.data?.delayMs : (node.data?.interval || 1000);
-        bodyHTML = `
+        } else if (node.type === 'delay') {
+          const dMs = node.data?.delayMs !== undefined ? node.data?.delayMs : (node.data?.interval || 1000);
+          bodyHTML = `
           <div class="node-info-row">
             <span>Duration:</span> <span class="node-info-value">${dMs}ms</span>
           </div>
@@ -918,18 +919,18 @@ class NodeCanvasEditor {
             <span>Type:</span> <span class="node-info-value">Delay Timer</span>
           </div>
         `;
-      } else if (node.type === 'action_branch' || node.type === 'branch' || node.type === 'condition') {
-        const targetAction = this.nodes.find(n => n.id === node.data?.conditionTargetId);
-        const targetName = targetAction ? (targetAction.title || targetAction.type) : (node.data?.conditionTargetId ? 'Action' : (isEn ? '(None)' : '(ไม่มี)'));
-        const rule = node.data?.conditionRule || 'is_running';
-        const ruleMap = {
-          is_running: isEn ? '🟢 Running' : '🟢 กำลังทำงาน',
-          is_stopped: isEn ? '🔴 Stopped' : '🔴 หยุดทำงาน',
-          on_cooldown: isEn ? '⏳ Cooldown' : '⏳ ติดคูลดาวน์',
-          is_ready: isEn ? '🛡️ Ready' : '🛡️ พร้อมใช้งาน'
-        };
-        const ruleLabel = ruleMap[rule] || (isEn ? '🟢 Running' : '🟢 กำลังทำงาน');
-        bodyHTML = `
+        } else if (node.type === 'action_branch' || node.type === 'branch' || node.type === 'condition') {
+          const targetAction = this.nodes.find(n => n.id === node.data?.conditionTargetId);
+          const targetName = targetAction ? (targetAction.title || targetAction.type) : (node.data?.conditionTargetId ? 'Action' : (isEn ? '(None)' : '(ไม่มี)'));
+          const rule = node.data?.conditionRule || 'is_running';
+          const ruleMap = {
+            is_running: isEn ? '🟢 Running' : '🟢 กำลังทำงาน',
+            is_stopped: isEn ? '🔴 Stopped' : '🔴 หยุดทำงาน',
+            on_cooldown: isEn ? '⏳ Cooldown' : '⏳ ติดคูลดาวน์',
+            is_ready: isEn ? '🛡️ Ready' : '🛡️ พร้อมใช้งาน'
+          };
+          const ruleLabel = ruleMap[rule] || (isEn ? '🟢 Running' : '🟢 กำลังทำงาน');
+          bodyHTML = `
           <div class="node-info-row">
             <span>${isEn ? 'Target:' : 'เป้าหมาย:'}</span> <span class="node-info-value" style="max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${targetName}">${targetName}</span>
           </div>
@@ -937,23 +938,23 @@ class NodeCanvasEditor {
             <span>${isEn ? 'Rule:' : 'เงื่อนไข:'}</span> <span class="node-info-value">${ruleLabel}</span>
           </div>
         `;
-      } else if (node.type === 'var_branch' || node.type === 'variable_branch') {
-        const targetId = node.data?.conditionTargetId || (node.data?.varName ? `var:${node.data.varName}` : '');
-        const varName = targetId.startsWith('var:') ? targetId.replace('var:', '') : (node.data?.varName || targetId || (isEn ? '(None)' : '(ไม่มี)'));
-        const rule = node.data?.conditionRule || 'is_true';
-        const ruleMap = {
-          is_true: isEn ? '🟢 True' : '🟢 เป็นจริง',
-          is_false: isEn ? '🔴 False' : '🔴 เป็นเท็จ',
-          equals: '==',
-          not_equals: '!=',
-          greater_than: '>',
-          less_than: '<',
-          greater_or_equal: '>=',
-          less_or_equal: '<='
-        };
-        const ruleLabel = ruleMap[rule] || rule;
-        const valStr = (node.data?.conditionValue !== undefined && node.data?.conditionValue !== '') ? ` (${node.data.conditionValue})` : '';
-        bodyHTML = `
+        } else if (node.type === 'var_branch' || node.type === 'variable_branch') {
+          const targetId = node.data?.conditionTargetId || (node.data?.varName ? `var:${node.data.varName}` : '');
+          const varName = targetId.startsWith('var:') ? targetId.replace('var:', '') : (node.data?.varName || targetId || (isEn ? '(None)' : '(ไม่มี)'));
+          const rule = node.data?.conditionRule || 'is_true';
+          const ruleMap = {
+            is_true: isEn ? '🟢 True' : '🟢 เป็นจริง',
+            is_false: isEn ? '🔴 False' : '🔴 เป็นเท็จ',
+            equals: '==',
+            not_equals: '!=',
+            greater_than: '>',
+            less_than: '<',
+            greater_or_equal: '>=',
+            less_or_equal: '<='
+          };
+          const ruleLabel = ruleMap[rule] || rule;
+          const valStr = (node.data?.conditionValue !== undefined && node.data?.conditionValue !== '') ? ` (${node.data.conditionValue})` : '';
+          bodyHTML = `
           <div class="node-info-row">
             <span>${isEn ? 'Var:' : 'ตัวแปร:'}</span> <span class="node-info-value" style="max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${varName}">${varName}</span>
           </div>
@@ -961,10 +962,10 @@ class NodeCanvasEditor {
             <span>${isEn ? 'Rule:' : 'เงื่อนไข:'}</span> <span class="node-info-value">${ruleLabel}${valStr}</span>
           </div>
         `;
-      } else if (node.type === 'party_scanner') {
-        const interval = node.data?.scanIntervalMs || 250;
-        const hpThresh = node.data?.lowHpThreshold || 70;
-        bodyHTML = `
+        } else if (node.type === 'party_scanner') {
+          const interval = node.data?.scanIntervalMs || 250;
+          const hpThresh = node.data?.lowHpThreshold || 70;
+          bodyHTML = `
           <div class="node-info-row">
             <span>Client:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
           </div>
@@ -975,10 +976,10 @@ class NodeCanvasEditor {
             <span>Low HP Alert:</span> <span class="node-info-value" style="color:#ef4444; font-weight:700;">&le; ${hpThresh}%</span>
           </div>
         `;
-      } else if (node.type === 'party_slot') {
-        const slotNum = node.data?.targetSlot || 1;
-        const delay = node.data?.delayAfterClick || 80;
-        bodyHTML = `
+        } else if (node.type === 'party_slot') {
+          const slotNum = node.data?.targetSlot || 1;
+          const delay = node.data?.delayAfterClick || 80;
+          bodyHTML = `
           <div class="node-info-row">
             <span>Client:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
           </div>
@@ -989,10 +990,10 @@ class NodeCanvasEditor {
             <span>Delay:</span> <span class="node-info-value">${delay}ms</span>
           </div>
         `;
-      } else if (node.type === 'party_heal') {
-        const hpThresh = node.data?.lowHpThreshold || 70;
-        const delay = node.data?.delayAfterClick || 80;
-        bodyHTML = `
+        } else if (node.type === 'party_heal') {
+          const hpThresh = node.data?.lowHpThreshold || 70;
+          const delay = node.data?.delayAfterClick || 80;
+          bodyHTML = `
           <div class="node-info-row">
             <span>Client:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
           </div>
@@ -1003,9 +1004,9 @@ class NodeCanvasEditor {
             <span>Delay:</span> <span class="node-info-value">${delay}ms</span>
           </div>
         `;
-      } else if (node.type === 'party_buff') {
-        const delay = node.data?.delayAfterClick || 80;
-        bodyHTML = `
+        } else if (node.type === 'party_buff') {
+          const delay = node.data?.delayAfterClick || 80;
+          bodyHTML = `
           <div class="node-info-row">
             <span>Client:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
           </div>
@@ -1016,21 +1017,21 @@ class NodeCanvasEditor {
             <span>Delay:</span> <span class="node-info-value">${delay}ms</span>
           </div>
         `;
-      } else if (node.type === 'tts') {
-        const textConn = this.connections.find(c => c.toNodeId === node.id && (c.toPort === 'text_in' || c.toPort === 'msg_in'));
-        let srcTitle = '';
-        if (textConn) {
-          const srcNode = this.nodes.find(n => n.id === textConn.fromNodeId);
-          srcTitle = srcNode ? (srcNode.title || srcNode.type) : 'Wire';
-        }
-        const text = node.data?.text || (isEn ? 'Voice alert message...' : 'ข้อความเสียง...');
-        const textDisplayHTML = textConn
-          ? `<span class="node-info-value" style="color:#ec4899; font-weight:700; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${isEn ? `🔗 Dynamic text from: ${srcTitle}` : `🔗 รับข้อความจากสาย: ${srcTitle}`}">🔗 [${srcTitle}]</span>`
-          : `<span class="node-info-value" style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${text}">"${text}"</span>`;
-        const v = node.data?.voice || 'th-TH-PremwadeeNeural';
-        const vLabel = v.includes('Niwat') ? (isEn ? 'Niwat (Male)' : 'นิวัต (ชาย)') : (v.includes('Jenny') ? 'Jenny' : (v.includes('Guy') ? 'Guy' : (isEn ? 'Premwadee (Female)' : 'เปรมวดี (หญิง)')));
-        const vol = node.data?.volume !== undefined ? node.data.volume : 100;
-        bodyHTML = `
+        } else if (node.type === 'tts') {
+          const textConn = this.connections.find(c => c.toNodeId === node.id && (c.toPort === 'text_in' || c.toPort === 'msg_in'));
+          let srcTitle = '';
+          if (textConn) {
+            const srcNode = this.nodes.find(n => n.id === textConn.fromNodeId);
+            srcTitle = srcNode ? (srcNode.title || srcNode.type) : 'Wire';
+          }
+          const text = node.data?.text || (isEn ? 'Voice alert message...' : 'ข้อความเสียง...');
+          const textDisplayHTML = textConn
+            ? `<span class="node-info-value" style="color:#ec4899; font-weight:700; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${isEn ? `🔗 Dynamic text from: ${srcTitle}` : `🔗 รับข้อความจากสาย: ${srcTitle}`}">🔗 [${srcTitle}]</span>`
+            : `<span class="node-info-value" style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${text}">"${text}"</span>`;
+          const v = node.data?.voice || 'th-TH-PremwadeeNeural';
+          const vLabel = v.includes('Niwat') ? (isEn ? 'Niwat (Male)' : 'นิวัต (ชาย)') : (v.includes('Jenny') ? 'Jenny' : (v.includes('Guy') ? 'Guy' : (isEn ? 'Premwadee (Female)' : 'เปรมวดี (หญิง)')));
+          const vol = node.data?.volume !== undefined ? node.data.volume : 100;
+          bodyHTML = `
           <div class="node-info-row">
             <span>Voice:</span> <span class="node-info-value" style="color:#c084fc; font-weight:700;">${vLabel}</span>
           </div>
@@ -1041,11 +1042,11 @@ class NodeCanvasEditor {
             <span>Vol:</span> <span class="node-info-value">${vol}%</span>
           </div>
         `;
-      } else if (node.type === 'screenshot') {
-        const region = node.data?.captureRegion || 'full';
-        const prefix = node.data?.prefix || 'error_snap';
-        const annotate = node.data?.annotate !== false;
-        bodyHTML = `
+        } else if (node.type === 'screenshot') {
+          const region = node.data?.captureRegion || 'full';
+          const prefix = node.data?.prefix || 'error_snap';
+          const annotate = node.data?.annotate !== false;
+          bodyHTML = `
           <div class="node-info-row">
             <span>Client:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
           </div>
@@ -1059,8 +1060,8 @@ class NodeCanvasEditor {
             <span>Annotate:</span> <span class="node-info-value" style="color:${annotate ? '#10b981' : '#94a3b8'}; font-weight:600;">${annotate ? '✅ ON' : 'OFF'}</span>
           </div>
         `;
-      } else if (node.type === 'control') {
-        bodyHTML = `
+        } else if (node.type === 'control') {
+          bodyHTML = `
           <div class="node-info-row">
             <span>Action:</span> <span class="node-info-value">${(node.data?.controlOperation || 'toggle').toUpperCase()}</span>
           </div>
@@ -1068,26 +1069,26 @@ class NodeCanvasEditor {
             <span>Target:</span> <span class="node-info-value">${(node.data?.controlTargetIds || []).length > 0 ? `${node.data.controlTargetIds.length} actions` : 'All'}</span>
           </div>
         `;
-      } else if (node.type === 'forwarder') {
-        let cdBadgeHTML = '';
-        if (node.data?.cooldownPresetId) {
-          const cdPreset = node.data.cooldownPresetId;
-          const customCd = node.data.customCooldownMs;
-          const presetsById = window.allCooldownPresetsById || {};
-          let cdLabel = 'Custom CD';
-          if (cdPreset === 'custom') {
-            cdLabel = customCd ? `${customCd / 1000}s` : 'Custom';
-          } else if (presetsById[cdPreset]) {
-            const eff = customCd > 0 ? customCd : (presetsById[cdPreset].cooldownMs || 0);
-            cdLabel = `${presetsById[cdPreset].name} (${eff / 1000}s)`;
-          }
-          cdBadgeHTML = `
+        } else if (node.type === 'forwarder') {
+          let cdBadgeHTML = '';
+          if (node.data?.cooldownPresetId) {
+            const cdPreset = node.data.cooldownPresetId;
+            const customCd = node.data.customCooldownMs;
+            const presetsById = window.allCooldownPresetsById || {};
+            let cdLabel = 'Custom CD';
+            if (cdPreset === 'custom') {
+              cdLabel = customCd ? `${customCd / 1000}s` : 'Custom';
+            } else if (presetsById[cdPreset]) {
+              const eff = customCd > 0 ? customCd : (presetsById[cdPreset].cooldownMs || 0);
+              cdLabel = `${presetsById[cdPreset].name} (${eff / 1000}s)`;
+            }
+            cdBadgeHTML = `
             <div class="node-info-row" style="color:#10b981; font-weight:700;">
               <span>🛡️ Guard:</span> <span class="node-info-value" style="color:#10b981; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${cdLabel}">${cdLabel}</span>
             </div>
           `;
-        }
-        bodyHTML = `
+          }
+          bodyHTML = `
           <div class="node-info-row">
             <span>Forward:</span> <span class="node-info-value">${node.data?.targetKey || (node.data?.keys || [])[0] || 'Key'}</span>
           </div>
@@ -1096,10 +1097,10 @@ class NodeCanvasEditor {
           </div>
           ${cdBadgeHTML}
         `;
-      } else if (node.type === 'macro_group') {
-        const steps = node.data?.steps || [];
-        const totalDelay = steps.reduce((acc, s) => acc + (s.delay || 0), 0);
-        bodyHTML = `
+        } else if (node.type === 'macro_group') {
+          const steps = node.data?.steps || [];
+          const totalDelay = steps.reduce((acc, s) => acc + (s.delay || 0), 0);
+          bodyHTML = `
           <div class="node-info-row">
             <span>Target:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
           </div>
@@ -1107,10 +1108,10 @@ class NodeCanvasEditor {
             <span>Steps:</span> <span class="node-info-value">${steps.length} actions (~${totalDelay}ms)</span>
           </div>
         `;
-      } else if (node.type === 'emergency_stop') {
-        const scope = node.data?.stopScope || 'all';
-        const scopeLabel = scope === 'all' ? 'All Everywhere' : (scope === 'profile' ? 'Current Profile' : `Client ${node.data?.targetClient || '1'}`);
-        bodyHTML = `
+        } else if (node.type === 'emergency_stop') {
+          const scope = node.data?.stopScope || 'all';
+          const scopeLabel = scope === 'all' ? 'All Everywhere' : (scope === 'profile' ? 'Current Profile' : `Client ${node.data?.targetClient || '1'}`);
+          bodyHTML = `
           <div class="node-info-row">
             <span>Scope:</span> <span class="node-info-value" style="color:#ef4444; font-weight:700;">${scopeLabel}</span>
           </div>
@@ -1118,12 +1119,12 @@ class NodeCanvasEditor {
             <span>Type:</span> <span class="node-info-value">Panic Kill-Switch</span>
           </div>
         `;
-      } else if (node.type === 'sound') {
-        const sSource = node.data?.soundSource || 'preset';
-        let soundName = node.data?.soundPreset || 'Ding';
-        if (sSource === 'url') soundName = 'Web URL';
-        if (sSource === 'upload') soundName = node.data?.soundFile ? 'Custom File' : 'Uploaded';
-        bodyHTML = `
+        } else if (node.type === 'sound') {
+          const sSource = node.data?.soundSource || 'preset';
+          let soundName = node.data?.soundPreset || 'Ding';
+          if (sSource === 'url') soundName = 'Web URL';
+          if (sSource === 'upload') soundName = node.data?.soundFile ? 'Custom File' : 'Uploaded';
+          bodyHTML = `
           <div class="node-info-row">
             <span>Sound:</span> <span class="node-info-value" style="color:#a855f7; font-weight:700;">${soundName}</span>
           </div>
@@ -1131,21 +1132,21 @@ class NodeCanvasEditor {
             <span>Volume:</span> <span class="node-info-value">${node.data?.volume !== undefined ? node.data.volume : 100}%</span>
           </div>
         `;
-      } else if (node.type === 'sequencer') {
-        const steps = node.data?.steps || [];
-        const isLoop = (node.data?.modeType || 'loop') === 'loop';
-        const intervalVal = node.data?.interval !== undefined ? node.data.interval : 1000;
-        const stepItemsHTML = steps.map((s, idx) => {
-          const delayMs = s.delay !== undefined ? s.delay : (s.castTimeMs !== undefined ? s.castTimeMs : 800);
-          const tag = delayMs > 0 ? `${delayMs}ms` : 'Instant';
-          const tagColor = delayMs > 0 ? '#f59e0b' : '#10b981';
-          return `<div style="font-size:10.5px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; margin-top:3px; padding:1px 0; border-bottom:1px solid rgba(255,255,255,0.03);">
+        } else if (node.type === 'sequencer') {
+          const steps = node.data?.steps || [];
+          const isLoop = (node.data?.modeType || 'loop') === 'loop';
+          const intervalVal = node.data?.interval !== undefined ? node.data.interval : 1000;
+          const stepItemsHTML = steps.map((s, idx) => {
+            const delayMs = s.delay !== undefined ? s.delay : (s.castTimeMs !== undefined ? s.castTimeMs : 800);
+            const tag = delayMs > 0 ? `${delayMs}ms` : 'Instant';
+            const tagColor = delayMs > 0 ? '#f59e0b' : '#10b981';
+            return `<div style="font-size:10.5px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; margin-top:3px; padding:1px 0; border-bottom:1px solid rgba(255,255,255,0.03);">
             <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:115px;">${idx + 1}. <strong style="color:var(--text); font-family:'JetBrains Mono';">${s.key || '-'}</strong></span>
             <span style="color:${tagColor}; font-weight:700; font-size:10px; font-family:'JetBrains Mono'; flex-shrink:0;">${tag}</span>
           </div>`;
-        }).join('');
+          }).join('');
 
-        bodyHTML = `
+          bodyHTML = `
           <div class="node-info-row">
             <span>Target:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
           </div>
@@ -1159,20 +1160,20 @@ class NodeCanvasEditor {
             ${stepItemsHTML || '<div style="font-size:10px; color:var(--muted); text-align:center;">No steps added</div>'}
           </div>
         `;
-      } else if (node.type === 'step_log') {
-        const stepTag = node.data?.stepTag || 'STEP 1';
-        const msg = node.data?.message || '';
-        const msgConn = this.connections.find(c => c.toNodeId === node.id && c.toPort === 'msg_in');
-        let srcTitle = '';
-        if (msgConn) {
-          const srcNode = this.nodes.find(n => n.id === msgConn.fromNodeId);
-          srcTitle = srcNode ? (srcNode.title || srcNode.type) : 'Wire';
-        }
-        const msgDisplayHTML = msgConn 
-          ? `<span class="node-info-value" style="color:#ec4899; font-weight:700; max-width:115px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="🔗 รับข้อความจากสาย: ${srcTitle} (แทนที่ข้อความพิมพ์)">🔗 [${srcTitle}]</span>`
-          : `<span class="node-info-value" style="color:#10b981; font-weight:600; max-width:115px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${msg || '(ว่างเปล่า)'}">${msg || '(ว่างเปล่า)'}</span>`;
+        } else if (node.type === 'step_log') {
+          const stepTag = node.data?.stepTag || 'STEP 1';
+          const msg = node.data?.message || '';
+          const msgConn = this.connections.find(c => c.toNodeId === node.id && c.toPort === 'msg_in');
+          let srcTitle = '';
+          if (msgConn) {
+            const srcNode = this.nodes.find(n => n.id === msgConn.fromNodeId);
+            srcTitle = srcNode ? (srcNode.title || srcNode.type) : 'Wire';
+          }
+          const msgDisplayHTML = msgConn
+            ? `<span class="node-info-value" style="color:#ec4899; font-weight:700; max-width:115px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="🔗 รับข้อความจากสาย: ${srcTitle} (แทนที่ข้อความพิมพ์)">🔗 [${srcTitle}]</span>`
+            : `<span class="node-info-value" style="color:#10b981; font-weight:600; max-width:115px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${msg || '(ว่างเปล่า)'}">${msg || '(ว่างเปล่า)'}</span>`;
 
-        bodyHTML = `
+          bodyHTML = `
           <div class="node-info-row">
             <span>Tag:</span> <span class="node-info-value" style="color:#10b981; font-weight:700;">${stepTag}</span>
           </div>
@@ -1180,11 +1181,11 @@ class NodeCanvasEditor {
             <span>Msg:</span> ${msgDisplayHTML}
           </div>
         `;
-      } else if (node.type === 'format_text') {
-        const template = node.data?.template !== undefined ? node.data.template : '{val_a}';
-        const pins = Array.isArray(node.data?.pins) ? node.data.pins : ['val_a'];
-        const boolFmt = node.data?.boolFormat || 'true_false';
-        bodyHTML = `
+        } else if (node.type === 'format_text') {
+          const template = node.data?.template !== undefined ? node.data.template : '{val_a}';
+          const pins = Array.isArray(node.data?.pins) ? node.data.pins : ['val_a'];
+          const boolFmt = node.data?.boolFormat || 'true_false';
+          bodyHTML = `
           <div class="node-info-row">
             <span>Pattern:</span> <span class="node-info-value" style="color:#ec4899; font-family:'JetBrains Mono'; font-weight:700; max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${template}">${template || '(Concat)'}</span>
           </div>
@@ -1192,12 +1193,12 @@ class NodeCanvasEditor {
             <span>Pins:</span> <span class="node-info-value" style="color:#a855f7; font-weight:700;">${pins.length} inputs</span>
           </div>
         `;
-      } else if (node.type === 'var_get') {
-        const vName = node.data?.varName || node.title || 'myVar';
-        const vType = node.data?.varType || 'string';
-        const defVal = node.data?.defaultValue !== undefined ? node.data.defaultValue : '';
-        const typeColor = vType === 'number' ? '#06b6d4' : (vType === 'boolean' ? '#ef4444' : '#ec4899');
-        bodyHTML = `
+        } else if (node.type === 'var_get') {
+          const vName = node.data?.varName || node.title || 'myVar';
+          const vType = node.data?.varType || 'string';
+          const defVal = node.data?.defaultValue !== undefined ? node.data.defaultValue : '';
+          const typeColor = vType === 'number' ? '#06b6d4' : (vType === 'boolean' ? '#ef4444' : '#ec4899');
+          bodyHTML = `
           <div class="node-info-row" style="margin-bottom:2px;">
             <span style="font-family:'JetBrains Mono'; font-weight:700; color:var(--text); font-size:12px;">${vName}</span>
           </div>
@@ -1206,27 +1207,27 @@ class NodeCanvasEditor {
             ${defVal ? `<span class="node-info-value" style="font-size:10px; opacity:0.8;">(def: ${defVal})</span>` : ''}
           </div>
         `;
-      } else if (node.type === 'var_set' || node.type === 'variable') {
-        const vName = node.data?.varName || 'myVar';
-        const vType = node.data?.varType || 'boolean';
-        const vScope = node.data?.scope || 'client';
-        const op = node.data?.operation || 'set_value';
-        const scopeLabel = vScope === 'global' ? 'Global (All)' : `Client ${node.data?.targetClient || '1'}`;
-        const typeMap = {
-          boolean: '🔘 Boolean',
-          number: '🔢 Number',
-          string: '📝 Text'
-        };
-        const opMap = {
-          toggle: '🔄 Toggle',
-          set_true: '🟢 Set True',
-          set_false: '🔴 Set False',
-          set_value: `✏️ Set: ${node.data?.opValue !== undefined ? node.data.opValue : '-'}`,
-          increment: `➕ +${node.data?.opValue !== undefined ? node.data.opValue : 1}`,
-          decrement: `➖ -${node.data?.opValue !== undefined ? node.data.opValue : 1}`,
-          reset: '🔁 Reset'
-        };
-        bodyHTML = `
+        } else if (node.type === 'var_set' || node.type === 'variable') {
+          const vName = node.data?.varName || 'myVar';
+          const vType = node.data?.varType || 'boolean';
+          const vScope = node.data?.scope || 'client';
+          const op = node.data?.operation || 'set_value';
+          const scopeLabel = vScope === 'global' ? 'Global (All)' : `Client ${node.data?.targetClient || '1'}`;
+          const typeMap = {
+            boolean: '🔘 Boolean',
+            number: '🔢 Number',
+            string: '📝 Text'
+          };
+          const opMap = {
+            toggle: '🔄 Toggle',
+            set_true: '🟢 Set True',
+            set_false: '🔴 Set False',
+            set_value: `✏️ Set: ${node.data?.opValue !== undefined ? node.data.opValue : '-'}`,
+            increment: `➕ +${node.data?.opValue !== undefined ? node.data.opValue : 1}`,
+            decrement: `➖ -${node.data?.opValue !== undefined ? node.data.opValue : 1}`,
+            reset: '🔁 Reset'
+          };
+          bodyHTML = `
           <div class="node-info-row">
             <span>Name:</span> <span class="node-info-value" style="color:var(--text); font-weight:700; font-family:'JetBrains Mono';">${vName}</span>
           </div>
@@ -1237,13 +1238,13 @@ class NodeCanvasEditor {
             <span>Op:</span> <span class="node-info-value" style="color:#10b981; font-weight:700;">${opMap[op] || op}</span>
           </div>
         `;
-      } else {
-        bodyHTML = `
+        } else {
+          bodyHTML = `
           <div class="node-info-row">
             <span>Target:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
           </div>
         `;
-      }
+        }
       } // End if (!bodyHTML)
 
       let portsHTML = '';
@@ -1723,7 +1724,7 @@ class NodeCanvasEditor {
         portEl.addEventListener('mousedown', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          if (pType === 'out' && e.button === 0) {
+          if (e.button === 0) {
             const portRect = portEl.getBoundingClientRect();
             const portPos = this.clientToWorld(
               portRect.left + portRect.width / 2,
@@ -1733,8 +1734,11 @@ class NodeCanvasEditor {
             const wireType = meta.kind === 'data' ? meta.type : null;
 
             this.draftWire = {
-              fromNodeId: nodeId,
-              fromPort: portName,
+              startNodeId: nodeId,
+              startPort: portName,
+              startType: pType, // 'out' or 'in'
+              fromNodeId: pType === 'out' ? nodeId : null,
+              fromPort: pType === 'out' ? portName : null,
               wireType,
               meta,
               isInvalid: false,
@@ -1744,22 +1748,35 @@ class NodeCanvasEditor {
               y2: portPos.y
             };
 
-            this.highlightCompatiblePorts(nodeId, portName);
+            this.highlightCompatiblePorts(nodeId, portName, pType);
           }
         });
 
         portEl.addEventListener('mouseup', (e) => {
           e.stopPropagation();
-          if (this.draftWire && portEl.classList.contains('port-in')) {
-            const toNodeId = portEl.dataset.node;
-            const toPort = portEl.dataset.port;
-            const check = this.canConnectPorts(this.draftWire.fromNodeId, this.draftWire.fromPort, toNodeId, toPort);
-            if (check.allowed) {
-              this.addConnection(this.draftWire.fromNodeId, this.draftWire.fromPort, toNodeId, toPort);
-            } else {
-              const msg = window.currentLang === 'en' ? check.reasonEn : check.reasonTh;
-              if (typeof window.toast === 'function') {
-                window.toast(`⚠️ ${msg}`, 'warning');
+          if (this.draftWire) {
+            let fromNodeId, fromPort, toNodeId, toPort;
+            if (this.draftWire.startType === 'out' && portEl.classList.contains('port-in')) {
+              fromNodeId = this.draftWire.startNodeId;
+              fromPort = this.draftWire.startPort;
+              toNodeId = portEl.dataset.node;
+              toPort = portEl.dataset.port;
+            } else if (this.draftWire.startType === 'in' && (!portEl.classList.contains('port-in') || portEl.classList.contains('port-out'))) {
+              fromNodeId = portEl.dataset.node;
+              fromPort = portEl.dataset.port;
+              toNodeId = this.draftWire.startNodeId;
+              toPort = this.draftWire.startPort;
+            }
+
+            if (fromNodeId && toNodeId) {
+              const check = this.canConnectPorts(fromNodeId, fromPort, toNodeId, toPort);
+              if (check.allowed) {
+                this.addConnection(fromNodeId, fromPort, toNodeId, toPort);
+              } else {
+                const msg = window.currentLang === 'en' ? check.reasonEn : check.reasonTh;
+                if (typeof window.toast === 'function') {
+                  window.toast(`⚠️ ${msg}`, 'warning');
+                }
               }
             }
           }
@@ -1887,14 +1904,14 @@ class NodeCanvasEditor {
       const fromNode = this.nodes.find(n => n.id === conn.fromNodeId);
       const toNode = this.nodes.find(n => n.id === conn.toNodeId);
       const isDataWire = (
-        conn.fromPort === 'val_out' || 
-        conn.fromPort === 'msg_out' || 
-        conn.fromPort === 'name_out' || 
-        conn.fromPort === 'slot_out' || 
-        conn.fromPort === 'names_out' || 
-        conn.fromPort === 'count_out' || 
-        conn.fromPort === 'info_out' || 
-        conn.toPort === 'val_in' || 
+        conn.fromPort === 'val_out' ||
+        conn.fromPort === 'msg_out' ||
+        conn.fromPort === 'name_out' ||
+        conn.fromPort === 'slot_out' ||
+        conn.fromPort === 'names_out' ||
+        conn.fromPort === 'count_out' ||
+        conn.fromPort === 'info_out' ||
+        conn.toPort === 'val_in' ||
         conn.toPort === 'msg_in' ||
         conn.toPort === 'text_in' ||
         (toNode && toNode.type === 'format_text')
@@ -1919,8 +1936,11 @@ class NodeCanvasEditor {
 
     // Render draft wire if currently dragging
     if (this.draftWire) {
+      const isStartIn = (this.draftWire.startType === 'in');
       const dx = Math.max(30, Math.abs(this.draftWire.x2 - this.draftWire.x1) * 0.5);
-      const pathData = `M ${this.draftWire.x1} ${this.draftWire.y1} C ${this.draftWire.x1 + dx} ${this.draftWire.y1}, ${this.draftWire.x2 - dx} ${this.draftWire.y2}, ${this.draftWire.x2} ${this.draftWire.y2}`;
+      const c1x = isStartIn ? (this.draftWire.x1 - dx) : (this.draftWire.x1 + dx);
+      const c2x = isStartIn ? (this.draftWire.x2 + dx) : (this.draftWire.x2 - dx);
+      const pathData = `M ${this.draftWire.x1} ${this.draftWire.y1} C ${c1x} ${this.draftWire.y1}, ${c2x} ${this.draftWire.y2}, ${this.draftWire.x2} ${this.draftWire.y2}`;
       let draftClass = 'wire-draft';
       if (this.draftWire.isInvalid) {
         draftClass += ' wire-draft-invalid';
@@ -1972,14 +1992,14 @@ class NodeCanvasEditor {
       const fromNode = this.nodes.find(n => n.id === conn.fromNodeId);
       const toNode = this.nodes.find(n => n.id === conn.toNodeId);
       const isDataWire = (
-        pName === 'val_out' || 
-        pName === 'msg_out' || 
-        pName === 'name_out' || 
-        pName === 'slot_out' || 
-        pName === 'names_out' || 
-        pName === 'count_out' || 
-        pName === 'info_out' || 
-        toPName === 'val_in' || 
+        pName === 'val_out' ||
+        pName === 'msg_out' ||
+        pName === 'name_out' ||
+        pName === 'slot_out' ||
+        pName === 'names_out' ||
+        pName === 'count_out' ||
+        pName === 'info_out' ||
+        toPName === 'val_in' ||
         toPName === 'msg_in' ||
         toPName === 'text_in' ||
         (toNode && toNode.type === 'format_text')
@@ -2445,9 +2465,10 @@ class NodeCanvasEditor {
       'next', 'exec_out', 'onComplete', 'onError', 'onScanned', 'onLowHp',
       'onHealTarget', 'onNoTarget', 'onNextMember', 'onKeyDown', 'onActivated',
       'onStep', 'onEachCycle', 'onStop', 'onCooldown', 'onBeforeStart',
-      'onAfterStart', 'onTrue', 'onFalse', 'onEnable', 'onDisable'
+      'onAfterStart', 'onTrue', 'onFalse', 'onEnable', 'onDisable',
+      'onStart', 'onFired', 'onKeyUp', 'onSelected', 'onTargetSelected', 'onAllHealthy', 'onMemberLowHp'
     ];
-    if (knownFlowOutputs.includes(portName) || portName.startsWith('item_')) {
+    if (knownFlowOutputs.includes(portName) || portName.startsWith('item_') || portName.startsWith('on')) {
       return { kind: 'flow', type: 'flow', label: portName };
     }
 
@@ -2564,12 +2585,18 @@ class NodeCanvasEditor {
     return { allowed: true, fromMeta, toMeta };
   }
 
-  highlightCompatiblePorts(fromNodeId, fromPort) {
+  highlightCompatiblePorts(startNodeId, startPort, startType = 'out') {
     if (!this.nodesLayer) return;
-    const inputPorts = this.nodesLayer.querySelectorAll('.node-port.port-in');
-    inputPorts.forEach(portEl => {
-      const toNodeId = portEl.dataset.node;
-      const toPort = portEl.dataset.port;
+    const targetSelector = startType === 'in' ? '.node-port.port-out, .node-port:not(.port-in)' : '.node-port.port-in';
+    const targetPorts = this.nodesLayer.querySelectorAll(targetSelector);
+    targetPorts.forEach(portEl => {
+      const otherNodeId = portEl.dataset.node;
+      const otherPort = portEl.dataset.port;
+      const fromNodeId = startType === 'in' ? otherNodeId : startNodeId;
+      const fromPort = startType === 'in' ? otherPort : startPort;
+      const toNodeId = startType === 'in' ? startNodeId : otherNodeId;
+      const toPort = startType === 'in' ? startPort : otherPort;
+
       const check = this.canConnectPorts(fromNodeId, fromPort, toNodeId, toPort);
       if (check.allowed) {
         portEl.classList.add('port-valid-target');
@@ -3040,8 +3067,8 @@ class NodeCanvasEditor {
           existingNames.add(vName);
           const vType = node.data?.varType || (node.type === 'var_get' ? 'string' : 'boolean');
           const vScope = node.data?.scope || 'client';
-          const defVal = node.data?.defaultValue !== undefined 
-            ? node.data.defaultValue 
+          const defVal = node.data?.defaultValue !== undefined
+            ? node.data.defaultValue
             : (node.data?.initialValue !== undefined ? node.data.initialValue : (vType === 'boolean' ? 'false' : (vType === 'number' ? '0' : '')));
 
           this.variables.push({
@@ -3076,8 +3103,8 @@ class NodeCanvasEditor {
     const filtered = allVars.filter(v => {
       if (!this.variablesSearchQuery) return true;
       return v.name.toLowerCase().includes(this.variablesSearchQuery) ||
-             (v.type && v.type.toLowerCase().includes(this.variablesSearchQuery)) ||
-             (v.description && v.description.toLowerCase().includes(this.variablesSearchQuery));
+        (v.type && v.type.toLowerCase().includes(this.variablesSearchQuery)) ||
+        (v.description && v.description.toLowerCase().includes(this.variablesSearchQuery));
     });
 
     if (filtered.length === 0) {
@@ -3193,7 +3220,7 @@ class NodeCanvasEditor {
     const v = (this.variables || []).find(it => it.id === varId);
     if (!v) return;
 
-    const referencingNodes = this.nodes.filter(n => 
+    const referencingNodes = this.nodes.filter(n =>
       (n.type === 'var_set' || n.type === 'variable' || n.type === 'var_get') &&
       n.data?.varName === v.name
     );

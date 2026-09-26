@@ -14,7 +14,7 @@ module.exports = {
   icon: '💚',
   color: '#22c55e',
   inputs: ['in'],
-  outputs: ['onTargetSelected', 'onAllHealthy', 'onError'],
+  outputs: ['onHealTarget', 'onNoTarget', 'onError', 'onTargetSelected', 'onAllHealthy'],
   defaultData: {
     targetClient: '1',
     scanRegion: 'auto',
