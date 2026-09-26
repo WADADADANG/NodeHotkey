@@ -52,7 +52,7 @@ async function runPartyScannerAction(action, callStack) {
         }
     };
 
-    const targetClientId = String(action.targetClient || '1');
+    const targetClientId = String(action.targetClient || '1').split(',')[0].trim() || '1';
     const page = global.clientPages ? global.clientPages[targetClientId] : null;
     const showOverlay = action.showOverlay !== false;
 
@@ -164,7 +164,7 @@ async function runSelectPartySlotAction(action, callStack) {
         }
     };
 
-    const targetClientId = String(action.targetClient || '1');
+    const targetClientId = String(action.targetClient || '1').split(',')[0].trim() || '1';
     const page = global.clientPages ? global.clientPages[targetClientId] : null;
     const showOverlay = action.showOverlay !== false;
 
@@ -185,10 +185,10 @@ async function runSelectPartySlotAction(action, callStack) {
         const slotIndex = Math.max(0, targetSlotNum - 1);
         const delayAfterClick = parseInt(action.delayAfterClick, 10) || 80;
 
-        // Check central cache first
+        const scanRegion = action.scanRegion || 'auto';
         let partyState = visionService.getLatestPartyState(targetClientId);
         if (!partyState || !Array.isArray(partyState.members) || partyState.members.length <= slotIndex || (Date.now() - (partyState.timestamp || 0)) > 2000) {
-            partyState = await visionService.scanClientPage(page, targetClientId, 'auto', { showOverlay });
+            partyState = await visionService.scanClientPage(page, targetClientId, scanRegion, { showOverlay });
         }
 
         if (!partyState || !Array.isArray(partyState.members) || partyState.members.length === 0) {
@@ -279,7 +279,7 @@ async function runPartyHealAction(action, callStack) {
         }
     };
 
-    const targetClientId = String(action.targetClient || '1');
+    const targetClientId = String(action.targetClient || '1').split(',')[0].trim() || '1';
     const page = global.clientPages ? global.clientPages[targetClientId] : null;
     const showOverlay = action.showOverlay !== false;
 
@@ -300,9 +300,10 @@ async function runPartyHealAction(action, callStack) {
         const lowHpThreshold = parseInt(action.lowHpThreshold, 10) || 70;
         const delayAfterClick = parseInt(action.delayAfterClick, 10) || 80;
 
+        const scanRegion = action.scanRegion || 'auto';
         let partyState = visionService.getLatestPartyState(targetClientId);
         if (!partyState || !Array.isArray(partyState.members) || (Date.now() - (partyState.timestamp || 0)) > 1500) {
-            partyState = await visionService.scanClientPage(page, targetClientId, 'auto', { showOverlay });
+            partyState = await visionService.scanClientPage(page, targetClientId, scanRegion, { showOverlay });
         }
 
         if (!partyState || !Array.isArray(partyState.members) || partyState.members.length === 0) {
@@ -416,7 +417,7 @@ async function runPartyBuffAction(action, callStack) {
         }
     };
 
-    const targetClientId = String(action.targetClient || '1');
+    const targetClientId = String(action.targetClient || '1').split(',')[0].trim() || '1';
     const page = global.clientPages ? global.clientPages[targetClientId] : null;
     const showOverlay = action.showOverlay !== false;
 
@@ -621,7 +622,7 @@ async function runPartyBuffAction(action, callStack) {
 async function runScreenshotAction(action, callStack) {
     if (global.isSuspended) return;
 
-    const targetClientId = String(action.targetClient || '1');
+    const targetClientId = String(action.targetClient || '1').split(',')[0].trim() || '1';
     const region = action.captureRegion || action.region || 'full';
     const annotate = action.annotate !== false;
     const prefix = (action.prefix || 'screenshot').replace(/[^a-zA-Z0-9_-]/g, '_');

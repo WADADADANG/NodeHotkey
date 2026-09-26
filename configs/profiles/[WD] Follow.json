@@ -1,0 +1,226 @@
+{
+  "version": "3.1.0",
+  "name": "[WD] Follow",
+  "canvas": {
+    "zoom": 0.92,
+    "pan": {
+      "x": 60,
+      "y": -200
+    }
+  },
+  "nodes": [
+    {
+      "id": "node_1790399201884",
+      "type": "trigger",
+      "title": "Global Trigger",
+      "position": {
+        "x": 240,
+        "y": 280
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "INSERT",
+        "actionId": "1790399201884"
+      }
+    },
+    {
+      "id": "node_1790399241613",
+      "type": "party_slot",
+      "title": "Party Slot Selector 1",
+      "position": {
+        "x": 620,
+        "y": 280
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "targetSlot": 1,
+        "scanRegion": "right",
+        "delayAfterClick": 80,
+        "showOverlay": false,
+        "actionId": "1790399241613"
+      }
+    },
+    {
+      "id": "node_1790399265153",
+      "type": "key_press",
+      "title": "Key Press Z 1",
+      "position": {
+        "x": 980,
+        "y": 280
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "Z"
+        ],
+        "actionId": "1790399265153"
+      }
+    },
+    {
+      "id": "node_1790399298727_6728",
+      "type": "party_slot",
+      "title": "Party Slot Selector 2",
+      "position": {
+        "x": 620,
+        "y": 480
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "2",
+        "targetSlot": 1,
+        "scanRegion": "right",
+        "delayAfterClick": 80,
+        "showOverlay": false,
+        "actionId": "1790399298727_6728"
+      }
+    },
+    {
+      "id": "node_1790399298727_6381",
+      "type": "key_press",
+      "title": "Key Press Z 2",
+      "position": {
+        "x": 980,
+        "y": 480
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "2",
+        "keys": [
+          "Z"
+        ],
+        "actionId": "1790399298727_6381"
+      }
+    },
+    {
+      "id": "node_1790399346918_2094",
+      "type": "party_slot",
+      "title": "Party Slot Selector 3",
+      "position": {
+        "x": 620,
+        "y": 680
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "3",
+        "targetSlot": 1,
+        "scanRegion": "left",
+        "delayAfterClick": 80,
+        "showOverlay": false,
+        "actionId": "1790399346918_2094"
+      }
+    },
+    {
+      "id": "node_1790399346918_7825",
+      "type": "key_press",
+      "title": "Key Press Z 3",
+      "position": {
+        "x": 980,
+        "y": 680
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "3",
+        "keys": [
+          "Z"
+        ],
+        "actionId": "1790399346918_7825"
+      }
+    },
+    {
+      "id": "node_1790399433908_1694",
+      "type": "party_slot",
+      "title": "Party Slot Selector 4",
+      "position": {
+        "x": 620,
+        "y": 880
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "targetSlot": 1,
+        "scanRegion": "right",
+        "delayAfterClick": 80,
+        "showOverlay": false,
+        "actionId": "1790399433908_1694"
+      }
+    },
+    {
+      "id": "node_1790399433908_904",
+      "type": "key_press",
+      "title": "Key Press Z 4",
+      "position": {
+        "x": 980,
+        "y": 880
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "keys": [
+          "Z"
+        ],
+        "actionId": "1790399433908_904"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_trig_to_slot1",
+      "fromNodeId": "node_1790399201884",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1790399241613",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_slot1_to_z1",
+      "fromNodeId": "node_1790399241613",
+      "fromPort": "next",
+      "toNodeId": "node_1790399265153",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_z1_to_slot2",
+      "fromNodeId": "node_1790399265153",
+      "fromPort": "next",
+      "toNodeId": "node_1790399298727_6728",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_slot2_to_z2",
+      "fromNodeId": "node_1790399298727_6728",
+      "fromPort": "next",
+      "toNodeId": "node_1790399298727_6381",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_z2_to_slot3",
+      "fromNodeId": "node_1790399298727_6381",
+      "fromPort": "next",
+      "toNodeId": "node_1790399346918_2094",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_slot3_to_z3",
+      "fromNodeId": "node_1790399346918_2094",
+      "fromPort": "next",
+      "toNodeId": "node_1790399346918_7825",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_z3_to_slot4",
+      "fromNodeId": "node_1790399346918_7825",
+      "fromPort": "next",
+      "toNodeId": "node_1790399433908_1694",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_slot4_to_z4",
+      "fromNodeId": "node_1790399433908_1694",
+      "fromPort": "next",
+      "toNodeId": "node_1790399433908_904",
+      "toPort": "exec_in"
+    }
+  ]
+}

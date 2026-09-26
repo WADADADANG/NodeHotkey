@@ -58,19 +58,31 @@
     components: {
       client_selector(field, value, node) {
         const isEn = window.currentLang === 'en';
-        const rawVal = String(value !== undefined ? value : (node.data?.[field.key || 'targetClient'] || '1'));
+        const isSingleSelect = field.allowMultiple === false || field.singleSelect === true;
+        let rawVal = String(value !== undefined ? value : (node.data?.[field.key || 'targetClient'] || '1'));
+        if (isSingleSelect && (rawVal === 'all' || rawVal === 'both' || rawVal.includes(','))) {
+          rawVal = rawVal.split(',')[0].trim() || '1';
+          if (node.data) node.data[field.key || 'targetClient'] = rawVal;
+        }
+
         let selectedList = [];
-        const isAllSelected = rawVal === 'all' || rawVal === 'both';
+        const isAllSelected = !isSingleSelect && (rawVal === 'all' || rawVal === 'both');
         if (isAllSelected) {
           selectedList = ['1', '2', '3', '4', '5', '6', '7', '8'];
         } else {
           selectedList = rawVal.split(',').map(s => s.trim()).filter(Boolean);
+          if (isSingleSelect && selectedList.length > 1) {
+            selectedList = [selectedList[0]];
+          }
         }
-        const allowAll = field.allowAll !== false;
+        const allowAll = !isSingleSelect && (field.allowAll !== false);
         const label = canvasT(field.labelKey, field.label || (isEn ? 'Target Client Screen' : 'เลือกจอเป้าหมาย (Client)'));
 
         let clientBadge = '';
-        if (rawVal === 'all') {
+        if (isSingleSelect) {
+          const currentTarget = selectedList[0] || '1';
+          clientBadge = isEn ? `Client ${currentTarget} (Single)` : `จอที่ ${currentTarget} (จอเดียว)`;
+        } else if (rawVal === 'all') {
           clientBadge = isEn ? 'All Clients' : 'ทุกจอเกม';
         } else if (selectedList.length === 1) {
           clientBadge = isEn ? `Client ${selectedList[0]}` : `จอที่ ${selectedList[0]}`;

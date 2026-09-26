@@ -23,7 +23,7 @@ module.exports = {
     showOverlay: true
   },
   schema: [
-    { key: 'targetClient', component: 'client_selector', labelKey: 'inspector_target_clients', label: 'Target Client Screen (Vision)' },
+    { key: 'targetClient', component: 'client_selector', allowMultiple: false, allowAll: false, labelKey: 'inspector_target_clients', label: 'Target Client Screen (Vision)' },
     { key: 'lowHpThreshold', component: 'slider', labelKey: 'inspector_party_low_hp', label: 'Low HP Threshold (%)', min: 10, max: 95, step: 5, unit: '%' },
     { key: 'delayAfterClick', component: 'number_input', labelKey: 'inspector_party_delay_click', label: 'Delay After Click (ms)', min: 0, max: 2000, step: 20 },
     { key: 'showOverlay', component: 'toggle', labelKey: 'inspector_party_show_overlay', label: 'Visual Overlay', icon: '👁️', color: '#06b6d4' }

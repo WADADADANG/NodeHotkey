@@ -27,7 +27,7 @@ module.exports = {
     subfolder: 'client_1'
   },
   schema: [
-    { key: 'targetClient', component: 'client_selector', labelKey: 'inspector_target_clients', label: 'Target Client Screen' },
+    { key: 'targetClient', component: 'client_selector', allowMultiple: false, allowAll: false, labelKey: 'inspector_target_clients', label: 'Target Client Screen' },
     {
       key: 'captureRegion', component: 'select', labelKey: 'inspector_screenshot_region', label: 'Capture Area',
       options: [

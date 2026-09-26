@@ -2288,6 +2288,20 @@
     if (!node) return;
     if (!node.data) node.data = {};
 
+    const def = window.clientNodeRegistry ? window.clientNodeRegistry.get(node.type) : null;
+    const clientField = def && Array.isArray(def.schema) ? def.schema.find(f => f.key === 'targetClient') : null;
+    const isSingleSelect = clientField && (clientField.allowMultiple === false || clientField.singleSelect === true);
+
+    if (isSingleSelect) {
+      const targetStr = (val === 'all' || val === 'both') ? '1' : String(val);
+      node.data.targetClient = targetStr;
+      this.renderNodes();
+      this.openInspector(node.id);
+      this.addHistory('🎯', `เปลี่ยนจอเป้าหมายของ "${node.title || node.type}" เป็น [Client ${targetStr}]`);
+      this.onProfileChanged();
+      return;
+    }
+
     let currentVal = node.data.targetClient || '1';
     let targets = [];
     if (currentVal === 'all' || currentVal === 'both') {

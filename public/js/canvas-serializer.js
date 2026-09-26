@@ -154,22 +154,23 @@
           enabled: it.enabled !== false
         })) : [];
       } else if (type === 'party_scanner') {
-        cleanData.targetClient = d.targetClient || '1';
+        cleanData.targetClient = String(d.targetClient || '1').split(',')[0].trim() || '1';
         cleanData.scanIntervalMs = d.scanIntervalMs !== undefined ? parseInt(d.scanIntervalMs, 10) : 250;
         cleanData.lowHpThreshold = d.lowHpThreshold !== undefined ? parseInt(d.lowHpThreshold, 10) : 70;
         cleanData.showOverlay = d.showOverlay !== false;
       } else if (type === 'party_slot') {
-        cleanData.targetClient = d.targetClient || '1';
+        cleanData.targetClient = String(d.targetClient || '1').split(',')[0].trim() || '1';
         cleanData.targetSlot = d.targetSlot !== undefined ? parseInt(d.targetSlot, 10) : 1;
+        cleanData.scanRegion = d.scanRegion || 'auto';
         cleanData.delayAfterClick = d.delayAfterClick !== undefined ? parseInt(d.delayAfterClick, 10) : 80;
         cleanData.showOverlay = d.showOverlay !== false;
       } else if (type === 'party_heal') {
-        cleanData.targetClient = d.targetClient || '1';
+        cleanData.targetClient = String(d.targetClient || '1').split(',')[0].trim() || '1';
         cleanData.lowHpThreshold = d.lowHpThreshold !== undefined ? parseInt(d.lowHpThreshold, 10) : 70;
         cleanData.delayAfterClick = d.delayAfterClick !== undefined ? parseInt(d.delayAfterClick, 10) : 80;
         cleanData.showOverlay = d.showOverlay !== false;
       } else if (type === 'party_buff') {
-        cleanData.targetClient = d.targetClient || '1';
+        cleanData.targetClient = String(d.targetClient || '1').split(',')[0].trim() || '1';
         cleanData.delayAfterClick = d.delayAfterClick !== undefined ? parseInt(d.delayAfterClick, 10) : 80;
         cleanData.showOverlay = d.showOverlay !== false;
       } else if (type === 'tts') {
@@ -179,7 +180,7 @@
       } else if (type === 'step_log') {
         cleanData.message = d.message !== undefined ? d.message : '';
       } else if (type === 'screenshot') {
-        cleanData.targetClient = d.targetClient || '1';
+        cleanData.targetClient = String(d.targetClient || '1').split(',')[0].trim() || '1';
         cleanData.captureRegion = d.captureRegion || 'active_client';
         cleanData.subfolder = d.subfolder || '';
         cleanData.prefix = d.prefix || 'error_snap';

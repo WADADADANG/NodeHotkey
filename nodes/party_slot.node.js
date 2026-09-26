@@ -18,11 +18,12 @@ module.exports = {
   defaultData: {
     targetClient: '1',
     targetSlot: 1,
+    scanRegion: 'auto',
     delayAfterClick: 80,
     showOverlay: true
   },
   schema: [
-    { key: 'targetClient', component: 'client_selector', labelKey: 'inspector_target_clients', label: 'Target Client Screen (Vision)' },
+    { key: 'targetClient', component: 'client_selector', allowMultiple: false, allowAll: false, labelKey: 'inspector_target_clients', label: 'Target Client Screen (Vision)' },
     {
       key: 'targetSlot', component: 'select', labelKey: 'inspector_target_slot', label: 'Target Party Member Slot',
       options: [
@@ -34,6 +35,15 @@ module.exports = {
         { value: 6, label: 'Slot 6' },
         { value: 7, label: 'Slot 7' },
         { value: 8, label: 'Slot 8' }
+      ]
+    },
+    {
+      key: 'scanRegion', component: 'select', labelKey: 'inspector_party_scan_region', label: 'Party Window Position',
+      options: [
+        { value: 'auto', labelKey: 'region_auto', label: '🔍 Auto (Detect Left/Right)' },
+        { value: 'right', labelKey: 'region_right', label: '👉 Right Half' },
+        { value: 'left', labelKey: 'region_left', label: '👈 Left Half' },
+        { value: 'full', labelKey: 'region_full', label: '🖥️ Full Screen' }
       ]
     },
     { key: 'delayAfterClick', component: 'number_input', labelKey: 'inspector_party_delay_click', label: 'Delay After Click (ms)', min: 0, max: 2000, step: 20 },

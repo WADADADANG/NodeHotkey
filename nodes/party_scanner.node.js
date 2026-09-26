@@ -30,7 +30,7 @@ module.exports = {
     showOverlay: true
   },
   schema: [
-    { key: 'targetClient', component: 'client_selector', labelKey: 'inspector_target_clients', label: 'Target Client Screen (Vision)' },
+    { key: 'targetClient', component: 'client_selector', allowMultiple: false, allowAll: false, labelKey: 'inspector_target_clients', label: 'Target Client Screen (Vision)' },
     {
       key: 'scanRegion', component: 'select', labelKey: 'inspector_party_scan_region', label: 'Party Window Position',
       options: [
