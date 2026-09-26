@@ -196,13 +196,17 @@ class NodeExecutionEngine {
     const connections = Array.isArray(profile.connections) ? profile.connections : [];
     const triggerMap = new Map();
 
-    // Map trigger connections (fromNodeId -> toNodeId)
+    // Map trigger connections (fromNodeId -> toNodeId) - supports multiple triggers to a single Action node
     connections.forEach(conn => {
       const fromNode = nodes.find(n => n.id === conn.fromNodeId);
       if (fromNode && fromNode.type === 'trigger' && fromNode.data) {
-        triggerMap.set(conn.toNodeId, {
+        if (!triggerMap.has(conn.toNodeId)) {
+          triggerMap.set(conn.toNodeId, []);
+        }
+        triggerMap.get(conn.toNodeId).push({
           type: fromNode.data.triggerType || 'keyboard',
-          value: fromNode.data.triggerValue || ''
+          value: fromNode.data.triggerValue || '',
+          triggerNodeId: fromNode.id
         });
       }
     });
@@ -255,9 +259,19 @@ class NodeExecutionEngine {
 
       const d = node.data || {};
       const actionId = d.actionId || (node.id.startsWith('node_') ? node.id.replace('node_', '') : node.id);
-      const trig = triggerMap.get(node.id) || {
-        type: d.triggerType || 'none',
-        value: d.triggerValue || ''
+      
+      const connectedTriggers = triggerMap.get(node.id) || [];
+      // Fallback: if node itself has embedded trigger data and no incoming wire triggers
+      if (connectedTriggers.length === 0 && d.triggerType && d.triggerType !== 'none' && d.triggerValue) {
+        connectedTriggers.push({
+          type: d.triggerType,
+          value: d.triggerValue,
+          triggerNodeId: null
+        });
+      }
+      const primaryTrig = connectedTriggers[0] || {
+        type: 'none',
+        value: ''
       };
 
       actions.push({
@@ -267,7 +281,8 @@ class NodeExecutionEngine {
         enabled: d.enabled !== false,
         mode: modeMap[node.type] || node.type || 'loop',
         modeType: d.modeType || 'loop',
-        trigger: trig,
+        trigger: primaryTrig,
+        triggers: connectedTriggers,
         targetMode: d.targetMode || 'heal_priority',
         targetSlot: d.targetSlot !== undefined ? parseInt(d.targetSlot, 10) : 1,
         lowHpThreshold: d.lowHpThreshold !== undefined ? parseInt(d.lowHpThreshold, 10) : 70,

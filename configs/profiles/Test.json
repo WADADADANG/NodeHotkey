@@ -2,52 +2,75 @@
   "version": "3.1.0",
   "name": "Test",
   "canvas": {
-    "zoom": 1.4030574899803647,
+    "zoom": 0.9205460191761174,
     "pan": {
-      "x": -713,
-      "y": 182
+      "x": -766,
+      "y": -339
     }
   },
   "nodes": [
     {
-      "id": "node_1789412136886",
-      "type": "var_set",
-      "title": "Set myVar",
+      "id": "node_1790414998968",
+      "type": "trigger",
+      "title": "Global Trigger",
       "position": {
-        "x": 850,
-        "y": 300
+        "x": 962,
+        "y": 514
       },
       "data": {
         "enabled": true,
-        "actionId": "1789412136886"
+        "triggerType": "keyboard",
+        "triggerValue": "NUMPAD 1",
+        "actionId": "1790414998968"
       }
     },
     {
-      "id": "node_1789412148731",
-      "type": "var_get",
-      "title": "myVar",
-      "position": {
-        "x": 1092,
-        "y": 301
-      },
-      "data": {
-        "enabled": true,
-        "actionId": "1789412148731"
-      }
-    },
-    {
-      "id": "node_1789412151680",
-      "type": "var_get",
-      "title": "myVar",
+      "id": "node_1790415005377",
+      "type": "key_press",
+      "title": "Key Press",
       "position": {
         "x": 1330,
-        "y": 300
+        "y": 590
       },
       "data": {
         "enabled": true,
-        "actionId": "1789412151680"
+        "targetClient": "1",
+        "keys": [
+          "2"
+        ],
+        "actionId": "1790415005377"
+      }
+    },
+    {
+      "id": "node_1790415011566",
+      "type": "trigger",
+      "title": "Global Trigger",
+      "position": {
+        "x": 960,
+        "y": 660
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "NUMPAD 2",
+        "actionId": "1790415011566"
       }
     }
   ],
-  "connections": []
+  "connections": [
+    {
+      "id": "conn_1790415007389",
+      "fromNodeId": "node_1790414998968",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1790415005377",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790415015249",
+      "fromNodeId": "node_1790415011566",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1790415005377",
+      "toPort": "exec_in"
+    }
+  ]
 }

@@ -3487,13 +3487,21 @@ async function runEmitEventAction(action, callStack) {
     const cleanEventName = eventName.toLowerCase();
     console.log(`[Event Bus] Broadcasting custom event: "${eventName}" (from "${action._profileName || 'Active'}" / "${action.name}")`);
 
-    // Find all matching trigger actions in activeActions
-    const listeners = activeActions.filter(act =>
-        act.enabled &&
-        act.trigger &&
-        act.trigger.type === 'event' &&
-        String(act.trigger.value || '').trim().toLowerCase() === cleanEventName
-    );
+    // Find all matching trigger actions in activeActions (supporting multi-triggers)
+    const listeners = [];
+    for (const act of activeActions) {
+        if (!act.enabled) continue;
+        const triggers = (Array.isArray(act.triggers) && act.triggers.length > 0)
+            ? act.triggers
+            : (act.trigger ? [act.trigger] : []);
+        const matchedTrig = triggers.find(t =>
+            t && t.type === 'event' &&
+            String(t.value || '').trim().toLowerCase() === cleanEventName
+        );
+        if (matchedTrig) {
+            listeners.push({ act, triggerNodeId: matchedTrig.triggerNodeId || null });
+        }
+    }
 
     console.log(`[Event Bus] Found ${listeners.length} active listener(s) for event "${eventName}"`);
 
@@ -3508,9 +3516,9 @@ async function runEmitEventAction(action, callStack) {
     resolvedStack.add(stackKey);
 
     // Fire all active listener actions
-    for (const listener of listeners) {
+    for (const { act: listener, triggerNodeId } of listeners) {
         console.log(`[Event Triggered] Event "${eventName}" -> Firing "${listener.name}" (Profile: ${listener._profileName || 'Default'})`);
-        handleActionTrigger(listener);
+        handleActionTrigger(listener, triggerNodeId);
     }
 
     await fireChain(action, 'onFired', resolvedStack);
@@ -3782,28 +3790,49 @@ function triggerWebhookEvent(eventName, payload = null) {
         });
     }
 
-    // 2. ActiveActions Fallback Trigger Matching
-    const directListeners = activeActions.filter(act =>
-        act.enabled &&
-        act.trigger &&
-        act.trigger.type === 'webhook' &&
-        String(act.trigger.value || '').trim().toLowerCase() === cleanEventName &&
-        !executedActions.includes(act.name || act.id)
-    );
+    // 2. ActiveActions Fallback Trigger Matching (supporting multi-triggers)
+    const directListeners = [];
+    for (const act of activeActions) {
+        if (!act.enabled || executedActions.includes(act.name || act.id)) continue;
+        const triggers = getActionTriggers(act);
+        const matchedTrig = triggers.find(t =>
+            t && t.type === 'webhook' &&
+            String(t.value || '').trim().toLowerCase() === cleanEventName
+        );
+        if (matchedTrig) {
+            directListeners.push({ act, triggerNodeId: matchedTrig.triggerNodeId || null });
+        }
+    }
 
-    for (const listener of directListeners) {
+    for (const { act: listener, triggerNodeId } of directListeners) {
         executedActions.push(listener.name || listener.id);
         console.log(`[Webhook Triggered] Event "${eventName}" -> Firing Action "${listener.name}"`);
-        handleActionTrigger(listener);
+        handleActionTrigger(listener, triggerNodeId);
     }
 
     return { count: executedActions.length, actions: executedActions };
 }
 global.triggerWebhookEvent = triggerWebhookEvent;
 
+// Helper to retrieve all active triggers for an action (supports multi-trigger arrays & single triggers)
+function getActionTriggers(act) {
+    if (!act) return [];
+    if (Array.isArray(act.triggers) && act.triggers.length > 0) {
+        return act.triggers;
+    }
+    if (act.trigger && act.trigger.type && act.trigger.type !== 'none') {
+        return [act.trigger];
+    }
+    return [];
+}
+global.getActionTriggers = getActionTriggers;
+
 // Unified trigger entry point
-function handleActionTrigger(act) {
-    if (global.isSuspended) return;
+function handleActionTrigger(act, firingTriggerId = null) {
+    if (global.isSuspended || !act) return;
+    if (firingTriggerId) {
+        emitSignal(firingTriggerId, 'trigger', act.id);
+    }
     emitSignal(act.id, 'trigger');
 
     // [v3.1 Modular Node Registry Dispatcher]
@@ -4385,16 +4414,22 @@ function startGlobalListeners() {
 
                 if (global.isSuspended) return;
 
-                // Find matching actions
-                const matchingActions = activeActions.filter(act =>
-                    act.enabled &&
-                    act.trigger.type === 'mouse' &&
-                    act.trigger.value == event.button
-                );
+                // Find matching actions (supporting multi-triggers)
+                const matchedMouseActions = [];
+                for (const act of activeActions) {
+                    if (!act.enabled) continue;
+                    const triggers = getActionTriggers(act);
+                    const matchedTrig = triggers.find(t =>
+                        t && t.type === 'mouse' && String(t.value) == String(event.button)
+                    );
+                    if (matchedTrig) {
+                        matchedMouseActions.push({ act, triggerNodeId: matchedTrig.triggerNodeId || null });
+                    }
+                }
 
-                for (let act of matchingActions) {
+                for (const { act, triggerNodeId } of matchedMouseActions) {
                     console.log(`[Global Mouse Captured] Triggered action: "${act.name}" via Mouse Button ${event.button}`);
-                    handleActionTrigger(act);
+                    handleActionTrigger(act, triggerNodeId);
                 }
             });
         }
@@ -4439,32 +4474,37 @@ function startGlobalListeners() {
 
         // 1. Handle normal actions (loop, buff_sequence, single_press, sound_alert, emergency_stop, etc.) strictly on DOWN state
         if (isDown) {
-            const matchingActions = activeActions.filter(act =>
-                act.enabled &&
-                act.mode !== 'forward' &&
-                act.trigger.type === 'keyboard' &&
-                act.trigger.type !== 'none' &&
-                act.trigger.value &&
-                matchKeyTrigger(act.trigger.value, e.name, down, false)
-            );
-
-            if (matchingActions.length > 0) {
-                console.log(`[Global Key Captured] Triggered action(s) via physical key "${e.name}"`);
+            const matchedActions = [];
+            for (const act of activeActions) {
+                if (!act.enabled || act.mode === 'forward') continue;
+                const triggers = getActionTriggers(act);
+                const matchedTrig = triggers.find(t =>
+                    t && t.type === 'keyboard' && t.type !== 'none' && t.value &&
+                    matchKeyTrigger(t.value, e.name, down, false)
+                );
+                if (matchedTrig) {
+                    matchedActions.push({ act, triggerNodeId: matchedTrig.triggerNodeId || null });
+                }
             }
 
-            for (let act of matchingActions) {
-                handleActionTrigger(act);
+            if (matchedActions.length > 0) {
+                console.log(`[Global Key Captured] Triggered ${matchedActions.length} action(s) via physical key "${e.name}"`);
+            }
+
+            for (const { act, triggerNodeId } of matchedActions) {
+                handleActionTrigger(act, triggerNodeId);
             }
         }
 
-        // 2. Handle forward actions (down and up states for holding keys)
-        const forwardActions = activeActions.filter(act =>
-            act.enabled &&
-            act.mode === 'forward' &&
-            act.trigger.type === 'keyboard' &&
-            act.trigger.value &&
-            matchKeyTrigger(act.trigger.value, e.name, down, isUp)
-        );
+        // 2. Handle forward actions (down and up states for holding keys, supporting multi-triggers)
+        const forwardActions = activeActions.filter(act => {
+            if (!act.enabled || act.mode !== 'forward') return false;
+            const triggers = getActionTriggers(act);
+            return triggers.some(t =>
+                t && t.type === 'keyboard' && t.value &&
+                matchKeyTrigger(t.value, e.name, down, isUp)
+            );
+        });
 
         for (let act of forwardActions) {
             const targetKey = act.targetKey || '5';
