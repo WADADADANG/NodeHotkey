@@ -209,6 +209,23 @@
       fieldsHTML += this.renderLoopSchedulerHelper(node);
     } else if (node.type === 'delay') {
       fieldsHTML += this.renderDelayHelper(node);
+    } else if (node.type === 'client_check' || node.type === 'check_client' || node.type === 'client_status') {
+      fieldsHTML += `
+        <div class="inspector-field-group">
+          <label class="inspector-label">${window.currentLang === 'en' ? 'Target Client Screen' : 'จอที่ต้องการตรวจสอบ'}</label>
+          ${this.renderClientButtonSelector(node)}
+        </div>
+        <div class="inspector-field-group">
+          <label class="inspector-label">${window.currentLang === 'en' ? 'Condition Rule' : 'เงื่อนไขที่เช็ค'}</label>
+          <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'checkRule', this.value); window.nodeCanvas.render(); window.nodeCanvas.openInspector('${node.id}');">
+            <option value="is_active" ${node.data?.checkRule !== 'is_inactive' ? 'selected' : ''}>${window.currentLang === 'en' ? '🟢 Client is Open / Active' : '🟢 จอเปิดใช้งานอยู่ (Active)'}</option>
+            <option value="is_inactive" ${node.data?.checkRule === 'is_inactive' ? 'selected' : ''}>${window.currentLang === 'en' ? '🔴 Client is Closed / Inactive' : '🔴 จอปิดอยู่หรือไม่เปิด (Inactive)'}</option>
+          </select>
+        </div>
+        <div class="inspector-helper-box" style="margin-top:10px; font-size:12px; color:#94a3b8; background:rgba(6,182,212,0.08); border-left:3px solid #06b6d4; padding:8px 12px; border-radius:4px;">
+          ${window.currentLang === 'en' ? 'Connect <strong>onActive</strong> to run actions when client is open, and <strong>onInactive</strong> to skip to next client.' : 'ต่อขา <strong>onActive</strong> ไปรันคำสั่งเมื่อจอเปิดอยู่ และต่อ <strong>onInactive</strong> เพื่อข้ามไปยังจอถัดไปทันที'}
+        </div>
+      `;
     } else if (node.type === 'var_branch' || node.type === 'variable_branch') {
       fieldsHTML += this.renderVariableBranchHelper(node);
     } else if (node.type === 'action_branch' || node.type === 'branch' || node.type === 'condition') {

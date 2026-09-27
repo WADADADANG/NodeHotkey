@@ -215,6 +215,8 @@ export const TRANSLATIONS = {
     port_onStop: "On Stop",
     port_onTrue: "True",
     port_onFalse: "False",
+    port_onActive: "Active (Open)",
+    port_onInactive: "Inactive (Skip)",
     port_onComplete: "On Complete",
     port_onCooldown: "On Cooldown",
 
@@ -660,6 +662,8 @@ export const TRANSLATIONS = {
     port_onStop: "เมื่อหยุด",
     port_onTrue: "จริง",
     port_onFalse: "เท็จ",
+    port_onActive: "จอเปิดอยู่ (Active)",
+    port_onInactive: "จอปิดอยู่ (ข้าม)",
     port_onComplete: "เมื่อเสร็จ",
     port_onCooldown: "เมื่อติดคูลดาวน์",
 

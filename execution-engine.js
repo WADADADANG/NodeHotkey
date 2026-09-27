@@ -126,6 +126,13 @@ class NodeExecutionEngine {
     const allHealthyPorts = ['onnotarget', 'onallhealthy'];
     if (allHealthyPorts.includes(normConn) && allHealthyPorts.includes(normReq)) return true;
 
+    // Client Check / Screen Active Status aliases
+    const activePorts = ['onactive', 'ontrue', 'onopen', 'isactive', 'isopen'];
+    if (activePorts.includes(normConn) && activePorts.includes(normReq)) return true;
+
+    const inactivePorts = ['oninactive', 'onfalse', 'onclosed', 'isinactive', 'isclosed'];
+    if (inactivePorts.includes(normConn) && inactivePorts.includes(normReq)) return true;
+
     return false;
   }
 

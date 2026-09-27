@@ -26,16 +26,25 @@ class SystemUpdater {
     });
   }
 
+  getAuthHeaders() {
+    const headers = {
+      'User-Agent': 'NodeHotkey-Launcher-Updater',
+      'Accept': 'application/vnd.github.v3+json'
+    };
+    const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
+  }
+
   fetchGitHubCommit() {
     return new Promise((resolve, reject) => {
       const options = {
         hostname: 'api.github.com',
         path: `/repos/${GITHUB_REPO}/commits/main`,
         method: 'GET',
-        headers: {
-          'User-Agent': 'NodeHotkey-Launcher-Updater',
-          'Accept': 'application/vnd.github.v3+json'
-        }
+        headers: this.getAuthHeaders()
       };
 
       const req = https.request(options, (res) => {
@@ -91,10 +100,7 @@ class SystemUpdater {
         hostname: 'api.github.com',
         path: `/repos/${GITHUB_REPO}/compare/${encodeURIComponent(localCommit)}...main`,
         method: 'GET',
-        headers: {
-          'User-Agent': 'NodeHotkey-Launcher-Updater',
-          'Accept': 'application/vnd.github.v3+json'
-        }
+        headers: this.getAuthHeaders()
       };
 
       const req = https.request(options, (res) => {
@@ -165,6 +171,210 @@ class SystemUpdater {
       });
       req.end();
     });
+  }
+
+  fetchGitHubAtomFeed() {
+    return new Promise((resolve, reject) => {
+      const options = {
+        hostname: 'github.com',
+        path: `/${GITHUB_REPO}/commits/main.atom`,
+        method: 'GET',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/atom+xml, text/xml, */*'
+        }
+      };
+
+      const handleResponse = (res) => {
+        if (res.statusCode === 301 || res.statusCode === 302) {
+          const loc = res.headers.location;
+          if (loc) {
+            try {
+              const parsed = new URL(loc);
+              options.hostname = parsed.hostname;
+              options.path = parsed.pathname + parsed.search;
+              return https.request(options, handleResponse).end();
+            } catch (e) {}
+          }
+        }
+
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try {
+            if (res.statusCode >= 200 && res.statusCode < 300) {
+              const entries = [];
+              const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
+              let match;
+              while ((match = entryRegex.exec(data)) !== null) {
+                const block = match[1];
+                const idMatch = /<id>tag:github\.com,2008:Grit::Commit\/([a-f0-9]{40})<\/id>/.exec(block);
+                const titleMatch = /<title>([\s\S]*?)<\/title>/.exec(block);
+                const updatedMatch = /<updated>(.*?)<\/updated>/.exec(block);
+                if (idMatch) {
+                  const sha = idMatch[1];
+                  const message = titleMatch ? titleMatch[1].trim() : 'Release update';
+                  entries.push({
+                    sha,
+                    shortSha: sha.slice(0, 7),
+                    message,
+                    date: updatedMatch ? updatedMatch[1] : null
+                  });
+                }
+              }
+
+              if (entries.length === 0) {
+                return reject(new Error('No commit entries found in Atom feed'));
+              }
+
+              const latest = entries[0];
+              resolve({
+                sha: latest.sha,
+                shortSha: latest.shortSha,
+                message: latest.message,
+                entries
+              });
+            } else {
+              reject(new Error(`GitHub Atom Feed HTTP ${res.statusCode}`));
+            }
+          } catch (e) {
+            reject(new Error(`Atom Parse Error: ${e.message}`));
+          }
+        });
+      };
+
+      const req = https.request(options, handleResponse);
+      req.on('error', err => reject(err));
+      req.setTimeout(8000, () => {
+        req.destroy();
+        reject(new Error('Connection timeout to GitHub Atom Feed'));
+      });
+      req.end();
+    });
+  }
+
+  fetchGitSmartHttpHead() {
+    return new Promise((resolve, reject) => {
+      const options = {
+        hostname: 'github.com',
+        path: `/${GITHUB_REPO}/info/refs?service=git-upload-pack`,
+        method: 'GET',
+        headers: {
+          'User-Agent': 'git/2.40.0',
+          'Accept': '*/*'
+        }
+      };
+
+      const req = https.request(options, res => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try {
+            if (res.statusCode >= 200 && res.statusCode < 300) {
+              const match = /([a-f0-9]{40})\s+refs\/heads\/main/.exec(data);
+              if (match) {
+                const sha = match[1];
+                resolve({
+                  sha,
+                  shortSha: sha.slice(0, 7)
+                });
+              } else {
+                reject(new Error('refs/heads/main not found in smart http response'));
+              }
+            } else {
+              reject(new Error(`Git Smart HTTP ${res.statusCode}`));
+            }
+          } catch (e) {
+            reject(e);
+          }
+        });
+      });
+
+      req.on('error', err => reject(err));
+      req.setTimeout(8000, () => {
+        req.destroy();
+        reject(new Error('Git Smart HTTP timeout'));
+      });
+      req.end();
+    });
+  }
+
+  async getRemoteDiffWithFallback(localCommit) {
+    // 1. Try official GitHub REST API first (fast and detailed when rate limit is available)
+    try {
+      return await this.fetchGitHubDiff(localCommit);
+    } catch (apiErr) {
+      console.warn(`[Updater] GitHub REST API unavailable (${apiErr.message}). Switching to unmetered Atom Feed...`);
+    }
+
+    // 2. Fallback to GitHub Atom Feed (Public web feed, zero rate limits)
+    try {
+      const feed = await this.fetchGitHubAtomFeed();
+      const entries = feed.entries || [];
+      const latest = feed;
+      
+      const normLocal = String(localCommit || '').toLowerCase().trim();
+      
+      const localIdx = entries.findIndex(e => 
+        e.sha.toLowerCase().startsWith(normLocal) || 
+        (normLocal.length >= 6 && e.shortSha.toLowerCase().startsWith(normLocal))
+      );
+
+      let commitsList = [];
+      let hasUpdate = false;
+
+      if (!normLocal || normLocal === 'unknown') {
+        hasUpdate = true;
+        commitsList = entries.slice(0, 5).map(e => ({ sha: e.shortSha, message: e.message }));
+      } else if (localIdx === -1) {
+        hasUpdate = (normLocal !== latest.shortSha.toLowerCase() && normLocal !== latest.sha.toLowerCase());
+        commitsList = entries.slice(0, 5).map(e => ({ sha: e.shortSha, message: e.message }));
+      } else if (localIdx > 0) {
+        hasUpdate = true;
+        commitsList = entries.slice(0, localIdx).map(e => ({ sha: e.shortSha, message: e.message }));
+      } else {
+        hasUpdate = false;
+        commitsList = [];
+      }
+
+      let commitMessage = '';
+      if (commitsList.length > 1) {
+        commitMessage = `${commitsList.length} commits:\n` + commitsList.map(c => `• ${c.sha}: ${c.message}`).join('\n');
+      } else if (commitsList.length === 1) {
+        commitMessage = commitsList[0].message || latest.message;
+      } else {
+        commitMessage = latest.message || 'Latest release update';
+      }
+
+      return {
+        hasUpdate,
+        status: hasUpdate ? 'ahead' : 'identical',
+        remoteHash: latest.shortSha,
+        remoteSha: latest.sha,
+        commitCount: commitsList.length || (hasUpdate ? 1 : 0),
+        commitsList,
+        commitMessage,
+        changedFiles: []
+      };
+    } catch (atomErr) {
+      console.warn(`[Updater] Atom Feed unavailable (${atomErr.message}). Switching to Git Smart HTTP...`);
+    }
+
+    // 3. Fallback to Git Smart HTTP (Universal Git protocol over HTTPS)
+    const smartHead = await this.fetchGitSmartHttpHead();
+    const normLocal = String(localCommit || '').toLowerCase().trim();
+    const hasUpdate = (!normLocal || normLocal === 'unknown' || (normLocal !== smartHead.shortSha.toLowerCase() && normLocal !== smartHead.sha.toLowerCase()));
+
+    return {
+      hasUpdate,
+      status: hasUpdate ? 'ahead' : 'identical',
+      remoteHash: smartHead.shortSha,
+      remoteSha: smartHead.sha,
+      commitCount: hasUpdate ? 1 : 0,
+      commitsList: hasUpdate ? [{ sha: smartHead.shortSha, message: 'Latest release update' }] : [],
+      commitMessage: 'Latest release update',
+      changedFiles: []
+    };
   }
 
   getLocalVersion() {
@@ -466,10 +676,10 @@ class SystemUpdater {
       }
     }
 
-    // 2. Direct GitHub API Check (Works on installed versions & PC without Git)
+    // 2. Direct GitHub Check with Multi-tier Fallback (Works on installed versions & PC without Git)
     try {
       const localInfo = this.getLocalVersion();
-      const diffInfo = await this.fetchGitHubDiff(localInfo.commit);
+      const diffInfo = await this.getRemoteDiffWithFallback(localInfo.commit);
       const impact = await this.analyzeImpact(diffInfo.changedFiles);
 
       return {
@@ -557,9 +767,9 @@ class SystemUpdater {
       const localInfo = this.getLocalVersion();
       let diffInfo;
       try {
-        diffInfo = await this.fetchGitHubDiff(localInfo.commit);
+        diffInfo = await this.getRemoteDiffWithFallback(localInfo.commit);
       } catch (e) {
-        diffInfo = await this.fetchGitHubCommit();
+        diffInfo = { remoteHash: 'main', remoteSha: 'main', changedFiles: [] };
       }
       const changedFiles = diffInfo.changedFiles || [];
       const impact = await this.analyzeImpact(changedFiles);

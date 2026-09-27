@@ -3876,6 +3876,8 @@ function handleActionTrigger(act, firingTriggerId = null) {
         runActionControl(act).catch(err => console.error(`Error in runActionControl:`, err));
     } else if (act.mode === 'branch' || act.mode === 'action_condition' || act.mode === 'action_branch' || act.mode === 'var_branch' || act.mode === 'variable_branch') {
         runActionCondition(act).catch(err => console.error(`Error in runActionCondition:`, err));
+    } else if (act.mode === 'client_check' || act.mode === 'check_client' || act.mode === 'client_status' || act.mode === 'is_client_open' || act.mode === 'is_client_active') {
+        runClientCheckAction(act).catch(err => console.error(`Error in runClientCheckAction:`, err));
     } else if (act.mode === 'sound_alert' || act.mode === 'sound') {
         runSoundAlertAction(act).catch(err => console.error(`Error in runSoundAlertAction:`, err));
     } else if (act.mode === 'emergency_stop' || act.mode === 'stop_all') {
@@ -4038,6 +4040,8 @@ async function runChainedAction(action, callStack) {
         await runActionControl(action, callStack).catch(err => console.error(`[Chain Error] runActionControl:`, err));
     } else if (action.mode === 'branch' || action.mode === 'action_condition' || action.mode === 'action_branch' || action.mode === 'var_branch' || action.mode === 'variable_branch') {
         await runActionCondition(action, callStack).catch(err => console.error(`[Chain Error] runActionCondition:`, err));
+    } else if (action.mode === 'client_check' || action.mode === 'check_client' || action.mode === 'client_status' || action.mode === 'is_client_open' || action.mode === 'is_client_active') {
+        await runClientCheckAction(action, callStack).catch(err => console.error(`[Chain Error] runClientCheckAction:`, err));
     } else if (action.mode === 'sound_alert' || action.mode === 'sound') {
         await runSoundAlertAction(action, callStack).catch(err => console.error(`[Chain Error] runSoundAlertAction:`, err));
     } else if (action.mode === 'emergency_stop' || action.mode === 'stop_all') {
@@ -4272,6 +4276,8 @@ async function runActionControl(act, callStack) {
             await runActionControl(targetAction, resolvedStack).catch(err => console.error(err));
         } else if (targetAction.mode === 'branch' || targetAction.mode === 'action_condition' || targetAction.mode === 'action_branch' || targetAction.mode === 'var_branch' || targetAction.mode === 'variable_branch') {
             await runActionCondition(targetAction, resolvedStack).catch(err => console.error(err));
+        } else if (targetAction.mode === 'client_check' || targetAction.mode === 'check_client' || targetAction.mode === 'client_status' || targetAction.mode === 'is_client_open' || targetAction.mode === 'is_client_active') {
+            await runClientCheckAction(targetAction, resolvedStack).catch(err => console.error(err));
         }
     }
 
@@ -4381,6 +4387,49 @@ async function runActionCondition(act, callStack) {
     return isTrue;
 }
 global.runActionCondition = runActionCondition;
+
+function isClientActive(clientIndex) {
+    const idxNum = parseInt(clientIndex, 10);
+    const idxStr = String(clientIndex);
+    const inActiveList = Array.isArray(global.activeClients) && (
+        global.activeClients.includes(idxNum) || global.activeClients.includes(idxStr)
+    );
+    const page = global.clientPages ? (global.clientPages[idxNum] || global.clientPages[idxStr]) : null;
+    const pageAlive = page && (typeof page.isClosed === 'function' ? !page.isClosed() : true);
+    return Boolean(inActiveList || pageAlive);
+}
+
+async function runClientCheckAction(act, callStack) {
+    if (global.isSuspended) return false;
+    const target = String(act.targetClient || '1').split(',')[0].trim() || '1';
+    const rule = act.checkRule || 'is_active';
+
+    const stackKey = `${act.id}:client_check`;
+    const resolvedStack = (callStack instanceof Set) ? callStack : new Set(Array.isArray(callStack) ? callStack : []);
+    if (resolvedStack.has(stackKey)) {
+        console.warn(`[Client Check] ⚠️ Circular stack detected: "${act.name}" — skipping.`);
+        return false;
+    }
+    resolvedStack.add(stackKey);
+
+    const active = isClientActive(target);
+    const isTrue = (rule === 'is_inactive') ? !active : active;
+
+    console.log(`🖥️ [Client Check] "${act.name}": Client ${target} status -> ${active ? 'ACTIVE' : 'INACTIVE'} (Rule: ${rule} -> ${isTrue ? 'MATCH' : 'NO_MATCH'})`);
+
+    if (isTrue) {
+        emitSignal(act.id, 'onActive');
+        emitSignal(act.id, 'onTrue');
+        await fireChain(act, 'onActive', resolvedStack);
+    } else {
+        emitSignal(act.id, 'onInactive');
+        emitSignal(act.id, 'onFalse');
+        await fireChain(act, 'onInactive', resolvedStack);
+    }
+    return isTrue;
+}
+global.runClientCheckAction = runClientCheckAction;
+global.isClientActive = isClientActive;
 
 // ============================================================================
 // GLOBAL HOTKEYS LISTENER (Native OS level hooks)

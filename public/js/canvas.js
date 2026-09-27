@@ -90,6 +90,8 @@ class NodeCanvasEditor {
       macro_group: canvasT('canvas_macro_group', isEn ? 'Macro Queue' : 'มาโคร (Macro)'),
       branch: canvasT('canvas_branch', isEn ? 'Action Branch' : 'เงื่อนไขสถานะ Action'),
       action_branch: canvasT('canvas_action_branch', isEn ? 'Action Branch' : 'เงื่อนไขสถานะ Action'),
+      client_check: canvasT('canvas_client_check', isEn ? 'Client Check' : 'ตรวจสอบสถานะจอ'),
+      check_client: canvasT('canvas_client_check', isEn ? 'Client Check' : 'ตรวจสอบสถานะจอ'),
       var_branch: canvasT('canvas_var_branch', isEn ? 'Variable Branch' : 'เงื่อนไขตัวแปร'),
       variable_branch: canvasT('canvas_var_branch', isEn ? 'Variable Branch' : 'เงื่อนไขตัวแปร'),
       condition: canvasT('canvas_condition', isEn ? 'Action Branch' : 'เงื่อนไขสถานะ Action'),
@@ -707,6 +709,8 @@ class NodeCanvasEditor {
         key_press: '⌨️',
         delay: '⏱️',
         branch: '🌿',
+        client_check: '🖥️',
+        check_client: '🖥️',
         action_branch: '⚡',
         var_branch: '📦',
         variable_branch: '📦',
@@ -960,6 +964,18 @@ class NodeCanvasEditor {
           </div>
           <div class="node-info-row">
             <span>${isEn ? 'Rule:' : 'เงื่อนไข:'}</span> <span class="node-info-value">${ruleLabel}${valStr}</span>
+          </div>
+        `;
+        } else if (node.type === 'client_check' || node.type === 'check_client' || node.type === 'client_status') {
+          const clientTarget = node.data?.targetClient || '1';
+          const rule = node.data?.checkRule || 'is_active';
+          const ruleLabel = rule === 'is_inactive' ? (isEn ? '🔴 Closed / Inactive' : '🔴 ปิดอยู่ / ไม่พร้อม') : (isEn ? '🟢 Open / Active' : '🟢 เปิดอยู่ / พร้อม');
+          bodyHTML = `
+          <div class="node-info-row">
+            <span>${isEn ? 'Target:' : 'จอเป้าหมาย:'}</span> <span class="node-info-value" style="font-weight:700; color:#06b6d4;">Client ${clientTarget}</span>
+          </div>
+          <div class="node-info-row">
+            <span>${isEn ? 'Status:' : 'สถานะ:'}</span> <span class="node-info-value">${ruleLabel}</span>
           </div>
         `;
         } else if (node.type === 'party_scanner') {
@@ -1583,6 +1599,19 @@ class NodeCanvasEditor {
             </div>
           </div>
         `;
+      } else if (node.type === 'client_check' || node.type === 'check_client' || node.type === 'client_status') {
+        pinsHTML = `
+          <div class="node-pins-section">
+            <div class="node-pin-row">
+              <span class="node-pin-label onActive" style="color:#10b981;">${canvasT('port_onActive', isEn ? 'Active (Open)' : 'เปิดอยู่')} ▶</span>
+              <div class="node-port port-out port-onActive" data-node="${node.id}" data-port="onActive" title="${canvasT('port_onActive', 'Active')}"></div>
+            </div>
+            <div class="node-pin-row">
+              <span class="node-pin-label onInactive" style="color:#ef4444;">${canvasT('port_onInactive', isEn ? 'Inactive (Closed)' : 'ปิด/ข้าม')} ▶</span>
+              <div class="node-port port-out port-onInactive" data-node="${node.id}" data-port="onInactive" title="${canvasT('port_onInactive', 'Inactive')}"></div>
+            </div>
+          </div>
+        `;
       } else if (node.type === 'key_hold') {
         pinsHTML = `
           <div class="node-pins-section">
@@ -2185,13 +2214,13 @@ class NodeCanvasEditor {
         // When STOPPING: Flow terminates at this Control Node immediately!
         return;
       }
-    } else if (currentNode.type === 'branch' || currentNode.type === 'action_branch' || currentNode.type === 'var_branch' || currentNode.type === 'variable_branch') {
+    } else if (currentNode.type === 'branch' || currentNode.type === 'action_branch' || currentNode.type === 'var_branch' || currentNode.type === 'variable_branch' || currentNode.type === 'client_check' || currentNode.type === 'check_client') {
       // Condition Branch Nodes evaluate True/False in engine:
       // Do NOT auto-fire both wires! Engine will emit onTrue or onFalse.
       return;
     } else {
       // Regular Nodes (Loop, Buff Sequence, Delay, Sound, Key Hold, Trigger, etc.)
-      const conns = this.connections.filter(c => c.fromNodeId === currentNode.id && c.fromPort !== 'onStop' && c.fromPort !== 'on_stop' && c.fromPort !== 'onTrue' && c.fromPort !== 'on_true' && c.fromPort !== 'onFalse' && c.fromPort !== 'on_false');
+      const conns = this.connections.filter(c => c.fromNodeId === currentNode.id && c.fromPort !== 'onStop' && c.fromPort !== 'on_stop' && c.fromPort !== 'onTrue' && c.fromPort !== 'on_true' && c.fromPort !== 'onFalse' && c.fromPort !== 'on_false' && c.fromPort !== 'onActive' && c.fromPort !== 'onInactive');
       conns.forEach(conn => {
         this.firePulseOnWire(conn, null, () => {
           const nextNode = this.nodes.find(n => n.id === conn.toNodeId);
@@ -2720,6 +2749,8 @@ class NodeCanvasEditor {
       delay: 'Delay Timer',
       branch: 'Action Branch',
       action_branch: 'Action Branch',
+      client_check: 'Client Check',
+      check_client: 'Client Check',
       var_branch: 'Variable Branch',
       variable_branch: 'Variable Branch',
       condition: 'Action Branch',
@@ -2865,6 +2896,8 @@ class NodeCanvasEditor {
       initialData = { delayMs: 1000, enabled: true };
     } else if (type === 'action_branch' || type === 'branch' || type === 'condition') {
       initialData = { conditionTargetId: '', conditionRule: 'is_running', enabled: true };
+    } else if (type === 'client_check' || type === 'check_client') {
+      initialData = { targetClient: '1', checkRule: 'is_active', enabled: true };
     } else if (type === 'var_branch' || type === 'variable_branch') {
       initialData = { conditionTargetId: '', varName: '', varType: 'boolean', conditionRule: 'is_true', conditionValue: '', enabled: true };
     } else if (type === 'control') {
@@ -4225,6 +4258,7 @@ class NodeCanvasEditor {
         icon: '🌿',
         name: canvasT('cat_flow', 'Logic & Flow'),
         items: [
+          { type: 'client_check', icon: '🖥️', name: this.getNodeTypeLabel('client_check') },
           { type: 'var_branch', icon: '📦', name: this.getNodeTypeLabel('var_branch') },
           { type: 'action_branch', icon: '⚡', name: this.getNodeTypeLabel('action_branch') },
           { type: 'var_set', icon: '📦', name: this.getNodeTypeLabel('var_set') },
