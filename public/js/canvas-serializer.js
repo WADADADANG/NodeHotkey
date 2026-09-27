@@ -83,6 +83,9 @@
         cleanData.varType = d.varType || 'boolean';
         cleanData.conditionRule = d.conditionRule || (cleanData.varType === 'boolean' ? 'is_true' : 'equals');
         if (d.conditionValue !== undefined) cleanData.conditionValue = d.conditionValue;
+      } else if (type === 'client_check' || type === 'check_client' || type === 'client_status') {
+        cleanData.targetClient = String(d.targetClient || '1').split(',')[0].trim() || '1';
+        cleanData.checkRule = d.checkRule || 'is_active';
       } else if (type === 'control') {
         cleanData.controlOperation = d.controlOperation || 'toggle';
         cleanData.controlTargetIds = Array.isArray(d.controlTargetIds) ? d.controlTargetIds : (d.controlTargetId ? [d.controlTargetId] : []);

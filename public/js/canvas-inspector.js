@@ -1312,6 +1312,7 @@
     const clientField = def && Array.isArray(def.schema) ? def.schema.find(f => f.key === 'targetClient') : null;
     const isSingleSelect = allowMultiple === false ||
                            isVisionNode ||
+                           node.type === 'client_check' || node.type === 'check_client' || node.type === 'client_status' ||
                            (clientField && (clientField.allowMultiple === false || clientField.singleSelect === true));
 
     let rawVal = String(node.data?.targetClient || '1');
@@ -2345,7 +2346,7 @@
     const isVisionNode = ['party_slot', 'party_scanner', 'party_heal', 'party_buff', 'screenshot'].includes(node.type);
     const def = window.clientNodeRegistry ? window.clientNodeRegistry.get(node.type) : null;
     const clientField = def && Array.isArray(def.schema) ? def.schema.find(f => f.key === 'targetClient') : null;
-    const isSingleSelect = isVisionNode || (clientField && (clientField.allowMultiple === false || clientField.singleSelect === true));
+    const isSingleSelect = isVisionNode || node.type === 'client_check' || node.type === 'check_client' || node.type === 'client_status' || (clientField && (clientField.allowMultiple === false || clientField.singleSelect === true));
 
     if (isSingleSelect) {
       const targetStr = (val === 'all' || val === 'both') ? '1' : String(val);

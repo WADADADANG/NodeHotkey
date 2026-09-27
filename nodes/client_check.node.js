@@ -21,6 +21,20 @@ module.exports = {
     targetClient: '1',
     checkRule: 'is_active' // 'is_active' | 'is_inactive'
   },
+  schema: [
+    { key: 'targetClient', component: 'client_selector', allowMultiple: false, allowAll: false, labelKey: 'inspector_target_clients', label: 'Target Client Screen' },
+    {
+      key: 'checkRule', component: 'select', labelKey: 'inspector_check_rule', label: 'Condition Rule',
+      options: [
+        { value: 'is_active', label: '🟢 Client is Open / Active' },
+        { value: 'is_inactive', label: '🔴 Client is Closed / Inactive' }
+      ]
+    }
+  ],
+  summaryFields: [
+    { key: 'targetClient', label: 'Target', format: 'Client {value}' },
+    { key: 'checkRule', label: 'Rule', format: '{value}' }
+  ],
 
   async execute(context, action, callStack = new Set()) {
     if (global.isSuspended) return false;

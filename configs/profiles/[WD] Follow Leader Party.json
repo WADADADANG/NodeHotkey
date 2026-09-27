@@ -1,0 +1,484 @@
+{
+  "version": "3.1.0",
+  "name": "[WD] Follow Leader Party",
+  "canvas": {
+    "zoom": 0.8013163690192904,
+    "pan": {
+      "x": 115,
+      "y": -4
+    }
+  },
+  "nodes": [
+    {
+      "id": "node_1790399201884",
+      "type": "trigger",
+      "title": "Global Trigger",
+      "position": {
+        "x": 280,
+        "y": 210
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "INSERT",
+        "actionId": "1790399201884"
+      }
+    },
+    {
+      "id": "node_1790426723755",
+      "type": "party_slot",
+      "title": "Party Slot Selector 1",
+      "position": {
+        "x": 1150,
+        "y": 280
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "targetSlot": 1,
+        "scanRegion": "right",
+        "delayAfterClick": 80,
+        "showOverlay": true,
+        "actionId": "1790426723755"
+      }
+    },
+    {
+      "id": "node_1790426751748",
+      "type": "key_press",
+      "title": "Key Press Z 1",
+      "position": {
+        "x": 1460,
+        "y": 380
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "Z"
+        ],
+        "actionId": "1790426751748"
+      }
+    },
+    {
+      "id": "node_1790426770515_6395",
+      "type": "key_press",
+      "title": "Key Press Z 2",
+      "position": {
+        "x": 1460,
+        "y": 580
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "2",
+        "keys": [
+          "Z"
+        ],
+        "actionId": "1790426770515_6395"
+      }
+    },
+    {
+      "id": "node_1790426770515_1955",
+      "type": "party_slot",
+      "title": "Party Slot Selector 2",
+      "position": {
+        "x": 1150,
+        "y": 480
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "2",
+        "targetSlot": 1,
+        "scanRegion": "right",
+        "delayAfterClick": 80,
+        "showOverlay": true,
+        "actionId": "1790426770515_1955"
+      }
+    },
+    {
+      "id": "node_1790426783508_5957",
+      "type": "key_press",
+      "title": "Key Press Z 3",
+      "position": {
+        "x": 1460,
+        "y": 780
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "3",
+        "keys": [
+          "Z"
+        ],
+        "actionId": "1790426783508_5957"
+      }
+    },
+    {
+      "id": "node_1790426783508_4423",
+      "type": "party_slot",
+      "title": "Party Slot Selector 3",
+      "position": {
+        "x": 1150,
+        "y": 680
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "3",
+        "targetSlot": 1,
+        "scanRegion": "right",
+        "delayAfterClick": 80,
+        "showOverlay": true,
+        "actionId": "1790426783508_4423"
+      }
+    },
+    {
+      "id": "node_1790426786586_3139",
+      "type": "key_press",
+      "title": "Key Press Z 4",
+      "position": {
+        "x": 1460,
+        "y": 980
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "keys": [
+          "Z"
+        ],
+        "actionId": "1790426786586_3139"
+      }
+    },
+    {
+      "id": "node_1790426786586_1105",
+      "type": "party_slot",
+      "title": "Party Slot Selector 4",
+      "position": {
+        "x": 1150,
+        "y": 880
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "targetSlot": 1,
+        "scanRegion": "right",
+        "delayAfterClick": 80,
+        "showOverlay": true,
+        "actionId": "1790426786586_1105"
+      }
+    },
+    {
+      "id": "node_1790426788842_4038",
+      "type": "key_press",
+      "title": "Key Press Z 5",
+      "position": {
+        "x": 1460,
+        "y": 1180
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "5",
+        "keys": [
+          "Z"
+        ],
+        "actionId": "1790426788842_4038"
+      }
+    },
+    {
+      "id": "node_1790426788842_7563",
+      "type": "party_slot",
+      "title": "Party Slot Selector 5",
+      "position": {
+        "x": 1150,
+        "y": 1080
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "5",
+        "targetSlot": 1,
+        "scanRegion": "right",
+        "delayAfterClick": 80,
+        "showOverlay": true,
+        "actionId": "1790426788842_7563"
+      }
+    },
+    {
+      "id": "node_1790426793286_7200",
+      "type": "key_press",
+      "title": "Key Press Z 6",
+      "position": {
+        "x": 1460,
+        "y": 1380
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "6",
+        "keys": [
+          "Z"
+        ],
+        "actionId": "1790426793286_7200"
+      }
+    },
+    {
+      "id": "node_1790426793286_5449",
+      "type": "party_slot",
+      "title": "Party Slot Selector 6",
+      "position": {
+        "x": 1150,
+        "y": 1280
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "6",
+        "targetSlot": 1,
+        "scanRegion": "right",
+        "delayAfterClick": 80,
+        "showOverlay": true,
+        "actionId": "1790426793286_5449"
+      }
+    },
+    {
+      "id": "node_1790485624092",
+      "type": "client_check",
+      "title": "Client Check 1",
+      "position": {
+        "x": 730,
+        "y": 200
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "checkRule": "is_active",
+        "actionId": "1790485624092"
+      }
+    },
+    {
+      "id": "node_1790485737382_8463",
+      "type": "client_check",
+      "title": "Client Check 2",
+      "position": {
+        "x": 730,
+        "y": 400
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "2",
+        "checkRule": "is_active",
+        "actionId": "1790485737382_8463"
+      }
+    },
+    {
+      "id": "node_1790485811462_7411",
+      "type": "client_check",
+      "title": "Client Check 3",
+      "position": {
+        "x": 730,
+        "y": 600
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "3",
+        "checkRule": "is_active",
+        "actionId": "1790485811462_7411"
+      }
+    },
+    {
+      "id": "node_1790485835332_7111",
+      "type": "client_check",
+      "title": "Client Check 4",
+      "position": {
+        "x": 730,
+        "y": 800
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "checkRule": "is_active",
+        "actionId": "1790485835332_7111"
+      }
+    },
+    {
+      "id": "node_1790485864183_400",
+      "type": "client_check",
+      "title": "Client Check 5",
+      "position": {
+        "x": 730,
+        "y": 1000
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "5",
+        "checkRule": "is_active",
+        "actionId": "1790485864183_400"
+      }
+    },
+    {
+      "id": "node_1790485865673_2102",
+      "type": "client_check",
+      "title": "Client Check 6",
+      "position": {
+        "x": 730,
+        "y": 1200
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "6",
+        "checkRule": "is_active",
+        "actionId": "1790485865673_2102"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_1790426754170",
+      "fromNodeId": "node_1790426723755",
+      "fromPort": "next",
+      "toNodeId": "node_1790426751748",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790426770516_4419",
+      "fromNodeId": "node_1790426770515_1955",
+      "fromPort": "next",
+      "toNodeId": "node_1790426770515_6395",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790426783508_3519",
+      "fromNodeId": "node_1790426783508_4423",
+      "fromPort": "next",
+      "toNodeId": "node_1790426783508_5957",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790426786586_3357",
+      "fromNodeId": "node_1790426786586_1105",
+      "fromPort": "next",
+      "toNodeId": "node_1790426786586_3139",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790426788842_3151",
+      "fromNodeId": "node_1790426788842_7563",
+      "fromPort": "next",
+      "toNodeId": "node_1790426788842_4038",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790426793286_2558",
+      "fromNodeId": "node_1790426793286_5449",
+      "fromPort": "next",
+      "toNodeId": "node_1790426793286_7200",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790485668044",
+      "fromNodeId": "node_1790399201884",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1790485624092",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790485674380",
+      "fromNodeId": "node_1790485624092",
+      "fromPort": "onActive",
+      "toNodeId": "node_1790426723755",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790485742275",
+      "fromNodeId": "node_1790426751748",
+      "fromPort": "next",
+      "toNodeId": "node_1790485737382_8463",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790485749369",
+      "fromNodeId": "node_1790485624092",
+      "fromPort": "onInactive",
+      "toNodeId": "node_1790485737382_8463",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790485768829",
+      "fromNodeId": "node_1790485737382_8463",
+      "fromPort": "onActive",
+      "toNodeId": "node_1790426770515_1955",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790485821201",
+      "fromNodeId": "node_1790426770515_6395",
+      "fromPort": "next",
+      "toNodeId": "node_1790485811462_7411",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790485823356",
+      "fromNodeId": "node_1790485811462_7411",
+      "fromPort": "onActive",
+      "toNodeId": "node_1790426783508_4423",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790485848644",
+      "fromNodeId": "node_1790485811462_7411",
+      "fromPort": "onInactive",
+      "toNodeId": "node_1790485835332_7111",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790485851652",
+      "fromNodeId": "node_1790485835332_7111",
+      "fromPort": "onActive",
+      "toNodeId": "node_1790426786586_1105",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790485858659",
+      "fromNodeId": "node_1790426783508_5957",
+      "fromPort": "next",
+      "toNodeId": "node_1790485835332_7111",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790485875496",
+      "fromNodeId": "node_1790485835332_7111",
+      "fromPort": "onInactive",
+      "toNodeId": "node_1790485864183_400",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790485878462",
+      "fromNodeId": "node_1790426786586_3139",
+      "fromPort": "next",
+      "toNodeId": "node_1790485864183_400",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790485886268",
+      "fromNodeId": "node_1790426788842_4038",
+      "fromPort": "next",
+      "toNodeId": "node_1790485865673_2102",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790485888559",
+      "fromNodeId": "node_1790485865673_2102",
+      "fromPort": "onActive",
+      "toNodeId": "node_1790426793286_5449",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790485896753",
+      "fromNodeId": "node_1790485864183_400",
+      "fromPort": "onInactive",
+      "toNodeId": "node_1790485865673_2102",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790485898683",
+      "fromNodeId": "node_1790485864183_400",
+      "fromPort": "onActive",
+      "toNodeId": "node_1790426788842_7563",
+      "toPort": "exec_in"
+    }
+  ]
+}
