@@ -14,7 +14,7 @@ module.exports = {
   icon: '🎯',
   color: '#38bdf8',
   inputs: ['in'],
-  outputs: ['next', 'onSelected', 'onComplete', 'onError'],
+  outputs: ['next', 'onError'],
   defaultData: {
     targetClient: '1',
     targetSlot: 1,

@@ -110,7 +110,7 @@ class NodeExecutionEngine {
     if (normConn === normReq) return true;
 
     // Generic Flow Continuation group (completion / next) - explicitly excludes onStop, onKeyDown, etc.
-    const genericCompletion = ['next', 'execout', 'oncomplete', 'onsuccess', 'onfired'];
+    const genericCompletion = ['next', 'execout', 'oncomplete', 'onsuccess', 'onfired', 'onselected'];
     const isConnGeneric = genericCompletion.includes(normConn);
     const isReqGeneric = genericCompletion.includes(normReq);
     if (isConnGeneric && isReqGeneric) return true;
@@ -125,10 +125,6 @@ class NodeExecutionEngine {
 
     const allHealthyPorts = ['onnotarget', 'onallhealthy'];
     if (allHealthyPorts.includes(normConn) && allHealthyPorts.includes(normReq)) return true;
-
-    // Party Slot selection aliases
-    const slotSelectPorts = ['onselected', 'next', 'oncomplete'];
-    if (normReq === 'onselected' && slotSelectPorts.includes(normConn)) return true;
 
     return false;
   }

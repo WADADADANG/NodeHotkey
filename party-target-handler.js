@@ -238,11 +238,9 @@ async function runSelectPartySlotAction(action, callStack) {
 
         clearStatus();
 
-        // Trigger subsequent execution flow
+        // Trigger subsequent execution flow (Emit single 'next' flow event)
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'next', callStack);
-            await global.fireChain(action, 'onSelected', callStack);
-            await global.fireChain(action, 'onComplete', callStack);
         }
     } catch (err) {
         console.error(`[SelectPartySlot Error] Client ${targetClientId}:`, err.message);
@@ -365,10 +363,9 @@ async function runPartyHealAction(action, callStack) {
 
         clearStatus();
 
-        // ส่งสัญญาณไปยิงสกิลฮีล
+        // ส่งสัญญาณไปยิงสกิลฮีล (Emit single 'onHealTarget' flow event)
         if (typeof global.fireChain === 'function') {
             await global.fireChain(action, 'onHealTarget', callStack);
-            await global.fireChain(action, 'onMemberLowHp', callStack);
         }
     } catch (err) {
         console.error(`[PartyHeal Error] Client ${targetClientId}:`, err.message);

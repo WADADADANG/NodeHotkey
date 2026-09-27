@@ -3958,7 +3958,7 @@ async function fireChain(sourceAction, eventName, callStack = new Set()) {
                 a.id === `node_${actId}` ||
                 (a.nodeId && (a.nodeId === actId || a.nodeId === `node_${actId}`))
             );
-            if (targetAction && targetAction.enabled) {
+            if (targetAction && targetAction.enabled && !targetActionsToRun.some(x => x.id === targetAction.id)) {
                 targetActionsToRun.push(targetAction);
             }
         });
