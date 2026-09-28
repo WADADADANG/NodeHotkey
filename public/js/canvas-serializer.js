@@ -86,6 +86,8 @@
       } else if (type === 'client_check' || type === 'check_client' || type === 'client_status') {
         cleanData.targetClient = String(d.targetClient || '1').split(',')[0].trim() || '1';
         cleanData.checkRule = d.checkRule || 'is_active';
+      } else if (type === 'reroute' || type === 'knot') {
+        cleanData.enabled = d.enabled !== false;
       } else if (type === 'control') {
         cleanData.controlOperation = d.controlOperation || 'toggle';
         cleanData.controlTargetIds = Array.isArray(d.controlTargetIds) ? d.controlTargetIds : (d.controlTargetId ? [d.controlTargetId] : []);

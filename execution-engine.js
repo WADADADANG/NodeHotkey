@@ -110,7 +110,7 @@ class NodeExecutionEngine {
     if (normConn === normReq) return true;
 
     // Generic Flow Continuation group (completion / next) - explicitly excludes onStop, onKeyDown, etc.
-    const genericCompletion = ['next', 'execout', 'oncomplete', 'onsuccess', 'onfired', 'onselected'];
+    const genericCompletion = ['next', 'execout', 'oncomplete', 'onsuccess', 'onfired', 'onselected', 'out'];
     const isConnGeneric = genericCompletion.includes(normConn);
     const isReqGeneric = genericCompletion.includes(normReq);
     if (isConnGeneric && isReqGeneric) return true;
@@ -253,7 +253,9 @@ class NodeExecutionEngine {
       screenshot: 'screenshot',
       capture_screen: 'screenshot',
       format_text: 'format_text',
-      format: 'format_text'
+      format: 'format_text',
+      reroute: 'reroute',
+      knot: 'reroute'
     };
 
     const actions = [];

@@ -311,6 +311,35 @@
       fieldsHTML += this.renderScreenshotHelper(node);
     } else if (node.type === 'format_text') {
       fieldsHTML += this.renderFormatTextHelper(node);
+    } else if (node.type === 'reroute' || node.type === 'knot') {
+      const isEn = window.currentLang === 'en';
+      const inConns = this.connections.filter(c => c.toNodeId === node.id);
+      const outConns = this.connections.filter(c => c.fromNodeId === node.id);
+      fieldsHTML += `
+        <div class="inspector-field-group">
+          <div style="background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25); border-radius:8px; padding:10px 12px; margin-bottom:12px;">
+            <div style="font-weight:700; color:#38bdf8; font-size:12px; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+              <span>🔀</span>
+              <span>${isEn ? 'Unreal-style Reroute Knot' : 'จุดดักสาย Reroute (Knot)'}</span>
+            </div>
+            <div style="font-size:11px; color:#94a3b8; line-height:1.4;">
+              ${isEn 
+                ? 'Used to organize wire routing, merge multiple input wires into one, or branch one signal to multiple destinations. 0ms instant pass-through.' 
+                : 'ใช้จัดระเบียบสายไฟ รวมสายจากหลายคำสั่งเข้าด้วยกัน (Merge) หรือแยกสายสัญญาณออกหลายทิศทาง ส่งต่อสัญญาณทันที 0ms ไม่หน่วงเวลา'}
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:8px; text-align:center;">
+              <div style="font-size:10px; color:var(--muted);">${isEn ? 'Incoming Wires' : 'สายเข้า (In)'}</div>
+              <div style="font-size:16px; font-weight:800; color:#38bdf8; margin-top:2px;">${inConns.length}</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:8px; text-align:center;">
+              <div style="font-size:10px; color:var(--muted);">${isEn ? 'Outgoing Wires' : 'สายออก (Out)'}</div>
+              <div style="font-size:16px; font-weight:800; color:#10b981; margin-top:2px;">${outConns.length}</div>
+            </div>
+          </div>
+        </div>
+      `;
     } else {
       fieldsHTML += `
         <div class="inspector-field-group">

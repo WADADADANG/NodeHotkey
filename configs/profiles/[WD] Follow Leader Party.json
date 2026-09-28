@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 0.8013163690192904,
     "pan": {
-      "x": 115,
-      "y": -4
+      "x": -52,
+      "y": -25
     }
   },
   "nodes": [
@@ -15,7 +15,7 @@
       "title": "Global Trigger",
       "position": {
         "x": 280,
-        "y": 210
+        "y": 200
       },
       "data": {
         "enabled": true,
@@ -314,7 +314,7 @@
       "type": "client_check",
       "title": "Client Check 6",
       "position": {
-        "x": 730,
+        "x": 720,
         "y": 1200
       },
       "data": {
@@ -369,13 +369,6 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1790485668044",
-      "fromNodeId": "node_1790399201884",
-      "fromPort": "exec_out",
-      "toNodeId": "node_1790485624092",
-      "toPort": "exec_in"
-    },
-    {
       "id": "conn_1790485674380",
       "fromNodeId": "node_1790485624092",
       "fromPort": "onActive",
@@ -401,6 +394,13 @@
       "fromNodeId": "node_1790485737382_8463",
       "fromPort": "onActive",
       "toNodeId": "node_1790426770515_1955",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_client2_inactive_to_client3",
+      "fromNodeId": "node_1790485737382_8463",
+      "fromPort": "onInactive",
+      "toNodeId": "node_1790485811462_7411",
       "toPort": "exec_in"
     },
     {
@@ -478,6 +478,13 @@
       "fromNodeId": "node_1790485864183_400",
       "fromPort": "onActive",
       "toNodeId": "node_1790426788842_7563",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790554235455",
+      "fromNodeId": "node_1790399201884",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1790485624092",
       "toPort": "exec_in"
     }
   ]

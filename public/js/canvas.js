@@ -71,6 +71,7 @@ class NodeCanvasEditor {
     // Real-time Energy Pulses persistence
     const savedLiveFlow = localStorage.getItem('canvas_live_flow_enabled');
     this.liveFlowEnabled = savedLiveFlow !== null ? savedLiveFlow === 'true' : true;
+    this.wireStyle = localStorage.getItem('nodehotkey_wire_style') || 'bezier';
 
     this.setupDOM();
     this.updateLiveFlowButtonUI();
@@ -92,6 +93,8 @@ class NodeCanvasEditor {
       action_branch: canvasT('canvas_action_branch', isEn ? 'Action Branch' : 'เงื่อนไขสถานะ Action'),
       client_check: canvasT('canvas_client_check', isEn ? 'Client Check' : 'ตรวจสอบสถานะจอ'),
       check_client: canvasT('canvas_client_check', isEn ? 'Client Check' : 'ตรวจสอบสถานะจอ'),
+      reroute: canvasT('canvas_reroute', isEn ? 'Reroute (Knot)' : 'จุดดักสาย (Reroute)'),
+      knot: canvasT('canvas_reroute', isEn ? 'Reroute (Knot)' : 'จุดดักสาย (Reroute)'),
       var_branch: canvasT('canvas_var_branch', isEn ? 'Variable Branch' : 'เงื่อนไขตัวแปร'),
       variable_branch: canvasT('canvas_var_branch', isEn ? 'Variable Branch' : 'เงื่อนไขตัวแปร'),
       condition: canvasT('canvas_condition', isEn ? 'Action Branch' : 'เงื่อนไขสถานะ Action'),
@@ -181,6 +184,7 @@ class NodeCanvasEditor {
         <button class="canvas-tool-btn" id="btn-zoom-out" title="Zoom Out">-</button>
         <button class="canvas-tool-btn" id="btn-reset-view" title="Reset View">1:1</button>
         <button class="canvas-tool-btn active" id="btn-toggle-live-flow" onclick="window.nodeCanvas.toggleLiveFlow()" title="Toggle Real-time Energy Pulses" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; color:#38bdf8;">✨</button>
+        <button class="canvas-tool-btn" id="btn-toggle-wire-style" onclick="window.nodeCanvas.toggleWireStyle()" title="Wire Style: Curved (〰️) / Orthogonal 90° (📐)">〰️</button>
         <div style="width:1px; height:20px; background:rgba(255,255,255,0.15); margin:0 4px;"></div>
         <button class="canvas-tool-btn" id="btn-canvas-save" onclick="if(window.onManualSaveProfile) window.onManualSaveProfile()" title="Save Profile (Ctrl+S)" style="background:rgba(37,99,235,0.25); border-color:#3b82f6; color:#60a5fa;">💾</button>
         <button class="canvas-tool-btn" id="btn-canvas-fullscreen" onclick="if(window.toggleCanvasFullscreen) window.toggleCanvasFullscreen()" title="Fullscreen Mode">⛶</button>
@@ -275,6 +279,22 @@ class NodeCanvasEditor {
     this.viewport.addEventListener('contextmenu', (e) => {
       e.preventDefault();
     });
+
+    // Double-click on Connection Wire -> Insert Unreal-style Reroute Knot
+    if (this.svgLayer) {
+      this.svgLayer.addEventListener('dblclick', (e) => {
+        const wireGroup = e.target.closest('.wire-group');
+        if (wireGroup) {
+          const connId = wireGroup.dataset.id || wireGroup.getAttribute('data-id');
+          if (connId) {
+            e.stopPropagation();
+            e.preventDefault();
+            const world = this.clientToWorld(e.clientX, e.clientY);
+            this.insertRerouteNode(connId, world.x, world.y);
+          }
+        }
+      });
+    }
 
     // Close Spotlight Catalog when clicking outside
     document.addEventListener('mousedown', (e) => {
@@ -702,6 +722,15 @@ class NodeCanvasEditor {
       nodeEl.dataset.id = node.id;
       nodeEl.dataset.type = node.type;
 
+      if (node.type === 'reroute' || node.type === 'knot') {
+        nodeEl.className = `canvas-node node-reroute ${isSelected ? 'selected' : ''}`.trim();
+        nodeEl.innerHTML = `
+          <div class="node-port port-in port-reroute-in" data-node="${node.id}" data-port="in" title="In"></div>
+          <div class="reroute-knot-dot"></div>
+          <div class="node-port port-out port-reroute-out" data-node="${node.id}" data-port="out" title="Out"></div>
+        `;
+      }
+
       const iconMap = {
         trigger: '⚡',
         loop: '🔄',
@@ -711,6 +740,8 @@ class NodeCanvasEditor {
         branch: '🌿',
         client_check: '🖥️',
         check_client: '🖥️',
+        reroute: '🔀',
+        knot: '🔀',
         action_branch: '⚡',
         var_branch: '📦',
         variable_branch: '📦',
@@ -1664,7 +1695,8 @@ class NodeCanvasEditor {
         `;
       }
 
-      nodeEl.innerHTML = `
+      if (node.type !== 'reroute' && node.type !== 'knot') {
+        nodeEl.innerHTML = `
         <div class="node-main-content">
           <div class="node-header">
             <div class="node-title-group">
@@ -1683,6 +1715,7 @@ class NodeCanvasEditor {
         </div>
         ${validationHTML}
       `;
+      }
 
       // Left-Click Node Selection & Multi-Node Dragging
       nodeEl.addEventListener('mousedown', (e) => {
@@ -1843,6 +1876,13 @@ class NodeCanvasEditor {
   getPortCenter(nodeId, portName) {
     const nodeEl = this.nodesLayer ? this.nodesLayer.querySelector(`.canvas-node[data-id="${nodeId}"]`) : null;
     if (nodeEl) {
+      if (nodeEl.classList.contains('node-reroute')) {
+        const knotRect = nodeEl.getBoundingClientRect();
+        return this.clientToWorld(
+          knotRect.left + knotRect.width / 2,
+          knotRect.top + knotRect.height / 2
+        );
+      }
       let portEl = null;
       if (portName) {
         portEl = nodeEl.querySelector(`.node-port[data-port="${portName}"]`);
@@ -1863,6 +1903,9 @@ class NodeCanvasEditor {
     // Mathematical fallback if DOM element is not rendered yet
     const node = this.nodes.find(n => n.id === nodeId);
     if (!node) return { x: 0, y: 0 };
+    if (node.type === 'reroute' || node.type === 'knot') {
+      return { x: node.position.x + 11, y: node.position.y + 11 };
+    }
 
     const isOutput = !(portName === 'exec_in' || portName === 'msg_in' || portName === 'val_in' || portName === 'text_in' || (node.type === 'format_text' && portName !== 'msg_out'));
     const x = isOutput ? node.position.x + 221 : node.position.x - 1;
@@ -1927,8 +1970,13 @@ class NodeCanvasEditor {
       const x2 = toPos.x;
       const y2 = toPos.y;
 
-      const dx = Math.max(30, Math.abs(x2 - x1) * 0.5);
-      const pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+      let pathData = '';
+      if (this.wireStyle === 'orthogonal') {
+        pathData = this.getOrthogonalPath(x1, y1, x2, y2);
+      } else {
+        const dx = Math.max(30, Math.abs(x2 - x1) * 0.5);
+        pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+      }
 
       const fromNode = this.nodes.find(n => n.id === conn.fromNodeId);
       const toNode = this.nodes.find(n => n.id === conn.toNodeId);
@@ -1958,6 +2006,7 @@ class NodeCanvasEditor {
 
       svgContent += `
         <g class="wire-group" data-id="${conn.id}">
+          <path class="wire-hitbox" d="${pathData}" data-id="${conn.id}" stroke="transparent" stroke-width="18" fill="none" style="cursor:pointer;" />
           <path class="wire-path ${wireTypeClass}" d="${pathData}" data-id="${conn.id}" />
         </g>
       `;
@@ -1993,8 +2042,13 @@ class NodeCanvasEditor {
     const x2 = toPos.x;
     const y2 = toPos.y;
 
-    const dx = Math.max(30, Math.abs(x2 - x1) * 0.5);
-    const pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+    let pathData = '';
+    if (this.wireStyle === 'orthogonal') {
+      pathData = this.getOrthogonalPath(x1, y1, x2, y2);
+    } else {
+      const dx = Math.max(30, Math.abs(x2 - x1) * 0.5);
+      pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+    }
 
     // Color mapping by port type or override
     let colorKey = colorOverride || 'default';
@@ -2160,6 +2214,67 @@ class NodeCanvasEditor {
     };
 
     requestAnimationFrame(animate);
+  }
+
+  toggleWireStyle() {
+    this.wireStyle = (this.wireStyle === 'orthogonal') ? 'bezier' : 'orthogonal';
+    localStorage.setItem('nodehotkey_wire_style', this.wireStyle);
+    const btn = this.container.querySelector('#btn-toggle-wire-style');
+    if (btn) btn.textContent = this.wireStyle === 'orthogonal' ? '📐' : '〰️';
+    this.renderWires();
+    if (typeof window.toast === 'function') {
+      window.toast(this.wireStyle === 'orthogonal' ? 'Wire Style: Orthogonal 90° (📐)' : 'Wire Style: Curved Bezier (〰️)', 'info');
+    }
+  }
+
+  getOrthogonalPath(x1, y1, x2, y2, r = 10) {
+    const midX = x1 + (x2 - x1) * 0.5;
+    if (Math.abs(y2 - y1) < r * 2 || Math.abs(x2 - x1) < r * 2) {
+      return `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
+    }
+    const dirY = y2 > y1 ? 1 : -1;
+    const dirX = x2 > x1 ? 1 : -1;
+    return `M ${x1} ${y1} L ${midX - dirX * r} ${y1} Q ${midX} ${y1} ${midX} ${y1 + dirY * r} L ${midX} ${y2 - dirY * r} Q ${midX} ${y2} ${midX + dirX * r} ${y2} L ${x2} ${y2}`;
+  }
+
+  insertRerouteNode(connId, x, y) {
+    const connIndex = this.connections.findIndex(c => c.id === connId);
+    if (connIndex === -1) return;
+    const conn = this.connections[connIndex];
+
+    const rerouteId = 'node_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    const rerouteNode = {
+      id: rerouteId,
+      type: 'reroute',
+      title: 'Reroute',
+      position: { x: Math.round(x - 11), y: Math.round(y - 11) },
+      data: { enabled: true, actionId: rerouteId }
+    };
+
+    this.nodes.push(rerouteNode);
+
+    this.connections.splice(connIndex, 1);
+    this.connections.push({
+      id: 'conn_' + Date.now() + '_in',
+      fromNodeId: conn.fromNodeId,
+      fromPort: conn.fromPort,
+      toNodeId: rerouteId,
+      toPort: 'in'
+    });
+    this.connections.push({
+      id: 'conn_' + Date.now() + '_out',
+      fromNodeId: rerouteId,
+      fromPort: 'out',
+      toNodeId: conn.toNodeId,
+      toPort: conn.toPort
+    });
+
+    this.render();
+    this.addHistory('🔀', 'Add Reroute Knot', true);
+    this.onProfileChanged();
+    if (typeof window.toast === 'function') {
+      window.toast('Created Reroute Knot (Unreal style)', 'info');
+    }
   }
 
   connectRealtimeSignalStream() {
@@ -2491,7 +2606,7 @@ class NodeCanvasEditor {
 
     // 3. Flow Outputs:
     const knownFlowOutputs = [
-      'next', 'exec_out', 'onComplete', 'onError', 'onScanned', 'onLowHp',
+      'next', 'out', 'exec_out', 'onComplete', 'onError', 'onScanned', 'onLowHp',
       'onHealTarget', 'onNoTarget', 'onNextMember', 'onKeyDown', 'onActivated',
       'onStep', 'onEachCycle', 'onStop', 'onCooldown', 'onBeforeStart',
       'onAfterStart', 'onTrue', 'onFalse', 'onEnable', 'onDisable',
@@ -2747,6 +2862,8 @@ class NodeCanvasEditor {
       buff_sequence: 'Buff Skill Queue',
       key_press: 'Single Key Press',
       delay: 'Delay Timer',
+      reroute: 'Reroute',
+      knot: 'Reroute',
       branch: 'Action Branch',
       action_branch: 'Action Branch',
       client_check: 'Client Check',
@@ -2896,6 +3013,8 @@ class NodeCanvasEditor {
       initialData = { delayMs: 1000, enabled: true };
     } else if (type === 'action_branch' || type === 'branch' || type === 'condition') {
       initialData = { conditionTargetId: '', conditionRule: 'is_running', enabled: true };
+    } else if (type === 'reroute' || type === 'knot') {
+      initialData = { enabled: true };
     } else if (type === 'client_check' || type === 'check_client') {
       initialData = { targetClient: '1', checkRule: 'is_active', enabled: true };
     } else if (type === 'var_branch' || type === 'variable_branch') {
@@ -4258,6 +4377,7 @@ class NodeCanvasEditor {
         icon: '🌿',
         name: canvasT('cat_flow', 'Logic & Flow'),
         items: [
+          { type: 'reroute', icon: '🔀', name: this.getNodeTypeLabel('reroute') },
           { type: 'client_check', icon: '🖥️', name: this.getNodeTypeLabel('client_check') },
           { type: 'var_branch', icon: '📦', name: this.getNodeTypeLabel('var_branch') },
           { type: 'action_branch', icon: '⚡', name: this.getNodeTypeLabel('action_branch') },

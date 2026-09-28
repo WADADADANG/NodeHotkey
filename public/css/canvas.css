@@ -580,6 +580,87 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3), 0 12px 30px rgba(0, 0, 0, 0.6);
 }
 
+/* Unreal Engine Reroute / Knot Node */
+.canvas-node.node-reroute {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: unset !important;
+  min-height: unset !important;
+  border-radius: 50% !important;
+  background: #0f172a !important;
+  border: 2px solid #38bdf8 !important;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.45) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  z-index: 10 !important;
+  overflow: visible !important;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.canvas-node.node-reroute:hover {
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 16px rgba(96, 165, 250, 0.8) !important;
+  transform: scale(1.2);
+}
+
+.canvas-node.node-reroute.selected {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.9) !important;
+}
+
+.canvas-node.node-reroute .reroute-knot-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #38bdf8;
+  pointer-events: none;
+  transition: background 0.15s;
+}
+
+.canvas-node.node-reroute.selected .reroute-knot-dot {
+  background: #f59e0b;
+}
+
+.canvas-node.node-reroute .node-port {
+  width: 14px !important;
+  height: 14px !important;
+  border-radius: 50% !important;
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 15 !important;
+  opacity: 0.15;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.canvas-node.node-reroute .node-port.port-in {
+  left: -8px !important;
+  background: #60a5fa !important;
+  border: 2px solid #fff !important;
+}
+
+.canvas-node.node-reroute .node-port.port-out {
+  right: -8px !important;
+  background: #38bdf8 !important;
+  border: 2px solid #fff !important;
+}
+
+.canvas-node.node-reroute:hover .node-port {
+  opacity: 0.9;
+}
+
+/* Wire Hitbox for easy double-clicking to add Reroute */
+.wire-hitbox {
+  pointer-events: stroke;
+  cursor: pointer;
+}
+.wire-hitbox:hover + .wire-path {
+  stroke-width: 3.5px !important;
+  filter: drop-shadow(0 0 6px #38bdf8);
+}
+
 /* Unreal Engine Blueprint Style Validation Indicators */
 .canvas-node.has-error {
   border-color: #ef4444 !important;
