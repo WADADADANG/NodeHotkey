@@ -383,10 +383,15 @@ class NodeCanvasEditor {
 
         // Check intersection for all nodes
         this.nodes.forEach(node => {
+          const isKnot = (node.type === 'reroute' || node.type === 'knot');
+          const nodeEl = this.nodesLayer ? this.nodesLayer.querySelector(`.canvas-node[data-id="${node.id}"]`) : null;
+          const width = isKnot ? 20 : (nodeEl?.offsetWidth || 220);
+          const height = isKnot ? 20 : (nodeEl?.offsetHeight || 120);
+
           const nx1 = node.position.x;
-          const nx2 = node.position.x + 220;
+          const nx2 = node.position.x + width;
           const ny1 = node.position.y;
-          const ny2 = node.position.y + 120;
+          const ny2 = node.position.y + height;
 
           const isIntersecting = nx1 < maxX && nx2 > minX && ny1 < maxY && ny2 > minY;
           if (isIntersecting) {
