@@ -2333,17 +2333,21 @@ class NodeCanvasEditor {
 
     // 3. Knot to Node: Leaves Knot towards the node, enters node horizontally from left
     if (isFromKnot && !isToKnot) {
-      if (dx >= 60) {
-        // Knot is well to the left of the node
-        const tension = Math.max(35, dx * 0.5);
+      if (Math.abs(dy) < 25 && dx > 0) {
+        const tension = Math.max(20, dx * 0.4);
+        return `M ${x1} ${y1} C ${x1 + tension} ${y1}, ${x2 - tension} ${y2}, ${x2} ${y2}`;
+      }
+      if (dx >= 80) {
+        // Knot is well to the left of the node (plenty of room for smooth forward S-curve)
+        const tension = Math.max(35, dx * 0.45);
         return `M ${x1} ${y1} C ${x1 + tension * 0.4} ${y1}, ${x2 - tension} ${y2}, ${x2} ${y2}`;
       } else {
-        // Knot is behind or directly below/above the target node's IN port (dx < 60)
-        // Must enter IN port from the left (-X) with generous clearance so it never cuts under the target node!
-        const inTension = Math.max(75, Math.min(160, 45 + Math.abs(dy) * 0.35 + Math.max(0, -dx) * 0.25));
-        const outTension = Math.max(35, Math.min(100, Math.abs(dx) * 0.35 + 25));
-        const c1x = (dx < 0) ? (x1 - outTension) : (x1 + outTension);
-        const c2x = x2 - inTension; // Loops in from the LEFT outside the target node!
+        // Knot is directly below/above or behind the target node's IN port (dx < 80, e.g. Image 1)
+        // Must arc OUTWARD to the left (-X) in a graceful C-curve to enter IN port smoothly without kinks!
+        const inTension = Math.max(45, Math.min(130, 25 + Math.abs(dy) * 0.35 + Math.max(0, -dx) * 0.25));
+        const outTension = Math.max(40, Math.min(110, 20 + Math.abs(dy) * 0.3 + Math.max(0, -dx) * 0.2));
+        const c1x = x1 - outTension;
+        const c2x = x2 - inTension;
         return `M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`;
       }
     }
