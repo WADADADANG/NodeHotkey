@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Heal 1,2,4",
   "canvas": {
-    "zoom": 0.7049539258012572,
+    "zoom": 0.775449318381383,
     "pan": {
-      "x": -725,
-      "y": -452
+      "x": -342,
+      "y": -279
     }
   },
   "nodes": [
@@ -38,7 +38,7 @@
         "keys": [
           "1"
         ],
-        "interval": 1300,
+        "interval": 2300,
         "jitter": 100,
         "executeImmediately": true,
         "actionId": "1786680205039"
@@ -49,8 +49,8 @@
       "type": "loop",
       "title": "Heal Rain 1",
       "position": {
-        "x": 1200,
-        "y": 1590
+        "x": 1150,
+        "y": 1840
       },
       "data": {
         "enabled": true,
@@ -58,8 +58,8 @@
         "keys": [
           "2"
         ],
-        "interval": 900,
-        "jitter": 100,
+        "interval": 1000,
+        "jitter": 200,
         "executeImmediately": true,
         "actionId": "1786680432366"
       }
@@ -69,8 +69,8 @@
       "type": "loop",
       "title": "Heal Rain 2",
       "position": {
-        "x": 1750,
-        "y": 1600
+        "x": 1700,
+        "y": 1850
       },
       "data": {
         "enabled": true,
@@ -78,8 +78,8 @@
         "keys": [
           "2"
         ],
-        "interval": 900,
-        "jitter": 100,
+        "interval": 1000,
+        "jitter": 200,
         "executeImmediately": true,
         "actionId": "1786680465713_967"
       }
@@ -89,8 +89,8 @@
       "type": "loop",
       "title": "Heal Rain 4",
       "position": {
-        "x": 2390,
-        "y": 1600
+        "x": 2340,
+        "y": 1850
       },
       "data": {
         "enabled": true,
@@ -98,8 +98,8 @@
         "keys": [
           "2"
         ],
-        "interval": 900,
-        "jitter": 100,
+        "interval": 1000,
+        "jitter": 200,
         "executeImmediately": true,
         "actionId": "1786680473923_7676"
       }
@@ -177,8 +177,8 @@
       "type": "loop",
       "title": "Loop MP 1",
       "position": {
-        "x": 1510,
-        "y": 1620
+        "x": 1460,
+        "y": 1870
       },
       "data": {
         "enabled": true,
@@ -196,8 +196,8 @@
       "type": "loop",
       "title": "Loop MP 2",
       "position": {
-        "x": 2120,
-        "y": 1690
+        "x": 2070,
+        "y": 1940
       },
       "data": {
         "enabled": true,
@@ -215,8 +215,8 @@
       "type": "loop",
       "title": "Loop MP 4",
       "position": {
-        "x": 2700,
-        "y": 1630
+        "x": 2650,
+        "y": 1880
       },
       "data": {
         "enabled": true,
@@ -224,7 +224,7 @@
         "keys": [
           "3"
         ],
-        "interval": 4400,
+        "interval": 6000,
         "executeImmediately": false,
         "actionId": "1786684545395_4783"
       }
@@ -234,8 +234,8 @@
       "type": "control",
       "title": "AC Stop Loop MP 1",
       "position": {
-        "x": 1510,
-        "y": 1830
+        "x": 1460,
+        "y": 2080
       },
       "data": {
         "enabled": true,
@@ -251,8 +251,8 @@
       "type": "control",
       "title": "AC Stop Heal 1",
       "position": {
-        "x": 1510,
-        "y": 1510
+        "x": 1460,
+        "y": 1760
       },
       "data": {
         "enabled": true,
@@ -269,8 +269,8 @@
       "type": "key_press",
       "title": "Buff GT 4",
       "position": {
-        "x": 2700,
-        "y": 1520
+        "x": 2650,
+        "y": 1770
       },
       "data": {
         "enabled": true,
@@ -287,8 +287,8 @@
       "type": "key_press",
       "title": "Buff BOL",
       "position": {
-        "x": 2120,
-        "y": 1510
+        "x": 2070,
+        "y": 1760
       },
       "data": {
         "enabled": true,
@@ -306,8 +306,8 @@
       "type": "control",
       "title": "AC Stop Loop MP 2",
       "position": {
-        "x": 2120,
-        "y": 1900
+        "x": 2070,
+        "y": 2150
       },
       "data": {
         "enabled": true,
@@ -323,8 +323,8 @@
       "type": "control",
       "title": "AC Stop Loop MP 4",
       "position": {
-        "x": 2700,
-        "y": 1840
+        "x": 2650,
+        "y": 2090
       },
       "data": {
         "enabled": true,
@@ -439,12 +439,12 @@
       "title": "Btn Start Heal Rain Tab",
       "position": {
         "x": 1170,
-        "y": 1160
+        "y": 1290
       },
       "data": {
         "enabled": true,
         "triggerType": "keyboard",
-        "triggerValue": "TAB",
+        "triggerValue": "3",
         "actionId": "1786879304240"
       }
     },
@@ -520,8 +520,8 @@
       "type": "emit_event",
       "title": "EmitEvent_4564E",
       "position": {
-        "x": 1510,
-        "y": 1950
+        "x": 1460,
+        "y": 2200
       },
       "data": {
         "enabled": true,
@@ -534,8 +534,8 @@
       "type": "emit_event",
       "title": "EmitEvent_EW944DDA",
       "position": {
-        "x": 1510,
-        "y": 1400
+        "x": 1460,
+        "y": 1650
       },
       "data": {
         "enabled": true,
@@ -559,6 +559,38 @@
         ],
         "cooldownPresetId": "skill_knight_heart-of-sacrifice",
         "actionId": "1787759322547"
+      }
+    },
+    {
+      "id": "node_1789626505874",
+      "type": "key_press",
+      "title": "Key Press",
+      "position": {
+        "x": 2400,
+        "y": 980
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "all",
+        "keys": [
+          "Z"
+        ],
+        "actionId": "1789626505874"
+      }
+    },
+    {
+      "id": "node_1789943917001_1634",
+      "type": "trigger",
+      "title": "Btn Start Heal Rain 3",
+      "position": {
+        "x": 1170,
+        "y": 1160
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "TAB",
+        "actionId": "1789943917001_1634"
       }
     }
   ],
@@ -690,13 +722,6 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1786879321460",
-      "fromNodeId": "node_1786879304240",
-      "fromPort": "exec_out",
-      "toNodeId": "node_1786879318638",
-      "toPort": "exec_in"
-    },
-    {
       "id": "conn_1786879480840",
       "fromNodeId": "node_1786879318638",
       "fromPort": "next",
@@ -736,6 +761,27 @@
       "fromNodeId": "node_1786879715668_3660",
       "fromPort": "onBeforeStart",
       "toNodeId": "node_1787759322547",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789690863873",
+      "fromNodeId": "node_1786684306401",
+      "fromPort": "onTrue",
+      "toNodeId": "node_1789626505874",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789944192482",
+      "fromNodeId": "node_1786879304240",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786879318638",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790552717165",
+      "fromNodeId": "node_1789943917001_1634",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786879318638",
       "toPort": "exec_in"
     }
   ]

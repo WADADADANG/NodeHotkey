@@ -453,6 +453,15 @@ class NodeCanvasEditor {
         const elemUnder = document.elementFromPoint(e.clientX, e.clientY);
         const targetSelector = this.draftWire.startType === 'in' ? '.node-port.port-out, .node-port:not(.port-in)' : '.node-port.port-in';
         const portUnder = elemUnder ? elemUnder.closest(targetSelector) : null;
+        const knotUnder = elemUnder ? elemUnder.closest('.canvas-node.node-reroute') : null;
+
+        if (knotUnder && knotUnder.dataset.id !== this.draftWire.startNodeId) {
+          const knotRect = knotUnder.getBoundingClientRect();
+          const knotCenter = this.clientToWorld(knotRect.left + knotRect.width / 2, knotRect.top + knotRect.height / 2);
+          this.draftWire.x2 = knotCenter.x;
+          this.draftWire.y2 = knotCenter.y;
+        }
+
         if (portUnder && portUnder.classList.contains('port-invalid-target')) {
           this.draftWire.isInvalid = true;
         } else {
@@ -724,10 +733,11 @@ class NodeCanvasEditor {
 
       if (node.type === 'reroute' || node.type === 'knot') {
         nodeEl.className = `canvas-node node-reroute ${isSelected ? 'selected' : ''}`.trim();
+        nodeEl.title = isEn ? 'Reroute Knot (Click & drag center to move)' : 'จุดดักสาย (คลิกลากตรงกลางเพื่อย้าย)';
         nodeEl.innerHTML = `
-          <div class="node-port port-in port-reroute-in" data-node="${node.id}" data-port="in" title="In"></div>
+          <div class="node-port port-in port-reroute-in" data-node="${node.id}" data-port="in" title="${window.currentLang === 'en' ? 'In: Drop wire here' : 'รับสายเข้า (วางสายตรงนี้)'}"></div>
           <div class="reroute-knot-dot"></div>
-          <div class="node-port port-out port-reroute-out" data-node="${node.id}" data-port="out" title="Out"></div>
+          <div class="node-port port-out port-reroute-out" data-node="${node.id}" data-port="out" title="${window.currentLang === 'en' ? 'Out: Drag wire to next node' : 'ส่งสายออก (ลากสายไปโหนดถัดไป)'}"></div>
         `;
       }
 
@@ -1785,13 +1795,22 @@ class NodeCanvasEditor {
 
         portEl.addEventListener('mousedown', (e) => {
           e.preventDefault();
-          e.stopPropagation();
           if (e.button === 0) {
-            const portRect = portEl.getBoundingClientRect();
-            const portPos = this.clientToWorld(
-              portRect.left + portRect.width / 2,
-              portRect.top + portRect.height / 2
-            );
+            e.stopPropagation();
+            let portPos;
+            if (nodeEl.classList.contains('node-reroute')) {
+              const knotRect = nodeEl.getBoundingClientRect();
+              portPos = this.clientToWorld(
+                knotRect.left + knotRect.width / 2,
+                knotRect.top + knotRect.height / 2
+              );
+            } else {
+              const portRect = portEl.getBoundingClientRect();
+              portPos = this.clientToWorld(
+                portRect.left + portRect.width / 2,
+                portRect.top + portRect.height / 2
+              );
+            }
 
             const wireType = meta.kind === 'data' ? meta.type : null;
 
@@ -1818,7 +1837,19 @@ class NodeCanvasEditor {
           e.stopPropagation();
           if (this.draftWire) {
             let fromNodeId, fromPort, toNodeId, toPort;
-            if (this.draftWire.startType === 'out' && portEl.classList.contains('port-in')) {
+            if (nodeEl.classList.contains('node-reroute')) {
+              if (this.draftWire.startType === 'out') {
+                fromNodeId = this.draftWire.startNodeId;
+                fromPort = this.draftWire.startPort;
+                toNodeId = nodeId;
+                toPort = 'in';
+              } else {
+                fromNodeId = nodeId;
+                fromPort = 'out';
+                toNodeId = this.draftWire.startNodeId;
+                toPort = this.draftWire.startPort;
+              }
+            } else if (this.draftWire.startType === 'out' && portEl.classList.contains('port-in')) {
               fromNodeId = this.draftWire.startNodeId;
               fromPort = this.draftWire.startPort;
               toNodeId = portEl.dataset.node;
@@ -1855,9 +1886,36 @@ class NodeCanvasEditor {
         });
       });
 
-      // Ensure release anywhere on a node also dismisses any active draft wire
-      nodeEl.addEventListener('mouseup', () => {
+      // Ensure release anywhere on a Knot completes incoming wire, or dismisses draft wire on other nodes
+      nodeEl.addEventListener('mouseup', (e) => {
         if (this.draftWire) {
+          if (node.type === 'reroute' || node.type === 'knot') {
+            e.stopPropagation();
+            let fromNodeId, fromPort, toNodeId, toPort;
+            if (this.draftWire.startType === 'out') {
+              fromNodeId = this.draftWire.startNodeId;
+              fromPort = this.draftWire.startPort;
+              toNodeId = node.id;
+              toPort = 'in';
+            } else {
+              fromNodeId = node.id;
+              fromPort = 'out';
+              toNodeId = this.draftWire.startNodeId;
+              toPort = this.draftWire.startPort;
+            }
+
+            if (fromNodeId && toNodeId && fromNodeId !== toNodeId) {
+              const check = this.canConnectPorts(fromNodeId, fromPort, toNodeId, toPort);
+              if (check.allowed) {
+                this.addConnection(fromNodeId, fromPort, toNodeId, toPort);
+              } else {
+                const msg = window.currentLang === 'en' ? check.reasonEn : check.reasonTh;
+                if (typeof window.toast === 'function') {
+                  window.toast(`⚠️ ${msg}`, 'warning');
+                }
+              }
+            }
+          }
           this.draftWire = null;
           this.clearPortHighlights();
           this.renderWires();
@@ -1904,7 +1962,7 @@ class NodeCanvasEditor {
     const node = this.nodes.find(n => n.id === nodeId);
     if (!node) return { x: 0, y: 0 };
     if (node.type === 'reroute' || node.type === 'knot') {
-      return { x: node.position.x + 11, y: node.position.y + 11 };
+      return { x: node.position.x + 10, y: node.position.y + 10 };
     }
 
     const isOutput = !(portName === 'exec_in' || portName === 'msg_in' || portName === 'val_in' || portName === 'text_in' || (node.type === 'format_text' && portName !== 'msg_out'));
@@ -2004,24 +2062,34 @@ class NodeCanvasEditor {
     // Render draft wire if currently dragging
     if (this.draftWire) {
       const isStartIn = (this.draftWire.startType === 'in');
-      const x1 = this.draftWire.x1;
-      const y1 = this.draftWire.y1;
-      const x2 = this.draftWire.x2;
-      const y2 = this.draftWire.y2;
-      const startNode = this.nodes.find(n => n.id === this.draftWire.startNodeId);
-      const isStartKnot = startNode && (startNode.type === 'reroute' || startNode.type === 'knot');
+      const rawDx = this.draftWire.x2 - this.draftWire.x1;
+      const rawDy = this.draftWire.y2 - this.draftWire.y1;
+      
+      // Backward detection:
+      // - OUT port (starts on right of node): backward if mouse is to the left/behind (rawDx < 60)
+      // - IN port (starts on left of node): backward if mouse is to the right/behind (rawDx > -60)
+      const isBackward = isStartIn ? (rawDx > -60) : (rawDx < 60);
 
-      let pathData = '';
-      if (this.wireStyle === 'orthogonal') {
-        pathData = this.getOrthogonalPath(x1, y1, x2, y2, startNode, null);
-      } else if (isStartKnot) {
-        pathData = `M ${x1} ${y1} L ${x2} ${y2}`;
+      const outTension = isBackward
+        ? Math.max(75, Math.min(160, 45 + Math.abs(rawDy) * 0.3 + (isStartIn ? Math.max(0, rawDx) : Math.max(0, -rawDx)) * 0.2))
+        : Math.max(35, Math.abs(rawDx) * 0.5);
+
+      const inTension = isBackward
+        ? Math.max(35, Math.min(100, Math.abs(rawDx) * 0.35 + 20))
+        : Math.max(35, Math.abs(rawDx) * 0.5);
+
+      let c1x, c2x;
+      if (isStartIn) {
+        // Leaves IN port to the LEFT (-X) to clear node body on the right
+        c1x = this.draftWire.x1 - outTension;
+        c2x = isBackward ? (this.draftWire.x2 - inTension) : (this.draftWire.x2 + inTension);
       } else {
-        const dx = Math.max(30, Math.abs(x2 - x1) * 0.5);
-        const c1x = isStartIn ? (x1 - dx) : (x1 + dx);
-        const c2x = isStartIn ? (x2 + dx) : (x2 - dx);
-        pathData = `M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`;
+        // Leaves OUT port to the RIGHT (+X) to clear node body on the left
+        c1x = this.draftWire.x1 + outTension;
+        c2x = isBackward ? (this.draftWire.x2 + inTension) : (this.draftWire.x2 - inTension);
       }
+
+      const pathData = `M ${this.draftWire.x1} ${this.draftWire.y1} C ${c1x} ${this.draftWire.y1}, ${c2x} ${this.draftWire.y2}, ${this.draftWire.x2} ${this.draftWire.y2}`;
       let draftClass = 'wire-draft';
       if (this.draftWire.isInvalid) {
         draftClass += ' wire-draft-invalid';
@@ -2234,63 +2302,62 @@ class NodeCanvasEditor {
     const isFromKnot = fromNode && (fromNode.type === 'reroute' || fromNode.type === 'knot');
     const isToKnot = toNode && (toNode.type === 'reroute' || toNode.type === 'knot');
 
-    // 1. Knot to Knot: Straight polyline segment (Authentic Unreal Engine Blueprint Knot segment)
-    if (isFromKnot && isToKnot) {
-      return `M ${x1} ${y1} L ${x2} ${y2}`;
-    }
-
     const dx = x2 - x1;
     const dy = y2 - y1;
 
-    // 2. Node to Knot: Leaves node horizontally to the right, flows directly into knot center
+    // 1. Knot to Knot: Continuous smooth spline following true direction (no diagonal ruler-straight line)
+    if (isFromKnot && isToKnot) {
+      const tensionX = Math.sign(dx || 1) * Math.max(35, Math.min(180, Math.abs(dx) * 0.45));
+      const tensionY = (Math.abs(dx) < 30) ? Math.sign(dy || 1) * Math.min(80, Math.abs(dy) * 0.3) : 0;
+      const c1x = x1 + tensionX;
+      const c1y = y1 + tensionY;
+      const c2x = x2 - tensionX;
+      const c2y = y2 - tensionY;
+      return `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`;
+    }
+
+    // 2. Node to Knot: Leaves node horizontally to the right, flows smoothly into Knot center
     if (!isFromKnot && isToKnot) {
-      if (dx >= 20) {
-        // Forward flow: Knot is to the right
-        const c1x = x1 + Math.max(30, dx * 0.45);
-        const c1y = y1;
-        const c2x = x2 - Math.max(15, dx * 0.2);
-        const c2y = y2;
-        return `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`;
+      if (dx >= 60) {
+        const tension = Math.max(35, dx * 0.45);
+        return `M ${x1} ${y1} C ${x1 + tension} ${y1}, ${x2 - tension * 0.4} ${y2}, ${x2} ${y2}`;
       } else {
-        // Backward/downward flow: Knot is behind or directly below node
-        // Smoothly curves out of node and aims towards knot without looping around
-        const lead = Math.min(60, Math.max(25, Math.abs(dy) * 0.25));
-        const c1x = x1 + lead;
-        const c1y = y1;
-        const c2x = x2 + Math.min(50, Math.max(15, (x1 - x2) * 0.25));
-        const c2y = y2 - Math.sign(dy) * Math.min(40, Math.max(10, Math.abs(dy) * 0.2));
-        return `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`;
+        // Knot is behind or directly below/above source node (dx < 60, e.g. False ▶ -> Knot below/left)
+        // Must arc OUTWARD generously to the right (+X) so it NEVER cuts under or behind the Action Node card!
+        const outTension = Math.max(80, Math.min(180, 50 + Math.abs(dy) * 0.35 + Math.max(0, -dx) * 0.25));
+        const inTension = Math.max(35, Math.min(100, Math.abs(dx) * 0.35 + 25));
+        const c2x = x2 + inTension;
+        return `M ${x1} ${y1} C ${x1 + outTension} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`;
       }
     }
 
-    // 3. Knot to Node: Leaves knot directly towards node, enters node horizontally from left
+    // 3. Knot to Node: Leaves Knot towards the node, enters node horizontally from left
     if (isFromKnot && !isToKnot) {
-      if (dx >= 20) {
-        // Forward flow: Node is to the right
-        const c1x = x1 + Math.max(15, dx * 0.2);
-        const c1y = y1;
-        const c2x = x2 - Math.max(30, dx * 0.45);
-        const c2y = y2;
-        return `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`;
+      if (dx >= 60) {
+        // Knot is well to the left of the node
+        const tension = Math.max(35, dx * 0.5);
+        return `M ${x1} ${y1} C ${x1 + tension * 0.4} ${y1}, ${x2 - tension} ${y2}, ${x2} ${y2}`;
       } else {
-        // Backward flow: Node is behind knot
-        const lead = Math.min(60, Math.max(25, Math.abs(dy) * 0.25));
-        const c1x = x1 - Math.min(50, Math.max(15, (x1 - x2) * 0.25));
-        const c1y = y1 + Math.sign(dy) * Math.min(40, Math.max(10, Math.abs(dy) * 0.2));
-        const c2x = x2 - lead;
-        const c2y = y2;
-        return `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`;
+        // Knot is behind or directly below/above the target node's IN port (dx < 60)
+        // Must enter IN port from the left (-X) with generous clearance so it never cuts under the target node!
+        const inTension = Math.max(75, Math.min(160, 45 + Math.abs(dy) * 0.35 + Math.max(0, -dx) * 0.25));
+        const outTension = Math.max(35, Math.min(100, Math.abs(dx) * 0.35 + 25));
+        const c1x = (dx < 0) ? (x1 - outTension) : (x1 + outTension);
+        const c2x = x2 - inTension; // Loops in from the LEFT outside the target node!
+        return `M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`;
       }
     }
 
-    // 4. Node to Node (Standard)
-    if (dx >= 0) {
-      const tension = Math.max(30, dx * 0.5);
+    // 4. Standard Node to Node
+    if (dx >= 60) {
+      const tension = Math.max(40, dx * 0.5);
       return `M ${x1} ${y1} C ${x1 + tension} ${y1}, ${x2 - tension} ${y2}, ${x2} ${y2}`;
     } else {
-      // Backward wire between normal nodes: limit overshoot so it never creates giant lasso loops
-      const tension = Math.min(80, Math.max(30, Math.abs(dy) * 0.3));
-      return `M ${x1} ${y1} C ${x1 + tension} ${y1}, ${x2 - tension} ${y2}, ${x2} ${y2}`;
+      // Destination node is behind or directly below/above source node
+      // Both OUT port (Node A, right side) and IN port (Node B, left side) get generous outward clearance!
+      const outTension = Math.max(80, Math.min(180, 50 + Math.abs(dy) * 0.35 + Math.max(0, -dx) * 0.25));
+      const inTension = Math.max(75, Math.min(160, 45 + Math.abs(dy) * 0.35 + Math.max(0, -dx) * 0.25));
+      return `M ${x1} ${y1} C ${x1 + outTension} ${y1}, ${x2 - inTension} ${y2}, ${x2} ${y2}`;
     }
   }
 
@@ -2816,6 +2883,7 @@ class NodeCanvasEditor {
 
   highlightCompatiblePorts(startNodeId, startPort, startType = 'out') {
     if (!this.nodesLayer) return;
+    document.body.classList.add('canvas-is-drafting-wire');
     const targetSelector = startType === 'in' ? '.node-port.port-out, .node-port:not(.port-in)' : '.node-port.port-in';
     const targetPorts = this.nodesLayer.querySelectorAll(targetSelector);
     targetPorts.forEach(portEl => {
@@ -2830,6 +2898,8 @@ class NodeCanvasEditor {
       if (check.allowed) {
         portEl.classList.add('port-valid-target');
         portEl.classList.remove('port-invalid-target');
+        const parentKnot = portEl.closest('.canvas-node.node-reroute');
+        if (parentKnot) parentKnot.classList.add('is-drop-target');
       } else {
         portEl.classList.add('port-invalid-target');
         portEl.classList.remove('port-valid-target');
@@ -2839,9 +2909,13 @@ class NodeCanvasEditor {
 
   clearPortHighlights() {
     if (!this.nodesLayer) return;
+    document.body.classList.remove('canvas-is-drafting-wire');
     const ports = this.nodesLayer.querySelectorAll('.node-port');
     ports.forEach(p => {
       p.classList.remove('port-valid-target', 'port-invalid-target');
+    });
+    this.nodesLayer.querySelectorAll('.canvas-node.node-reroute.is-drop-target').forEach(n => {
+      n.classList.remove('is-drop-target');
     });
   }
 

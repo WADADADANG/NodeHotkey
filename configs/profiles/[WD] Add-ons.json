@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Add-ons",
   "canvas": {
-    "zoom": 0.7338713865793143,
+    "zoom": 0.8111890445806761,
     "pan": {
-      "x": -168,
-      "y": -937
+      "x": -899,
+      "y": -769
     }
   },
   "nodes": [
@@ -39,38 +39,6 @@
           "0"
         ],
         "actionId": "1786880041877"
-      }
-    },
-    {
-      "id": "node_1786880085539",
-      "type": "trigger",
-      "title": "Btn Follow All",
-      "position": {
-        "x": 1450,
-        "y": 1180
-      },
-      "data": {
-        "enabled": true,
-        "triggerType": "keyboard",
-        "triggerValue": "INSERT",
-        "actionId": "1786880085539"
-      }
-    },
-    {
-      "id": "node_1786880124294",
-      "type": "key_press",
-      "title": "Single Key Press",
-      "position": {
-        "x": 1750,
-        "y": 1180
-      },
-      "data": {
-        "enabled": true,
-        "targetClient": "1,2,3,4,5,6",
-        "keys": [
-          "Z"
-        ],
-        "actionId": "1786880124294"
       }
     },
     {
@@ -200,21 +168,6 @@
         ],
         "cooldownPresetId": "skill_knight_heart-of-sacrifice",
         "actionId": "1786885743555"
-      }
-    },
-    {
-      "id": "node_1786887562506_9436",
-      "type": "key_hold",
-      "title": "Knight  PowerStomp 6",
-      "position": {
-        "x": 1060,
-        "y": 1680
-      },
-      "data": {
-        "enabled": true,
-        "targetClient": "6",
-        "targetKey": "1",
-        "actionId": "1786887562506_9436"
       }
     },
     {
@@ -378,9 +331,9 @@
         "enabled": true,
         "targetClient": "3",
         "keys": [
-          "3"
+          "4"
         ],
-        "interval": 17350,
+        "interval": 6550,
         "executeImmediately": false,
         "actionId": "1788519552906"
       }
@@ -407,8 +360,8 @@
       "type": "key_press",
       "title": "Single Key Press",
       "position": {
-        "x": 686,
-        "y": 1708
+        "x": 80,
+        "y": 1850
       },
       "data": {
         "enabled": true,
@@ -419,6 +372,153 @@
         "cooldownPresetId": "skill_knight_power-stomp",
         "actionId": "1789523381451"
       }
+    },
+    {
+      "id": "node_1789673560200",
+      "type": "trigger",
+      "title": "Global Trigger",
+      "position": {
+        "x": 290,
+        "y": 520
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "NUMPAD 5",
+        "actionId": "1789673560200"
+      }
+    },
+    {
+      "id": "node_1789673582290",
+      "type": "key_press",
+      "title": "Key Press",
+      "position": {
+        "x": 600,
+        "y": 520
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "all",
+        "keys": [
+          "LEFT ALT + 0"
+        ],
+        "actionId": "1789673582290"
+      }
+    },
+    {
+      "id": "node_1790153211610",
+      "type": "trigger",
+      "title": "Global Trigger",
+      "position": {
+        "x": 514,
+        "y": 2369
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "NUMPAD 1",
+        "actionId": "1790153211610"
+      }
+    },
+    {
+      "id": "node_1790153214598",
+      "type": "loop",
+      "title": "Interval Loop",
+      "position": {
+        "x": 830,
+        "y": 2370
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "5",
+        "keys": [
+          "2"
+        ],
+        "interval": 1700,
+        "executeImmediately": true,
+        "actionId": "1790153214598"
+      }
+    },
+    {
+      "id": "node_1790391002753_2771",
+      "type": "control",
+      "title": "AC Stop Knight Loop FP 6",
+      "position": {
+        "x": 1050,
+        "y": 1830
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "stop",
+        "controlTargetIds": [
+          "1786880617990"
+        ],
+        "actionId": "1790391002753_2771"
+      }
+    },
+    {
+      "id": "node_1790391002753_5002",
+      "type": "loop",
+      "title": "Knight Loop FP 6",
+      "position": {
+        "x": 1050,
+        "y": 1620
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "6",
+        "keys": [
+          "3"
+        ],
+        "interval": 8000,
+        "executeImmediately": true,
+        "actionId": "1790391002753_5002"
+      }
+    },
+    {
+      "id": "node_1790391002753_6644",
+      "type": "key_hold",
+      "title": "Knight  PowerStomp 6",
+      "position": {
+        "x": 720,
+        "y": 1730
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "6",
+        "targetKey": "1",
+        "actionId": "1790391002753_6644"
+      }
+    },
+    {
+      "id": "node_1790393630991",
+      "type": "trigger",
+      "title": "Global Trigger",
+      "position": {
+        "x": 510,
+        "y": 2610
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "NUMPAD 2",
+        "actionId": "1790393630991"
+      }
+    },
+    {
+      "id": "node_1790393640169",
+      "type": "key_hold",
+      "title": "Key Hold",
+      "position": {
+        "x": 830,
+        "y": 2610
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "targetKey": "7",
+        "actionId": "1790393640169"
+      }
     }
   ],
   "connections": [
@@ -427,20 +527,6 @@
       "fromNodeId": "node_1786880020907",
       "fromPort": "exec_out",
       "toNodeId": "node_1786880041877",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1786882816309",
-      "fromNodeId": "node_1786880252871",
-      "fromPort": "exec_out",
-      "toNodeId": "node_1786882811325",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1786882871042",
-      "fromNodeId": "node_1786880252871",
-      "fromPort": "exec_out",
-      "toNodeId": "node_1786882832042",
       "toPort": "exec_in"
     },
     {
@@ -462,20 +548,6 @@
       "fromNodeId": "node_1786885729841",
       "fromPort": "exec_out",
       "toNodeId": "node_1786885743555",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1786887670370",
-      "fromNodeId": "node_1786887562506_9436",
-      "fromPort": "onEnable",
-      "toNodeId": "node_1786887573634_8323",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1786887672401",
-      "fromNodeId": "node_1786887562506_9436",
-      "fromPort": "onDisable",
-      "toNodeId": "node_1786887640249",
       "toPort": "exec_in"
     },
     {
@@ -521,17 +593,59 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1789165019276",
-      "fromNodeId": "node_1786880085539",
+      "id": "conn_1789673614586",
+      "fromNodeId": "node_1789673560200",
       "fromPort": "exec_out",
-      "toNodeId": "node_1786880124294",
+      "toNodeId": "node_1789673582290",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1789607186260",
+      "id": "conn_1790153222933",
+      "fromNodeId": "node_1790153211610",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1790153214598",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790328414815",
       "fromNodeId": "node_1786880252871",
       "fromPort": "exec_out",
-      "toNodeId": "node_1786887562506_9436",
+      "toNodeId": "node_1786882832042",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790328417437",
+      "fromNodeId": "node_1786880252871",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1786882811325",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790391002753_1695",
+      "fromNodeId": "node_1790391002753_6644",
+      "fromPort": "onEnable",
+      "toNodeId": "node_1790391002753_5002",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790391002753_3340",
+      "fromNodeId": "node_1790391002753_6644",
+      "fromPort": "onDisable",
+      "toNodeId": "node_1790391002753_2771",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790391010021",
+      "fromNodeId": "node_1786880252871",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1790391002753_6644",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790393651116",
+      "fromNodeId": "node_1790393630991",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1790393640169",
       "toPort": "exec_in"
     }
   ]

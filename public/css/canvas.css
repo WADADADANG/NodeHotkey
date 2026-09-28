@@ -580,75 +580,132 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3), 0 12px 30px rgba(0, 0, 0, 0.6);
 }
 
-/* Unreal Engine Reroute / Knot Node */
+/* Unreal Engine Blueprint Reroute Node (Knot) - Pure Single Pin Design */
 .canvas-node.node-reroute {
-  width: 22px !important;
-  height: 22px !important;
-  min-width: unset !important;
-  min-height: unset !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
   border-radius: 50% !important;
-  background: #0f172a !important;
+  background: #0b1120 !important;
   border: 2px solid #38bdf8 !important;
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.45) !important;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   padding: 0 !important;
+  margin: 0 !important;
   z-index: 10 !important;
+  cursor: grab !important;
   overflow: visible !important;
-  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.canvas-node.node-reroute::before,
+.canvas-node.node-reroute::after {
+  display: none !important;
+  content: none !important;
 }
 
 .canvas-node.node-reroute:hover {
-  border-color: #60a5fa !important;
-  box-shadow: 0 0 16px rgba(96, 165, 250, 0.8) !important;
+  border-color: #7dd3fc !important;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.8), inset 0 0 5px rgba(56, 189, 248, 0.3) !important;
   transform: scale(1.2);
 }
 
 .canvas-node.node-reroute.selected {
   border-color: #f59e0b !important;
-  box-shadow: 0 0 18px rgba(245, 158, 11, 0.9) !important;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.95), 0 0 0 2px rgba(245, 158, 11, 0.4) !important;
 }
 
 .canvas-node.node-reroute .reroute-knot-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: #38bdf8;
+  box-shadow: 0 0 6px #38bdf8;
   pointer-events: none;
-  transition: background 0.15s;
+  transition: background 0.15s, box-shadow 0.15s;
 }
 
 .canvas-node.node-reroute.selected .reroute-knot-dot {
   background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
 }
 
+/* Ports on Knot: Hidden by default (Pure Clean Knot), smoothly pops out on Hover! */
 .canvas-node.node-reroute .node-port {
+  position: absolute !important;
+  top: 50% !important;
   width: 14px !important;
   height: 14px !important;
   border-radius: 50% !important;
-  position: absolute !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  z-index: 15 !important;
-  opacity: 0.15;
-  transition: opacity 0.15s, transform 0.15s;
+  margin: 0 !important;
+  padding: 0 !important;
+  clip-path: none !important;
+  -webkit-clip-path: none !important;
+  z-index: 25 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(-50%) scale(0.3) !important;
+  transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background 0.15s, box-shadow 0.15s !important;
 }
 
+/* On Knot Hover (when NOT dragging wire): Pins smoothly pop out on left and right! */
+body:not(.canvas-is-drafting-wire) .canvas-node.node-reroute:hover .node-port {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translateY(-50%) scale(1) !important;
+}
+
+/* In Pin on Left (pops out on hover): Electric Blue */
 .canvas-node.node-reroute .node-port.port-in {
-  left: -8px !important;
-  background: #60a5fa !important;
-  border: 2px solid #fff !important;
+  left: -16px !important;
+  right: auto !important;
+  background: #0284c7 !important;
+  border: 1.5px solid #38bdf8 !important;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.7) !important;
+  cursor: pointer !important;
 }
-
-.canvas-node.node-reroute .node-port.port-out {
-  right: -8px !important;
+.canvas-node.node-reroute .node-port.port-in:hover {
   background: #38bdf8 !important;
-  border: 2px solid #fff !important;
+  box-shadow: 0 0 14px #38bdf8 !important;
+  transform: translateY(-50%) scale(1.25) !important;
 }
 
-.canvas-node.node-reroute:hover .node-port {
-  opacity: 0.9;
+/* Out Pin on Right (pops out on hover): Emerald Green */
+.canvas-node.node-reroute .node-port.port-out {
+  right: -16px !important;
+  left: auto !important;
+  background: #059669 !important;
+  border: 1.5px solid #10b981 !important;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.7) !important;
+  cursor: crosshair !important;
+}
+.canvas-node.node-reroute .node-port.port-out:hover {
+  background: #10b981 !important;
+  box-shadow: 0 0 14px #10b981 !important;
+  transform: translateY(-50%) scale(1.25) !important;
+}
+
+/* Wire Drafting Mode: Knot glows green and becomes giant drop target! */
+body.canvas-is-drafting-wire .canvas-node.node-reroute {
+  cursor: copy !important;
+}
+body.canvas-is-drafting-wire .canvas-node.node-reroute .node-port {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.canvas-node.node-reroute.is-drop-target,
+.canvas-node.node-reroute:has(.port-valid-target) {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.95), inset 0 0 8px rgba(16, 185, 129, 0.5) !important;
+  transform: scale(1.35) !important;
+}
+.canvas-node.node-reroute.is-drop-target .reroute-knot-dot,
+.canvas-node.node-reroute:has(.port-valid-target) .reroute-knot-dot {
+  background: #10b981 !important;
+  box-shadow: 0 0 10px #10b981 !important;
 }
 
 /* Wire Hitbox for easy double-clicking to add Reroute */
@@ -1185,6 +1242,13 @@
   filter: grayscale(0.7) !important;
   cursor: not-allowed !important;
   pointer-events: none !important;
+}
+
+/* Strict Safeguard: Reroute Knot ports NEVER show chevrons or solid square cards */
+.canvas-node.node-reroute .node-port {
+  clip-path: none !important;
+  -webkit-clip-path: none !important;
+  border-radius: 50% !important;
 }
 
 /* Unreal Engine Blueprint Style Pure Node (Get Variable) */

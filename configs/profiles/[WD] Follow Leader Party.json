@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Follow Leader Party",
   "canvas": {
-    "zoom": 0.8013163690192904,
+    "zoom": 0.7930366830916332,
     "pan": {
-      "x": -52,
-      "y": -25
+      "x": -343,
+      "y": -17
     }
   },
   "nodes": [
@@ -15,7 +15,7 @@
       "title": "Global Trigger",
       "position": {
         "x": 280,
-        "y": 200
+        "y": 130
       },
       "data": {
         "enabled": true,
@@ -29,8 +29,8 @@
       "type": "party_slot",
       "title": "Party Slot Selector 1",
       "position": {
-        "x": 1150,
-        "y": 280
+        "x": 1790,
+        "y": 290
       },
       "data": {
         "enabled": true,
@@ -47,8 +47,8 @@
       "type": "key_press",
       "title": "Key Press Z 1",
       "position": {
-        "x": 1460,
-        "y": 380
+        "x": 2100,
+        "y": 390
       },
       "data": {
         "enabled": true,
@@ -64,8 +64,8 @@
       "type": "key_press",
       "title": "Key Press Z 2",
       "position": {
-        "x": 1460,
-        "y": 580
+        "x": 2100,
+        "y": 590
       },
       "data": {
         "enabled": true,
@@ -81,8 +81,8 @@
       "type": "party_slot",
       "title": "Party Slot Selector 2",
       "position": {
-        "x": 1150,
-        "y": 480
+        "x": 1790,
+        "y": 490
       },
       "data": {
         "enabled": true,
@@ -99,8 +99,8 @@
       "type": "key_press",
       "title": "Key Press Z 3",
       "position": {
-        "x": 1460,
-        "y": 780
+        "x": 2100,
+        "y": 790
       },
       "data": {
         "enabled": true,
@@ -116,8 +116,8 @@
       "type": "party_slot",
       "title": "Party Slot Selector 3",
       "position": {
-        "x": 1150,
-        "y": 680
+        "x": 1790,
+        "y": 690
       },
       "data": {
         "enabled": true,
@@ -134,8 +134,8 @@
       "type": "key_press",
       "title": "Key Press Z 4",
       "position": {
-        "x": 1460,
-        "y": 980
+        "x": 2100,
+        "y": 990
       },
       "data": {
         "enabled": true,
@@ -151,8 +151,8 @@
       "type": "party_slot",
       "title": "Party Slot Selector 4",
       "position": {
-        "x": 1150,
-        "y": 880
+        "x": 1790,
+        "y": 890
       },
       "data": {
         "enabled": true,
@@ -169,8 +169,8 @@
       "type": "key_press",
       "title": "Key Press Z 5",
       "position": {
-        "x": 1460,
-        "y": 1180
+        "x": 2100,
+        "y": 1190
       },
       "data": {
         "enabled": true,
@@ -186,8 +186,8 @@
       "type": "party_slot",
       "title": "Party Slot Selector 5",
       "position": {
-        "x": 1150,
-        "y": 1080
+        "x": 1790,
+        "y": 1090
       },
       "data": {
         "enabled": true,
@@ -204,8 +204,8 @@
       "type": "key_press",
       "title": "Key Press Z 6",
       "position": {
-        "x": 1460,
-        "y": 1380
+        "x": 2100,
+        "y": 1390
       },
       "data": {
         "enabled": true,
@@ -221,8 +221,8 @@
       "type": "party_slot",
       "title": "Party Slot Selector 6",
       "position": {
-        "x": 1150,
-        "y": 1280
+        "x": 1790,
+        "y": 1290
       },
       "data": {
         "enabled": true,
@@ -239,8 +239,8 @@
       "type": "client_check",
       "title": "Client Check 1",
       "position": {
-        "x": 730,
-        "y": 200
+        "x": 1370,
+        "y": 210
       },
       "data": {
         "enabled": true,
@@ -254,8 +254,8 @@
       "type": "client_check",
       "title": "Client Check 2",
       "position": {
-        "x": 730,
-        "y": 400
+        "x": 1370,
+        "y": 410
       },
       "data": {
         "enabled": true,
@@ -269,8 +269,8 @@
       "type": "client_check",
       "title": "Client Check 3",
       "position": {
-        "x": 730,
-        "y": 600
+        "x": 1370,
+        "y": 610
       },
       "data": {
         "enabled": true,
@@ -284,8 +284,8 @@
       "type": "client_check",
       "title": "Client Check 4",
       "position": {
-        "x": 730,
-        "y": 800
+        "x": 1370,
+        "y": 810
       },
       "data": {
         "enabled": true,
@@ -299,8 +299,8 @@
       "type": "client_check",
       "title": "Client Check 5",
       "position": {
-        "x": 730,
-        "y": 1000
+        "x": 1370,
+        "y": 1010
       },
       "data": {
         "enabled": true,
@@ -314,14 +314,137 @@
       "type": "client_check",
       "title": "Client Check 6",
       "position": {
-        "x": 720,
-        "y": 1200
+        "x": 1360,
+        "y": 1210
       },
       "data": {
         "enabled": true,
         "targetClient": "6",
         "checkRule": "is_active",
         "actionId": "1790485865673_2102"
+      }
+    },
+    {
+      "id": "node_1790496708184",
+      "type": "var_branch",
+      "title": "Variable Branch",
+      "position": {
+        "x": 750,
+        "y": 130
+      },
+      "data": {
+        "enabled": true,
+        "conditionTargetId": "var:isWorking",
+        "varName": "isWorking",
+        "varType": "boolean",
+        "conditionRule": "is_false",
+        "conditionValue": "",
+        "actionId": "1790496708184"
+      }
+    },
+    {
+      "id": "node_1790496738696",
+      "type": "var_set",
+      "title": "Set isWorking",
+      "position": {
+        "x": 750,
+        "y": 370
+      },
+      "data": {
+        "enabled": true,
+        "varName": "isWorking",
+        "varType": "boolean",
+        "scope": "global",
+        "targetClient": "all",
+        "initialValue": "false",
+        "operation": "set_false",
+        "opValue": "1",
+        "actionId": "1790496738696"
+      }
+    },
+    {
+      "id": "node_1790497195587",
+      "type": "emergency_stop",
+      "title": "Emergency Stop All",
+      "position": {
+        "x": 1020,
+        "y": 490
+      },
+      "data": {
+        "enabled": true,
+        "stopScope": "all",
+        "targetClient": "1",
+        "showOverlayNotice": true,
+        "actionId": "1790497195587"
+      }
+    },
+    {
+      "id": "node_1790497234311_567",
+      "type": "var_set",
+      "title": "Set isWorking",
+      "position": {
+        "x": 2450,
+        "y": 1390
+      },
+      "data": {
+        "enabled": true,
+        "varName": "isWorking",
+        "varType": "boolean",
+        "scope": "global",
+        "targetClient": "all",
+        "initialValue": "false",
+        "operation": "set_false",
+        "opValue": "1",
+        "actionId": "1790497234311_567"
+      }
+    },
+    {
+      "id": "node_1790497244311_9571",
+      "type": "var_set",
+      "title": "Set isWorking",
+      "position": {
+        "x": 2770,
+        "y": 800
+      },
+      "data": {
+        "enabled": true,
+        "varName": "isWorking",
+        "varType": "boolean",
+        "scope": "global",
+        "targetClient": "all",
+        "initialValue": "false",
+        "operation": "set_false",
+        "opValue": "1",
+        "actionId": "1790497244311_9571"
+      }
+    },
+    {
+      "id": "node_1790497280529",
+      "type": "emergency_stop",
+      "title": "Emergency Stop All",
+      "position": {
+        "x": 3080,
+        "y": 920
+      },
+      "data": {
+        "enabled": true,
+        "stopScope": "all",
+        "targetClient": "1",
+        "showOverlayNotice": true,
+        "actionId": "1790497280529"
+      }
+    },
+    {
+      "id": "node_1790558471821",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 2580,
+        "y": 830
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790558471821"
       }
     }
   ],
@@ -481,10 +604,94 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1790554235455",
+      "id": "conn_1790496719689",
       "fromNodeId": "node_1790399201884",
       "fromPort": "exec_out",
+      "toNodeId": "node_1790496708184",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790496728442",
+      "fromNodeId": "node_1790496708184",
+      "fromPort": "onTrue",
       "toNodeId": "node_1790485624092",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790497215084",
+      "fromNodeId": "node_1790496738696",
+      "fromPort": "next",
+      "toNodeId": "node_1790497195587",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790497238325",
+      "fromNodeId": "node_1790426793286_7200",
+      "fromPort": "next",
+      "toNodeId": "node_1790497234311_567",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790497283326",
+      "fromNodeId": "node_1790497244311_9571",
+      "fromPort": "next",
+      "toNodeId": "node_1790497280529",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790558441000",
+      "fromNodeId": "node_1790496708184",
+      "fromPort": "onFalse",
+      "toNodeId": "node_1790496738696",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790558475499",
+      "fromNodeId": "node_1790426783508_4423",
+      "fromPort": "onError",
+      "toNodeId": "node_1790558471821",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790558477800",
+      "fromNodeId": "node_1790426786586_1105",
+      "fromPort": "onError",
+      "toNodeId": "node_1790558471821",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790558480468",
+      "fromNodeId": "node_1790426788842_7563",
+      "fromPort": "onError",
+      "toNodeId": "node_1790558471821",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790558483192",
+      "fromNodeId": "node_1790426793286_5449",
+      "fromPort": "onError",
+      "toNodeId": "node_1790558471821",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790558486105",
+      "fromNodeId": "node_1790426770515_1955",
+      "fromPort": "onError",
+      "toNodeId": "node_1790558471821",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790558488386",
+      "fromNodeId": "node_1790426723755",
+      "fromPort": "onError",
+      "toNodeId": "node_1790558471821",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790558494045",
+      "fromNodeId": "node_1790558471821",
+      "fromPort": "out",
+      "toNodeId": "node_1790497244311_9571",
       "toPort": "exec_in"
     }
   ]
