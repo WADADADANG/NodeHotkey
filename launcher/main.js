@@ -642,6 +642,105 @@ function openLogFolder() {
   return { success: true, path: dir };
 }
 
+function openScreenshotsFolder() {
+  const dir = path.join(PROJECT_DIR, 'screenshots');
+  if (!fs.existsSync(dir)) {
+    try { fs.mkdirSync(dir, { recursive: true }); } catch (e) {}
+  }
+  shell.openPath(dir);
+  return { success: true, path: dir };
+}
+
+function formatBytes(bytes) {
+  if (!bytes || bytes <= 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function getDirStats(dirPath) {
+  let fileCount = 0;
+  let totalBytes = 0;
+
+  if (!fs.existsSync(dirPath)) {
+    return { fileCount: 0, totalBytes: 0, formattedSize: '0 B' };
+  }
+
+  function walk(current) {
+    try {
+      const items = fs.readdirSync(current, { withFileTypes: true });
+      for (const item of items) {
+        const full = path.join(current, item.name);
+        if (item.isDirectory()) {
+          walk(full);
+        } else if (item.isFile()) {
+          fileCount++;
+          try {
+            totalBytes += fs.statSync(full).size;
+          } catch (e) {}
+        }
+      }
+    } catch (e) {}
+  }
+
+  walk(dirPath);
+  return {
+    fileCount,
+    totalBytes,
+    formattedSize: formatBytes(totalBytes)
+  };
+}
+
+function clearDirContents(targetDir) {
+  if (!fs.existsSync(targetDir)) {
+    try { fs.mkdirSync(targetDir, { recursive: true }); } catch (e) {}
+    return { success: true, deletedFiles: 0, freedBytes: 0, formattedFreed: '0 B' };
+  }
+
+  let deletedFiles = 0;
+  let freedBytes = 0;
+
+  function removeRecursive(currentDir) {
+    try {
+      const items = fs.readdirSync(currentDir, { withFileTypes: true });
+      for (const item of items) {
+        const full = path.join(currentDir, item.name);
+        if (item.isDirectory()) {
+          removeRecursive(full);
+          try {
+            if (fs.readdirSync(full).length === 0) {
+              fs.rmdirSync(full);
+            }
+          } catch (e) {}
+        } else if (item.isFile()) {
+          try {
+            const size = fs.statSync(full).size;
+            fs.unlinkSync(full);
+            deletedFiles++;
+            freedBytes += size;
+          } catch (err) {
+            try {
+              const size = fs.statSync(full).size;
+              fs.truncateSync(full, 0);
+              deletedFiles++;
+              freedBytes += size;
+            } catch (e2) {}
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
+  removeRecursive(targetDir);
+  return {
+    success: true,
+    deletedFiles,
+    freedBytes,
+    formattedFreed: formatBytes(freedBytes)
+  };
+}
+
 // IPC Handlers
 ipcMain.handle('bot:start', () => startBotProcess());
 ipcMain.handle('bot:stop', () => stopBotProcess());
@@ -689,6 +788,54 @@ ipcMain.handle('config:save-global-settings', async (event, newGlobalSettings) =
 
 ipcMain.handle('logs:open-folder', () => openLogFolder());
 ipcMain.handle('logs:get-path', () => logManager.getLogFilePath());
+ipcMain.handle('screenshots:open-folder', () => openScreenshotsFolder());
+
+ipcMain.handle('storage:get-stats', async () => {
+  const logsPath = path.join(PROJECT_DIR, 'logs');
+  const screenshotsPath = path.join(PROJECT_DIR, 'screenshots');
+  const logsStats = getDirStats(logsPath);
+  const screenshotsStats = getDirStats(screenshotsPath);
+  const totalBytes = logsStats.totalBytes + screenshotsStats.totalBytes;
+  const totalFiles = logsStats.fileCount + screenshotsStats.fileCount;
+  return {
+    logs: logsStats,
+    screenshots: screenshotsStats,
+    totalBytes,
+    totalFiles,
+    formattedTotal: formatBytes(totalBytes)
+  };
+});
+
+ipcMain.handle('storage:clear-logs', async () => {
+  const logsPath = path.join(PROJECT_DIR, 'logs');
+  const result = clearDirContents(logsPath);
+  broadcastLog(`🧹 [Storage] Cleared ${result.deletedFiles} log files (${result.formattedFreed} freed)`, 'info');
+  return result;
+});
+
+ipcMain.handle('storage:clear-screenshots', async () => {
+  const screenshotsPath = path.join(PROJECT_DIR, 'screenshots');
+  const result = clearDirContents(screenshotsPath);
+  broadcastLog(`🧹 [Storage] Cleared ${result.deletedFiles} screenshot files (${result.formattedFreed} freed)`, 'info');
+  return result;
+});
+
+ipcMain.handle('storage:clear-all', async () => {
+  const logsPath = path.join(PROJECT_DIR, 'logs');
+  const screenshotsPath = path.join(PROJECT_DIR, 'screenshots');
+  const resLogs = clearDirContents(logsPath);
+  const resScreenshots = clearDirContents(screenshotsPath);
+  const totalDeleted = resLogs.deletedFiles + resScreenshots.deletedFiles;
+  const totalFreed = resLogs.freedBytes + resScreenshots.freedBytes;
+  const formatted = formatBytes(totalFreed);
+  broadcastLog(`🧹 [Storage] Cleared all logs & screenshots: ${totalDeleted} files (${formatted} freed)`, 'info');
+  return {
+    success: true,
+    deletedFiles: totalDeleted,
+    freedBytes: totalFreed,
+    formattedFreed: formatted
+  };
+});
 
 // IPC Handlers for Step-by-Step Update Wizard
 ipcMain.handle('update:check', async () => {

@@ -387,6 +387,80 @@
             </div>
           </div>
 
+          <!-- 6. Storage & Data Cleanup -->
+          <div class="settings-card-box">
+            <div class="setting-row-head" id="lbl-setting-head-storage">🧹 Storage & Data Cleanup</div>
+            <div style="font-size:10.5px; color:var(--text-muted); margin-bottom:8px;" id="lbl-setting-storage-desc">
+              จัดการพื้นที่จัดเก็บข้อมูลไฟล์บันทึก (Logs) และไฟล์แคปหน้าจอตรวจสอบผล (Screenshots)
+            </div>
+
+            <!-- Two Sub-Cards Grid: Logs and Screenshots -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px;">
+              
+              <!-- Sub-Card 1: Logs Storage -->
+              <div style="background:var(--bg-card-alt); border:1px solid var(--border); border-radius:8px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; gap:10px;">
+                <div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span style="font-weight:700; font-size:12px; color:#38bdf8; display:flex; align-items:center; gap:6px;">
+                      <span>📁</span> <span id="lbl-storage-logs-title">System Logs</span>
+                    </span>
+                    <span id="storage-logs-size" style="font-size:11px; font-weight:800; color:#fff; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3); border-radius:4px; padding:2px 6px; font-family:var(--font-mono);">0 B</span>
+                  </div>
+                  <div style="font-size:10px; color:var(--text-dim);" id="storage-logs-detail">0 files in logs/</div>
+                </div>
+                <div style="display:flex; gap:6px;">
+                  <button type="button" class="btn-topbar-tool" id="btn-storage-open-logs" style="flex:1; justify-content:center; padding:5px 8px; font-size:11px;">
+                    <span>📂</span> <span id="lbl-storage-open-logs">เปิดโฟลเดอร์</span>
+                  </button>
+                  <button type="button" class="btn-topbar-tool" id="btn-storage-clear-logs" style="justify-content:center; padding:5px 10px; font-size:11px; color:#f87171; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.08);">
+                    <span>🗑️</span> <span id="lbl-storage-clear-logs">ล้าง</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Sub-Card 2: Screenshots Storage -->
+              <div style="background:var(--bg-card-alt); border:1px solid var(--border); border-radius:8px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; gap:10px;">
+                <div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span style="font-weight:700; font-size:12px; color:#a855f7; display:flex; align-items:center; gap:6px;">
+                      <span>📸</span> <span id="lbl-storage-shots-title">Screenshots</span>
+                    </span>
+                    <span id="storage-shots-size" style="font-size:11px; font-weight:800; color:#fff; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.3); border-radius:4px; padding:2px 6px; font-family:var(--font-mono);">0 B</span>
+                  </div>
+                  <div style="font-size:10px; color:var(--text-dim);" id="storage-shots-detail">0 images in screenshots/</div>
+                </div>
+                <div style="display:flex; gap:6px;">
+                  <button type="button" class="btn-topbar-tool" id="btn-storage-open-shots" style="flex:1; justify-content:center; padding:5px 8px; font-size:11px;">
+                    <span>📂</span> <span id="lbl-storage-open-shots">เปิดโฟลเดอร์</span>
+                  </button>
+                  <button type="button" class="btn-topbar-tool" id="btn-storage-clear-shots" style="justify-content:center; padding:5px 10px; font-size:11px; color:#f87171; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.08);">
+                    <span>🗑️</span> <span id="lbl-storage-clear-shots">ล้าง</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Total Storage Bar & Master Clear Button -->
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:rgba(0,0,0,0.25); border:1px dashed rgba(255,255,255,0.08); border-radius:6px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button type="button" class="btn-topbar-tool" id="btn-storage-refresh" title="รีเฟรชขนาดพื้นที่" style="padding:4px 8px; font-size:11px;">
+                  <span>🔄</span>
+                </button>
+                <div style="font-size:11px; color:#cbd5e1;">
+                  <span id="lbl-storage-total-title">พื้นที่จัดเก็บรวม:</span>
+                  <strong id="storage-total-size" style="color:#fbbf24; font-family:var(--font-mono); margin-left:4px;">0 B</strong>
+                  <span id="storage-total-files" style="color:var(--text-dim); font-size:10px; margin-left:4px;">(0 ไฟล์)</span>
+                </div>
+              </div>
+              <button type="button" id="btn-storage-clear-all" class="btn-matrix-action stop" style="padding:6px 14px; font-size:11px; font-weight:700; border-radius:6px; display:flex; align-items:center; gap:6px;">
+                <span>🔥</span>
+                <span id="lbl-storage-clear-all">ล้างข้อมูลทั้งหมด (Logs + Screenshots)</span>
+              </button>
+            </div>
+
+          </div>
+
         </div>
       </div>
 
@@ -516,6 +590,35 @@
         </button>
         <button type="button" class="btn-hero-primary" onclick="window.closeUnsavedReloadModal()" id="btn-unsaved-back" style="padding:6px 16px; font-size:12px; font-weight:700; border-radius:6px; background:#eab308; color:#000; border:none; cursor:pointer;">
           ✕ ปิด เพื่อกลับไปบันทึกเอง
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Storage Cleanup Confirmation Modal -->
+  <div class="modal-overlay" id="storage-confirm-modal" style="display:none; z-index:350;" onclick="if(event.target===this) window.closeStorageConfirmModal()">
+    <div class="modal-card" style="width: 440px; max-width: 94%; background: #0f172a; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 12px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px; margin-bottom:14px;">
+        <h3 style="margin:0; font-size:14px; font-weight:800; color:#f87171; display:flex; align-items:center; gap:8px;">
+          <span>🗑️</span>
+          <span id="lbl-storage-modal-title">ยืนยันการล้างข้อมูล</span>
+        </h3>
+        <button class="win-btn close" onclick="window.closeStorageConfirmModal()" style="width:24px; height:24px; border-radius:4px;">✕</button>
+      </div>
+      <div class="modal-body" style="font-size:12px; color:#cbd5e1; line-height:1.6;">
+        <div id="lbl-storage-modal-desc">
+          คุณต้องการลบไฟล์ Logs ทั้งหมดใช่หรือไม่?
+        </div>
+        <div style="margin-top:12px; background:rgba(239, 68, 68, 0.08); border:1px solid rgba(239, 68, 68, 0.25); border-radius:8px; padding:10px 12px; font-size:11px; color:#fca5a5;">
+          ⚠️ <strong id="lbl-storage-modal-warn-head">คำเตือน:</strong> <span id="lbl-storage-modal-warn-text">ไฟล์จะถูกลบถาวรออกจากเครื่องและไม่สามารถกู้คืนได้ (โฟลเดอร์หลักจะยังคงอยู่และระบบจะสร้างไฟล์ใหม่อัตโนมัติเมื่อมีการบันทึก)</span>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">
+        <button type="button" class="btn-topbar-tool" onclick="window.closeStorageConfirmModal()" id="btn-storage-modal-cancel" style="padding:6px 14px; font-size:11.5px; border-radius:6px; cursor:pointer;">
+          ✕ ยกเลิก
+        </button>
+        <button type="button" onclick="window.executeStorageClear()" id="btn-storage-modal-confirm" style="padding:6px 16px; font-size:12px; font-weight:700; border-radius:6px; background:#ef4444; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
+          <span>🔥</span> <span id="lbl-storage-modal-confirm-text">ยืนยันการลบ</span>
         </button>
       </div>
     </div>

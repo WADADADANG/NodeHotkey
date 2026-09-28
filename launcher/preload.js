@@ -10,6 +10,11 @@ contextBridge.exposeInMainWorld('launcherAPI', {
   // Logs & Storage
   openLogFolder: () => ipcRenderer.invoke('logs:open-folder'),
   getLogPath: () => ipcRenderer.invoke('logs:get-path'),
+  openScreenshotsFolder: () => ipcRenderer.invoke('screenshots:open-folder'),
+  getStorageStats: () => ipcRenderer.invoke('storage:get-stats'),
+  clearLogs: () => ipcRenderer.invoke('storage:clear-logs'),
+  clearScreenshots: () => ipcRenderer.invoke('storage:clear-screenshots'),
+  clearAllStorage: () => ipcRenderer.invoke('storage:clear-all'),
 
   // Global Config Disk Persistence
   getGlobalConfig: () => ipcRenderer.invoke('config:get-global'),

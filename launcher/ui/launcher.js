@@ -300,6 +300,9 @@
       if (viewSettings) viewSettings.classList.add('active');
       if (breadcrumbEl) breadcrumbEl.textContent = t.breadcrumbSettings;
       if (studioTopbarActions) studioTopbarActions.style.display = 'none';
+      if (typeof refreshStorageStats === 'function') {
+        refreshStorageStats();
+      }
     }
   }
 
@@ -521,7 +524,20 @@
       btnRestartLater: "⏳ รีสตาร์ทเองภายหลัง",
       btnDone: "เสร็จสิ้น",
       btnCancel: "ยกเลิก",
-      btnClose: "ปิด"
+      btnClose: "ปิด",
+      settingStorageHead: "🧹 Storage & Data Cleanup",
+      settingStorageDesc: "จัดการพื้นที่จัดเก็บข้อมูลไฟล์บันทึก (Logs) และไฟล์แคปหน้าจอตรวจสอบผล (Screenshots)",
+      storageLogsTitle: "System Logs",
+      storageShotsTitle: "Screenshots",
+      storageOpenFolder: "เปิดโฟลเดอร์",
+      storageClear: "ล้าง",
+      storageTotalTitle: "พื้นที่จัดเก็บรวม:",
+      storageClearAll: "ล้างข้อมูลทั้งหมด (Logs + Screenshots)",
+      storageModalTitle: "ยืนยันการล้างข้อมูล",
+      storageModalConfirm: "ยืนยันการลบ",
+      storageModalCancel: "✕ ยกเลิก",
+      storageModalWarnHead: "คำเตือน:",
+      storageModalWarnText: "ไฟล์จะถูกลบถาวรออกจากเครื่องและไม่สามารถกู้คืนได้ (โฟลเดอร์หลักจะยังคงอยู่และระบบจะสร้างไฟล์ใหม่อัตโนมัติเมื่อมีการบันทึก)"
     },
     en: {
       menuMain: "Main Workspace",
@@ -648,7 +664,20 @@
       btnRestartLater: "⏳ Restart Later",
       btnDone: "Done",
       btnCancel: "Cancel",
-      btnClose: "Close"
+      btnClose: "Close",
+      settingStorageHead: "🧹 Storage & Data Cleanup",
+      settingStorageDesc: "Manage disk space occupied by system logs and vision diagnostics screenshots",
+      storageLogsTitle: "System Logs",
+      storageShotsTitle: "Screenshots",
+      storageOpenFolder: "Open Folder",
+      storageClear: "Clear",
+      storageTotalTitle: "Total Storage:",
+      storageClearAll: "Clear All (Logs + Screenshots)",
+      storageModalTitle: "Confirm Data Cleanup",
+      storageModalConfirm: "Confirm Delete",
+      storageModalCancel: "✕ Cancel",
+      storageModalWarnHead: "Warning:",
+      storageModalWarnText: "Files will be permanently deleted from disk and cannot be restored. (Root folders remain and fresh files will be generated on new logs)"
     }
   };
 
@@ -775,6 +804,28 @@
     if (lblPortTitle) lblPortTitle.textContent = t.settingPortTitle;
     if (lblPortDesc) lblPortDesc.textContent = t.settingPortDesc;
     if (lblPortNote) lblPortNote.textContent = t.settingPortNote;
+
+    // Update Storage Card Labels
+    const lblHeadStorage = document.getElementById('lbl-setting-head-storage');
+    const lblStorageDesc = document.getElementById('lbl-setting-storage-desc');
+    const lblStorageLogsTitle = document.getElementById('lbl-storage-logs-title');
+    const lblStorageShotsTitle = document.getElementById('lbl-storage-shots-title');
+    const lblStorageOpenLogs = document.getElementById('lbl-storage-open-logs');
+    const lblStorageClearLogs = document.getElementById('lbl-storage-clear-logs');
+    const lblStorageOpenShots = document.getElementById('lbl-storage-open-shots');
+    const lblStorageClearShots = document.getElementById('lbl-storage-clear-shots');
+    const lblStorageTotalTitle = document.getElementById('lbl-storage-total-title');
+    const lblStorageClearAll = document.getElementById('lbl-storage-clear-all');
+    if (lblHeadStorage) lblHeadStorage.textContent = t.settingStorageHead;
+    if (lblStorageDesc) lblStorageDesc.textContent = t.settingStorageDesc;
+    if (lblStorageLogsTitle) lblStorageLogsTitle.textContent = t.storageLogsTitle;
+    if (lblStorageShotsTitle) lblStorageShotsTitle.textContent = t.storageShotsTitle;
+    if (lblStorageOpenLogs) lblStorageOpenLogs.textContent = t.storageOpenFolder;
+    if (lblStorageClearLogs) lblStorageClearLogs.textContent = t.storageClear;
+    if (lblStorageOpenShots) lblStorageOpenShots.textContent = t.storageOpenFolder;
+    if (lblStorageClearShots) lblStorageClearShots.textContent = t.storageClear;
+    if (lblStorageTotalTitle) lblStorageTotalTitle.textContent = t.storageTotalTitle;
+    if (lblStorageClearAll) lblStorageClearAll.textContent = t.storageClearAll;
 
     // Update Unsaved Changes Modal text
     const lblUnsavedTitle = document.getElementById('lbl-unsaved-modal-title');
@@ -1043,6 +1094,157 @@
       window.saveSettingsFromUI();
     }
   };
+
+  // ══════════════════════════════════════════════════════════
+  // 4.0 STORAGE & DATA CLEANUP CONTROLLER
+  // ══════════════════════════════════════════════════════════
+  let currentStorageStats = null;
+  let activeClearType = null; // 'logs' | 'screenshots' | 'all'
+
+  async function refreshStorageStats() {
+    if (!api || typeof api.getStorageStats !== 'function') return;
+    try {
+      const logsDetail = document.getElementById('storage-logs-detail');
+      const logsSize = document.getElementById('storage-logs-size');
+      const shotsDetail = document.getElementById('storage-shots-detail');
+      const shotsSize = document.getElementById('storage-shots-size');
+      const totalSize = document.getElementById('storage-total-size');
+      const totalFiles = document.getElementById('storage-total-files');
+
+      const stats = await api.getStorageStats();
+      if (!stats) return;
+      currentStorageStats = stats;
+
+      if (logsSize) logsSize.textContent = stats.logs.formattedSize;
+      if (logsDetail) {
+        logsDetail.textContent = currentLang === 'en'
+          ? `${stats.logs.fileCount} ${stats.logs.fileCount === 1 ? 'file' : 'files'} in logs/`
+          : `${stats.logs.fileCount} ไฟล์ ใน logs/`;
+      }
+
+      if (shotsSize) shotsSize.textContent = stats.screenshots.formattedSize;
+      if (shotsDetail) {
+        shotsDetail.textContent = currentLang === 'en'
+          ? `${stats.screenshots.fileCount} ${stats.screenshots.fileCount === 1 ? 'image' : 'images'} in screenshots/`
+          : `${stats.screenshots.fileCount} รูป ใน screenshots/`;
+      }
+
+      if (totalSize) totalSize.textContent = stats.formattedTotal;
+      if (totalFiles) {
+        totalFiles.textContent = currentLang === 'en'
+          ? `(${stats.totalFiles} ${stats.totalFiles === 1 ? 'file' : 'files'})`
+          : `(${stats.totalFiles} ไฟล์)`;
+      }
+    } catch (err) {
+      console.warn('Failed to refresh storage stats:', err);
+    }
+  }
+
+  window.openStorageConfirmModal = function(type) {
+    activeClearType = type;
+    const modal = document.getElementById('storage-confirm-modal');
+    const descEl = document.getElementById('lbl-storage-modal-desc');
+    const confirmBtn = document.getElementById('btn-storage-modal-confirm');
+    const confirmText = document.getElementById('lbl-storage-modal-confirm-text');
+    const t = i18nDict[currentLang] || i18nDict.th;
+
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.style.opacity = '1';
+    }
+    if (confirmText) {
+      confirmText.textContent = t.storageModalConfirm || 'ยืนยันการลบ';
+    }
+
+    if (descEl) {
+      if (type === 'logs') {
+        const count = currentStorageStats?.logs?.fileCount || 0;
+        const size = currentStorageStats?.logs?.formattedSize || '0 B';
+        descEl.innerHTML = currentLang === 'en'
+          ? `Are you sure you want to permanently delete all <strong>${count} log files (${size})</strong> in <code>logs/</code>?`
+          : `คุณต้องการลบไฟล์ Logs ทั้งหมด <strong>${count} ไฟล์ (${size})</strong> ในโฟลเดอร์ <code>logs/</code> ใช่หรือไม่?`;
+      } else if (type === 'screenshots') {
+        const count = currentStorageStats?.screenshots?.fileCount || 0;
+        const size = currentStorageStats?.screenshots?.formattedSize || '0 B';
+        descEl.innerHTML = currentLang === 'en'
+          ? `Are you sure you want to permanently delete all <strong>${count} screenshot images (${size})</strong> in <code>screenshots/</code>?`
+          : `คุณต้องการลบรูปภาพทั้งหมด <strong>${count} รูป (${size})</strong> ในโฟลเดอร์ <code>screenshots/</code> ใช่หรือไม่?`;
+      } else {
+        const count = currentStorageStats?.totalFiles || 0;
+        const size = currentStorageStats?.formattedTotal || '0 B';
+        descEl.innerHTML = currentLang === 'en'
+          ? `Are you sure you want to permanently delete <strong>ALL logs and screenshots (${count} files, ${size})</strong>?`
+          : `คุณต้องการลบ<strong>ทั้งไฟล์ Logs และ Screenshots ทั้งหมด (${count} ไฟล์, ${size})</strong> ออกจากเครื่องใช่หรือไม่?`;
+      }
+    }
+
+    if (modal) modal.style.display = 'flex';
+  };
+
+  window.closeStorageConfirmModal = function() {
+    const modal = document.getElementById('storage-confirm-modal');
+    if (modal) modal.style.display = 'none';
+    activeClearType = null;
+  };
+
+  window.executeStorageClear = async function() {
+    if (!api || !activeClearType) return;
+    const confirmBtn = document.getElementById('btn-storage-modal-confirm');
+    const confirmText = document.getElementById('lbl-storage-modal-confirm-text');
+    const descEl = document.getElementById('lbl-storage-modal-desc');
+
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.style.opacity = '0.7';
+    }
+    if (confirmText) {
+      confirmText.textContent = currentLang === 'en' ? 'Deleting...' : 'กำลังลบ...';
+    }
+
+    try {
+      let res;
+      if (activeClearType === 'logs') {
+        res = await api.clearLogs();
+      } else if (activeClearType === 'screenshots') {
+        res = await api.clearScreenshots();
+      } else {
+        res = await api.clearAllStorage();
+      }
+
+      if (descEl) {
+        descEl.innerHTML = currentLang === 'en'
+          ? `✅ <strong>Cleanup Complete!</strong> Deleted ${res.deletedFiles} files and freed <strong>${res.formattedFreed}</strong>.`
+          : `✅ <strong>ล้างข้อมูลสำเร็จ!</strong> ลบไฟล์เรียบร้อย ${res.deletedFiles} ไฟล์ ได้พื้นที่คืนมา <strong>${res.formattedFreed}</strong>`;
+      }
+
+      await refreshStorageStats();
+
+      setTimeout(() => {
+        window.closeStorageConfirmModal();
+      }, 1200);
+    } catch (err) {
+      if (descEl) {
+        descEl.innerHTML = `❌ Error: ${err.message}`;
+      }
+      if (confirmBtn) confirmBtn.disabled = false;
+      if (confirmText) confirmText.textContent = 'Retry';
+    }
+  };
+
+  // Wire Storage Buttons
+  const btnStorageOpenLogs = document.getElementById('btn-storage-open-logs');
+  const btnStorageClearLogs = document.getElementById('btn-storage-clear-logs');
+  const btnStorageOpenShots = document.getElementById('btn-storage-open-shots');
+  const btnStorageClearShots = document.getElementById('btn-storage-clear-shots');
+  const btnStorageRefresh = document.getElementById('btn-storage-refresh');
+  const btnStorageClearAll = document.getElementById('btn-storage-clear-all');
+
+  if (btnStorageOpenLogs) btnStorageOpenLogs.onclick = () => api.openLogFolder();
+  if (btnStorageClearLogs) btnStorageClearLogs.onclick = () => window.openStorageConfirmModal('logs');
+  if (btnStorageOpenShots) btnStorageOpenShots.onclick = () => api.openScreenshotsFolder();
+  if (btnStorageClearShots) btnStorageClearShots.onclick = () => window.openStorageConfirmModal('screenshots');
+  if (btnStorageRefresh) btnStorageRefresh.onclick = () => refreshStorageStats();
+  if (btnStorageClearAll) btnStorageClearAll.onclick = () => window.openStorageConfirmModal('all');
 
   // ══════════════════════════════════════════════════════════
   // 4.1 LAUNCHER VISUAL KEY PICKER & MECHANICAL KEYBOARD
@@ -2187,6 +2389,7 @@
 
   // 10. Initial Load
   applyLanguage(currentLang);
+  refreshStorageStats();
 
   api.getBotStatus().then(status => {
     updateStatusUI(status);
