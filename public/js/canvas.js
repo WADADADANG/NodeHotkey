@@ -44,6 +44,7 @@ class NodeCanvasEditor {
 
     // Multi-selection state
     this.selectedNodeIds = new Set();
+    this.clickedNodeToIsolateOnRelease = null;
 
     // Viewport Panning state (Right-Click Drag)
     this.isPanning = false;
@@ -333,6 +334,7 @@ class NodeCanvasEditor {
           this.updateNodeSelectionClasses();
           this.closeInspector();
         }
+        this.clickedNodeToIsolateOnRelease = null;
 
         // Create selection box element
         if (this.selectionBoxEl) this.selectionBoxEl.remove();
@@ -367,6 +369,7 @@ class NodeCanvasEditor {
         this.isDraggingNodes = false;
         this.hasActuallyDraggedNodes = false;
         this.dragInitialPositions.clear();
+        this.clickedNodeToIsolateOnRelease = null;
       }
 
       // 1. Box Selection / คลุมดำ (Left-Click Drag on background)
@@ -524,6 +527,15 @@ class NodeCanvasEditor {
         const didMove = this.hasActuallyDraggedNodes;
         this.hasActuallyDraggedNodes = false;
 
+        // If user clicked on an already-selected node without dragging, collapse multi-selection to only this node!
+        if (!didMove && this.clickedNodeToIsolateOnRelease && !e.shiftKey && !e.ctrlKey) {
+          this.selectedNodeIds.clear();
+          this.selectedNodeIds.add(this.clickedNodeToIsolateOnRelease);
+          this.updateNodeSelectionClasses();
+          this.openInspector(this.clickedNodeToIsolateOnRelease);
+        }
+        this.clickedNodeToIsolateOnRelease = null;
+
         let anyNodeReallyMoved = false;
         if (didMove) {
           this.selectedNodeIds.forEach(nodeId => {
@@ -599,11 +611,23 @@ class NodeCanvasEditor {
       if (e.buttons === 0) resetCanvasDragStates();
     });
 
-    // Delete or Backspace key to delete all selected nodes
+    // Escape key to deselect all nodes or close catalog
     window.addEventListener('keydown', (e) => {
       const activeEl = document.activeElement;
       const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
       if (isInput) return;
+
+      if (e.key === 'Escape') {
+        if (this.spotlightCatalog && this.spotlightCatalog.style.display !== 'none') {
+          this.hideNodeCatalog();
+        } else if (this.selectedNodeIds.size > 0) {
+          this.selectedNodeIds.clear();
+          this.updateNodeSelectionClasses();
+          this.closeInspector();
+        }
+        this.clickedNodeToIsolateOnRelease = null;
+        return;
+      }
 
       if ((e.key === 'Delete' || e.key === 'Backspace') && this.selectedNodeIds.size > 0) {
         e.preventDefault();
@@ -1746,11 +1770,18 @@ class NodeCanvasEditor {
           } else {
             this.selectedNodeIds.add(node.id);
           }
+          this.clickedNodeToIsolateOnRelease = null;
         } else {
-          // If clicked node is not already part of selection, select only this one
+          // If clicked node is not already part of selection, select only this one immediately
           if (!this.selectedNodeIds.has(node.id)) {
             this.selectedNodeIds.clear();
             this.selectedNodeIds.add(node.id);
+            this.clickedNodeToIsolateOnRelease = null;
+          } else {
+            // Node is already part of selection:
+            // Don't deselect others yet in case user wants to drag the whole group.
+            // But if user simply clicks (releases without moving), collapse selection to just this node!
+            this.clickedNodeToIsolateOnRelease = node.id;
           }
         }
 
