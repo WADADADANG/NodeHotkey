@@ -11,7 +11,7 @@ module.exports = {
   aliases: ['macro'],
   title: 'Macro Combo Group',
   category: 'Actions',
-  icon: '🔀',
+  icon: 'layers',
   color: '#8b5cf6',
   inputs: ['in'],
   outputs: ['onComplete'],

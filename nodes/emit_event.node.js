@@ -11,7 +11,7 @@ module.exports = {
   aliases: ['send_event'],
   title: 'Emit Event',
   category: 'Logic & Flow',
-  icon: '📡',
+  icon: 'radio',
   color: '#8b5cf6',
   inputs: ['in'],
   outputs: ['onFired'],

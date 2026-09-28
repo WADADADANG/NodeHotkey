@@ -10,7 +10,7 @@ module.exports = {
   aliases: ['http_request'],
   title: 'Discord / HTTP Webhook',
   category: 'Utility / Network',
-  icon: '🌐',
+  icon: 'webhook',
   color: '#6366f1',
   inputs: ['in'],
   outputs: ['onComplete', 'onError'],

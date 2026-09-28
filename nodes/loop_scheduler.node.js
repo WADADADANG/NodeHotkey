@@ -12,7 +12,7 @@ module.exports = {
   aliases: ['scheduler'],
   title: 'Loop Scheduler',
   category: 'Loops & Automation',
-  icon: '⏱️',
+  icon: 'hourglass',
   color: '#6366f1',
   inputs: ['in'],
   outputs: ['item_0', 'item_1', 'item_2', 'item_3', 'item_4', 'onStop'],

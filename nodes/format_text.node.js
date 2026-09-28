@@ -19,7 +19,7 @@ module.exports = {
   aliases: ['format', 'format_string', 'string_format', 'concat_text', 'combine_text'],
   title: 'Format Text',
   category: 'Utility & Debug',
-  icon: '🧩',
+  icon: 'sparkles',
   isPure: true,
   inputs: [],
   outputs: ['msg_out'],

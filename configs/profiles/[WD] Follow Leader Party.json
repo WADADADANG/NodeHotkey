@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 1.0442744734957345,
     "pan": {
-      "x": -251,
-      "y": 270
+      "x": -1812,
+      "y": -874
     }
   },
   "nodes": [
@@ -30,7 +30,7 @@
       "title": "Party Slot Selector 1",
       "position": {
         "x": 1790,
-        "y": 290
+        "y": 300
       },
       "data": {
         "enabled": true,
@@ -47,8 +47,8 @@
       "type": "key_press",
       "title": "Key Press Z 1",
       "position": {
-        "x": 2100,
-        "y": 390
+        "x": 2090,
+        "y": 410
       },
       "data": {
         "enabled": true,
@@ -65,7 +65,7 @@
       "title": "Key Press Z 2",
       "position": {
         "x": 2100,
-        "y": 590
+        "y": 610
       },
       "data": {
         "enabled": true,
@@ -82,7 +82,7 @@
       "title": "Party Slot Selector 2",
       "position": {
         "x": 1790,
-        "y": 490
+        "y": 500
       },
       "data": {
         "enabled": true,
@@ -117,7 +117,7 @@
       "title": "Party Slot Selector 3",
       "position": {
         "x": 1790,
-        "y": 690
+        "y": 680
       },
       "data": {
         "enabled": true,
@@ -205,7 +205,7 @@
       "title": "Key Press Z 6",
       "position": {
         "x": 2100,
-        "y": 1390
+        "y": 1380
       },
       "data": {
         "enabled": true,
@@ -222,7 +222,7 @@
       "title": "Party Slot Selector 6",
       "position": {
         "x": 1790,
-        "y": 1290
+        "y": 1280
       },
       "data": {
         "enabled": true,
@@ -556,8 +556,8 @@
       "type": "reroute",
       "title": "Reroute",
       "position": {
-        "x": 2330,
-        "y": 490
+        "x": 2320,
+        "y": 500
       },
       "data": {
         "enabled": true,
@@ -870,7 +870,7 @@
       "title": "Screenshot (Diagnostic) 1",
       "position": {
         "x": 2450,
-        "y": 410
+        "y": 430
       },
       "data": {
         "enabled": true,

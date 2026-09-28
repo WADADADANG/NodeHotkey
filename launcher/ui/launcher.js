@@ -48,13 +48,16 @@
   const tabNavDashboard = document.getElementById('tab-nav-dashboard') || document.getElementById('tab-nav-launcher');
   const tabNavEditor = document.getElementById('tab-nav-editor');
   const tabNavSettings = document.getElementById('tab-nav-settings');
+  const tabNavDocs = document.getElementById('tab-nav-docs');
   const tabEditorDot = document.getElementById('tab-editor-dot');
   
   const viewDashboard = document.getElementById('view-dashboard') || document.getElementById('view-launcher');
   const viewEditor = document.getElementById('view-editor');
   const viewSettings = document.getElementById('view-settings');
+  const viewDocs = document.getElementById('view-docs');
   const editorFrame = document.getElementById('editor-frame');
   const btnSwitchToEditor = document.getElementById('btn-switch-to-editor');
+  let launcherDocsInstance = null;
   
   // Top Utilities
   const btnTopGithub = document.getElementById('btn-top-github');
@@ -267,9 +270,11 @@
     if (tabNavDashboard) tabNavDashboard.classList.remove('active');
     if (tabNavEditor) tabNavEditor.classList.remove('active');
     if (tabNavSettings) tabNavSettings.classList.remove('active');
+    if (tabNavDocs) tabNavDocs.classList.remove('active');
     if (viewDashboard) viewDashboard.classList.remove('active');
     if (viewEditor) viewEditor.classList.remove('active');
     if (viewSettings) viewSettings.classList.remove('active');
+    if (viewDocs) viewDocs.classList.remove('active');
 
     const studioTopbarActions = document.getElementById('studio-topbar-actions');
     const offlinePlaceholder = document.getElementById('editor-offline-placeholder');
@@ -302,6 +307,23 @@
       if (studioTopbarActions) studioTopbarActions.style.display = 'none';
       if (typeof refreshStorageStats === 'function') {
         refreshStorageStats();
+      }
+    } else if (viewName === 'docs') {
+      if (tabNavDocs) tabNavDocs.classList.add('active');
+      if (viewDocs) viewDocs.classList.add('active');
+      if (breadcrumbEl) breadcrumbEl.textContent = t.breadcrumbDocs || (currentLang === 'en' ? 'Action Node Wiki & Reference' : 'คู่มือการใช้งาน Action Node (Wiki)');
+      if (studioTopbarActions) studioTopbarActions.style.display = 'none';
+
+      // Initialize or mount NodeDocsComponent if not already mounted
+      if (!launcherDocsInstance && window.NodeDocsComponent) {
+        const mountEl = document.getElementById('launcher-node-docs-mount');
+        if (mountEl) {
+          launcherDocsInstance = new window.NodeDocsComponent({
+            container: mountEl,
+            lang: currentLang,
+            showTitle: false
+          });
+        }
       }
     }
   }
@@ -365,6 +387,7 @@
   if (tabNavDashboard) tabNavDashboard.onclick = () => switchView('dashboard');
   if (tabNavEditor) tabNavEditor.onclick = () => switchView('editor');
   if (tabNavSettings) tabNavSettings.onclick = () => switchView('settings');
+  if (tabNavDocs) tabNavDocs.onclick = () => switchView('docs');
   if (btnSwitchToEditor) btnSwitchToEditor.onclick = () => switchView('editor');
 
   // GitHub Open
@@ -400,12 +423,15 @@
     th: {
       menuMain: "หน้าหลัก (Workspace)",
       menuConfig: "การตั้งค่า (Configuration)",
+      menuDocs: "คู่มือการใช้งาน (Documentation)",
       navDashboard: "แดชบอร์ด",
       navActionNode: "Action Node",
       navSettings: "ตั้งค่า & HUD",
+      navDocs: "Node Wiki",
       breadcrumbDashboard: "Dashboard & ควบคุมจอ",
       breadcrumbStudio: "Action Node Studio",
       breadcrumbSettings: "ตั้งค่าระบบ & HUD",
+      breadcrumbDocs: "คู่มือการใช้งาน Action Node (Wiki)",
       btnLogs: "Logs",
       btnUpdate: "อัปเดต",
       btnUpdateHasNew: "มีอัปเดตใหม่!",
@@ -542,12 +568,15 @@
     en: {
       menuMain: "Main Workspace",
       menuConfig: "Configuration",
+      menuDocs: "Documentation",
       navDashboard: "Dashboard",
       navActionNode: "Action Node",
       navSettings: "Settings & HUD",
+      navDocs: "Node Wiki",
       breadcrumbDashboard: "Dashboard & Clients",
       breadcrumbStudio: "Action Node Studio",
       breadcrumbSettings: "System Settings & HUD",
+      breadcrumbDocs: "Action Node Wiki & Reference",
       btnLogs: "Logs",
       btnUpdate: "Update",
       btnUpdateHasNew: "Update Available!",
@@ -693,6 +722,22 @@
       if (currentView === 'dashboard') breadcrumbEl.textContent = t.breadcrumbDashboard;
       else if (currentView === 'editor') breadcrumbEl.textContent = t.breadcrumbStudio;
       else if (currentView === 'settings') breadcrumbEl.textContent = t.breadcrumbSettings;
+      else if (currentView === 'docs') breadcrumbEl.textContent = t.breadcrumbDocs;
+    }
+
+    // Update Sidebar Navigation Labels
+    const menuLblConfig = document.getElementById('menu-lbl-config');
+    const menuLblDocs = document.getElementById('menu-lbl-docs');
+    const navLblSettings = document.getElementById('nav-lbl-settings');
+    const navLblDocs = document.getElementById('nav-lbl-docs');
+    if (menuLblConfig) menuLblConfig.textContent = t.menuConfig || 'Configuration';
+    if (menuLblDocs) menuLblDocs.textContent = t.menuDocs || 'Documentation';
+    if (navLblSettings) navLblSettings.textContent = t.navSettings || 'Settings & HUD';
+    if (navLblDocs) navLblDocs.textContent = t.navDocs || 'Node Wiki';
+
+    // Synchronize language with Node Docs Component
+    if (launcherDocsInstance && typeof launcherDocsInstance.setLanguage === 'function') {
+      launcherDocsInstance.setLanguage(lang);
     }
 
     // Update Studio Topbar Buttons

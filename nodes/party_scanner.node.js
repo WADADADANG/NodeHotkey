@@ -12,7 +12,7 @@ module.exports = {
   aliases: ['scan_party', 'scanner'],
   title: 'Party Scanner',
   category: 'Vision & Party',
-  icon: '👁️',
+  icon: 'scan-face',
   color: '#0ea5e9',
   inputs: ['in'],
   outputs: ['onScanned', 'onLowHp', 'onError'],

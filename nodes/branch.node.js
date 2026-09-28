@@ -12,7 +12,7 @@ module.exports = {
   aliases: ['branch', 'condition', 'action_condition'],
   title: 'Action Branch',
   category: 'Logic & Flow',
-  icon: '⚡',
+  icon: 'git-branch',
   color: '#eab308',
   inputs: ['in'],
   outputs: ['onTrue', 'onFalse'],

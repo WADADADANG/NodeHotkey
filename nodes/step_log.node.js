@@ -12,7 +12,7 @@ module.exports = {
   aliases: ['step', 'steplog', 'step_checkpoint', 'log', 'log_message', 'print_string'],
   title: 'Log Message',
   category: 'Utility & Debug',
-  icon: '📝',
+  icon: 'file-text',
   color: '#10b981',
   inputs: ['in', 'msg_in'],
   outputs: ['onComplete'],

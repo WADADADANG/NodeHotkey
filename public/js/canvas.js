@@ -211,21 +211,21 @@ class NodeCanvasEditor {
       <!-- Modern Compact Node Palette Floating Dock -->
       <div class="node-palette-bar compact-palette-dock" id="node-palette-bar">
         <button type="button" class="palette-main-add-btn" id="btn-palette-main-add" onclick="window.nodeCanvas.toggleNodeCatalog(this)">
-          <span id="lbl-palette-add-btn">${canvasT('palette_add_node', '➕ Add Node')}</span>
+          <span id="lbl-palette-add-btn">${canvasT('palette_add_node', '+ Add Node')}</span>
         </button>
         <div class="palette-dock-divider"></div>
         <div class="palette-quick-group">
-          <button type="button" class="palette-quick-btn" id="quick-btn-trigger" onclick="window.nodeCanvas.addNodeFromPalette('trigger')" title="${canvasT('palette_quick_trigger', 'Global Trigger')}">⚡</button>
-          <button type="button" class="palette-quick-btn" id="quick-btn-loop" onclick="window.nodeCanvas.addNodeFromPalette('loop')" title="${canvasT('palette_quick_loop', 'Repeat Loop')}">🔄</button>
-          <button type="button" class="palette-quick-btn" id="quick-btn-buff" onclick="window.nodeCanvas.addNodeFromPalette('buff_sequence')" title="${canvasT('palette_quick_buff', 'Buff Sequence')}">🛡️</button>
-          <button type="button" class="palette-quick-btn" id="quick-btn-key" onclick="window.nodeCanvas.addNodeFromPalette('key_press')" title="${canvasT('palette_quick_key', 'Single Key')}">⌨️</button>
+          <button type="button" class="palette-quick-btn" id="quick-btn-trigger" onclick="window.nodeCanvas.addNodeFromPalette('trigger')" title="${canvasT('palette_quick_trigger', 'Global Trigger')}">${typeof window !== 'undefined' && window.NodeDocsIcons ? window.NodeDocsIcons.render('zap', { size: 16 }) : '⚡'}</button>
+          <button type="button" class="palette-quick-btn" id="quick-btn-loop" onclick="window.nodeCanvas.addNodeFromPalette('loop')" title="${canvasT('palette_quick_loop', 'Repeat Loop')}">${typeof window !== 'undefined' && window.NodeDocsIcons ? window.NodeDocsIcons.render('repeat', { size: 16 }) : '🔄'}</button>
+          <button type="button" class="palette-quick-btn" id="quick-btn-buff" onclick="window.nodeCanvas.addNodeFromPalette('buff_sequence')" title="${canvasT('palette_quick_buff', 'Buff Sequence')}">${typeof window !== 'undefined' && window.NodeDocsIcons ? window.NodeDocsIcons.render('shield-plus', { size: 16 }) : '🛡️'}</button>
+          <button type="button" class="palette-quick-btn" id="quick-btn-key" onclick="window.nodeCanvas.addNodeFromPalette('key_press')" title="${canvasT('palette_quick_key', 'Single Key')}">${typeof window !== 'undefined' && window.NodeDocsIcons ? window.NodeDocsIcons.render('keyboard', { size: 16 }) : '⌨️'}</button>
         </div>
       </div>
 
       <!-- Blender-Style Add Node Menu Popover -->
       <div class="node-spotlight-catalog blender-add-menu" id="node-spotlight-catalog" style="display:none;">
         <div class="spotlight-search-header">
-          <span class="spotlight-search-icon">🔍</span>
+          <span class="spotlight-search-icon">${typeof window !== 'undefined' && window.NodeDocsIcons ? window.NodeDocsIcons.render('search', { size: 14 }) : '🔍'}</span>
           <input type="text" class="spotlight-search-input" id="spotlight-search-input" placeholder="${canvasT('palette_search_placeholder', 'Search... (Shift+A)')}" oninput="window.nodeCanvas.filterSpotlight(this.value)" />
           <button type="button" class="spotlight-close-btn" onclick="window.nodeCanvas.hideNodeCatalog()">✕</button>
         </div>
@@ -766,6 +766,105 @@ class NodeCanvasEditor {
     this.renderOutliner();
   }
 
+  /**
+   * Get semantic vector SVG icon for a node type
+   * @param {string} type - Node type string
+   * @param {number} size - Pixel size (default 15)
+   * @returns {string} Inline SVG HTML or fallback
+   */
+  getNodeIcon(type, size = 15) {
+    const typeToKeyMap = {
+      trigger: 'zap',
+      loop: 'repeat',
+      buff_sequence: 'shield-plus',
+      key_press: 'keyboard',
+      key_hold: 'timer',
+      delay: 'timer',
+      branch: 'git-branch',
+      action_branch: 'git-branch',
+      var_branch: 'git-branch',
+      variable_branch: 'git-branch',
+      condition: 'git-branch',
+      client_check: 'app-window',
+      check_client: 'app-window',
+      client_status: 'app-window',
+      reroute: 'circle-dot',
+      knot: 'circle-dot',
+      control: 'sliders',
+      forwarder: 'share-2',
+      macro_group: 'layers',
+      emergency_stop: 'octagon-x',
+      sound: 'volume-2',
+      emit_event: 'radio',
+      sequencer: 'list-ordered',
+      loop_scheduler: 'hourglass',
+      step_log: 'file-text',
+      var_get: 'file-input',
+      var_set: 'database',
+      variable: 'database',
+      party_scanner: 'scan-face',
+      party_slot: 'crosshair',
+      party_heal: 'heart-pulse',
+      party_buff: 'shield-plus',
+      tts: 'mic',
+      screenshot: 'camera',
+      webhook_out: 'webhook',
+      format_text: 'sparkles',
+      move_mouse: 'mouse-pointer-click',
+      click_mouse: 'mouse-pointer-click',
+      ocr_scan: 'scan-text',
+      pixel_search: 'pipette'
+    };
+
+    const def = window.clientNodeRegistry ? window.clientNodeRegistry.get(type) : null;
+    let iconKey = (def && def.icon) ? def.icon : (typeToKeyMap[type] || 'zap');
+
+    const emojiToKeyMap = {
+      '⚡': 'zap',
+      '🔄': 'repeat',
+      '🔁': 'repeat',
+      '🛡️': 'shield-plus',
+      '✨': 'shield-plus',
+      '⌨️': 'keyboard',
+      '⏱️': 'hourglass',
+      '⏳': 'timer',
+      '⚓': 'timer',
+      '🌿': 'git-branch',
+      '🖥️': 'app-window',
+      '🔀': 'circle-dot',
+      '📦': 'database',
+      '🏷️': 'file-input',
+      '📥': 'file-input',
+      '🎛️': 'sliders',
+      '🎮': 'sliders',
+      '🔗': 'share-2',
+      '🛑': 'octagon-x',
+      '🔊': 'volume-2',
+      '📡': 'radio',
+      '⚔️': 'list-ordered',
+      '📝': 'file-text',
+      '👁️': 'scan-face',
+      '🎯': 'crosshair',
+      '🚑': 'heart-pulse',
+      '💚': 'heart-pulse',
+      '📜': 'shield-plus',
+      '🗣️': 'mic',
+      '📸': 'camera',
+      '🌐': 'webhook',
+      '🧩': 'sparkles'
+    };
+
+    if (emojiToKeyMap[iconKey]) {
+      iconKey = emojiToKeyMap[iconKey];
+    }
+
+    if (typeof window !== 'undefined' && window.NodeDocsIcons && typeof window.NodeDocsIcons.render === 'function') {
+      return window.NodeDocsIcons.render(iconKey, { size });
+    }
+
+    return `<span class="node-icon-fallback">${iconKey}</span>`;
+  }
+
   renderNodes() {
     this.nodesLayer.innerHTML = '';
     const isEn = (typeof window !== 'undefined' && window.currentLang === 'en');
@@ -790,45 +889,8 @@ class NodeCanvasEditor {
         `;
       }
 
-      const iconMap = {
-        trigger: '⚡',
-        loop: '🔄',
-        buff_sequence: '🛡️',
-        key_press: '⌨️',
-        delay: '⏱️',
-        branch: '🌿',
-        client_check: '🖥️',
-        check_client: '🖥️',
-        reroute: '🔀',
-        knot: '🔀',
-        action_branch: '⚡',
-        var_branch: '📦',
-        variable_branch: '📦',
-        condition: '🌿',
-        control: '🎛️',
-        forwarder: '🔗',
-        macro_group: '🔀',
-        emergency_stop: '🛑',
-        sound: '🔊',
-        emit_event: '📡',
-        sequencer: '⚔️',
-        loop_scheduler: '⏱️',
-        step_log: '📝',
-        var_get: '📥',
-        var_set: '📦',
-        variable: '📦',
-        party_scanner: '👁️',
-        party_slot: '🎯',
-        party_heal: '🚑',
-        party_buff: '📜',
-        tts: '🗣️',
-        screenshot: '📸',
-        webhook_out: '🌐',
-        format_text: '🧩'
-      };
-
       const def = window.clientNodeRegistry ? window.clientNodeRegistry.get(node.type) : null;
-      const icon = (def && def.icon) || iconMap[node.type] || '📦';
+      const icon = this.getNodeIcon(node.type, 15);
 
       let bodyHTML = '';
       if (window.CanvasComponents && typeof window.CanvasComponents.renderCardSummary === 'function') {
@@ -1745,7 +1807,9 @@ class NodeCanvasEditor {
       if (issue) {
         nodeEl.classList.add(issue.severity === 'error' ? 'has-error' : 'has-warning');
         const bannerText = issue.severity === 'error' ? 'ERROR!' : 'WARNING!';
-        const bubbleIcon = issue.severity === 'error' ? '🚫' : '⚠️';
+        const bubbleIcon = (typeof window !== 'undefined' && window.NodeDocsIcons)
+          ? window.NodeDocsIcons.render(issue.severity === 'error' ? 'octagon-x' : 'shield-alert', { size: 14 })
+          : (issue.severity === 'error' ? '🚫' : '⚠️');
         const msg = (window.currentLang === 'en' ? issue.messageEn : issue.messageTh) || issue.messageTh;
         validationHTML = `
           <div class="node-unreal-footer-banner ${issue.severity}">
@@ -2027,7 +2091,7 @@ class NodeCanvasEditor {
 
     const isOutput = !(portName === 'exec_in' || portName === 'msg_in' || portName === 'val_in' || portName === 'text_in' || (node.type === 'format_text' && portName !== 'msg_out'));
     const x = isOutput ? node.position.x + 221 : node.position.x - 1;
-    let y = node.position.y + 38;
+    let y = node.position.y + 19;
     if (portName === 'onBeforeStart') y = node.position.y + 75;
     else if (portName === 'onAfterStart' || portName === 'onKeyDown') y = node.position.y + 100;
     else if (portName === 'onEachCycle' || portName === 'on_interval') y = node.position.y + 125;
@@ -4093,18 +4157,6 @@ class NodeCanvasEditor {
 
     const q = (filterText || (this.outlinerSearchInput ? this.outlinerSearchInput.value : '')).toLowerCase().trim();
 
-    const iconMap = {
-      trigger: '⚡',
-      loop: '🔄',
-      buff_sequence: '🛡️',
-      key_press: '⌨️',
-      delay: '⏱️',
-      condition: '🌿',
-      control: '🎛️',
-      forwarder: '🔗',
-      macro_group: '🔀'
-    };
-
     let filteredNodes = this.nodes.filter(node => {
       if (!q) return true;
       const title = (node.title || '').toLowerCase();
@@ -4126,7 +4178,7 @@ class NodeCanvasEditor {
     let listHTML = '';
     filteredNodes.forEach(node => {
       const isSelected = this.selectedNodeIds.has(node.id);
-      const icon = iconMap[node.type] || '📦';
+      const icon = this.getNodeIcon(node.type, 14);
 
       let metaText = '';
       if (node.type === 'trigger') {
@@ -4683,62 +4735,64 @@ class NodeCanvasEditor {
     if (!this.spotlightBody) return;
     const q = (query || '').toLowerCase().trim();
 
+    const renderCatIcon = (iconName) => (typeof window !== 'undefined' && window.NodeDocsIcons ? window.NodeDocsIcons.render(iconName, { size: 14 }) : '');
+
     const categories = [
       {
         id: 'triggers',
-        icon: '⚡',
+        icon: renderCatIcon('zap'),
         name: canvasT('cat_triggers', 'Triggers & Events'),
         items: [
-          { type: 'trigger', icon: '⚡', name: this.getNodeTypeLabel('trigger') },
-          { type: 'emit_event', icon: '📡', name: this.getNodeTypeLabel('emit_event') },
-          { type: 'webhook_out', icon: '🌐', name: this.getNodeTypeLabel('webhook_out') }
+          { type: 'trigger', icon: this.getNodeIcon('trigger', 14), name: this.getNodeTypeLabel('trigger') },
+          { type: 'emit_event', icon: this.getNodeIcon('emit_event', 14), name: this.getNodeTypeLabel('emit_event') },
+          { type: 'webhook_out', icon: this.getNodeIcon('webhook_out', 14), name: this.getNodeTypeLabel('webhook_out') }
         ]
       },
       {
         id: 'actions',
-        icon: '🎮',
+        icon: renderCatIcon('gamepad-2'),
         name: canvasT('cat_actions', 'Actions & Macros'),
         items: [
-          { type: 'loop_scheduler', icon: '⏱️', name: this.getNodeTypeLabel('loop_scheduler') },
-          { type: 'loop', icon: '🔄', name: this.getNodeTypeLabel('loop') },
-          { type: 'sequencer', icon: '⚔️', name: this.getNodeTypeLabel('sequencer') },
-          { type: 'buff_sequence', icon: '🛡️', name: this.getNodeTypeLabel('buff_sequence') },
-          { type: 'key_hold', icon: '⚓', name: this.getNodeTypeLabel('key_hold') },
-          { type: 'key_press', icon: '⌨️', name: this.getNodeTypeLabel('key_press') },
-          { type: 'forwarder', icon: '🔗', name: this.getNodeTypeLabel('forwarder') },
-          { type: 'party_scanner', icon: '👁️', name: this.getNodeTypeLabel('party_scanner') },
-          { type: 'party_slot', icon: '🎯', name: this.getNodeTypeLabel('party_slot') },
-          { type: 'party_heal', icon: '🚑', name: this.getNodeTypeLabel('party_heal') },
-          { type: 'party_buff', icon: '📜', name: this.getNodeTypeLabel('party_buff') },
-          { type: 'macro_group', icon: '🔀', name: this.getNodeTypeLabel('macro_group') }
+          { type: 'loop_scheduler', icon: this.getNodeIcon('loop_scheduler', 14), name: this.getNodeTypeLabel('loop_scheduler') },
+          { type: 'loop', icon: this.getNodeIcon('loop', 14), name: this.getNodeTypeLabel('loop') },
+          { type: 'sequencer', icon: this.getNodeIcon('sequencer', 14), name: this.getNodeTypeLabel('sequencer') },
+          { type: 'buff_sequence', icon: this.getNodeIcon('buff_sequence', 14), name: this.getNodeTypeLabel('buff_sequence') },
+          { type: 'key_hold', icon: this.getNodeIcon('key_hold', 14), name: this.getNodeTypeLabel('key_hold') },
+          { type: 'key_press', icon: this.getNodeIcon('key_press', 14), name: this.getNodeTypeLabel('key_press') },
+          { type: 'forwarder', icon: this.getNodeIcon('forwarder', 14), name: this.getNodeTypeLabel('forwarder') },
+          { type: 'party_scanner', icon: this.getNodeIcon('party_scanner', 14), name: this.getNodeTypeLabel('party_scanner') },
+          { type: 'party_slot', icon: this.getNodeIcon('party_slot', 14), name: this.getNodeTypeLabel('party_slot') },
+          { type: 'party_heal', icon: this.getNodeIcon('party_heal', 14), name: this.getNodeTypeLabel('party_heal') },
+          { type: 'party_buff', icon: this.getNodeIcon('party_buff', 14), name: this.getNodeTypeLabel('party_buff') },
+          { type: 'macro_group', icon: this.getNodeIcon('macro_group', 14), name: this.getNodeTypeLabel('macro_group') }
         ]
       },
       {
         id: 'flow',
-        icon: '🌿',
+        icon: renderCatIcon('git-branch'),
         name: canvasT('cat_flow', 'Logic & Flow'),
         items: [
-          { type: 'reroute', icon: '🔀', name: this.getNodeTypeLabel('reroute') },
-          { type: 'client_check', icon: '🖥️', name: this.getNodeTypeLabel('client_check') },
-          { type: 'var_branch', icon: '📦', name: this.getNodeTypeLabel('var_branch') },
-          { type: 'action_branch', icon: '⚡', name: this.getNodeTypeLabel('action_branch') },
-          { type: 'var_set', icon: '📦', name: this.getNodeTypeLabel('var_set') },
-          { type: 'var_get', icon: '📥', name: this.getNodeTypeLabel('var_get') },
-          { type: 'control', icon: '🎛️', name: this.getNodeTypeLabel('control') },
-          { type: 'delay', icon: '⏳', name: this.getNodeTypeLabel('delay') }
+          { type: 'reroute', icon: this.getNodeIcon('reroute', 14), name: this.getNodeTypeLabel('reroute') },
+          { type: 'client_check', icon: this.getNodeIcon('client_check', 14), name: this.getNodeTypeLabel('client_check') },
+          { type: 'var_branch', icon: this.getNodeIcon('var_branch', 14), name: this.getNodeTypeLabel('var_branch') },
+          { type: 'action_branch', icon: this.getNodeIcon('action_branch', 14), name: this.getNodeTypeLabel('action_branch') },
+          { type: 'var_set', icon: this.getNodeIcon('var_set', 14), name: this.getNodeTypeLabel('var_set') },
+          { type: 'var_get', icon: this.getNodeIcon('var_get', 14), name: this.getNodeTypeLabel('var_get') },
+          { type: 'control', icon: this.getNodeIcon('control', 14), name: this.getNodeTypeLabel('control') },
+          { type: 'delay', icon: this.getNodeIcon('delay', 14), name: this.getNodeTypeLabel('delay') }
         ]
       },
       {
         id: 'utilities',
-        icon: '🛡️',
+        icon: renderCatIcon('shield-check'),
         name: canvasT('cat_utilities', 'Safety & Utilities'),
         items: [
-          { type: 'step_log', icon: '📝', name: this.getNodeTypeLabel('step_log') },
-          { type: 'format_text', icon: '🧩', name: this.getNodeTypeLabel('format_text') },
-          { type: 'emergency_stop', icon: '🛑', name: this.getNodeTypeLabel('emergency_stop') },
-          { type: 'tts', icon: '🗣️', name: this.getNodeTypeLabel('tts') },
-          { type: 'screenshot', icon: '📸', name: this.getNodeTypeLabel('screenshot') },
-          { type: 'sound', icon: '🔊', name: this.getNodeTypeLabel('sound') }
+          { type: 'step_log', icon: this.getNodeIcon('step_log', 14), name: this.getNodeTypeLabel('step_log') },
+          { type: 'format_text', icon: this.getNodeIcon('format_text', 14), name: this.getNodeTypeLabel('format_text') },
+          { type: 'emergency_stop', icon: this.getNodeIcon('emergency_stop', 14), name: this.getNodeTypeLabel('emergency_stop') },
+          { type: 'tts', icon: this.getNodeIcon('tts', 14), name: this.getNodeTypeLabel('tts') },
+          { type: 'screenshot', icon: this.getNodeIcon('screenshot', 14), name: this.getNodeTypeLabel('screenshot') },
+          { type: 'sound', icon: this.getNodeIcon('sound', 14), name: this.getNodeTypeLabel('sound') }
         ]
       }
     ];
@@ -4753,14 +4807,14 @@ class NodeCanvasEditor {
         .filter(n => !existingTypes.has(n.type))
         .map(n => ({
           type: n.type,
-          icon: n.icon || '🧩',
+          icon: this.getNodeIcon(n.type, 14),
           name: n.title || n.type
         }));
 
       if (customItems.length > 0) {
         categories.push({
           id: 'modular_nodes',
-          icon: '🧩',
+          icon: renderCatIcon('sparkles'),
           name: window.currentLang === 'en' ? 'Modular Nodes (v3.1)' : 'โหนดโมดูลเสริม (v3.1)',
           items: customItems
         });
@@ -4834,7 +4888,10 @@ class NodeCanvasEditor {
 
   updatePaletteLabels() {
     const addBtnLbl = document.getElementById('lbl-palette-add-btn');
-    if (addBtnLbl) addBtnLbl.textContent = canvasT('palette_add_node', '➕ Add Node');
+    if (addBtnLbl) {
+      const plusIcon = (typeof window !== 'undefined' && window.NodeDocsIcons) ? window.NodeDocsIcons.render('sparkles', { size: 13, style: 'margin-right:4px; vertical-align:middle;' }) : '+ ';
+      addBtnLbl.innerHTML = `${plusIcon}${canvasT('palette_add_node', 'Add Node')}`;
+    }
 
     const qTrig = document.getElementById('quick-btn-trigger');
     if (qTrig) qTrig.title = canvasT('palette_quick_trigger', 'Global Trigger');

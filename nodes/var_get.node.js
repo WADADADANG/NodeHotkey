@@ -12,7 +12,7 @@ module.exports = {
   aliases: ['get_var', 'variable_get'],
   title: 'Get Variable',
   category: 'Logic & Flow',
-  icon: '🏷️',
+  icon: 'file-input',
   color: '#ec4899',
   isPure: true, // Unreal Blueprint Pure Node flag
   inputs: [],   // No execution pins!

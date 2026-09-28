@@ -13,7 +13,7 @@ module.exports = {
   aliases: ['check_client', 'client_status', 'is_client_open', 'is_client_active'],
   title: 'Client Check',
   category: 'Logic & Flow',
-  icon: '🖥️',
+  icon: 'app-window',
   color: '#06b6d4',
   inputs: ['in'],
   outputs: ['onActive', 'onInactive'],

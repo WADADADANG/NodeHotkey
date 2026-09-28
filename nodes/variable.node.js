@@ -12,7 +12,7 @@ module.exports = {
   aliases: ['variable', 'var', 'state', 'set_var', 'variable_set'],
   title: 'Set Variable',
   category: 'Logic & Flow',
-  icon: '📦',
+  icon: 'database',
   color: '#a855f7',
   inputs: ['in', 'val_in'],
   outputs: ['onComplete', 'val_out'],

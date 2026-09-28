@@ -321,6 +321,14 @@
   outline: none;
 }
 
+.palette-quick-btn svg,
+.palette-quick-btn .node-docs-icon-svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}
+
 .palette-quick-btn:hover {
   background: rgba(59, 130, 246, 0.25);
   border-color: #60a5fa;
@@ -437,6 +445,21 @@
 .blender-item-icon {
   font-size: 13px;
   margin-right: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #94a3b8;
+}
+
+.blender-item-icon svg,
+.blender-item-icon .node-docs-icon-svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
 }
 
 .blender-item-label {
@@ -528,7 +551,21 @@
 .blender-sub-icon {
   font-size: 13px;
   width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   text-align: center;
+  color: #94a3b8;
+}
+
+.blender-sub-icon svg,
+.blender-sub-icon .node-docs-icon-svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
 }
 
 .blender-sub-label {
@@ -810,6 +847,18 @@ body.canvas-is-drafting-wire .canvas-node.node-reroute .node-port {
 .node-unreal-detail-bubble .bubble-icon {
   font-size: 13px;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+}
+
+.node-unreal-detail-bubble .bubble-icon svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
 }
 
 .node-unreal-detail-bubble .bubble-text {
@@ -826,6 +875,8 @@ body.canvas-is-drafting-wire .canvas-node.node-reroute .node-port {
   align-items: center;
   justify-content: space-between;
   padding: 10px 12px;
+  height: 38px;
+  box-sizing: border-box;
   background: var(--node-header-bg);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px 12px 0 0;
@@ -836,10 +887,77 @@ body.canvas-is-drafting-wire .canvas-node.node-reroute .node-port {
   align-items: center;
   gap: 8px;
   overflow: hidden;
+  min-width: 0;
 }
 
 .node-icon {
   font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: #94a3b8;
+}
+
+.node-icon svg,
+.node-icon .node-docs-icon-svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}
+
+/* Category Theme Accents for Action Node Icons on Canvas Cards */
+.canvas-node[data-type="trigger"] .node-icon,
+.canvas-node[data-type="emit_event"] .node-icon,
+.canvas-node[data-type="webhook_out"] .node-icon {
+  color: #f59e0b;
+}
+
+.canvas-node[data-type="branch"] .node-icon,
+.canvas-node[data-type="action_branch"] .node-icon,
+.canvas-node[data-type="var_branch"] .node-icon,
+.canvas-node[data-type="condition"] .node-icon,
+.canvas-node[data-type="client_check"] .node-icon,
+.canvas-node[data-type="check_client"] .node-icon,
+.canvas-node[data-type="reroute"] .node-icon {
+  color: #10b981;
+}
+
+.canvas-node[data-type="loop"] .node-icon,
+.canvas-node[data-type="loop_scheduler"] .node-icon,
+.canvas-node[data-type="sequencer"] .node-icon,
+.canvas-node[data-type="delay"] .node-icon {
+  color: #38bdf8;
+}
+
+.canvas-node[data-type="key_press"] .node-icon,
+.canvas-node[data-type="key_hold"] .node-icon,
+.canvas-node[data-type="buff_sequence"] .node-icon,
+.canvas-node[data-type="macro_group"] .node-icon,
+.canvas-node[data-type="forwarder"] .node-icon,
+.canvas-node[data-type="control"] .node-icon {
+  color: #60a5fa;
+}
+
+.canvas-node[data-type="party_scanner"] .node-icon,
+.canvas-node[data-type="party_slot"] .node-icon,
+.canvas-node[data-type="party_heal"] .node-icon,
+.canvas-node[data-type="party_buff"] .node-icon {
+  color: #ec4899;
+}
+
+.canvas-node[data-type="var_get"] .node-icon,
+.canvas-node[data-type="var_set"] .node-icon,
+.canvas-node[data-type="variable"] .node-icon,
+.canvas-node[data-type="format_text"] .node-icon {
+  color: #a855f7;
+}
+
+.canvas-node[data-type="emergency_stop"] .node-icon {
+  color: #ef4444;
 }
 
 .node-title {
@@ -860,6 +978,11 @@ body.canvas-is-drafting-wire .canvas-node.node-reroute .node-port {
   background: rgba(255, 255, 255, 0.1);
   color: #94a3b8;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  max-width: 105px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .node-body {
@@ -920,7 +1043,7 @@ body.canvas-is-drafting-wire .canvas-node.node-reroute .node-port {
 
 .node-port.port-in {
   left: -8px;
-  top: 38px;
+  top: 19px;
   transform: translateY(-50%);
   border-color: var(--port-in, #38bdf8);
   background: #0284c7;
@@ -933,7 +1056,7 @@ body.canvas-is-drafting-wire .canvas-node.node-reroute .node-port {
 
 .node-port.port-out {
   right: -8px;
-  top: 38px;
+  top: 19px;
   transform: translateY(-50%);
   border-color: var(--port-out, #10b981);
   background: #059669;
@@ -1833,7 +1956,21 @@ body.canvas-is-drafting-wire .canvas-node.node-reroute .node-port {
 .outliner-item-icon {
   font-size: 14px;
   min-width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   text-align: center;
+  color: #94a3b8;
+}
+
+.outliner-item-icon svg,
+.outliner-item-icon .node-docs-icon-svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
 }
 
 .outliner-item-info {

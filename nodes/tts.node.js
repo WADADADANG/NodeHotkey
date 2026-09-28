@@ -11,7 +11,7 @@ module.exports = {
   aliases: ['tts_alert', 'text_to_speech'],
   title: 'Text to Speech',
   category: 'Utility / Alert',
-  icon: '🗣️',
+  icon: 'mic',
   color: '#ec4899',
   inputs: ['in', 'text_in'],
   outputs: ['next', 'onError'],
@@ -39,7 +39,7 @@ module.exports = {
       labelKey: 'inspector_tts_wait_previous',
       label: 'Wait for Previous Voice (รอตัวเก่าเล่นเสร็จก่อน)',
       hint: 'เปิด: รอตัวเก่าเล่นจบก่อนแล้วค่อยพูดต่อ (ไม่ตัดเสียง) | ปิด: ข้ามตัวเก่าทันทีแล้วพูดใหม่ (ตัดเสียงเดิม)',
-      icon: '⏳',
+      icon: 'timer',
       color: '#ec4899',
       default: false
     }

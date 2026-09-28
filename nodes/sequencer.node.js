@@ -12,7 +12,7 @@ module.exports = {
   aliases: ['cast_sequence', 'combo'],
   title: 'Cast Sequencer',
   category: 'Loops & Automation',
-  icon: '⚔️',
+  icon: 'list-ordered',
   color: '#ec4899',
   inputs: ['in'],
   outputs: ['onEachCycle', 'onComplete', 'onStop'],

@@ -11,7 +11,7 @@ module.exports = {
   aliases: ['repeat', 'auto_press'],
   title: 'Interval Loop',
   category: 'Loops & Automation',
-  icon: '🔁',
+  icon: 'repeat',
   color: '#10b981',
   inputs: ['in'],
   outputs: ['onStart', 'onEachCycle', 'onStop'],

@@ -11,7 +11,7 @@ module.exports = {
   aliases: ['select_party_slot', 'party_member'],
   title: 'Party Slot Selector',
   category: 'Vision & Party',
-  icon: '🎯',
+  icon: 'crosshair',
   color: '#38bdf8',
   inputs: ['in'],
   outputs: ['next', 'onError'],

@@ -15,7 +15,7 @@ module.exports = {
   aliases: ['capture_screen'],
   title: 'Screenshot (Diagnostic)',
   category: 'Utility / Vision',
-  icon: '📸',
+  icon: 'camera',
   color: '#06b6d4',
   inputs: ['in'],
   outputs: ['onComplete', 'onError'],

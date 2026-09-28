@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="launcher.css">
+  <link rel="stylesheet" href="../../public/css/node-docs.css">
 </head>
 <body class="app-root-body">
   
@@ -45,13 +46,23 @@
           <span class="nav-pill-badge active-tag" id="badge-profile-active">Studio</span>
         </button>
 
-        <span class="menu-section-label" style="margin-top:8px;">Configuration</span>
+        <span class="menu-section-label" style="margin-top:8px;" id="menu-lbl-config">Configuration</span>
 
         <button class="sidebar-nav-btn" id="tab-nav-settings" title="ตั้งค่าระบบ ปุ่มฉุกเฉิน และ Overlay HUD">
           <div class="nav-btn-left">
             <span class="nav-btn-icon">⚙️</span>
-            <span>Settings & HUD</span>
+            <span id="nav-lbl-settings">Settings & HUD</span>
           </div>
+        </button>
+
+        <span class="menu-section-label" style="margin-top:8px;" id="menu-lbl-docs">Documentation</span>
+
+        <button class="sidebar-nav-btn" id="tab-nav-docs" title="คู่มือสอนการใช้งาน Action Node ทั้งหมด (Wiki & Blueprint Reference)">
+          <div class="nav-btn-left">
+            <span class="nav-btn-icon">📚</span>
+            <span id="nav-lbl-docs">Node Wiki</span>
+          </div>
+          <span class="nav-pill-badge" id="badge-docs-count" style="background:rgba(59,130,246,0.18); color:#60a5fa; border:1px solid rgba(59,130,246,0.35);">29 Nodes</span>
         </button>
       </nav>
     </div>
@@ -464,6 +475,11 @@
         </div>
       </div>
 
+      <!-- ================= VIEW 4: ACTION NODE WIKI / DOCS ================= -->
+      <div class="app-view" id="view-docs">
+        <div id="launcher-node-docs-mount" style="width:100%; height:100%; overflow:hidden;"></div>
+      </div>
+
     </div>
   </main>
 
@@ -844,6 +860,9 @@
     </div>
   </div>
 
+  <script src="../../public/js/components/node-docs-icons.js"></script>
+  <script src="../../public/js/components/node-docs-data.js"></script>
+  <script src="../../public/js/components/node-docs.js"></script>
   <script src="launcher.js"></script>
 </body>
 </html>

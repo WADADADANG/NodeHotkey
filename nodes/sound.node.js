@@ -10,7 +10,7 @@ module.exports = {
   aliases: ['sound_alert'],
   title: 'Sound Alert',
   category: 'Utility / Alert',
-  icon: '🔊',
+  icon: 'volume-2',
   color: '#f59e0b',
   inputs: ['in'],
   outputs: ['onFired'],

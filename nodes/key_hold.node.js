@@ -11,7 +11,7 @@ module.exports = {
   aliases: ['hold'],
   title: 'Key Hold',
   category: 'Actions',
-  icon: '⚓',
+  icon: 'timer',
   color: '#0284c7',
   inputs: ['in'],
   outputs: ['onEnable', 'onDisable'],

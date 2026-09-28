@@ -11,7 +11,7 @@ module.exports = {
   aliases: ['single_press', 'press'],
   title: 'Key Press',
   category: 'Actions',
-  icon: '⌨️',
+  icon: 'keyboard',
   color: '#3b82f6',
   inputs: ['in'],
   outputs: ['onComplete'],

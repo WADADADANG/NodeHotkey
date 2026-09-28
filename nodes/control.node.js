@@ -12,7 +12,7 @@ module.exports = {
   aliases: ['action_control'],
   title: 'Action Controller',
   category: 'Logic & Flow',
-  icon: '🎮',
+  icon: 'sliders',
   color: '#f97316',
   inputs: ['in'],
   outputs: ['onComplete'],

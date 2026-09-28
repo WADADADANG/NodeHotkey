@@ -1,10 +1,7 @@
 {
-  "activeProfile": "[WD] Full Buff",
+  "activeProfile": "Default",
   "activeProfiles": [
-    "[WD] Full Buff",
-    "[WD] Follow Leader Party",
-    "[WD] Heal 1,2,4",
-    "[WD] Add-ons"
+    "Default"
   ],
   "disabledClients": [],
   "globalSettings": {

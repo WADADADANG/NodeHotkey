@@ -12,7 +12,7 @@ module.exports = {
   aliases: ['knot', 'reroute_node', 'wire_pin', 'junction'],
   title: 'Reroute',
   category: 'Logic & Flow',
-  icon: '🔀',
+  icon: 'circle-dot',
   color: '#38bdf8',
   inputs: ['in'],
   outputs: ['out'],

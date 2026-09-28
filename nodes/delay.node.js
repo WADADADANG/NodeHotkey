@@ -10,7 +10,7 @@ module.exports = {
   aliases: ['delay_only'],
   title: 'Delay Timer',
   category: 'Flow / Timing',
-  icon: '⏳',
+  icon: 'timer',
   color: '#eab308',
   inputs: ['in'],
   outputs: ['onBeforeStart', 'onComplete'],

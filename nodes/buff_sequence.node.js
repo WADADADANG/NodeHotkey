@@ -11,7 +11,7 @@ module.exports = {
   aliases: ['buffs', 'buff_seq'],
   title: 'Buff Sequence',
   category: 'Actions',
-  icon: '✨',
+  icon: 'shield-plus',
   color: '#06b6d4',
   inputs: ['in'],
   outputs: ['onBeforeStart', 'onStart', 'onAfterStart', 'onComplete'],

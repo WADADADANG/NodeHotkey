@@ -12,7 +12,7 @@ module.exports = {
   aliases: ['variable_branch', 'var_if', 'variable_if'],
   title: 'Variable Branch',
   category: 'Logic & Flow',
-  icon: '📦',
+  icon: 'git-branch',
   color: '#ec4899',
   inputs: ['in'],
   outputs: ['onTrue', 'onFalse'],

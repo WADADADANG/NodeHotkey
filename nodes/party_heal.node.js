@@ -11,7 +11,7 @@ module.exports = {
   aliases: ['heal_party', 'auto_heal'],
   title: 'Party Heal',
   category: 'Vision & Party',
-  icon: '💚',
+  icon: 'heart-pulse',
   color: '#22c55e',
   inputs: ['in'],
   outputs: ['onHealTarget', 'onNoTarget', 'onError'],

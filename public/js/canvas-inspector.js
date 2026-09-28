@@ -22,7 +22,8 @@
 
     const formBody = this.container.querySelector('#inspector-form-body');
     const titleEl = this.container.querySelector('#inspector-node-title');
-    titleEl.innerHTML = `⚙️ ${this.getNodeTypeLabel(node.type)}`;
+    const nodeIcon = (typeof this.getNodeIcon === 'function') ? this.getNodeIcon(node.type, 16) : ((typeof window !== 'undefined' && window.NodeDocsIcons) ? window.NodeDocsIcons.render(node.type, { size: 16 }) : '⚙️');
+    titleEl.innerHTML = `<span class="inspector-title-icon" style="display:inline-flex; align-items:center; margin-right:6px; color:#60a5fa;">${nodeIcon}</span><span>${this.getNodeTypeLabel(node.type)}</span>`;
 
     let fieldsHTML = `
       <div class="inspector-field-group">

@@ -11,7 +11,7 @@ module.exports = {
   aliases: ['forward'],
   title: 'Key Forwarder',
   category: 'Logic & Flow',
-  icon: '🔗',
+  icon: 'share-2',
   color: '#64748b',
   inputs: ['in'],
   outputs: ['onComplete'],

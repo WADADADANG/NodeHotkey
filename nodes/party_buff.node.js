@@ -12,7 +12,7 @@ module.exports = {
   aliases: ['buff_party', 'party_buff_cycle'],
   title: 'Party Buff',
   category: 'Vision & Party',
-  icon: '🛡️',
+  icon: 'shield-plus',
   color: '#14b8a6',
   inputs: ['in'],
   outputs: ['onNextMember', 'onComplete', 'onError'],

@@ -10,7 +10,7 @@ module.exports = {
   aliases: ['stop_all'],
   title: 'Emergency Stop All',
   category: 'Safety / Utility',
-  icon: '🛑',
+  icon: 'octagon-x',
   color: '#ef4444',
   inputs: ['in'],
   outputs: ['onFired'],
