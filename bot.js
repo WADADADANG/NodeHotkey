@@ -93,11 +93,13 @@ let runTtsAction = async (action, callStack) => {
         }
         const voice = action.voice || 'th-TH-PremwadeeNeural';
         const volume = action.volume !== undefined ? parseInt(action.volume, 10) : 100;
+        const waitForPrevious = action.waitForPrevious === true;
+        const interrupt = !waitForPrevious;
 
-        console.log(`🗣️ [TTS Action] Synthesizing: "${text}" (${voice}, Vol: ${volume}%)`);
+        console.log(`🗣️ [TTS Action] Synthesizing: "${text}" (${voice}, Vol: ${volume}%, WaitPrev: ${waitForPrevious})`);
         const mp3Path = await tts.synthesize(text, voice);
         if (mp3Path && fs.existsSync(mp3Path)) {
-            playNativeSound(null, mp3Path, null, 1, volume);
+            playNativeSound(null, mp3Path, null, 1, volume, 'tts', interrupt);
             if (typeof broadcastToClients === 'function') {
                 broadcastToClients({
                     type: 'tts_spoken',
@@ -458,6 +460,51 @@ function loadConfigFromFile() {
         global.activeActions = activeActions; // Share with test-server.js
 
         console.log(`[Config] Node Workflow Engine initialized across ${activeProfileObjs.length} profile(s): ${totalNodes} nodes, ${totalConns} connections, ${activeActions.length} executable actions in memory`);
+
+        // Seed cross-profile shared variables (__SHARED__ bucket)
+        if (!global.profileVariables) global.profileVariables = {};
+        if (!global.profileVariables['__SHARED__']) global.profileVariables['__SHARED__'] = {};
+        activeProfileObjs.forEach(prof => {
+            const vars = Array.isArray(prof.variables) ? prof.variables : [];
+            vars.forEach(v => {
+                if (v.scope === 'global' || v.scope === 'shared' || v.scope === 'cross_profile') {
+                    const varId = (v.varName || v.name || '').trim();
+                    if (!varId) return;
+                    if (!global.profileVariables['__SHARED__'][varId]) {
+                        global.profileVariables['__SHARED__'][varId] = {};
+                        // Parse initial value by type
+                        const vType = v.varType || v.type || 'boolean';
+                        const init = v.initialValue !== undefined ? v.initialValue : (v.defaultValue !== undefined ? v.defaultValue : '');
+                        let parsed;
+                        if (vType === 'boolean') parsed = (init === true || String(init) === 'true');
+                        else if (vType === 'number') parsed = parseFloat(init) || 0;
+                        else parsed = String(init !== undefined ? init : '');
+                        global.profileVariables['__SHARED__'][varId]['global'] = parsed;
+                    }
+                }
+            });
+            // Also seed from variable nodes on canvas (var_set / var_get / variable / var_branch)
+            const nodes = Array.isArray(prof.nodes) ? prof.nodes : [];
+            nodes.forEach(node => {
+                if ((node.type === 'var_set' || node.type === 'variable' || node.type === 'var_get' || node.type === 'var_branch') && node.data) {
+                    const d = node.data;
+                    const varId = (d.varName || (d.conditionTargetId && String(d.conditionTargetId).startsWith('var:') ? String(d.conditionTargetId).replace('var:', '') : (node.title ? node.title.replace(/^(Get |Set )/, '') : '')) || '').trim();
+                    if (!varId || global.profileVariables['__SHARED__'][varId]) return;
+                    global.profileVariables['__SHARED__'][varId] = {};
+                    const vType = d.varType || 'boolean';
+                    const init = d.initialValue !== undefined ? d.initialValue : (d.defaultValue !== undefined ? d.defaultValue : '');
+                    let parsed;
+                    if (vType === 'boolean') parsed = (init === true || String(init) === 'true');
+                    else if (vType === 'number') parsed = parseFloat(init) || 0;
+                    else parsed = String(init !== undefined ? init : '');
+                    global.profileVariables['__SHARED__'][varId]['global'] = parsed;
+                }
+            });
+        });
+        const sharedVarCount = Object.keys(global.profileVariables['__SHARED__']).length;
+        if (sharedVarCount > 0) {
+            console.log(`[Config] Cross-profile shared variables seeded: ${sharedVarCount} variable(s) in __SHARED__ bucket`);
+        }
 
         // Load client aliases
         clientAliases = globalSet.clientAliases || primaryProfile.clientAliases || {};
@@ -3208,7 +3255,11 @@ $sfxPlayer = New-Object System.Windows.Media.MediaPlayer
 
 while ($line = [Console]::In.ReadLine()) {
     if ([string]::IsNullOrWhiteSpace($line)) { continue }
-    if ($line -eq 'STOP') {
+    if ($line -eq 'STOP' -or $line -eq 'STOP_SFX') {
+        try { $sfxPlayer.Stop() } catch {}
+        continue
+    }
+    if ($line -eq 'STOP_ALL') {
         try { $ttsPlayer.Stop(); $sfxPlayer.Stop() } catch {}
         continue
     }
@@ -3226,6 +3277,14 @@ while ($line = [Console]::In.ReadLine()) {
 
     try {
         if ($interrupt -eq 1) {
+            try { $targetPlayer.Stop() } catch {}
+        } else {
+            # Queue mode: wait for previous audio on this channel to finish before starting new audio
+            $waitLimit = 0
+            while ($targetPlayer.NaturalDuration.HasTimeSpan -and ($targetPlayer.Position -lt $targetPlayer.NaturalDuration.TimeSpan) -and $waitLimit -lt 300) {
+                Start-Sleep -Milliseconds 50
+                $waitLimit++
+            }
             try { $targetPlayer.Stop() } catch {}
         }
         $uri = New-Object System.Uri($filePath)
@@ -3245,7 +3304,7 @@ while ($line = [Console]::In.ReadLine()) {
     } catch {}
 }
 `;
-        nativeAudioWorker = spawn('powershell', ['-NoProfile', '-NonInteractive', '-Command', psScript], {
+        nativeAudioWorker = spawn('powershell', ['-Sta', '-NoProfile', '-NonInteractive', '-Command', psScript], {
             windowsHide: true,
             stdio: ['pipe', 'ignore', 'ignore']
         });
@@ -3283,9 +3342,9 @@ function playNativeSound(preset, url, file, repeatCount = 1, volume = 100, chann
 }
 global.playNativeSound = playNativeSound;
 
-function stopAllAudio() {
+function stopAllAudio(includeTts = false) {
     if (nativeAudioWorker && nativeAudioWorker.stdin && nativeAudioWorker.stdin.writable) {
-        nativeAudioWorker.stdin.write('STOP\n');
+        nativeAudioWorker.stdin.write(includeTts ? 'STOP_ALL\n' : 'STOP_SFX\n');
     }
 }
 global.stopAllAudio = stopAllAudio;
@@ -3529,8 +3588,9 @@ global.profileVariables = global.profileVariables || {};
 
 function getVariableKey(action, clientOverride = null) {
     const scope = action.scope || 'client';
-    const pName = action._profileName || 'Active';
     const varKey = (action.varName || action.name || action.id || 'default').trim();
+    // Cross-profile shared: scope === 'global' → store in '__SHARED__' bucket
+    const pName = (scope === 'global') ? '__SHARED__' : (action._profileName || 'Active');
     const clientStr = scope === 'global' ? 'global' : String(clientOverride !== null ? clientOverride : (action.targetClient || '1'));
     return { pName, varId: varKey, clientStr };
 }
@@ -3555,6 +3615,29 @@ function getVariableValue(action, clientOverride = null) {
         return global.profileVariables[pName][varId][keys[0]];
     }
 
+    // Cross-profile fallback: check __SHARED__ bucket if current pName is not already __SHARED__
+    if (pName !== '__SHARED__' && global.profileVariables['__SHARED__'] && global.profileVariables['__SHARED__'][varId]) {
+        const sharedBucket = global.profileVariables['__SHARED__'][varId];
+        if (sharedBucket['global'] !== undefined) return sharedBucket['global'];
+        const sharedKeys = Object.keys(sharedBucket);
+        if (sharedKeys.length > 0 && sharedBucket[sharedKeys[0]] !== undefined) return sharedBucket[sharedKeys[0]];
+    }
+
+    // Cross-profile fallback: check other profiles if not in current profile or __SHARED__
+    if (pName !== '__SHARED__') {
+        for (const otherPName of Object.keys(global.profileVariables)) {
+            if (otherPName !== pName && otherPName !== '__SHARED__') {
+                const otherBucket = global.profileVariables[otherPName]?.[varId];
+                if (otherBucket) {
+                    if (otherBucket['global'] !== undefined) return otherBucket['global'];
+                    if (otherBucket[clientStr] !== undefined) return otherBucket[clientStr];
+                    const otherKeys = Object.keys(otherBucket);
+                    if (otherKeys.length > 0 && otherBucket[otherKeys[0]] !== undefined) return otherBucket[otherKeys[0]];
+                }
+            }
+        }
+    }
+
     // Fallback to initialValue parsed according to varType
     const vType = action.varType || 'boolean';
     const init = action.initialValue !== undefined ? action.initialValue : action.defaultValue;
@@ -3572,6 +3655,12 @@ function setVariableValue(action, val, clientOverride = null) {
     if (!global.profileVariables[pName]) global.profileVariables[pName] = {};
     if (!global.profileVariables[pName][varId]) global.profileVariables[pName][varId] = {};
     global.profileVariables[pName][varId][clientStr] = val;
+
+    // If this variable is registered in __SHARED__ bucket, keep it synchronized across all profiles
+    if (pName !== '__SHARED__' && global.profileVariables['__SHARED__'] && global.profileVariables['__SHARED__'][varId]) {
+        global.profileVariables['__SHARED__'][varId]['global'] = val;
+        global.profileVariables['__SHARED__'][varId][clientStr] = val;
+    }
     return val;
 }
 
@@ -4448,9 +4537,7 @@ async function runRerouteAction(act, callStack) {
     resolvedStack.add(stackKey);
 
     emitSignal(act.id, 'out');
-    emitSignal(act.id, 'next');
     await fireChain(act, 'out', resolvedStack);
-    await fireChain(act, 'next', resolvedStack);
 }
 global.runRerouteAction = runRerouteAction;
 

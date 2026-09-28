@@ -240,10 +240,11 @@ class ClientPartyScanner {
             xBuckets[k] = (xBuckets[k] || 0) + 1;
         });
 
-        // Party window in Flyff is placed on the left side or right side (never dead center over player character)
-        const edgeKeys = Object.keys(xBuckets).map(Number).filter(k => k <= w * 0.38 || k >= w * 0.62);
-        const candidateKeys = (edgeKeys.length > 0) ? edgeKeys : Object.keys(xBuckets).map(Number);
-        const sortedBuckets = candidateKeys.sort((a, b) => xBuckets[b] - xBuckets[a]).slice(0, 4);
+        // Sort all x-buckets by segment count. The party window with stacked member bars
+        // naturally has the highest segment density anywhere on screen or in cropped regions.
+        // We evaluate top candidate columns without arbitrary center-exclusion that breaks regional crops.
+        const allKeys = Object.keys(xBuckets).map(Number);
+        const sortedBuckets = allKeys.sort((a, b) => xBuckets[b] - xBuckets[a]).slice(0, 6);
 
         const results = [];
         for (const bucket of sortedBuckets) {
@@ -868,7 +869,20 @@ class VisionService {
                 })
                 .toBuffer();
 
-            const result = await scanner.scan(croppedBuffer, options);
+            let result = await scanner.scan(croppedBuffer, options);
+            let usedCropLeft = cropLeft;
+            let usedCropTop = cropTop;
+
+            // Auto-Fallback: If regional crop (e.g. 'right' or 'left') missed the party window,
+            // immediately retry scanning with full-screen frame to prevent false errors
+            if ((!result || !result.success || !Array.isArray(result.members) || result.members.length === 0) && (cropLeft > 0 || cropTop > 0 || cropW < imgW || cropH < imgH)) {
+                const fullResult = await scanner.scan(frameBuffer, options);
+                if (fullResult && fullResult.success && Array.isArray(fullResult.members) && fullResult.members.length > 0) {
+                    result = fullResult;
+                    usedCropLeft = 0;
+                    usedCropTop = 0;
+                }
+            }
 
             if (result && result.success && Array.isArray(result.members)) {
                 // คำนวณ Scale Factor หากขนาดเฟรมภาพกับขนาด Browser DOM ไม่เท่ากัน (เช่น High-DPI Display)
@@ -877,12 +891,12 @@ class VisionService {
 
                 const scaledMembers = result.members.map(m => ({
                     ...m,
-                    barY: Math.round((m.barY + cropTop) * scaleY),
-                    startX: Math.round((m.startX + cropLeft) * scaleX),
+                    barY: Math.round((m.barY + usedCropTop) * scaleY),
+                    startX: Math.round((m.startX + usedCropLeft) * scaleX),
                     barWidth: Math.round(m.barWidth * scaleX),
                     click: {
-                        x: Math.round((m.click.x + cropLeft) * scaleX),
-                        y: Math.round((m.click.y + cropTop) * scaleY)
+                        x: Math.round((m.click.x + usedCropLeft) * scaleX),
+                        y: Math.round((m.click.y + usedCropTop) * scaleY)
                     }
                 }));
 
@@ -900,7 +914,7 @@ class VisionService {
                     clientId: id,
                     timestamp: Date.now(),
                     autoAnchor: {
-                        startX: Math.round(((result.autoAnchor?.startX || 0) + cropLeft) * scaleX),
+                        startX: Math.round(((result.autoAnchor?.startX || 0) + usedCropLeft) * scaleX),
                         detectedBarWidth: Math.round((result.autoAnchor?.detectedBarWidth || 0) * scaleX),
                         slotsFound: scaledMembers.length
                     },

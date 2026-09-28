@@ -131,41 +131,58 @@ class NodeCanvasEditor {
         </div>
       </div>
 
-      <!-- Action Outliner & Edit History Side Drawer -->
-      <div class="node-outliner-panel" id="node-outliner-panel">
-        <div class="outliner-header">
-          <div class="panel-tab-bar">
-            <button class="panel-tab-btn active" id="tab-btn-outliner" onclick="window.nodeCanvas.switchDrawerTab('outliner')">📑 <span id="lbl-drawer-tab-outliner">${window.currentLang === 'en' ? 'Actions' : 'รายการคำสั่ง'}</span> (<span id="outliner-node-count">0</span>)</button>
-            <button class="panel-tab-btn" id="tab-btn-variables" onclick="window.nodeCanvas.switchDrawerTab('variables')">📦 <span id="lbl-drawer-tab-variables">${window.currentLang === 'en' ? 'Variables' : 'ตัวแปร'}</span> (<span id="variables-count">0</span>)</button>
-            <button class="panel-tab-btn" id="tab-btn-history" onclick="window.nodeCanvas.switchDrawerTab('history')">🕒 <span id="lbl-drawer-tab-history">${window.currentLang === 'en' ? 'History' : 'ประวัติแก้ไข'}</span> (<span id="history-entry-count">0</span>)</button>
+      <!-- Floating Side Drawers Multi-Panel Container (Actions, Variables, and History) -->
+      <div class="canvas-drawers-container" id="canvas-drawers-container">
+        <!-- 1. Action Outliner Panel -->
+        <div class="node-panel-drawer panel-outliner" id="node-outliner-panel">
+          <div class="panel-drawer-header">
+            <div class="panel-drawer-title">
+              <span class="panel-drawer-icon">📑</span>
+              <span id="lbl-outliner-title">${window.currentLang === 'en' ? 'Actions' : 'รายการคำสั่ง'}</span>
+              <span class="panel-drawer-badge" id="outliner-node-count">0</span>
+            </div>
+            <button class="panel-drawer-close-btn" onclick="window.nodeCanvas.togglePanel('outliner', false)" title="${window.currentLang === 'en' ? 'Close' : 'ปิด'}">✕</button>
           </div>
-          <button class="outliner-close-btn" onclick="window.nodeCanvas.togglePanel(null, false)">✕</button>
-        </div>
-
-        <!-- Tab 1: Outliner Body -->
-        <div id="drawer-outliner-body" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
-          <div class="outliner-search-box">
-            <input type="text" class="outliner-search-input" id="outliner-search-input" placeholder="🔍 ค้นหา Action, Key, Type..." oninput="window.nodeCanvas.filterOutliner(this.value)" />
+          <div class="panel-drawer-search">
+            <input type="text" class="panel-drawer-search-input" id="outliner-search-input" placeholder="🔍 ${window.currentLang === 'en' ? 'Search Action, Key, Type...' : 'ค้นหา Action, Key, Type...'}" oninput="window.nodeCanvas.filterOutliner(this.value)" />
           </div>
           <div class="outliner-list" id="outliner-node-list"></div>
         </div>
 
-        <!-- Tab 2: Blueprint Variables Body -->
-        <div id="drawer-variables-body" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
+        <!-- 2. Blueprint Variables Panel -->
+        <div class="node-panel-drawer panel-variables" id="node-variables-panel">
+          <div class="panel-drawer-header">
+            <div class="panel-drawer-title">
+              <span class="panel-drawer-icon">📦</span>
+              <span id="lbl-variables-title">${window.currentLang === 'en' ? 'Variables' : 'ตัวแปร (Variables)'}</span>
+              <span class="panel-drawer-badge" id="variables-count">0</span>
+            </div>
+            <button class="panel-drawer-close-btn" onclick="window.nodeCanvas.togglePanel('variables', false)" title="${window.currentLang === 'en' ? 'Close' : 'ปิด'}">✕</button>
+          </div>
           <div class="variables-toolbar">
             <button type="button" class="btn-add-variable-hero" onclick="window.nodeCanvas.openVariableModal()">
               <span>➕ ${canvasT('btn_add_variable', 'สร้างตัวแปรใหม่ (Add Variable)')}</span>
             </button>
-            <input type="text" class="outliner-search-input" id="variables-search-input" placeholder="${canvasT('var_search_placeholder', '🔍 ค้นหาตัวแปร...')}" oninput="window.nodeCanvas.filterVariables(this.value)" />
+            <input type="text" class="panel-drawer-search-input" id="variables-search-input" placeholder="${canvasT('var_search_placeholder', '🔍 ค้นหาตัวแปร...')}" oninput="window.nodeCanvas.filterVariables(this.value)" />
           </div>
           <div class="variables-list" id="variables-list"></div>
         </div>
 
-        <!-- Tab 3: History Timeline Body -->
-        <div id="drawer-history-body" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
-          <div style="padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:space-between;">
-            <span id="lbl-history-hint" style="font-size:11px; color:var(--muted); font-weight:600;">คลิกรายการเพื่อย้อนเวลา (Restore)</span>
-            <button onclick="window.nodeCanvas.clearHistory()" id="btn-clear-history" style="background:transparent; border:none; color:var(--muted); font-size:11px; cursor:pointer; padding:2px 4px;" title="ล้างประวัติ">🗑️ ล้าง</button>
+        <!-- 3. Edit History Timeline Panel -->
+        <div class="node-panel-drawer panel-history" id="node-history-panel">
+          <div class="panel-drawer-header">
+            <div class="panel-drawer-title">
+              <span class="panel-drawer-icon">🕒</span>
+              <span id="lbl-history-title">${window.currentLang === 'en' ? 'Edit History' : 'ประวัติการแก้ไข'}</span>
+              <span class="panel-drawer-badge" id="history-entry-count">0</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button onclick="window.nodeCanvas.clearHistory()" id="btn-clear-history" class="panel-drawer-action-btn" title="ล้างประวัติ">🗑️ ล้าง</button>
+              <button class="panel-drawer-close-btn" onclick="window.nodeCanvas.togglePanel('history', false)" title="${window.currentLang === 'en' ? 'Close' : 'ปิด'}">✕</button>
+            </div>
+          </div>
+          <div class="history-hint-bar">
+            <span id="lbl-history-hint">${window.currentLang === 'en' ? 'Click an entry to restore timeline' : 'คลิกรายการเพื่อย้อนเวลา (Restore)'}</span>
           </div>
           <div class="history-timeline-list" id="history-timeline-list"></div>
         </div>
@@ -238,16 +255,16 @@ class NodeCanvasEditor {
     this.nodesLayer = this.container.querySelector('#canvas-nodes-layer');
     this.zoomIndicator = this.container.querySelector('#zoom-indicator');
     this.inspectorPanel = this.container.querySelector('#node-inspector-panel');
+    this.drawersContainer = this.container.querySelector('#canvas-drawers-container');
     this.outlinerPanel = this.container.querySelector('#node-outliner-panel');
+    this.variablesPanel = this.container.querySelector('#node-variables-panel');
+    this.historyPanel = this.container.querySelector('#node-history-panel');
+    this.btnToggleOutliner = this.container.querySelector('#btn-toggle-outliner');
+    this.btnToggleVariables = this.container.querySelector('#btn-toggle-variables');
+    this.btnToggleHistory = this.container.querySelector('#btn-toggle-history');
     this.outlinerSearchInput = this.container.querySelector('#outliner-search-input');
     this.outlinerNodeList = this.container.querySelector('#outliner-node-list');
     this.outlinerNodeCount = this.container.querySelector('#outliner-node-count');
-    this.tabBtnOutliner = this.container.querySelector('#tab-btn-outliner');
-    this.tabBtnVariables = this.container.querySelector('#tab-btn-variables');
-    this.tabBtnHistory = this.container.querySelector('#tab-btn-history');
-    this.drawerOutlinerBody = this.container.querySelector('#drawer-outliner-body');
-    this.drawerVariablesBody = this.container.querySelector('#drawer-variables-body');
-    this.drawerHistoryBody = this.container.querySelector('#drawer-history-body');
     this.variablesListEl = this.container.querySelector('#variables-list');
     this.variablesCountEl = this.container.querySelector('#variables-count');
     this.variablesSearchInput = this.container.querySelector('#variables-search-input');
@@ -620,6 +637,8 @@ class NodeCanvasEditor {
       if (e.key === 'Escape') {
         if (this.spotlightCatalog && this.spotlightCatalog.style.display !== 'none') {
           this.hideNodeCatalog();
+        } else if (this.outlinerPanel?.classList.contains('open') || this.variablesPanel?.classList.contains('open') || this.historyPanel?.classList.contains('open')) {
+          this.closeAllDrawers();
         } else if (this.selectedNodeIds.size > 0) {
           this.selectedNodeIds.clear();
           this.updateNodeSelectionClasses();
@@ -668,8 +687,9 @@ class NodeCanvasEditor {
 
   loadProfile(profile) {
     if (!profile) return;
+    this.currentProfileName = profile.name || window.currentEditProfile || 'Default';
     this.closeInspector();
-    if (this.outlinerPanel) this.outlinerPanel.classList.remove('open');
+    this.closeAllDrawers();
     this.hideNodeCatalog();
     this.hidePortContextMenu();
     this.historyTimeline = [];
@@ -1117,6 +1137,7 @@ class NodeCanvasEditor {
           const v = node.data?.voice || 'th-TH-PremwadeeNeural';
           const vLabel = v.includes('Niwat') ? (isEn ? 'Niwat (Male)' : 'นิวัต (ชาย)') : (v.includes('Jenny') ? 'Jenny' : (v.includes('Guy') ? 'Guy' : (isEn ? 'Premwadee (Female)' : 'เปรมวดี (หญิง)')));
           const vol = node.data?.volume !== undefined ? node.data.volume : 100;
+          const waitForPrevious = node.data?.waitForPrevious === true;
           bodyHTML = `
           <div class="node-info-row">
             <span>Voice:</span> <span class="node-info-value" style="color:#c084fc; font-weight:700;">${vLabel}</span>
@@ -1126,6 +1147,9 @@ class NodeCanvasEditor {
           </div>
           <div class="node-info-row">
             <span>Vol:</span> <span class="node-info-value">${vol}%</span>
+          </div>
+          <div class="node-info-row">
+            <span>Queue:</span> <span class="node-info-value" style="color:${waitForPrevious ? '#ec4899' : '#94a3b8'}; font-weight:700;">${waitForPrevious ? '⏳ Wait' : '⚡ Cut'}</span>
           </div>
         `;
         } else if (node.type === 'screenshot') {
@@ -2100,29 +2124,32 @@ class NodeCanvasEditor {
       const isStartIn = (this.draftWire.startType === 'in');
       const rawDx = this.draftWire.x2 - this.draftWire.x1;
       const rawDy = this.draftWire.y2 - this.draftWire.y1;
-      
-      // Backward detection:
-      // - OUT port (starts on right of node): backward if mouse is to the left/behind (rawDx < 60)
-      // - IN port (starts on left of node): backward if mouse is to the right/behind (rawDx > -60)
-      const isBackward = isStartIn ? (rawDx > -60) : (rawDx < 60);
-
-      const outTension = isBackward
-        ? Math.max(75, Math.min(160, 45 + Math.abs(rawDy) * 0.3 + (isStartIn ? Math.max(0, rawDx) : Math.max(0, -rawDx)) * 0.2))
-        : Math.max(35, Math.abs(rawDx) * 0.5);
-
-      const inTension = isBackward
-        ? Math.max(35, Math.min(100, Math.abs(rawDx) * 0.35 + 20))
-        : Math.max(35, Math.abs(rawDx) * 0.5);
+      const absDy = Math.abs(rawDy);
+      const absDx = Math.abs(rawDx);
 
       let c1x, c2x;
       if (isStartIn) {
-        // Leaves IN port to the LEFT (-X) to clear node body on the right
-        c1x = this.draftWire.x1 - outTension;
-        c2x = isBackward ? (this.draftWire.x2 - inTension) : (this.draftWire.x2 + inTension);
+        // Dragging out from IN port (exits to the left -X)
+        if (rawDx <= 0) {
+          const t = Math.max(30, Math.min(140, absDx * 0.45 + absDy * 0.22));
+          c1x = this.draftWire.x1 - t;
+          c2x = this.draftWire.x2 + t;
+        } else {
+          const t = Math.max(35, Math.min(95, 35 + absDy * 0.12 + absDx * 0.1));
+          c1x = this.draftWire.x1 - t;
+          c2x = this.draftWire.x2 + t;
+        }
       } else {
-        // Leaves OUT port to the RIGHT (+X) to clear node body on the left
-        c1x = this.draftWire.x1 + outTension;
-        c2x = isBackward ? (this.draftWire.x2 + inTension) : (this.draftWire.x2 - inTension);
+        // Dragging out from OUT port (exits to the right +X)
+        if (rawDx >= 0) {
+          const t = Math.max(30, Math.min(140, absDx * 0.45 + absDy * 0.22));
+          c1x = this.draftWire.x1 + t;
+          c2x = this.draftWire.x2 - t;
+        } else {
+          const t = Math.max(35, Math.min(95, 35 + absDy * 0.12 + absDx * 0.1));
+          c1x = this.draftWire.x1 + t;
+          c2x = this.draftWire.x2 - t;
+        }
       }
 
       const pathData = `M ${this.draftWire.x1} ${this.draftWire.y1} C ${c1x} ${this.draftWire.y1}, ${c2x} ${this.draftWire.y2}, ${this.draftWire.x2} ${this.draftWire.y2}`;
@@ -2340,64 +2367,68 @@ class NodeCanvasEditor {
 
     const dx = x2 - x1;
     const dy = y2 - y1;
+    const absDy = Math.abs(dy);
+    const absDx = Math.abs(dx);
 
-    // 1. Knot to Knot: Continuous smooth spline following true direction (no diagonal ruler-straight line)
+    // 1. KNOT TO KNOT: Omnidirectional natural waypoint routing
+    // Reroute knots are point waypoints without rectangular card bodies.
+    // When connecting between two knots, the wire flows along the true travel direction
+    // (forward or backward) as a smooth, elegant S-curve, eliminating ugly paperclip U-turn loops.
     if (isFromKnot && isToKnot) {
-      const tensionX = Math.sign(dx || 1) * Math.max(35, Math.min(180, Math.abs(dx) * 0.45));
-      const tensionY = (Math.abs(dx) < 30) ? Math.sign(dy || 1) * Math.min(80, Math.abs(dy) * 0.3) : 0;
-      const c1x = x1 + tensionX;
-      const c1y = y1 + tensionY;
-      const c2x = x2 - tensionX;
-      const c2y = y2 - tensionY;
-      return `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`;
+      if (Math.abs(dx) < 10) {
+        return `M ${x1} ${y1} L ${x2} ${y2}`;
+      }
+      const dir = dx >= 0 ? 1 : -1;
+      const t = Math.max(15, Math.min(60, absDx * 0.35 + absDy * 0.15));
+      const c1x = x1 + dir * t;
+      const c2x = x2 - dir * t;
+      return `M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`;
     }
 
-    // 2. Node to Knot: Leaves node horizontally to the right, flows smoothly into Knot center
-    if (!isFromKnot && isToKnot) {
-      if (dx >= 60) {
-        const tension = Math.max(35, dx * 0.45);
-        return `M ${x1} ${y1} C ${x1 + tension} ${y1}, ${x2 - tension * 0.4} ${y2}, ${x2} ${y2}`;
-      } else {
-        // Knot is behind or directly below/above source node (dx < 60, e.g. False ▶ -> Knot below/left)
-        // Must arc OUTWARD generously to the right (+X) so it NEVER cuts under or behind the Action Node card!
-        const outTension = Math.max(80, Math.min(180, 50 + Math.abs(dy) * 0.35 + Math.max(0, -dx) * 0.25));
-        const inTension = Math.max(35, Math.min(100, Math.abs(dx) * 0.35 + 25));
-        const c2x = x2 + inTension;
-        return `M ${x1} ${y1} C ${x1 + outTension} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`;
-      }
+    // 2. NODE TO KNOT (dx < 0: Knot is behind/to the left of source node)
+    // Leaves source node to the right (+X) to clear node body, glides smoothly into Knot from the right
+    if (!isFromKnot && isToKnot && dx < 0) {
+      const loopTension = Math.max(35, Math.min(95, 35 + absDy * 0.12 + absDx * 0.1));
+      const knotTension = Math.max(15, Math.min(50, loopTension * 0.45));
+      const c1x = x1 + loopTension;
+      const c2x = x2 + knotTension;
+      return `M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`;
     }
 
-    // 3. Knot to Node: Leaves Knot towards the node, enters node horizontally from left
-    if (isFromKnot && !isToKnot) {
-      if (Math.abs(dy) < 25 && dx > 0) {
-        const tension = Math.max(20, dx * 0.4);
-        return `M ${x1} ${y1} C ${x1 + tension} ${y1}, ${x2 - tension} ${y2}, ${x2} ${y2}`;
-      }
-      if (dx >= 80) {
-        // Knot is well to the left of the node (plenty of room for smooth forward S-curve)
-        const tension = Math.max(35, dx * 0.45);
-        return `M ${x1} ${y1} C ${x1 + tension * 0.4} ${y1}, ${x2 - tension} ${y2}, ${x2} ${y2}`;
-      } else {
-        // Knot is directly below/above or behind the target node's IN port (dx < 80, e.g. Image 1)
-        // Must arc OUTWARD to the left (-X) in a graceful C-curve to enter IN port smoothly without kinks!
-        const inTension = Math.max(45, Math.min(130, 25 + Math.abs(dy) * 0.35 + Math.max(0, -dx) * 0.25));
-        const outTension = Math.max(40, Math.min(110, 20 + Math.abs(dy) * 0.3 + Math.max(0, -dx) * 0.2));
-        const c1x = x1 - outTension;
-        const c2x = x2 - inTension;
-        return `M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`;
-      }
-    }
+    // 3. Unreal Engine Spline Tangent System (FConnectionDrawingPolicy):
+    // Standard Node-to-Node, Forward Node-to-Knot, and Knot-to-Node
+    if (dx >= 0) {
+      // FORWARD FLOW (dx >= 0: Target is to the right of source)
+      const baseTension = dx * 0.45 + absDy * 0.22;
 
-    // 4. Standard Node to Node
-    if (dx >= 60) {
-      const tension = Math.max(40, dx * 0.5);
-      return `M ${x1} ${y1} C ${x1 + tension} ${y1}, ${x2 - tension} ${y2}, ${x2} ${y2}`;
+      // Knots are compact points (no card body), so their tangent handles are tighter
+      const t1 = isFromKnot 
+        ? Math.max(15, Math.min(60, baseTension * 0.45))
+        : Math.max(30, Math.min(140, baseTension));
+
+      const t2 = isToKnot
+        ? Math.max(15, Math.min(60, baseTension * 0.45))
+        : Math.max(30, Math.min(140, baseTension));
+
+      const c1x = x1 + t1;
+      const c2x = x2 - t2;
+      return `M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`;
     } else {
-      // Destination node is behind or directly below/above source node
-      // Both OUT port (Node A, right side) and IN port (Node B, left side) get generous outward clearance!
-      const outTension = Math.max(80, Math.min(180, 50 + Math.abs(dy) * 0.35 + Math.max(0, -dx) * 0.25));
-      const inTension = Math.max(75, Math.min(160, 45 + Math.abs(dy) * 0.35 + Math.max(0, -dx) * 0.25));
-      return `M ${x1} ${y1} C ${x1 + outTension} ${y1}, ${x2 - inTension} ${y2}, ${x2} ${y2}`;
+      // BACKWARD FLOW (dx < 0: Destination node is behind/to the left of source)
+      // Smooth compact loop: Leaves right (+X), circles around, enters left (-X)
+      const loopTension = Math.max(35, Math.min(95, 35 + absDy * 0.12 + absDx * 0.1));
+
+      const t1 = isFromKnot
+        ? Math.max(20, Math.min(50, loopTension * 0.5))
+        : loopTension;
+
+      const t2 = isToKnot
+        ? Math.max(20, Math.min(50, loopTension * 0.5))
+        : loopTension;
+
+      const c1x = x1 + t1;
+      const c2x = x2 - t2;
+      return `M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`;
     }
   }
 
@@ -3202,6 +3233,7 @@ class NodeCanvasEditor {
         text: isEn ? 'Party HP alert from bot' : 'เกิดการแจ้งเตือนจากบอท',
         voice: isEn ? 'en-US-JennyNeural' : 'th-TH-PremwadeeNeural',
         volume: 100,
+        waitForPrevious: false,
         enabled: true
       };
     } else if (type === 'buff_sequence') {
@@ -3354,43 +3386,37 @@ class NodeCanvasEditor {
     this.closeInspector();
   }
 
-  switchDrawerTab(tabName) {
-    this.activeDrawerTab = tabName;
-    if (this.tabBtnOutliner) this.tabBtnOutliner.classList.toggle('active', tabName === 'outliner');
-    if (this.tabBtnVariables) this.tabBtnVariables.classList.toggle('active', tabName === 'variables');
-    if (this.tabBtnHistory) this.tabBtnHistory.classList.toggle('active', tabName === 'history');
-    if (this.drawerOutlinerBody) this.drawerOutlinerBody.style.display = tabName === 'outliner' ? 'flex' : 'none';
-    if (this.drawerVariablesBody) this.drawerVariablesBody.style.display = tabName === 'variables' ? 'flex' : 'none';
-    if (this.drawerHistoryBody) this.drawerHistoryBody.style.display = tabName === 'history' ? 'flex' : 'none';
+  togglePanel(panelName = 'outliner', forceState = undefined) {
+    let targetPanel = null;
+    let targetBtn = null;
 
-    if (tabName === 'history') {
-      this.renderHistory();
-    } else if (tabName === 'variables') {
-      this.renderVariablesPanel();
+    if (panelName === 'variables') {
+      targetPanel = this.variablesPanel;
+      targetBtn = this.btnToggleVariables;
+    } else if (panelName === 'history') {
+      targetPanel = this.historyPanel;
+      targetBtn = this.btnToggleHistory;
     } else {
-      this.renderOutliner();
-    }
-  }
-
-  togglePanel(tabName = null, forceState = undefined) {
-    if (!this.outlinerPanel) return;
-    const isCurrentlyOpen = this.outlinerPanel.classList.contains('open');
-
-    if (tabName) {
-      this.switchDrawerTab(tabName);
+      targetPanel = this.outlinerPanel;
+      targetBtn = this.btnToggleOutliner;
     }
 
-    const shouldOpen = forceState !== undefined ? !!forceState : (!isCurrentlyOpen || (tabName && this.activeDrawerTab !== tabName));
+    if (!targetPanel) return;
+
+    const isCurrentlyOpen = targetPanel.classList.contains('open');
+    const shouldOpen = forceState !== undefined ? !!forceState : !isCurrentlyOpen;
 
     if (shouldOpen) {
-      this.outlinerPanel.classList.add('open');
-      if (this.activeDrawerTab === 'history') {
-        this.renderHistory();
-      } else if (this.activeDrawerTab === 'variables') {
+      targetPanel.classList.add('open');
+      if (targetBtn) targetBtn.classList.add('active');
+
+      if (panelName === 'variables') {
         this.renderVariablesPanel();
         if (this.variablesSearchInput) {
           setTimeout(() => this.variablesSearchInput.focus(), 50);
         }
+      } else if (panelName === 'history') {
+        this.renderHistory();
       } else {
         this.renderOutliner();
         if (this.outlinerSearchInput) {
@@ -3398,36 +3424,76 @@ class NodeCanvasEditor {
         }
       }
     } else {
-      this.outlinerPanel.classList.remove('open');
+      targetPanel.classList.remove('open');
+      if (targetBtn) targetBtn.classList.remove('active');
     }
+  }
+
+  closeAllDrawers() {
+    if (this.outlinerPanel) this.outlinerPanel.classList.remove('open');
+    if (this.variablesPanel) this.variablesPanel.classList.remove('open');
+    if (this.historyPanel) this.historyPanel.classList.remove('open');
+    if (this.btnToggleOutliner) this.btnToggleOutliner.classList.remove('active');
+    if (this.btnToggleVariables) this.btnToggleVariables.classList.remove('active');
+    if (this.btnToggleHistory) this.btnToggleHistory.classList.remove('active');
+  }
+
+  switchDrawerTab(panelName) {
+    this.togglePanel(panelName, true);
   }
 
   // =========================================================================
   // UNREAL ENGINE BLUEPRINT VARIABLES SYSTEM
   // =========================================================================
+
+  /**
+   * Sync current canvas variables & nodes back to fullConfig
+   * so cross-profile variable discovery always sees fresh data.
+   */
+  syncVariablesToFullConfig() {
+    if (!window.fullConfig || !window.fullConfig.profiles) return;
+    const targetProfileName = this.currentProfileName || window.currentEditProfile;
+    if (!targetProfileName) return;
+    const profObj = window.fullConfig.profiles[targetProfileName];
+    if (!profObj) return;
+
+    // Sync variables array (includes auto-discovered ones, even if empty)
+    if (Array.isArray(this.variables)) {
+      profObj.variables = JSON.parse(JSON.stringify(this.variables));
+    }
+    // Sync nodes (so node-level scan also picks up latest data)
+    if (Array.isArray(this.nodes)) {
+      profObj.nodes = JSON.parse(JSON.stringify(this.nodes));
+    }
+    // Sync connections
+    if (Array.isArray(this.connections)) {
+      profObj.connections = JSON.parse(JSON.stringify(this.connections));
+    }
+  }
+
   getAvailableVariables() {
     if (!Array.isArray(this.variables)) this.variables = [];
 
-    // Auto-discovery from nodes on canvas
+    // Auto-discovery from nodes on current canvas (var_set, variable, var_get, var_branch)
     const existingNames = new Set(this.variables.map(v => v.name));
 
     this.nodes.forEach(node => {
-      if (node.type === 'var_set' || node.type === 'variable' || node.type === 'var_get') {
-        const vName = node.data?.varName || (node.title ? node.title.replace(/^(Get |Set )/, '') : null);
+      if (node.type === 'var_set' || node.type === 'variable' || node.type === 'var_get' || node.type === 'var_branch') {
+        const d = node.data || {};
+        const vName = d.varName || (d.conditionTargetId && String(d.conditionTargetId).startsWith('var:') ? String(d.conditionTargetId).replace('var:', '') : (node.title ? node.title.replace(/^(Get |Set )/, '') : null));
         if (vName && !existingNames.has(vName)) {
           existingNames.add(vName);
-          const vType = node.data?.varType || (node.type === 'var_get' ? 'string' : 'boolean');
-          const vScope = node.data?.scope || 'client';
-          const defVal = node.data?.defaultValue !== undefined
-            ? node.data.defaultValue
-            : (node.data?.initialValue !== undefined ? node.data.initialValue : (vType === 'boolean' ? 'false' : (vType === 'number' ? '0' : '')));
+          const vType = d.varType || (node.type === 'var_get' ? 'string' : 'boolean');
+          const defVal = d.defaultValue !== undefined
+            ? d.defaultValue
+            : (d.initialValue !== undefined ? d.initialValue : (vType === 'boolean' ? 'false' : (vType === 'number' ? '0' : '')));
 
           this.variables.push({
             id: 'var_' + Math.random().toString(36).substring(2, 9),
             name: vName,
             type: vType,
-            scope: 'global',
-            targetClient: 'all',
+            scope: d.scope || 'global',
+            targetClient: d.targetClient || 'all',
             defaultValue: String(defVal),
             description: ''
           });
@@ -3435,7 +3501,66 @@ class NodeCanvasEditor {
       }
     });
 
-    return this.variables.sort((a, b) => a.name.localeCompare(b.name));
+    // Cross-profile discovery: pull variables from other active profiles
+    const crossProfileVars = [];
+    if (window.fullConfig && window.fullConfig.profiles && window.fullConfig.activeProfiles) {
+      const currentProfileName = this.currentProfileName || window.currentEditProfile || '';
+      const activeProfileNames = Array.isArray(window.fullConfig.activeProfiles)
+        ? window.fullConfig.activeProfiles
+        : [window.fullConfig.activeProfile || 'Default'];
+
+      activeProfileNames.forEach(pName => {
+        if (pName === currentProfileName) return; // Skip current profile (already in this.variables)
+        const profObj = window.fullConfig.profiles[pName];
+        if (!profObj) return;
+
+        // From profile's variables array
+        const vars = Array.isArray(profObj.variables) ? profObj.variables : [];
+        vars.forEach(v => {
+          if (existingNames.has(v.name)) return;
+          existingNames.add(v.name);
+          crossProfileVars.push({
+            id: 'xvar_' + Math.random().toString(36).substring(2, 9),
+            name: v.name,
+            type: v.type || v.varType || 'boolean',
+            scope: v.scope || 'global',
+            targetClient: v.targetClient || 'all',
+            defaultValue: v.defaultValue !== undefined ? String(v.defaultValue) : '',
+            description: v.description || '',
+            fromProfile: pName,
+            isSharedAcrossProfiles: true,
+            isReadOnly: true
+          });
+        });
+
+        // From variable nodes on that profile's canvas (discover all, regardless of scope)
+        const nodes = Array.isArray(profObj.nodes) ? profObj.nodes : [];
+        nodes.forEach(node => {
+          if (node.type !== 'var_set' && node.type !== 'variable' && node.type !== 'var_get' && node.type !== 'var_branch') return;
+          const d = node.data || {};
+          const vName = d.varName || (d.conditionTargetId && String(d.conditionTargetId).startsWith('var:') ? String(d.conditionTargetId).replace('var:', '') : (node.title ? node.title.replace(/^(Get |Set )/, '') : null));
+          if (!vName || existingNames.has(vName)) return;
+          existingNames.add(vName);
+          crossProfileVars.push({
+            id: 'xvar_' + Math.random().toString(36).substring(2, 9),
+            name: vName,
+            type: d.varType || 'boolean',
+            scope: d.scope || 'global',
+            targetClient: d.targetClient || 'all',
+            defaultValue: d.defaultValue !== undefined ? String(d.defaultValue) : (d.initialValue !== undefined ? String(d.initialValue) : ''),
+            description: '',
+            fromProfile: pName,
+            isSharedAcrossProfiles: true,
+            isReadOnly: true
+          });
+        });
+      });
+    }
+    // Auto-sync current profile's variables to fullConfig for cross-profile freshness
+    this.syncVariablesToFullConfig();
+
+    const allVars = [...this.variables, ...crossProfileVars];
+    return allVars.sort((a, b) => a.name.localeCompare(b.name));
   }
 
   filterVariables(query) {
@@ -3476,15 +3601,19 @@ class NodeCanvasEditor {
     this.variablesListEl.innerHTML = filtered.map(v => {
       const typeBadgeClass = v.type === 'number' ? 'var-badge-number' : (v.type === 'boolean' ? 'var-badge-boolean' : 'var-badge-string');
       const typeIcon = v.type === 'number' ? '🔢' : (v.type === 'boolean' ? '🔘' : '📝');
+      const isCrossProfile = v.isSharedAcrossProfiles && v.fromProfile;
+      const scopeLabel = isCrossProfile
+        ? `🌐 แชร์จาก "${v.fromProfile}"`
+        : '🌐 Global';
 
       return `
-        <div class="variable-card" id="var-card-${v.id}">
+        <div class="variable-card${isCrossProfile ? ' variable-card-shared' : ''}" id="var-card-${v.id}">
           <div class="variable-card-top">
             <span class="variable-name" title="${v.name}">${v.name}</span>
             <span class="var-type-badge ${typeBadgeClass}">${typeIcon} ${v.type}</span>
           </div>
           <div class="variable-card-meta">
-            <span>🌐 Global</span>
+            <span>${scopeLabel}</span>
             <span style="font-family:'JetBrains Mono'; opacity:0.85;">Def: ${v.defaultValue !== undefined ? v.defaultValue : '-'}</span>
           </div>
           ${v.description ? `<div style="font-size:10px; color:#94a3b8; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${v.description}">${v.description}</div>` : ''}
@@ -3495,12 +3624,14 @@ class NodeCanvasEditor {
             <button type="button" class="btn-var-spawn btn-var-set" onclick="window.nodeCanvas.spawnVariableNode('${v.name}', 'var_set')" title="วางโหนด Set Variable ลง Canvas">
               ✏️ ${canvasT('var_spawn_set', 'Set')}
             </button>
+            ${!isCrossProfile ? `
             <button type="button" class="btn-var-icon" onclick="window.nodeCanvas.openVariableModal('${v.id}')" title="แก้ไขตัวแปร (Edit)">
               ⚙️
             </button>
             <button type="button" class="btn-var-icon btn-var-del" onclick="window.nodeCanvas.deleteVariable('${v.id}')" title="ลบตัวแปร (Delete)">
               🗑️
             </button>
+            ` : ''}
           </div>
         </div>
       `;
@@ -3631,6 +3762,7 @@ class NodeCanvasEditor {
     const varName = vObj ? vObj.name : '';
     const varType = vObj ? (vObj.type || 'boolean') : 'boolean';
     const defaultValue = vObj ? (vObj.defaultValue !== undefined ? vObj.defaultValue : '') : (varType === 'boolean' ? 'false' : (varType === 'number' ? '0' : ''));
+    const varScope = vObj ? (vObj.scope || 'global') : 'global';
     const desc = vObj ? (vObj.description || '') : '';
 
     modalEl.innerHTML = `
@@ -3657,6 +3789,15 @@ class NodeCanvasEditor {
               <option value="number" ${varType === 'number' ? 'selected' : ''}>🔢 Number (ตัวเลขจำนวนเต็ม/ทศนิยม - สีฟ้า)</option>
               <option value="string" ${varType === 'string' ? 'selected' : ''}>📝 String (ข้อความตัวอักษร - สีชมพู)</option>
             </select>
+          </div>
+
+          <div class="inspector-field-group" style="margin-bottom:12px;">
+            <label class="inspector-label">${canvasT('var_scope_label', 'ขอบเขต (Scope)')}</label>
+            <select id="modal-var-scope" class="inspector-select">
+              <option value="global" ${varScope === 'global' ? 'selected' : ''}>🌐 Global (แชร์ข้ามทุกโปรไฟล์ที่ Active)</option>
+              <option value="client" ${varScope === 'client' ? 'selected' : ''}>🖥️ Client (เฉพาะหน้าจอ/โปรไฟล์นี้)</option>
+            </select>
+            <span style="font-size:10px; color:var(--muted); margin-top:3px; display:block;">Global = โปรไฟล์อื่นที่ Active อยู่สามารถอ่าน/เขียนตัวแปรนี้ร่วมกันได้</span>
           </div>
 
           <div class="inspector-field-group" style="margin-bottom:12px;">
@@ -3708,7 +3849,8 @@ class NodeCanvasEditor {
 
     const rawName = nameInput.value.trim().replace(/\s+/g, '_');
     const type = typeSelect ? typeSelect.value : 'boolean';
-    const scope = 'global';
+    const scopeSelect = document.getElementById('modal-var-scope');
+    const scope = scopeSelect ? scopeSelect.value : 'global';
     const targetClient = 'all';
     let defaultValue = defaultInput ? defaultInput.value.trim() : '';
     if (type === 'boolean' && defaultValue !== 'true' && defaultValue !== 'false') defaultValue = 'false';
@@ -4709,11 +4851,14 @@ class NodeCanvasEditor {
     const searchInput = document.getElementById('spotlight-search-input');
     if (searchInput) searchInput.placeholder = canvasT('palette_search_placeholder', 'Search node or action...');
 
-    const outlinerTab = document.getElementById('lbl-drawer-tab-outliner');
-    if (outlinerTab) outlinerTab.textContent = window.currentLang === 'en' ? 'Actions' : 'รายการคำสั่ง';
+    const outlinerTitle = document.getElementById('lbl-outliner-title') || document.getElementById('lbl-drawer-tab-outliner');
+    if (outlinerTitle) outlinerTitle.textContent = window.currentLang === 'en' ? 'Actions' : 'รายการคำสั่ง';
 
-    const historyTab = document.getElementById('lbl-drawer-tab-history');
-    if (historyTab) historyTab.textContent = window.currentLang === 'en' ? 'History' : 'ประวัติแก้ไข';
+    const varsTitle = document.getElementById('lbl-variables-title') || document.getElementById('lbl-drawer-tab-variables');
+    if (varsTitle) varsTitle.textContent = window.currentLang === 'en' ? 'Variables' : 'ตัวแปร (Variables)';
+
+    const historyTitle = document.getElementById('lbl-history-title') || document.getElementById('lbl-drawer-tab-history');
+    if (historyTitle) historyTitle.textContent = window.currentLang === 'en' ? 'Edit History' : 'ประวัติการแก้ไข';
 
     const outlinerSearch = document.getElementById('outliner-search-input');
     if (outlinerSearch) outlinerSearch.placeholder = window.currentLang === 'en' ? '🔍 Search Action, Key, Type...' : '🔍 ค้นหา Action, Key, Type...';

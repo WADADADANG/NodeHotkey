@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Full Buff",
   "canvas": {
-    "zoom": 0.5884914648979521,
+    "zoom": 0.576780484746483,
     "pan": {
-      "x": -1214,
-      "y": -244
+      "x": -957,
+      "y": -1
     }
   },
   "nodes": [
@@ -482,8 +482,8 @@
       "type": "tts",
       "title": "Text to Speech (TTS)",
       "position": {
-        "x": 2480,
-        "y": 980
+        "x": 2530,
+        "y": 1000
       },
       "data": {
         "enabled": true,
@@ -517,8 +517,8 @@
       "type": "party_buff",
       "title": "party_buff",
       "position": {
-        "x": 3330,
-        "y": 1010
+        "x": 3310,
+        "y": 1000
       },
       "data": {
         "enabled": true,
@@ -554,7 +554,7 @@
       "title": "Format Text",
       "position": {
         "x": 4420,
-        "y": 1170
+        "y": 1180
       },
       "data": {
         "enabled": true,
@@ -642,8 +642,8 @@
       "type": "var_set",
       "title": "Set isFullBuffPartyScanner",
       "position": {
-        "x": 2480,
-        "y": 1220
+        "x": 2530,
+        "y": 1230
       },
       "data": {
         "enabled": true,
@@ -662,8 +662,8 @@
       "type": "var_set",
       "title": "Set isFullBuffPartyScanner",
       "position": {
-        "x": 2820,
-        "y": 1200
+        "x": 2870,
+        "y": 1360
       },
       "data": {
         "enabled": true,
@@ -736,6 +736,84 @@
         "opValue": "1",
         "actionId": "1789712321031_1305"
       }
+    },
+    {
+      "id": "node_1790566114013",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 4190,
+        "y": 550
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790566114013"
+      }
+    },
+    {
+      "id": "node_1790566142946",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 3960,
+        "y": 1660
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790566142946"
+      }
+    },
+    {
+      "id": "node_1790566179128",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 3080,
+        "y": 1230
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790566179128"
+      }
+    },
+    {
+      "id": "node_1790566201878",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 2450,
+        "y": 920
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790566201878"
+      }
+    },
+    {
+      "id": "node_1790566220633_712",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 2460,
+        "y": 1030
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790566220633_712"
+      }
+    },
+    {
+      "id": "node_1790566246084_94",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 2870,
+        "y": 1230
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790566246084_94"
+      }
     }
   ],
   "connections": [
@@ -803,59 +881,10 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1789127458922",
-      "fromNodeId": "node_1788970148217_3228",
-      "fromPort": "onComplete",
-      "toNodeId": "node_1789127455286",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1789159470261",
-      "fromNodeId": "node_1788970148217_3228",
-      "fromPort": "onComplete",
-      "toNodeId": "node_1789159465925",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1789159483787",
-      "fromNodeId": "node_1789159465925",
-      "fromPort": "onError",
-      "toNodeId": "node_1788970221662",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1789159624925",
-      "fromNodeId": "node_1789159615592",
-      "fromPort": "onNextMember",
-      "toNodeId": "node_1788970211279_2906",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1789159629695",
-      "fromNodeId": "node_1789159615592",
-      "fromPort": "onComplete",
-      "toNodeId": "node_1788970309194",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1789159639245",
-      "fromNodeId": "node_1789159615592",
-      "fromPort": "onComplete",
-      "toNodeId": "node_1788970282798",
-      "toPort": "exec_in"
-    },
-    {
       "id": "conn_1789159715163",
       "fromNodeId": "node_1789159465925",
       "fromPort": "onScanned",
       "toNodeId": "node_1789159615592",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1789256729438",
-      "fromNodeId": "node_1789159615592",
-      "fromPort": "onNextMember",
-      "toNodeId": "node_1789256723555",
       "toPort": "exec_in"
     },
     {
@@ -901,31 +930,10 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1789712240671",
-      "fromNodeId": "node_1788970148217_3228",
-      "fromPort": "onComplete",
-      "toNodeId": "node_1789712235204_2458",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1789712249335",
-      "fromNodeId": "node_1789159465925",
-      "fromPort": "onError",
-      "toNodeId": "node_1789712245422_6511",
-      "toPort": "exec_in"
-    },
-    {
       "id": "conn_1789712260213",
       "fromNodeId": "node_1789159615592",
       "fromPort": "onError",
       "toNodeId": "node_1789712253768_123",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1789712275434",
-      "fromNodeId": "node_1789159615592",
-      "fromPort": "onComplete",
-      "toNodeId": "node_1789712266344_1756",
       "toPort": "exec_in"
     },
     {
@@ -940,6 +948,118 @@
       "fromNodeId": "node_1789712132650",
       "fromPort": "next",
       "toNodeId": "node_1788970148217_3228",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790566128152",
+      "fromNodeId": "node_1789159615592",
+      "fromPort": "onNextMember",
+      "toNodeId": "node_1790566114013",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790566130640",
+      "fromNodeId": "node_1790566114013",
+      "fromPort": "out",
+      "toNodeId": "node_1789256723555",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790566133467",
+      "fromNodeId": "node_1790566114013",
+      "fromPort": "out",
+      "toNodeId": "node_1788970211279_2906",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790566145658",
+      "fromNodeId": "node_1789159615592",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1790566142946",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790566151047",
+      "fromNodeId": "node_1790566142946",
+      "fromPort": "out",
+      "toNodeId": "node_1789712266344_1756",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790566154162",
+      "fromNodeId": "node_1790566142946",
+      "fromPort": "out",
+      "toNodeId": "node_1788970309194",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790566156893",
+      "fromNodeId": "node_1790566142946",
+      "fromPort": "out",
+      "toNodeId": "node_1788970282798",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790566184918",
+      "fromNodeId": "node_1789159465925",
+      "fromPort": "onError",
+      "toNodeId": "node_1790566179128",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790566190698",
+      "fromNodeId": "node_1790566179128",
+      "fromPort": "out",
+      "toNodeId": "node_1788970221662",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790566205788",
+      "fromNodeId": "node_1788970148217_3228",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1790566201878",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790566207737",
+      "fromNodeId": "node_1790566201878",
+      "fromPort": "out",
+      "toNodeId": "node_1789159465925",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790566220633_in",
+      "fromNodeId": "node_1790566201878",
+      "fromPort": "out",
+      "toNodeId": "node_1790566220633_712",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790566220633_out",
+      "fromNodeId": "node_1790566220633_712",
+      "fromPort": "out",
+      "toNodeId": "node_1789712235204_2458",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790566224575",
+      "fromNodeId": "node_1790566220633_712",
+      "fromPort": "out",
+      "toNodeId": "node_1789127455286",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790566246084_in",
+      "fromNodeId": "node_1790566179128",
+      "fromPort": "out",
+      "toNodeId": "node_1790566246084_94",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790566246084_out",
+      "fromNodeId": "node_1790566246084_94",
+      "fromPort": "out",
+      "toNodeId": "node_1789712245422_6511",
       "toPort": "exec_in"
     }
   ]

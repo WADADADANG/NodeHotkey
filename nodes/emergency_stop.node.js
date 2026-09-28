@@ -44,7 +44,7 @@ module.exports = {
 
   async execute(context, action, callStack = []) {
     if (typeof global.stopAllAudio === 'function') {
-      global.stopAllAudio();
+      global.stopAllAudio(false); // Stop SFX/alarms, but preserve active TTS voice alerts
     }
     if (typeof global.runEmergencyStopAction === 'function') {
       await global.runEmergencyStopAction(action, callStack);

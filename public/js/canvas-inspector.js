@@ -858,6 +858,7 @@
     const text = node.data?.text || '';
     const voice = node.data?.voice || 'th-TH-PremwadeeNeural';
     const volume = node.data?.volume !== undefined ? node.data.volume : 100;
+    const waitForPrevious = node.data?.waitForPrevious === true;
 
     const textConn = this.connections.find(c => c.toNodeId === node.id && (c.toPort === 'text_in' || c.toPort === 'msg_in'));
     let srcTitle = '';
@@ -906,6 +907,15 @@
         <div style="display:flex; align-items:center; gap:8px;">
           <input type="range" min="0" max="100" step="5" value="${volume}" style="flex:1; accent-color:#c084fc;" oninput="this.nextElementSibling.innerText = this.value + '%'; window.nodeCanvas.updateNodeData('${node.id}', 'volume', parseInt(this.value, 10));" />
           <span style="min-width:44px; font-weight:700; color:#c084fc; font-family:'JetBrains Mono',monospace;">${volume}%</span>
+        </div>
+      </div>
+      <div class="inspector-field-group" style="margin-top:8px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text); cursor:pointer;">
+          <input type="checkbox" ${waitForPrevious ? 'checked' : ''} onchange="window.nodeCanvas.updateNodeData('${node.id}', 'waitForPrevious', this.checked); window.nodeCanvas.renderNodes();" style="accent-color:#ec4899; cursor:pointer;" />
+          <span>⏳ ${canvasT('inspector_tts_wait_previous', isEn ? 'Wait for Previous Voice (Queue)' : 'รอตัวเก่าเล่นเสร็จก่อน (เข้าคิว)')}</span>
+        </label>
+        <div style="font-size:10.5px; opacity:0.6; margin-top:2px; margin-left:22px; line-height:1.4;">
+          ${canvasT('inspector_tts_wait_previous_hint', isEn ? 'ON: Wait for previous speech to finish before speaking | OFF: Interrupt & speak immediately' : 'เปิด: รอให้เสียงเก่าพูดจบก่อนแล้วค่อยพูดต่อ (ไม่ตัดเสียง) | ปิด: ตัดเสียงเก่าทันทีแล้วพูดใหม่ (ข้ามตัวเก่า)')}
         </div>
       </div>
     `;

@@ -33,7 +33,6 @@ module.exports = {
 
     if (typeof global.fireChain === 'function') {
       await global.fireChain(action, 'out', stack);
-      await global.fireChain(action, 'next', stack);
       return true;
     }
 

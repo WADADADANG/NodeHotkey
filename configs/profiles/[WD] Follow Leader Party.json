@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Follow Leader Party",
   "canvas": {
-    "zoom": 0.7930366830916332,
+    "zoom": 1.0442744734957345,
     "pan": {
-      "x": -343,
-      "y": -17
+      "x": -251,
+      "y": 270
     }
   },
   "nodes": [
@@ -14,7 +14,7 @@
       "type": "trigger",
       "title": "Global Trigger",
       "position": {
-        "x": 280,
+        "x": 370,
         "y": 130
       },
       "data": {
@@ -314,7 +314,7 @@
       "type": "client_check",
       "title": "Client Check 6",
       "position": {
-        "x": 1360,
+        "x": 1370,
         "y": 1210
       },
       "data": {
@@ -329,7 +329,7 @@
       "type": "var_branch",
       "title": "Variable Branch",
       "position": {
-        "x": 750,
+        "x": 690,
         "y": 130
       },
       "data": {
@@ -345,14 +345,14 @@
     {
       "id": "node_1790496738696",
       "type": "var_set",
-      "title": "Set isWorking",
+      "title": "Set isScanningPartyFollowLeader",
       "position": {
-        "x": 750,
-        "y": 370
+        "x": 690,
+        "y": 530
       },
       "data": {
         "enabled": true,
-        "varName": "isWorking",
+        "varName": "isScanningPartyFollowLeader",
         "varType": "boolean",
         "scope": "global",
         "targetClient": "all",
@@ -367,8 +367,8 @@
       "type": "emergency_stop",
       "title": "Emergency Stop All",
       "position": {
-        "x": 1020,
-        "y": 490
+        "x": 950,
+        "y": 660
       },
       "data": {
         "enabled": true,
@@ -381,14 +381,14 @@
     {
       "id": "node_1790497234311_567",
       "type": "var_set",
-      "title": "Set isWorking",
+      "title": "Set isScanningPartyFollowLeader",
       "position": {
         "x": 2450,
-        "y": 1390
+        "y": 1650
       },
       "data": {
         "enabled": true,
-        "varName": "isWorking",
+        "varName": "isScanningPartyFollowLeader",
         "varType": "boolean",
         "scope": "global",
         "targetClient": "all",
@@ -401,14 +401,14 @@
     {
       "id": "node_1790497244311_9571",
       "type": "var_set",
-      "title": "Set isWorking",
+      "title": "Set isScanningPartyFollowLeader",
       "position": {
-        "x": 2770,
-        "y": 800
+        "x": 3620,
+        "y": 1060
       },
       "data": {
         "enabled": true,
-        "varName": "isWorking",
+        "varName": "isScanningPartyFollowLeader",
         "varType": "boolean",
         "scope": "global",
         "targetClient": "all",
@@ -423,8 +423,8 @@
       "type": "emergency_stop",
       "title": "Emergency Stop All",
       "position": {
-        "x": 3080,
-        "y": 920
+        "x": 3930,
+        "y": 1180
       },
       "data": {
         "enabled": true,
@@ -435,16 +435,571 @@
       }
     },
     {
-      "id": "node_1790558471821",
+      "id": "node_1790559002013",
       "type": "reroute",
       "title": "Reroute",
       "position": {
-        "x": 2580,
-        "y": 830
+        "x": 3420,
+        "y": 1090
       },
       "data": {
         "enabled": true,
-        "actionId": "1790558471821"
+        "actionId": "1790559002013"
+      }
+    },
+    {
+      "id": "node_1790560210656_671",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 2330,
+        "y": 1290
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560210656_671"
+      }
+    },
+    {
+      "id": "node_1790560224948_803",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 1320,
+        "y": 1290
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560224948_803"
+      }
+    },
+    {
+      "id": "node_1790560461089_868",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 2330,
+        "y": 1090
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560461089_868"
+      }
+    },
+    {
+      "id": "node_1790560466202_810",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 1330,
+        "y": 1090
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560466202_810"
+      }
+    },
+    {
+      "id": "node_1790560472794_851",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 2330,
+        "y": 890
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560472794_851"
+      }
+    },
+    {
+      "id": "node_1790560477457_580",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 1330,
+        "y": 880
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560477457_580"
+      }
+    },
+    {
+      "id": "node_1790560491290_529",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 2330,
+        "y": 700
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560491290_529"
+      }
+    },
+    {
+      "id": "node_1790560499363_986",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 1340,
+        "y": 690
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560499363_986"
+      }
+    },
+    {
+      "id": "node_1790560516786_228",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 2330,
+        "y": 490
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560516786_228"
+      }
+    },
+    {
+      "id": "node_1790560519879_604",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 1340,
+        "y": 490
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560519879_604"
+      }
+    },
+    {
+      "id": "node_1790560557477_200",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 1340,
+        "y": 380
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560557477_200"
+      }
+    },
+    {
+      "id": "node_1790560561583_861",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 1600,
+        "y": 380
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560561583_861"
+      }
+    },
+    {
+      "id": "node_1790560571789_760",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 1600,
+        "y": 580
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560571789_760"
+      }
+    },
+    {
+      "id": "node_1790560574635_610",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 1340,
+        "y": 580
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560574635_610"
+      }
+    },
+    {
+      "id": "node_1790560580274_766",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 1600,
+        "y": 780
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560580274_766"
+      }
+    },
+    {
+      "id": "node_1790560582550_486",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 1340,
+        "y": 780
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560582550_486"
+      }
+    },
+    {
+      "id": "node_1790560587006_483",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 1600,
+        "y": 980
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560587006_483"
+      }
+    },
+    {
+      "id": "node_1790560588891_774",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 1330,
+        "y": 980
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560588891_774"
+      }
+    },
+    {
+      "id": "node_1790560592138_821",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 1600,
+        "y": 1180
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560592138_821"
+      }
+    },
+    {
+      "id": "node_1790560594748_553",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 1330,
+        "y": 1180
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790560594748_553"
+      }
+    },
+    {
+      "id": "node_1790566659812",
+      "type": "var_set",
+      "title": "Set isScanningPartyFollowLeader",
+      "position": {
+        "x": 1060,
+        "y": 210
+      },
+      "data": {
+        "enabled": true,
+        "varName": "isScanningPartyFollowLeader",
+        "varType": "boolean",
+        "scope": "global",
+        "targetClient": "all",
+        "initialValue": "false",
+        "operation": "set_true",
+        "opValue": "1",
+        "actionId": "1790566659812"
+      }
+    },
+    {
+      "id": "node_1790566837251",
+      "type": "tts",
+      "title": "Text to Speech 1",
+      "position": {
+        "x": 2950,
+        "y": 460
+      },
+      "data": {
+        "enabled": true,
+        "text": "จอที่ 1 สแกนปาร์ตี้ผิดพลาด",
+        "voice": "th-TH-PremwadeeNeural",
+        "volume": 100,
+        "waitForPrevious": true,
+        "actionId": "1790566837251"
+      }
+    },
+    {
+      "id": "node_1790566912329_2171",
+      "type": "tts",
+      "title": "Text to Speech 2",
+      "position": {
+        "x": 2950,
+        "y": 690
+      },
+      "data": {
+        "enabled": true,
+        "text": "จอที่ 2 สแกนปาร์ตี้ผิดพลาด",
+        "voice": "th-TH-PremwadeeNeural",
+        "volume": 100,
+        "waitForPrevious": true,
+        "actionId": "1790566912329_2171"
+      }
+    },
+    {
+      "id": "node_1790566926958_1859",
+      "type": "tts",
+      "title": "Text to Speech 3",
+      "position": {
+        "x": 2950,
+        "y": 920
+      },
+      "data": {
+        "enabled": true,
+        "text": "จอที่ 3 สแกนปาร์ตี้ผิดพลาด",
+        "voice": "th-TH-PremwadeeNeural",
+        "volume": 100,
+        "waitForPrevious": true,
+        "actionId": "1790566926958_1859"
+      }
+    },
+    {
+      "id": "node_1790566947301_912",
+      "type": "tts",
+      "title": "Text to Speech 4",
+      "position": {
+        "x": 2950,
+        "y": 1150
+      },
+      "data": {
+        "enabled": true,
+        "text": "จอที่ 4 สแกนปาร์ตี้ผิดพลาด",
+        "voice": "th-TH-PremwadeeNeural",
+        "volume": 100,
+        "waitForPrevious": true,
+        "actionId": "1790566947301_912"
+      }
+    },
+    {
+      "id": "node_1790566986389_542",
+      "type": "tts",
+      "title": "Text to Speech 5",
+      "position": {
+        "x": 2950,
+        "y": 1380
+      },
+      "data": {
+        "enabled": true,
+        "text": "จอที่ 5 สแกนปาร์ตี้ผิดพลาด",
+        "voice": "th-TH-PremwadeeNeural",
+        "volume": 100,
+        "waitForPrevious": true,
+        "actionId": "1790566986389_542"
+      }
+    },
+    {
+      "id": "node_1790567004321_482",
+      "type": "tts",
+      "title": "Text to Speech 6",
+      "position": {
+        "x": 2950,
+        "y": 1600
+      },
+      "data": {
+        "enabled": true,
+        "text": "จอที่ 6 สแกนปาร์ตี้ผิดพลาด",
+        "voice": "th-TH-PremwadeeNeural",
+        "volume": 100,
+        "waitForPrevious": true,
+        "actionId": "1790567004321_482"
+      }
+    },
+    {
+      "id": "node_1790567098411",
+      "type": "trigger",
+      "title": "Global Trigger ใช้สำหรับเทส เพื่อ คืนสถานะตัวแปร",
+      "position": {
+        "x": 370,
+        "y": 1110
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "NUMPAD 0",
+        "actionId": "1790567098411"
+      }
+    },
+    {
+      "id": "node_1790567109102",
+      "type": "var_set",
+      "title": "Set isScanningPartyFollowLeader",
+      "position": {
+        "x": 680,
+        "y": 1110
+      },
+      "data": {
+        "enabled": true,
+        "varName": "isScanningPartyFollowLeader",
+        "varType": "boolean",
+        "scope": "global",
+        "targetClient": "all",
+        "initialValue": "false",
+        "operation": "set_false",
+        "opValue": "1",
+        "actionId": "1790567109102"
+      }
+    },
+    {
+      "id": "node_1790574361477",
+      "type": "screenshot",
+      "title": "Screenshot (Diagnostic) 1",
+      "position": {
+        "x": 2450,
+        "y": 410
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "captureRegion": "full",
+        "subfolder": "Scanning Follow Leader Party 1",
+        "prefix": "error_snap",
+        "annotate": true,
+        "actionId": "1790574361477"
+      }
+    },
+    {
+      "id": "node_1790574440494_7796",
+      "type": "screenshot",
+      "title": "Screenshot (Diagnostic) 2",
+      "position": {
+        "x": 2450,
+        "y": 620
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "2",
+        "captureRegion": "full",
+        "subfolder": "Scanning Follow Leader Party 2",
+        "prefix": "error_snap",
+        "annotate": true,
+        "actionId": "1790574440494_7796"
+      }
+    },
+    {
+      "id": "node_1790574537173_5758",
+      "type": "screenshot",
+      "title": "Screenshot (Diagnostic) 3",
+      "position": {
+        "x": 2450,
+        "y": 820
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "3",
+        "captureRegion": "full",
+        "subfolder": "Scanning Follow Leader Party 3",
+        "prefix": "error_snap",
+        "annotate": true,
+        "actionId": "1790574537173_5758"
+      }
+    },
+    {
+      "id": "node_1790574575926_6382",
+      "type": "screenshot",
+      "title": "Screenshot (Diagnostic) 4",
+      "position": {
+        "x": 2450,
+        "y": 1010
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "captureRegion": "full",
+        "subfolder": "Scanning Follow Leader Party 4",
+        "prefix": "error_snap",
+        "annotate": true,
+        "actionId": "1790574575926_6382"
+      }
+    },
+    {
+      "id": "node_1790574687479_5609",
+      "type": "screenshot",
+      "title": "Screenshot (Diagnostic) 5",
+      "position": {
+        "x": 2450,
+        "y": 1210
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "5",
+        "captureRegion": "full",
+        "subfolder": "Scanning Follow Leader Party 5",
+        "prefix": "error_snap",
+        "annotate": true,
+        "actionId": "1790574687479_5609"
+      }
+    },
+    {
+      "id": "node_1790574758519_648",
+      "type": "screenshot",
+      "title": "Screenshot (Diagnostic) 6",
+      "position": {
+        "x": 2450,
+        "y": 1410
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "6",
+        "captureRegion": "full",
+        "subfolder": "Scanning Follow Leader Party 6",
+        "prefix": "error_snap",
+        "annotate": true,
+        "actionId": "1790574758519_648"
+      }
+    },
+    {
+      "id": "node_1790575352549",
+      "type": "tts",
+      "title": "Text to Speech",
+      "position": {
+        "x": 2450,
+        "y": 1840
+      },
+      "data": {
+        "enabled": true,
+        "text": "",
+        "voice": "th-TH-PremwadeeNeural",
+        "volume": 100,
+        "waitForPrevious": false,
+        "actionId": "1790575352549"
+      }
+    },
+    {
+      "id": "node_1790575369015",
+      "type": "reroute",
+      "title": "Reroute",
+      "position": {
+        "x": 2390,
+        "y": 1680
+      },
+      "data": {
+        "enabled": true,
+        "actionId": "1790575369015"
       }
     }
   ],
@@ -492,45 +1047,10 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1790485674380",
-      "fromNodeId": "node_1790485624092",
-      "fromPort": "onActive",
-      "toNodeId": "node_1790426723755",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1790485742275",
-      "fromNodeId": "node_1790426751748",
-      "fromPort": "next",
-      "toNodeId": "node_1790485737382_8463",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1790485749369",
-      "fromNodeId": "node_1790485624092",
-      "fromPort": "onInactive",
-      "toNodeId": "node_1790485737382_8463",
-      "toPort": "exec_in"
-    },
-    {
       "id": "conn_1790485768829",
       "fromNodeId": "node_1790485737382_8463",
       "fromPort": "onActive",
       "toNodeId": "node_1790426770515_1955",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_client2_inactive_to_client3",
-      "fromNodeId": "node_1790485737382_8463",
-      "fromPort": "onInactive",
-      "toNodeId": "node_1790485811462_7411",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1790485821201",
-      "fromNodeId": "node_1790426770515_6395",
-      "fromPort": "next",
-      "toNodeId": "node_1790485811462_7411",
       "toPort": "exec_in"
     },
     {
@@ -541,13 +1061,6 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1790485848644",
-      "fromNodeId": "node_1790485811462_7411",
-      "fromPort": "onInactive",
-      "toNodeId": "node_1790485835332_7111",
-      "toPort": "exec_in"
-    },
-    {
       "id": "conn_1790485851652",
       "fromNodeId": "node_1790485835332_7111",
       "fromPort": "onActive",
@@ -555,45 +1068,10 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1790485858659",
-      "fromNodeId": "node_1790426783508_5957",
-      "fromPort": "next",
-      "toNodeId": "node_1790485835332_7111",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1790485875496",
-      "fromNodeId": "node_1790485835332_7111",
-      "fromPort": "onInactive",
-      "toNodeId": "node_1790485864183_400",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1790485878462",
-      "fromNodeId": "node_1790426786586_3139",
-      "fromPort": "next",
-      "toNodeId": "node_1790485864183_400",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1790485886268",
-      "fromNodeId": "node_1790426788842_4038",
-      "fromPort": "next",
-      "toNodeId": "node_1790485865673_2102",
-      "toPort": "exec_in"
-    },
-    {
       "id": "conn_1790485888559",
       "fromNodeId": "node_1790485865673_2102",
       "fromPort": "onActive",
       "toNodeId": "node_1790426793286_5449",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1790485896753",
-      "fromNodeId": "node_1790485864183_400",
-      "fromPort": "onInactive",
-      "toNodeId": "node_1790485865673_2102",
       "toPort": "exec_in"
     },
     {
@@ -611,24 +1089,10 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1790496728442",
-      "fromNodeId": "node_1790496708184",
-      "fromPort": "onTrue",
-      "toNodeId": "node_1790485624092",
-      "toPort": "exec_in"
-    },
-    {
       "id": "conn_1790497215084",
       "fromNodeId": "node_1790496738696",
       "fromPort": "next",
       "toNodeId": "node_1790497195587",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1790497238325",
-      "fromNodeId": "node_1790426793286_7200",
-      "fromPort": "next",
-      "toNodeId": "node_1790497234311_567",
       "toPort": "exec_in"
     },
     {
@@ -639,60 +1103,403 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1790558441000",
+      "id": "conn_1790558989781",
       "fromNodeId": "node_1790496708184",
       "fromPort": "onFalse",
       "toNodeId": "node_1790496738696",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1790558475499",
-      "fromNodeId": "node_1790426783508_4423",
-      "fromPort": "onError",
-      "toNodeId": "node_1790558471821",
-      "toPort": "in"
-    },
-    {
-      "id": "conn_1790558477800",
-      "fromNodeId": "node_1790426786586_1105",
-      "fromPort": "onError",
-      "toNodeId": "node_1790558471821",
-      "toPort": "in"
-    },
-    {
-      "id": "conn_1790558480468",
-      "fromNodeId": "node_1790426788842_7563",
-      "fromPort": "onError",
-      "toNodeId": "node_1790558471821",
-      "toPort": "in"
-    },
-    {
-      "id": "conn_1790558483192",
-      "fromNodeId": "node_1790426793286_5449",
-      "fromPort": "onError",
-      "toNodeId": "node_1790558471821",
-      "toPort": "in"
-    },
-    {
-      "id": "conn_1790558486105",
-      "fromNodeId": "node_1790426770515_1955",
-      "fromPort": "onError",
-      "toNodeId": "node_1790558471821",
-      "toPort": "in"
-    },
-    {
-      "id": "conn_1790558488386",
-      "fromNodeId": "node_1790426723755",
-      "fromPort": "onError",
-      "toNodeId": "node_1790558471821",
-      "toPort": "in"
-    },
-    {
-      "id": "conn_1790558494045",
-      "fromNodeId": "node_1790558471821",
+      "id": "conn_1790559004532",
+      "fromNodeId": "node_1790559002013",
       "fromPort": "out",
       "toNodeId": "node_1790497244311_9571",
       "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790560210656_in",
+      "fromNodeId": "node_1790426788842_4038",
+      "fromPort": "next",
+      "toNodeId": "node_1790560210656_671",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560224948_in",
+      "fromNodeId": "node_1790560210656_671",
+      "fromPort": "out",
+      "toNodeId": "node_1790560224948_803",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560224948_out",
+      "fromNodeId": "node_1790560224948_803",
+      "fromPort": "out",
+      "toNodeId": "node_1790485865673_2102",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790560461089_in",
+      "fromNodeId": "node_1790426786586_3139",
+      "fromPort": "next",
+      "toNodeId": "node_1790560461089_868",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560466202_in",
+      "fromNodeId": "node_1790560461089_868",
+      "fromPort": "out",
+      "toNodeId": "node_1790560466202_810",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560466202_out",
+      "fromNodeId": "node_1790560466202_810",
+      "fromPort": "out",
+      "toNodeId": "node_1790485864183_400",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790560472794_in",
+      "fromNodeId": "node_1790426783508_5957",
+      "fromPort": "next",
+      "toNodeId": "node_1790560472794_851",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560477457_in",
+      "fromNodeId": "node_1790560472794_851",
+      "fromPort": "out",
+      "toNodeId": "node_1790560477457_580",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560477457_out",
+      "fromNodeId": "node_1790560477457_580",
+      "fromPort": "out",
+      "toNodeId": "node_1790485835332_7111",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790560491290_in",
+      "fromNodeId": "node_1790426770515_6395",
+      "fromPort": "next",
+      "toNodeId": "node_1790560491290_529",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560499363_in",
+      "fromNodeId": "node_1790560491290_529",
+      "fromPort": "out",
+      "toNodeId": "node_1790560499363_986",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560499363_out",
+      "fromNodeId": "node_1790560499363_986",
+      "fromPort": "out",
+      "toNodeId": "node_1790485811462_7411",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790560516786_in",
+      "fromNodeId": "node_1790426751748",
+      "fromPort": "next",
+      "toNodeId": "node_1790560516786_228",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560519879_in",
+      "fromNodeId": "node_1790560516786_228",
+      "fromPort": "out",
+      "toNodeId": "node_1790560519879_604",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560519879_out",
+      "fromNodeId": "node_1790560519879_604",
+      "fromPort": "out",
+      "toNodeId": "node_1790485737382_8463",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790560557477_out",
+      "fromNodeId": "node_1790560557477_200",
+      "fromPort": "out",
+      "toNodeId": "node_1790485737382_8463",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790560561583_out",
+      "fromNodeId": "node_1790560561583_861",
+      "fromPort": "out",
+      "toNodeId": "node_1790560557477_200",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560571789_in",
+      "fromNodeId": "node_1790485737382_8463",
+      "fromPort": "onInactive",
+      "toNodeId": "node_1790560571789_760",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560574635_in",
+      "fromNodeId": "node_1790560571789_760",
+      "fromPort": "out",
+      "toNodeId": "node_1790560574635_610",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560574635_out",
+      "fromNodeId": "node_1790560574635_610",
+      "fromPort": "out",
+      "toNodeId": "node_1790485811462_7411",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790560580274_in",
+      "fromNodeId": "node_1790485811462_7411",
+      "fromPort": "onInactive",
+      "toNodeId": "node_1790560580274_766",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560582550_in",
+      "fromNodeId": "node_1790560580274_766",
+      "fromPort": "out",
+      "toNodeId": "node_1790560582550_486",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560582550_out",
+      "fromNodeId": "node_1790560582550_486",
+      "fromPort": "out",
+      "toNodeId": "node_1790485835332_7111",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790560587006_in",
+      "fromNodeId": "node_1790485835332_7111",
+      "fromPort": "onInactive",
+      "toNodeId": "node_1790560587006_483",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560588891_in",
+      "fromNodeId": "node_1790560587006_483",
+      "fromPort": "out",
+      "toNodeId": "node_1790560588891_774",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560588891_out",
+      "fromNodeId": "node_1790560588891_774",
+      "fromPort": "out",
+      "toNodeId": "node_1790485864183_400",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790560592138_in",
+      "fromNodeId": "node_1790485864183_400",
+      "fromPort": "onInactive",
+      "toNodeId": "node_1790560592138_821",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560594748_in",
+      "fromNodeId": "node_1790560592138_821",
+      "fromPort": "out",
+      "toNodeId": "node_1790560594748_553",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790560594748_out",
+      "fromNodeId": "node_1790560594748_553",
+      "fromPort": "out",
+      "toNodeId": "node_1790485865673_2102",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790566663339",
+      "fromNodeId": "node_1790496708184",
+      "fromPort": "onTrue",
+      "toNodeId": "node_1790566659812",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790566677996",
+      "fromNodeId": "node_1790566659812",
+      "fromPort": "next",
+      "toNodeId": "node_1790485624092",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790566882658",
+      "fromNodeId": "node_1790566837251",
+      "fromPort": "next",
+      "toNodeId": "node_1790559002013",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790566920080",
+      "fromNodeId": "node_1790566912329_2171",
+      "fromPort": "next",
+      "toNodeId": "node_1790559002013",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790566942801",
+      "fromNodeId": "node_1790566926958_1859",
+      "fromPort": "next",
+      "toNodeId": "node_1790559002013",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790566958199",
+      "fromNodeId": "node_1790566947301_912",
+      "fromPort": "next",
+      "toNodeId": "node_1790559002013",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790567002198",
+      "fromNodeId": "node_1790566986389_542",
+      "fromPort": "next",
+      "toNodeId": "node_1790559002013",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790567018839",
+      "fromNodeId": "node_1790567004321_482",
+      "fromPort": "next",
+      "toNodeId": "node_1790559002013",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790567116234",
+      "fromNodeId": "node_1790567098411",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1790567109102",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790567300155",
+      "fromNodeId": "node_1790485624092",
+      "fromPort": "onInactive",
+      "toNodeId": "node_1790560561583_861",
+      "toPort": "in"
+    },
+    {
+      "id": "conn_1790567606178",
+      "fromNodeId": "node_1790485624092",
+      "fromPort": "onActive",
+      "toNodeId": "node_1790426723755",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790574418722",
+      "fromNodeId": "node_1790426723755",
+      "fromPort": "onError",
+      "toNodeId": "node_1790574361477",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790574426241",
+      "fromNodeId": "node_1790574361477",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1790566837251",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790574531348",
+      "fromNodeId": "node_1790426770515_1955",
+      "fromPort": "onError",
+      "toNodeId": "node_1790574440494_7796",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790574534625",
+      "fromNodeId": "node_1790574440494_7796",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1790566912329_2171",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790574553509",
+      "fromNodeId": "node_1790426783508_4423",
+      "fromPort": "onError",
+      "toNodeId": "node_1790574537173_5758",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790574556851",
+      "fromNodeId": "node_1790574537173_5758",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1790566926958_1859",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790574696577",
+      "fromNodeId": "node_1790426786586_1105",
+      "fromPort": "onError",
+      "toNodeId": "node_1790574575926_6382",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790574701575",
+      "fromNodeId": "node_1790574575926_6382",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1790566947301_912",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790574706842",
+      "fromNodeId": "node_1790426788842_7563",
+      "fromPort": "onError",
+      "toNodeId": "node_1790574687479_5609",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790574710025",
+      "fromNodeId": "node_1790574687479_5609",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1790566986389_542",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790574761777",
+      "fromNodeId": "node_1790426793286_5449",
+      "fromPort": "onError",
+      "toNodeId": "node_1790574758519_648",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790574781467",
+      "fromNodeId": "node_1790574758519_648",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1790567004321_482",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790575380486",
+      "fromNodeId": "node_1790575369015",
+      "fromPort": "out",
+      "toNodeId": "node_1790497234311_567",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790575384353",
+      "fromNodeId": "node_1790575369015",
+      "fromPort": "out",
+      "toNodeId": "node_1790575352549",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790575438594",
+      "fromNodeId": "node_1790426793286_7200",
+      "fromPort": "next",
+      "toNodeId": "node_1790575369015",
+      "toPort": "in"
     }
   ]
 }

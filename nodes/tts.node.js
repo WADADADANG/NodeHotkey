@@ -18,7 +18,8 @@ module.exports = {
   defaultData: {
     text: '',
     voice: 'th-TH-PremwadeeNeural',
-    volume: 100
+    volume: 100,
+    waitForPrevious: false
   },
   schema: [
     { key: 'text', component: 'textarea', labelKey: 'inspector_tts_text', label: 'Speech Text (ข้อความพูด)', placeholder: 'เช่น บอสเกิดแล้ว, ฮีลเลือดด่วน' },
@@ -31,12 +32,23 @@ module.exports = {
         { value: 'en-US-GuyNeural', label: '🇺🇸 Guy (English - Male)' }
       ]
     },
-    { key: 'volume', component: 'slider', labelKey: 'inspector_tts_volume', label: 'Volume (ระดับเสียง %)', min: 10, max: 100, step: 5, unit: '%' }
+    { key: 'volume', component: 'slider', labelKey: 'inspector_tts_volume', label: 'Volume (ระดับเสียง %)', min: 10, max: 100, step: 5, unit: '%' },
+    {
+      key: 'waitForPrevious',
+      component: 'toggle',
+      labelKey: 'inspector_tts_wait_previous',
+      label: 'Wait for Previous Voice (รอตัวเก่าเล่นเสร็จก่อน)',
+      hint: 'เปิด: รอตัวเก่าเล่นจบก่อนแล้วค่อยพูดต่อ (ไม่ตัดเสียง) | ปิด: ข้ามตัวเก่าทันทีแล้วพูดใหม่ (ตัดเสียงเดิม)',
+      icon: '⏳',
+      color: '#ec4899',
+      default: false
+    }
   ],
   summaryFields: [
     { key: 'text', label: 'Speech', format: val => val ? (val.length > 20 ? val.substring(0, 18) + '...' : val) : '(From Pin)' },
     { key: 'voice', label: 'Voice', format: val => (val || '').includes('Premwadee') ? 'Premwadee' : ((val || '').includes('Niwat') ? 'Niwat' : (val || 'Default')) },
-    { key: 'volume', label: 'Vol', format: '{value}%' }
+    { key: 'volume', label: 'Vol', format: '{value}%' },
+    { key: 'waitForPrevious', label: 'Queue', format: val => val ? '⏳ Wait' : '⚡ Cut' }
   ],
 
   async execute(context, action, callStack = []) {
@@ -76,11 +88,14 @@ module.exports = {
       tts._lastTime = now;
       tts._lastText = text;
 
-      console.log(`[TTS Node] Synthesizing: "${text}" (${voice}, Vol: ${volume}%)`);
+      const waitForPrevious = action.waitForPrevious === true;
+      const interrupt = !waitForPrevious;
+
+      console.log(`[TTS Node] Synthesizing: "${text}" (${voice}, Vol: ${volume}%, WaitPrev: ${waitForPrevious})`);
       const mp3Path = await tts.synthesize(text, voice);
       if (mp3Path && fs.existsSync(mp3Path)) {
         if (typeof global.playNativeSound === 'function') {
-          global.playNativeSound(null, mp3Path, null, 1, volume, 'tts', action.interrupt !== false);
+          global.playNativeSound(null, mp3Path, null, 1, volume, 'tts', interrupt);
         } else {
           console.warn('[TTS Node] global.playNativeSound is not initialized.');
         }

@@ -1,9 +1,10 @@
 {
-  "activeProfile": "[WD] Add-ons",
+  "activeProfile": "[WD] Full Buff",
   "activeProfiles": [
-    "[WD] Add-ons",
     "[WD] Full Buff",
-    "[WD] Heal 1,2,4"
+    "[WD] Follow Leader Party",
+    "[WD] Heal 1,2,4",
+    "[WD] Add-ons"
   ],
   "disabledClients": [],
   "globalSettings": {
@@ -79,19 +80,25 @@
         "x": -967,
         "y": 147,
         "w": 974,
-        "h": 532
+        "h": 525
       },
       "5": {
         "x": -7,
         "y": 705,
-        "w": 922,
+        "w": 888,
         "h": 712
       },
       "6": {
         "x": -7,
         "y": 0,
-        "w": 919,
-        "h": 712
+        "w": 885,
+        "h": 705
+      },
+      "7": {
+        "x": 867,
+        "y": 0,
+        "w": 1700,
+        "h": 1417
       }
     },
     "webPort": 3088,

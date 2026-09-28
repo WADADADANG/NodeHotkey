@@ -182,6 +182,7 @@
         cleanData.text = d.text || '';
         cleanData.voice = d.voice || 'th-TH-PremwadeeNeural';
         cleanData.volume = d.volume !== undefined ? parseInt(d.volume, 10) : 100;
+        cleanData.waitForPrevious = d.waitForPrevious === true;
       } else if (type === 'step_log') {
         cleanData.message = d.message !== undefined ? d.message : '';
       } else if (type === 'screenshot') {
@@ -216,7 +217,9 @@
         zoom: this.zoom,
         pan: this.pan
       },
-      variables: this.getAvailableVariables(),
+      variables: (typeof this.getAvailableVariables === 'function'
+        ? this.getAvailableVariables().filter(v => !v.isSharedAcrossProfiles)
+        : (this.variables || [])),
       nodes: cleanNodes,
       connections: this.connections
     };

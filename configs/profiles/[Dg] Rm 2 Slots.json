@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[Dg] Rm 2 Slots",
   "canvas": {
-    "zoom": 0.7290000000000001,
+    "zoom": 0.7002744912900005,
     "pan": {
-      "x": 74,
-      "y": 178
+      "x": -50,
+      "y": -694
     }
   },
   "nodes": [
@@ -338,6 +338,11 @@
             "castTimeMs": 150
           },
           {
+            "key": "6",
+            "delay": 900,
+            "castTimeMs": 900
+          },
+          {
             "key": "LEFT ALT + 1",
             "delay": 900,
             "castTimeMs": 900
@@ -419,11 +424,43 @@
           },
           {
             "key": "LEFT ALT + 5",
-            "delay": 750,
-            "castTimeMs": 750
+            "delay": 900,
+            "castTimeMs": 900
           }
         ],
         "actionId": "1789342048274"
+      }
+    },
+    {
+      "id": "node_1789806041355",
+      "type": "trigger",
+      "title": "Global Trigger",
+      "position": {
+        "x": 678,
+        "y": 2192
+      },
+      "data": {
+        "enabled": true,
+        "triggerType": "keyboard",
+        "triggerValue": "DELETE",
+        "actionId": "1789806041355"
+      }
+    },
+    {
+      "id": "node_1789806049103",
+      "type": "key_press",
+      "title": "Key Press",
+      "position": {
+        "x": 1080,
+        "y": 2210
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1,2",
+        "keys": [
+          "5"
+        ],
+        "actionId": "1789806049103"
       }
     }
   ],
@@ -552,6 +589,13 @@
       "fromNodeId": "node_1789341846413",
       "fromPort": "exec_out",
       "toNodeId": "node_1789342048274",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789806052224",
+      "fromNodeId": "node_1789806041355",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1789806049103",
       "toPort": "exec_in"
     }
   ]

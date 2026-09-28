@@ -187,8 +187,17 @@ async function runSelectPartySlotAction(action, callStack) {
 
         const scanRegion = action.scanRegion || 'auto';
         let partyState = visionService.getLatestPartyState(targetClientId);
-        if (!partyState || !Array.isArray(partyState.members) || partyState.members.length <= slotIndex || (Date.now() - (partyState.timestamp || 0)) > 2000) {
-            partyState = await visionService.scanClientPage(page, targetClientId, scanRegion, { showOverlay });
+        const isStale = !partyState || !Array.isArray(partyState.members) || partyState.members.length <= slotIndex || (Date.now() - (partyState.timestamp || 0)) > 2000;
+
+        if (isStale) {
+            const freshState = await visionService.scanClientPage(page, targetClientId, scanRegion, { showOverlay });
+            if (freshState && Array.isArray(freshState.members) && freshState.members.length > 0) {
+                partyState = freshState;
+            } else if (partyState && Array.isArray(partyState.members) && partyState.members.length > slotIndex && (Date.now() - (partyState.timestamp || 0)) < 15000) {
+                console.warn(`[SelectPartySlot] Client ${targetClientId}: Fresh scan missed, using recent cached party state (${Date.now() - (partyState.timestamp || 0)}ms old).`);
+            } else {
+                partyState = null;
+            }
         }
 
         if (!partyState || !Array.isArray(partyState.members) || partyState.members.length === 0) {
@@ -300,8 +309,17 @@ async function runPartyHealAction(action, callStack) {
 
         const scanRegion = action.scanRegion || 'auto';
         let partyState = visionService.getLatestPartyState(targetClientId);
-        if (!partyState || !Array.isArray(partyState.members) || (Date.now() - (partyState.timestamp || 0)) > 1500) {
-            partyState = await visionService.scanClientPage(page, targetClientId, scanRegion, { showOverlay });
+        const isStale = !partyState || !Array.isArray(partyState.members) || partyState.members.length === 0 || (Date.now() - (partyState.timestamp || 0)) > 1500;
+
+        if (isStale) {
+            const freshState = await visionService.scanClientPage(page, targetClientId, scanRegion, { showOverlay });
+            if (freshState && Array.isArray(freshState.members) && freshState.members.length > 0) {
+                partyState = freshState;
+            } else if (partyState && Array.isArray(partyState.members) && partyState.members.length > 0 && (Date.now() - (partyState.timestamp || 0)) < 15000) {
+                console.warn(`[PartyHeal] Client ${targetClientId}: Fresh scan missed, using recent cached party state (${Date.now() - (partyState.timestamp || 0)}ms old).`);
+            } else {
+                partyState = null;
+            }
         }
 
         if (!partyState || !Array.isArray(partyState.members) || partyState.members.length === 0) {
@@ -442,7 +460,14 @@ async function runPartyBuffAction(action, callStack) {
 
         if (!isCacheFresh) {
             // Fallback: Scan live page if central cache is not present or stale
-            initialScan = await visionService.scanClientPage(page, targetClientId, scanRegion, { readNames, showOverlay });
+            const freshScan = await visionService.scanClientPage(page, targetClientId, scanRegion, { readNames, showOverlay });
+            if (freshScan && Array.isArray(freshScan.members) && freshScan.members.length > 0) {
+                initialScan = freshScan;
+            } else if (initialScan && Array.isArray(initialScan.members) && initialScan.members.length > 0 && (Date.now() - (initialScan.timestamp || 0)) < 15000) {
+                console.warn(`[PartyBuff] Client ${targetClientId}: Fresh scan missed, using recent cached party state (${Date.now() - (initialScan.timestamp || 0)}ms old).`);
+            } else {
+                initialScan = null;
+            }
         }
 
         if (!initialScan || !Array.isArray(initialScan.members) || initialScan.members.length === 0) {

@@ -27,21 +27,40 @@ class LogManager {
     return `${hh}:${mm}:${ss}`;
   }
 
-  initDailyLogFile() {
+  initDailyLogFile(force = false) {
     const today = this.getTodayDateString();
-    if (today !== this.currentDateStr || !this.currentLogFilePath) {
+    const needsNewFile = force ||
+      today !== this.currentDateStr ||
+      !this.currentLogFilePath ||
+      !fs.existsSync(this.currentLogDir) ||
+      !fs.existsSync(this.currentLogFilePath);
+
+    if (needsNewFile) {
       this.currentDateStr = today;
       this.currentLogDir = path.join(this.baseDir, today);
 
-      if (!fs.existsSync(this.currentLogDir)) {
-        fs.mkdirSync(this.currentLogDir, { recursive: true });
-      }
+      try {
+        if (!fs.existsSync(this.currentLogDir)) {
+          fs.mkdirSync(this.currentLogDir, { recursive: true });
+        }
 
-      const timeTag = new Date().toTimeString().split(' ')[0].replace(/:/g, '');
-      this.currentLogFilePath = path.join(this.currentLogDir, `launcher_${timeTag}.log`);
-      
-      const timestamp = `[${this.getTimeString()}]`;
-      fs.appendFileSync(this.currentLogFilePath, `${timestamp} === NodeHotkey Launcher Session Started at ${new Date().toLocaleString()} ===\n`, 'utf8');
+        const timeTag = new Date().toTimeString().split(' ')[0].replace(/:/g, '');
+        let newFilePath = path.join(this.currentLogDir, `launcher_${timeTag}.log`);
+        if (fs.existsSync(newFilePath)) {
+          const ms = String(Date.now()).slice(-4);
+          newFilePath = path.join(this.currentLogDir, `launcher_${timeTag}_${ms}.log`);
+        }
+        this.currentLogFilePath = newFilePath;
+
+        const timestamp = `[${this.getTimeString()}]`;
+        fs.appendFileSync(
+          this.currentLogFilePath,
+          `${timestamp} === NodeHotkey Launcher Session Started at ${new Date().toLocaleString()} ===\n`,
+          'utf8'
+        );
+      } catch (err) {
+        console.error('[LogManager] Error creating log directory or file:', err.message);
+      }
     }
   }
 
@@ -51,7 +70,15 @@ class LogManager {
     const cleanText = text.replace(/\x1b\[[0-9;]*m/g, ''); // strip ANSI codes for plain file
     try {
       fs.appendFileSync(this.currentLogFilePath, `${timestamp} ${cleanText}\n`, 'utf8');
-    } catch (e) {}
+    } catch (e) {
+      // If writing failed (e.g. folder or file was deleted mid-session), force recreate and retry write
+      try {
+        this.initDailyLogFile(true);
+        fs.appendFileSync(this.currentLogFilePath, `${timestamp} ${cleanText}\n`, 'utf8');
+      } catch (retryErr) {
+        console.error('[LogManager] Error writing log file after retry:', retryErr.message);
+      }
+    }
   }
 
   getLogDirectory() {
@@ -60,6 +87,7 @@ class LogManager {
   }
 
   getLogFilePath() {
+    this.initDailyLogFile();
     return this.currentLogFilePath;
   }
 }

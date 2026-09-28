@@ -151,8 +151,10 @@ NodeHotkey/
 ├── node-registry.js           # ตัวโหลดโหนดทั้งหมดในโฟลเดอร์ nodes/ เข้าสู่ระบบ
 ├── config-store.js            # ระบบจัดการไฟล์โปรไฟล์และ File Watcher ตรวจจับการแก้ไฟล์
 ├── vision-service.js          # บริการสแกนภาพและ OCR หลอดเลือด/สถานะบนจอเกม
-└── docs/                      # เอกสารคู่มือและสถาปัตยกรรมระบบ
-    └── SYSTEM_ARCHITECTURE.md # เอกสารฉบับนี้
+├── docs/                      # เอกสารคู่มือและสถาปัตยกรรมระบบ
+│   ├── SYSTEM_ARCHITECTURE.md # เอกสารฉบับนี้
+│   ├── OS_COMPATIBILITY.md    # สรุปความเข้ากันได้ของระบบปฏิบัติการ
+│   └── UNREAL_ENGINE_GRAPH_REFERENCE.md # สรุปการคำนวณเส้น Spline และสถาปัตยกรรม Unreal Engine
 ```
 
 ---

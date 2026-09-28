@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[CW] Full Party Rm3-Psy1-Knight2",
   "canvas": {
-    "zoom": 0.5513684346952022,
+    "zoom": 0.6408672052738701,
     "pan": {
-      "x": -970,
-      "y": -1896
+      "x": -240,
+      "y": -2273
     }
   },
   "nodes": [
@@ -29,8 +29,8 @@
       "type": "loop_scheduler",
       "title": "RM 1",
       "position": {
-        "x": 2230,
-        "y": 2580
+        "x": 3100,
+        "y": 2260
       },
       "data": {
         "enabled": true,
@@ -78,8 +78,8 @@
       "type": "key_press",
       "title": "Heal Rain 1",
       "position": {
-        "x": 2640,
-        "y": 2420
+        "x": 3510,
+        "y": 2100
       },
       "data": {
         "enabled": true,
@@ -96,8 +96,8 @@
       "type": "key_press",
       "title": "MoomBeam 1",
       "position": {
-        "x": 2640,
-        "y": 2600
+        "x": 3510,
+        "y": 2280
       },
       "data": {
         "enabled": true,
@@ -114,8 +114,8 @@
       "type": "key_press",
       "title": "Merkaba 1",
       "position": {
-        "x": 2640,
-        "y": 2780
+        "x": 3510,
+        "y": 2460
       },
       "data": {
         "enabled": true,
@@ -132,8 +132,8 @@
       "type": "key_press",
       "title": "Restore Mp 1",
       "position": {
-        "x": 2640,
-        "y": 2960
+        "x": 3510,
+        "y": 2640
       },
       "data": {
         "enabled": true,
@@ -150,7 +150,7 @@
       "title": "Restore Mp 2",
       "position": {
         "x": 2640,
-        "y": 3650
+        "y": 3340
       },
       "data": {
         "enabled": true,
@@ -166,7 +166,7 @@
       "type": "key_press",
       "title": "Merkaba 2",
       "position": {
-        "x": 2640,
+        "x": 3100,
         "y": 3470
       },
       "data": {
@@ -184,7 +184,7 @@
       "type": "key_press",
       "title": "MoomBeam 2",
       "position": {
-        "x": 2640,
+        "x": 3100,
         "y": 3290
       },
       "data": {
@@ -231,7 +231,7 @@
           {
             "id": "item_0",
             "name": "Heal Rain 2",
-            "interval": 4500,
+            "interval": 4000,
             "jitter": 2000,
             "executeImmediately": true,
             "enabled": true
@@ -259,6 +259,14 @@
             "jitter": 200,
             "executeImmediately": false,
             "enabled": true
+          },
+          {
+            "id": "item_4",
+            "name": "holycross",
+            "interval": 1000,
+            "jitter": 0,
+            "executeImmediately": true,
+            "enabled": true
           }
         ],
         "actionId": "1787585306026_9396"
@@ -269,8 +277,8 @@
       "type": "key_press",
       "title": "Restore Mp 4",
       "position": {
-        "x": 2640,
-        "y": 4320
+        "x": 2620,
+        "y": 4120
       },
       "data": {
         "enabled": true,
@@ -286,8 +294,8 @@
       "type": "key_press",
       "title": "Merkaba 4",
       "position": {
-        "x": 2640,
-        "y": 4140
+        "x": 3100,
+        "y": 4230
       },
       "data": {
         "enabled": true,
@@ -304,8 +312,8 @@
       "type": "key_press",
       "title": "MoomBeam 4",
       "position": {
-        "x": 2640,
-        "y": 3960
+        "x": 3110,
+        "y": 4000
       },
       "data": {
         "enabled": true,
@@ -351,7 +359,7 @@
           {
             "id": "item_0",
             "name": "Heal Rain 4",
-            "interval": 4500,
+            "interval": 4000,
             "jitter": 2000,
             "executeImmediately": true,
             "enabled": true
@@ -387,6 +395,14 @@
             "jitter": 2000,
             "executeImmediately": true,
             "enabled": true
+          },
+          {
+            "id": "item_5",
+            "name": "holycross",
+            "interval": 1500,
+            "jitter": 0,
+            "executeImmediately": true,
+            "enabled": true
           }
         ],
         "actionId": "1787585346514_4421"
@@ -397,8 +413,8 @@
       "type": "key_press",
       "title": "Buff GT",
       "position": {
-        "x": 2640,
-        "y": 4420
+        "x": 2620,
+        "y": 4230
       },
       "data": {
         "enabled": true,
@@ -420,8 +436,8 @@
       },
       "data": {
         "enabled": true,
-        "targetKey": "1",
         "targetClient": "3",
+        "targetKey": "1",
         "actionId": "1787761524195"
       }
     },
@@ -437,9 +453,9 @@
         "enabled": true,
         "targetClient": "3",
         "keys": [
-          "3"
+          "4"
         ],
-        "interval": 12050,
+        "interval": 10650,
         "executeImmediately": false,
         "actionId": "1787761572525"
       }
@@ -545,7 +561,7 @@
       "title": "Global Trigger",
       "position": {
         "x": 860,
-        "y": 3680
+        "y": 3710
       },
       "data": {
         "enabled": true,
@@ -559,14 +575,101 @@
       "type": "emergency_stop",
       "title": "Emergency Stop",
       "position": {
-        "x": 1170,
-        "y": 3680
+        "x": 1180,
+        "y": 3710
       },
       "data": {
         "enabled": true,
         "stopScope": "profile",
+        "targetClient": "1",
         "showOverlayNotice": true,
         "actionId": "1787763358852"
+      }
+    },
+    {
+      "id": "node_1789718483059",
+      "type": "key_hold",
+      "title": "Key Hold",
+      "position": {
+        "x": 2290,
+        "y": 2700
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "targetKey": "7",
+        "cooldownPresetId": "skill_ringmaster_holycross",
+        "actionId": "1789718483059"
+      }
+    },
+    {
+      "id": "node_1789719767272",
+      "type": "loop",
+      "title": "RM 1 Restroe Mp Loop",
+      "position": {
+        "x": 2610,
+        "y": 2580
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "1",
+        "keys": [
+          "3"
+        ],
+        "interval": 20050,
+        "executeImmediately": true,
+        "actionId": "1789719767272"
+      }
+    },
+    {
+      "id": "node_1789719788829",
+      "type": "control",
+      "title": "Action Controller",
+      "position": {
+        "x": 2610,
+        "y": 2800
+      },
+      "data": {
+        "enabled": true,
+        "controlOperation": "start",
+        "controlTargetIds": [
+          "1789719767272"
+        ],
+        "actionId": "1789719788829"
+      }
+    },
+    {
+      "id": "node_1790400199096",
+      "type": "key_press",
+      "title": "Key Press",
+      "position": {
+        "x": 2640,
+        "y": 3470
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "2",
+        "keys": [
+          "7"
+        ],
+        "actionId": "1790400199096"
+      }
+    },
+    {
+      "id": "node_1790400395670",
+      "type": "key_press",
+      "title": "Key Press",
+      "position": {
+        "x": 2630,
+        "y": 4410
+      },
+      "data": {
+        "enabled": true,
+        "targetClient": "4",
+        "keys": [
+          "7"
+        ],
+        "actionId": "1790400395670"
       }
     }
   ],
@@ -607,20 +710,6 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1787585306026_2113",
-      "fromNodeId": "node_1787585306026_9396",
-      "fromPort": "item_1",
-      "toNodeId": "node_1787585306026_578",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1787585306026_8651",
-      "fromNodeId": "node_1787585306026_9396",
-      "fromPort": "item_2",
-      "toNodeId": "node_1787585306026_5962",
-      "toPort": "exec_in"
-    },
-    {
       "id": "conn_1787585306026_336",
       "fromNodeId": "node_1787585306026_9396",
       "fromPort": "item_3",
@@ -632,20 +721,6 @@
       "fromNodeId": "node_1787585346514_4421",
       "fromPort": "item_0",
       "toNodeId": "node_1787585346514_2481",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1787585346514_758",
-      "fromNodeId": "node_1787585346514_4421",
-      "fromPort": "item_1",
-      "toNodeId": "node_1787585346514_5378",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1787585346514_2415",
-      "fromNodeId": "node_1787585346514_4421",
-      "fromPort": "item_2",
-      "toNodeId": "node_1787585346514_5361",
       "toPort": "exec_in"
     },
     {
@@ -705,13 +780,6 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1787763330943",
-      "fromNodeId": "node_1787763319703",
-      "fromPort": "exec_out",
-      "toNodeId": "node_1787581118283",
-      "toPort": "exec_in"
-    },
-    {
       "id": "conn_1787763333301",
       "fromNodeId": "node_1787763319703",
       "fromPort": "exec_out",
@@ -737,6 +805,41 @@
       "fromNodeId": "node_1787763346416",
       "fromPort": "exec_out",
       "toNodeId": "node_1787763358852",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789718486537",
+      "fromNodeId": "node_1787763319703",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1789718483059",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789719770688",
+      "fromNodeId": "node_1789718483059",
+      "fromPort": "onEnable",
+      "toNodeId": "node_1789719767272",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1789719792051",
+      "fromNodeId": "node_1789718483059",
+      "fromPort": "onDisable",
+      "toNodeId": "node_1789719788829",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790400201837",
+      "fromNodeId": "node_1787585306026_9396",
+      "fromPort": "item_4",
+      "toNodeId": "node_1790400199096",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790400415871",
+      "fromNodeId": "node_1787585346514_4421",
+      "fromPort": "item_5",
+      "toNodeId": "node_1790400395670",
       "toPort": "exec_in"
     }
   ]

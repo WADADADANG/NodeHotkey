@@ -112,6 +112,7 @@ export function triggerUndo() {
   if (prev && prev.data) {
     fullConfig.profiles[prev.profileName] = prev.data;
     currentEditProfile = prev.profileName;
+    window.currentEditProfile = currentEditProfile;
     loadProfileToUI(prev.data);
     isDirty = true;
     updateUnsavedBadge();
@@ -136,6 +137,7 @@ export function triggerRedo() {
   if (next && next.data) {
     fullConfig.profiles[next.profileName] = next.data;
     currentEditProfile = next.profileName;
+    window.currentEditProfile = currentEditProfile;
     loadProfileToUI(next.data);
     isDirty = true;
     updateUnsavedBadge();
@@ -176,10 +178,12 @@ export function setRenderActionsCallback(cb) {
 
 export function setCurrentEditProfile(val) {
   currentEditProfile = val;
+  window.currentEditProfile = val;
 }
 
 export function setFullConfig(cfg) {
   fullConfig = cfg;
+  window.fullConfig = fullConfig;
 }
 
 export function setActiveClients(clients) {
@@ -192,6 +196,7 @@ export function loadConfig() {
     .then(cfg => {
       if (cfg && cfg.profiles) {
         fullConfig = cfg;
+        window.fullConfig = fullConfig; // Expose to canvas.js for cross-profile variable discovery
         if (!Array.isArray(fullConfig.activeProfiles) || fullConfig.activeProfiles.length === 0) {
           fullConfig.activeProfiles = [fullConfig.activeProfile || 'Default'];
         }
@@ -203,6 +208,7 @@ export function loadConfig() {
         } else {
           currentEditProfile = cfg.activeProfile || Object.keys(cfg.profiles)[0] || 'Default';
         }
+        window.currentEditProfile = currentEditProfile;
 
         populateProfileDropdowns();
         loadGlobalSettingsToUI();
@@ -420,7 +426,14 @@ window.activeProfilesFilterTag = activeProfilesFilterTag;
 export function switchToEditProfile(name) {
   if (!fullConfig.profiles || !fullConfig.profiles[name]) return;
   syncGlobalSettingsFromDOM();
+
+  // Sync current canvas data back to fullConfig before switching (while currentEditProfile still points to old profile)
+  if (window.nodeCanvas && typeof window.nodeCanvas.syncVariablesToFullConfig === 'function') {
+    window.nodeCanvas.syncVariablesToFullConfig();
+  }
+
   currentEditProfile = name;
+  window.currentEditProfile = name;
   try {
     localStorage.setItem('nodehotkey_last_viewed_profile', currentEditProfile);
   } catch (e) { }
@@ -913,7 +926,14 @@ export function onProfileSelectChange() {
   const selectEl = document.getElementById('profile-select');
   if (selectEl) {
     syncGlobalSettingsFromDOM();
+
+    // Sync current canvas data before switching
+    if (window.nodeCanvas && typeof window.nodeCanvas.syncVariablesToFullConfig === 'function') {
+      window.nodeCanvas.syncVariablesToFullConfig();
+    }
+
     currentEditProfile = selectEl.value;
+    window.currentEditProfile = selectEl.value;
     try {
       localStorage.setItem('nodehotkey_last_viewed_profile', currentEditProfile);
     } catch (e) { }
@@ -1132,8 +1152,12 @@ export function confirmNewProfile() {
     newProfileData.name = name;
   }
 
+  if (window.nodeCanvas && typeof window.nodeCanvas.syncVariablesToFullConfig === 'function') {
+    window.nodeCanvas.syncVariablesToFullConfig();
+  }
   fullConfig.profiles[name] = newProfileData;
   currentEditProfile = name;
+  window.currentEditProfile = name;
   try { localStorage.setItem('nodehotkey_last_viewed_profile', currentEditProfile); } catch (e) { }
   if (!Array.isArray(fullConfig.activeProfiles)) fullConfig.activeProfiles = ['Default'];
 
@@ -1173,6 +1197,9 @@ export function confirmRenameProfile() {
 
   const oldProfile = fullConfig.profiles[currentEditProfile];
   delete fullConfig.profiles[currentEditProfile];
+  if (window.nodeCanvas && typeof window.nodeCanvas.syncVariablesToFullConfig === 'function') {
+    window.nodeCanvas.syncVariablesToFullConfig();
+  }
   fullConfig.profiles[newName] = oldProfile;
   if (fullConfig.activeProfile === currentEditProfile) {
     fullConfig.activeProfile = newName;
@@ -1181,6 +1208,7 @@ export function confirmRenameProfile() {
     fullConfig.activeProfiles = fullConfig.activeProfiles.map(p => p === currentEditProfile ? newName : p);
   }
   currentEditProfile = newName;
+  window.currentEditProfile = newName;
   try { localStorage.setItem('nodehotkey_last_viewed_profile', currentEditProfile); } catch (e) { }
   document.getElementById('rename-profile-modal').classList.remove('show');
   populateProfileDropdowns();
@@ -1209,6 +1237,7 @@ export function deleteProfile() {
     }
     const remaining = Object.keys(fullConfig.profiles);
     currentEditProfile = remaining.includes('Default') ? 'Default' : remaining[0];
+    window.currentEditProfile = currentEditProfile;
     try { localStorage.setItem('nodehotkey_last_viewed_profile', currentEditProfile); } catch (e) { }
     populateProfileDropdowns();
     loadProfileToUI(fullConfig.profiles[currentEditProfile]);
@@ -1609,9 +1638,13 @@ export function handleImportProfileFile(event) {
       }
 
       // Save sanitized profile to fullConfig and backend disk
+      if (window.nodeCanvas && typeof window.nodeCanvas.syncVariablesToFullConfig === 'function') {
+        window.nodeCanvas.syncVariablesToFullConfig();
+      }
       if (!fullConfig.profiles) fullConfig.profiles = {};
       fullConfig.profiles[targetName] = sanitizedData;
       currentEditProfile = targetName;
+      window.currentEditProfile = targetName;
       try { localStorage.setItem('nodehotkey_last_viewed_profile', currentEditProfile); } catch (e) { }
       if (!Array.isArray(fullConfig.activeProfiles)) fullConfig.activeProfiles = ['Default'];
 
