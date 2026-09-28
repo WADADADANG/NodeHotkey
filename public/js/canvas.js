@@ -1964,22 +1964,11 @@ class NodeCanvasEditor {
     this.connections.forEach(conn => {
       const fromPos = this.getPortCenter(conn.fromNodeId, conn.fromPort);
       const toPos = this.getPortCenter(conn.toNodeId, conn.toPort || 'exec_in');
-
-      const x1 = fromPos.x;
-      const y1 = fromPos.y;
-      const x2 = toPos.x;
-      const y2 = toPos.y;
-
-      let pathData = '';
-      if (this.wireStyle === 'orthogonal') {
-        pathData = this.getOrthogonalPath(x1, y1, x2, y2);
-      } else {
-        const dx = Math.max(30, Math.abs(x2 - x1) * 0.5);
-        pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
-      }
-
       const fromNode = this.nodes.find(n => n.id === conn.fromNodeId);
       const toNode = this.nodes.find(n => n.id === conn.toNodeId);
+
+      const pathData = this.getWirePath(fromNode, fromPos, toNode, toPos);
+
       const isDataWire = (
         conn.fromPort === 'val_out' ||
         conn.fromPort === 'msg_out' ||
@@ -2015,10 +2004,24 @@ class NodeCanvasEditor {
     // Render draft wire if currently dragging
     if (this.draftWire) {
       const isStartIn = (this.draftWire.startType === 'in');
-      const dx = Math.max(30, Math.abs(this.draftWire.x2 - this.draftWire.x1) * 0.5);
-      const c1x = isStartIn ? (this.draftWire.x1 - dx) : (this.draftWire.x1 + dx);
-      const c2x = isStartIn ? (this.draftWire.x2 + dx) : (this.draftWire.x2 - dx);
-      const pathData = `M ${this.draftWire.x1} ${this.draftWire.y1} C ${c1x} ${this.draftWire.y1}, ${c2x} ${this.draftWire.y2}, ${this.draftWire.x2} ${this.draftWire.y2}`;
+      const x1 = this.draftWire.x1;
+      const y1 = this.draftWire.y1;
+      const x2 = this.draftWire.x2;
+      const y2 = this.draftWire.y2;
+      const startNode = this.nodes.find(n => n.id === this.draftWire.startNodeId);
+      const isStartKnot = startNode && (startNode.type === 'reroute' || startNode.type === 'knot');
+
+      let pathData = '';
+      if (this.wireStyle === 'orthogonal') {
+        pathData = this.getOrthogonalPath(x1, y1, x2, y2, startNode, null);
+      } else if (isStartKnot) {
+        pathData = `M ${x1} ${y1} L ${x2} ${y2}`;
+      } else {
+        const dx = Math.max(30, Math.abs(x2 - x1) * 0.5);
+        const c1x = isStartIn ? (x1 - dx) : (x1 + dx);
+        const c2x = isStartIn ? (x2 + dx) : (x2 - dx);
+        pathData = `M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`;
+      }
       let draftClass = 'wire-draft';
       if (this.draftWire.isInvalid) {
         draftClass += ' wire-draft-invalid';
@@ -2036,19 +2039,10 @@ class NodeCanvasEditor {
 
     const fromPos = this.getPortCenter(conn.fromNodeId, conn.fromPort);
     const toPos = this.getPortCenter(conn.toNodeId, conn.toPort || 'exec_in');
+    const fromNode = this.nodes.find(n => n.id === conn.fromNodeId);
+    const toNode = this.nodes.find(n => n.id === conn.toNodeId);
 
-    const x1 = fromPos.x;
-    const y1 = fromPos.y;
-    const x2 = toPos.x;
-    const y2 = toPos.y;
-
-    let pathData = '';
-    if (this.wireStyle === 'orthogonal') {
-      pathData = this.getOrthogonalPath(x1, y1, x2, y2);
-    } else {
-      const dx = Math.max(30, Math.abs(x2 - x1) * 0.5);
-      pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
-    }
+    const pathData = this.getWirePath(fromNode, fromPos, toNode, toPos);
 
     // Color mapping by port type or override
     let colorKey = colorOverride || 'default';
@@ -2227,14 +2221,105 @@ class NodeCanvasEditor {
     }
   }
 
-  getOrthogonalPath(x1, y1, x2, y2, r = 10) {
-    const midX = x1 + (x2 - x1) * 0.5;
-    if (Math.abs(y2 - y1) < r * 2 || Math.abs(x2 - x1) < r * 2) {
+  getWirePath(fromNode, fromPos, toNode, toPos) {
+    const x1 = fromPos.x;
+    const y1 = fromPos.y;
+    const x2 = toPos.x;
+    const y2 = toPos.y;
+
+    if (this.wireStyle === 'orthogonal') {
+      return this.getOrthogonalPath(x1, y1, x2, y2, fromNode, toNode);
+    }
+
+    const isFromKnot = fromNode && (fromNode.type === 'reroute' || fromNode.type === 'knot');
+    const isToKnot = toNode && (toNode.type === 'reroute' || toNode.type === 'knot');
+
+    // 1. Knot to Knot: Straight polyline segment (Authentic Unreal Engine Blueprint Knot segment)
+    if (isFromKnot && isToKnot) {
+      return `M ${x1} ${y1} L ${x2} ${y2}`;
+    }
+
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+
+    // 2. Node to Knot: Leaves node horizontally to the right, flows directly into knot center
+    if (!isFromKnot && isToKnot) {
+      if (dx >= 20) {
+        // Forward flow: Knot is to the right
+        const c1x = x1 + Math.max(30, dx * 0.45);
+        const c1y = y1;
+        const c2x = x2 - Math.max(15, dx * 0.2);
+        const c2y = y2;
+        return `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`;
+      } else {
+        // Backward/downward flow: Knot is behind or directly below node
+        // Smoothly curves out of node and aims towards knot without looping around
+        const lead = Math.min(60, Math.max(25, Math.abs(dy) * 0.25));
+        const c1x = x1 + lead;
+        const c1y = y1;
+        const c2x = x2 + Math.min(50, Math.max(15, (x1 - x2) * 0.25));
+        const c2y = y2 - Math.sign(dy) * Math.min(40, Math.max(10, Math.abs(dy) * 0.2));
+        return `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`;
+      }
+    }
+
+    // 3. Knot to Node: Leaves knot directly towards node, enters node horizontally from left
+    if (isFromKnot && !isToKnot) {
+      if (dx >= 20) {
+        // Forward flow: Node is to the right
+        const c1x = x1 + Math.max(15, dx * 0.2);
+        const c1y = y1;
+        const c2x = x2 - Math.max(30, dx * 0.45);
+        const c2y = y2;
+        return `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`;
+      } else {
+        // Backward flow: Node is behind knot
+        const lead = Math.min(60, Math.max(25, Math.abs(dy) * 0.25));
+        const c1x = x1 - Math.min(50, Math.max(15, (x1 - x2) * 0.25));
+        const c1y = y1 + Math.sign(dy) * Math.min(40, Math.max(10, Math.abs(dy) * 0.2));
+        const c2x = x2 - lead;
+        const c2y = y2;
+        return `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`;
+      }
+    }
+
+    // 4. Node to Node (Standard)
+    if (dx >= 0) {
+      const tension = Math.max(30, dx * 0.5);
+      return `M ${x1} ${y1} C ${x1 + tension} ${y1}, ${x2 - tension} ${y2}, ${x2} ${y2}`;
+    } else {
+      // Backward wire between normal nodes: limit overshoot so it never creates giant lasso loops
+      const tension = Math.min(80, Math.max(30, Math.abs(dy) * 0.3));
+      return `M ${x1} ${y1} C ${x1 + tension} ${y1}, ${x2 - tension} ${y2}, ${x2} ${y2}`;
+    }
+  }
+
+  getOrthogonalPath(x1, y1, x2, y2, fromNode = null, toNode = null, r = 10) {
+    const isFromKnot = fromNode && (fromNode.type === 'reroute' || fromNode.type === 'knot');
+    const isToKnot = toNode && (toNode.type === 'reroute' || toNode.type === 'knot');
+
+    if (isFromKnot && isToKnot) {
+      if (Math.abs(x2 - x1) < 10 || Math.abs(y2 - y1) < 10) {
+        return `M ${x1} ${y1} L ${x2} ${y2}`;
+      }
+      const midX = x1 + (x2 - x1) * 0.5;
       return `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
     }
-    const dirY = y2 > y1 ? 1 : -1;
-    const dirX = x2 > x1 ? 1 : -1;
-    return `M ${x1} ${y1} L ${midX - dirX * r} ${y1} Q ${midX} ${y1} ${midX} ${y1 + dirY * r} L ${midX} ${y2 - dirY * r} Q ${midX} ${y2} ${midX + dirX * r} ${y2} L ${x2} ${y2}`;
+
+    if (x2 >= x1 + 30) {
+      const midX = x1 + (x2 - x1) * 0.5;
+      if (Math.abs(y2 - y1) < r * 2 || Math.abs(x2 - x1) < r * 2) {
+        return `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
+      }
+      const dirY = y2 > y1 ? 1 : -1;
+      const dirX = x2 > x1 ? 1 : -1;
+      return `M ${x1} ${y1} L ${midX - dirX * r} ${y1} Q ${midX} ${y1} ${midX} ${y1 + dirY * r} L ${midX} ${y2 - dirY * r} Q ${midX} ${y2} ${midX + dirX * r} ${y2} L ${x2} ${y2}`;
+    } else {
+      const p1x = isFromKnot ? x1 : (x1 + 25);
+      const p2x = isToKnot ? x2 : (x2 - 25);
+      const midY = y1 + (y2 - y1) * 0.5;
+      return `M ${x1} ${y1} L ${p1x} ${y1} L ${p1x} ${midY} L ${p2x} ${midY} L ${p2x} ${y2} L ${x2} ${y2}`;
+    }
   }
 
   insertRerouteNode(connId, x, y) {
