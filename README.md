@@ -13,47 +13,51 @@
 
 | Feature | รายละเอียด |
 |---------|-----------|
-| 🎮 **Client Control Center (1-8)** | สั่งเปิด (`Launch`), สลับหยุดชั่วคราว (`Pause`), หรือปิด (`Close`) แต่ละจอได้อย่างอิสระผ่าน Web Dashboard |
+| 🎮 **Client Control Center (1-8)** | สั่งเปิด (`Launch`), สลับหยุดชั่วคราว (`Pause`), หรือปิด (`Close`) แต่ละจอได้อย่างอิสระ พร้อมบันทึกพิกัดหน้าจออัตโนมัติ |
 | 🛡️ **Per-Client Anti-Detect & Proxy** | ตั้งค่า **User-Agent** สุ่ม และใส่ **HTTP/SOCKS5 Proxy IP** แยกประจำแต่ละจอได้อิสระ ป้องกันการโดนตรวจจับ IP ซ้ำ |
-| 🌐 **Background Control** | ส่งปุ่มเข้าแท็บเกมพื้นหลังแบบ CDP Input แท้ เกมคิดว่าเปิดจออยู่ตลอดเวลา ไม่แย่งเมาส์ |
-| ⚡ **8 Multi-Action Modes** | รองรับ **Loop** (กดวนซ้ำ + First Steps), **Buff Sequence** (กดสกิลตามคูลดาวน์), **Single Key Press**, **Timer / Delay**, **Key Forwarder**, **Key Hold**, **Action Control**, และ **Branch (If / Else)** |
-| 🌿 **Condition Branch (If / Else)** | ตรวจสอบสถานะ Action อ้างอิงแล้วแยกสายการทำงาน (`onTrue` / `onFalse`) ช่วยควบคุมลูปได้อย่างชาญฉลาด |
-| 🔍 **Profile Integrity Inspector & 1-Click Auto-Fix** | ระบบสแกนหาข้อผิดพลาดในโปรไฟล์ (ปุ่ม Trigger ชนกัน, สาย Chain ขาด, ลืมเลือกเป้าหมาย) พร้อมปุ่ม **`⚡ Auto-Fix`** ซ่อมแซมอัตโนมัติใน 1 คลิก |
-| 🔗 **Action Chaining & Cooldown Guards** | ตั้งค่าลูกโซ่เชื่อม Action อัตโนมัติ พร้อมระบบเช็ค Cooldown และ Cooldown Presets ป้องกันกดทับซ้อน |
-| 🖱️ **Ghost Mouse Jitter** | สุ่มขยับเมาส์ในแท็บเกมพื้นหลังเพื่อสร้าง `mousemove` event หลีกเลี่ยง AFK Detection |
-| 🖥️ **Single-Instance Desktop Overlay** | หน้าต่างลอยแสดงสถานะ Real-time ติดตามบอท ลากย้ายได้ พร้อมระบบ Socket Lock ป้องกันหน้าต่างซ้อน |
-| 📂 **Modular Config (configs/)** | แยกเก็บไฟล์ตั้งค่า `configs/global.json` (ค่าระบบ/Proxy) และ `configs/profiles/*.json` (ไฟล์ละ 1 โปรไฟล์) แชร์โปรไฟล์ขึ้น GitHub ง่าย ปลอดภัย ไม่ปะปนกับ IP ส่วนตัว |
+| 🎨 **Visual Blueprint Node Canvas** | ออกแบบลำดับการทำงานสไตล์ **Unreal Engine Blueprints** ลากสายไฟ Wires เชื่อมต่อพอร์ต Exec / Data พร้อมเส้นทางโค้ง Bezier นุ่มนวล |
+| ⚡ **29 Modular Workflow Nodes** | ครบครัน 6 หมวดหมู่: **Triggers** (3 โหนด), **Actions & Input** (5 โหนด), **Logic & Flow** (8 โหนด), **Vision & Party** (5 โหนด), **Variables & Data** (4 โหนด), และ **Safety & Utilities** (4 โหนด) |
+| 👁️ **Computer Vision & Party Scanner** | สแกนหลอดเลือด Party สมาชิก 1-8 แบบเรียลไทม์ ตรวจจับสถานะเลือดต่ำเพื่อสั่งฮีลหรือบัฟเฉพาะเป้าหมายอัตโนมัติ |
+| 📚 **Interactive Node Docs & Wiki** | คู่มือเอกสารอธิบายการใช้งานโหนดทั้ง 29 ตัวอย่างละเอียด พร้อมแผนผัง Pin, Code Snippet, และ Blueprint Example ในตัว (`/docs.html`) |
+| 🌿 **Condition Branch & Logic Flow** | ตรวจสอบสถานะและค่าตัวแปรเพื่อแยกสายการทำงาน (`onTrue` / `onFalse`), Loop Scheduler, Step Sequencer, และ Reroute Pins |
+| 🔍 **Profile Integrity & 1-Click Fix** | ระบบสแกนหาข้อผิดพลาดในโปรไฟล์ (สายไฟขาด, โหนดลอย, ค่าพารามิเตอร์ไม่ครบ) พร้อมปุ่ม **`⚡ Auto-Fix`** จัดสายอัตโนมัติ |
+| 🖱️ **Ghost Mouse Jitter & Anti-AFK** | สุ่มขยับเมาส์ในแท็บเกมพื้นหลังเพื่อสร้าง `mousemove` event ป้องกันการตัดการเชื่อมต่อจากระบบ AFK |
+| 🖥️ **Desktop Launcher & Overlay** | โปรแกรมควบคุม Desktop แบบ Dark Theme ไร้หน้าต่างดำ พร้อมหน้าต่าง Overlay ลอยแสดงสถานะแบบ Single-Instance |
+| 📂 **Modular Config & Safe Upgrade** | แยกเก็บ `configs/global.json` และ `configs/profiles/*.json` พร้อมระบบป้องกันข้อมูลสูญหาย ติดตั้งทับเพื่ออัปเดตได้ปลอดภัย 100% |
 
 ---
 
 ## 🛠️ การติดตั้ง (Installation)
 
 1. ติดตั้ง **Node.js v18+** จาก [nodejs.org](https://nodejs.org/)
-2. ดับเบิลคลิก `1 install.bat` *(ระบบจะติดตั้งแพ็คเกจ และ Playwright Browser ครบจบในคลิกเดียว)*
+2. ดับเบิลคลิก **`1 install.bat`** *(ระบบจะติดตั้งแพ็คเกจ, Playwright Browser และสร้าง Template ค่าเริ่มต้นให้อัตโนมัติ)*
 
 ---
 
-## 💡 วิธีใช้งาน (Usage)
+## 💡 วิธีใช้งาน (Usage Workflow)
 
-### 🚀 วิธีรันใช้งาน (เลือกได้ 2 แบบตามความสะดวก)
+### 🚀 1. วิธีรันโปรแกรม (เลือกได้ 2 แบบตามความสะดวก)
 
 - **วิธีที่ 1 (แนะนำสำหรับผู้ใช้ทั่วไป):** ดับเบิลคลิก **`NodeHotkey Launcher.bat`**
-  - ระบบจะเด้งหน้าต่างโปรแกรมสีเข้มสวยงาม **ไร้หน้าต่างดำ CMD** เป็น All-in-One Dashboard พร้อมหน้าจอควบคุมและ Canvas Editor ในตัว!
-- **วิธีที่ 2 (สำหรับสายพัฒนา/CMD):** รันคำสั่ง `npm start` ใน Terminal
+  - ระบบจะเปิดหน้าต่าง **Control Center Dashboard** สีเข้มสวยงาม ควบคุมจอเกม 1-8, ดู Log สด, และมี Node Canvas Editor ฝังในตัว
+- **วิธีที่ 2 (สำหรับสายพัฒนา / CLI):** ดับเบิลคลิก **`2 start.bat`** หรือรัน `npm start`
+  - ทำงานผ่าน Engine โดยตรง และเปิด Web Studio ได้ที่ **[http://localhost:3088](http://localhost:3088)**
+
+### 🎮 2. ขั้นตอนการใช้งานระบบ
+1. **เปิดหน้าจอเกม:** ที่แท็บ **Clients** ใน Launcher หรือหน้าเว็บ **[http://localhost:3088](http://localhost:3088)** ตั้งค่า Proxy/User-Agent (ถ้ามี) แล้วกดปุ่ม **`➕ Launch`** บนการ์ดจอที่ต้องการ
+2. **สร้างหรือเลือกโปรไฟล์:** ไปที่แท็บ **Node Studio** เลือกโปรไฟล์ที่ต้องการใช้งาน หรือสร้างใหม่ด้วยการลากวางโหนดจาก Palette ด้านข้าง
+3. **ตรวจสอบและบันทึก:** กดปุ่ม **`🔍 Validate`** เพื่อตรวจเช็คความถูกต้องของสายไฟ และกดปุ่มลอย **`💾 Save Profile`**
+4. **เปิด/ปิดบอท:** กดปุ่ม **`▶️ Start Engine`** ใน Launcher หรือกดคีย์ลัด **`END`** เพื่อหยุด/ทำงานต่อชั่วคราว
 
 ---
 
 ### 📦 วิธีสร้างตัวติดตั้ง Standalone Windows Installer (.exe)
-หากต้องการส่งไฟล์ให้คนอื่นใช้งานโดยที่**ผู้ใช้ปลายทางไม่ต้องลง Node.js ในเครื่องเลย**:
+หากต้องการส่งโปรแกรมให้คนอื่นใช้งานโดยที่**ผู้ใช้ปลายทางไม่ต้องลง Node.js ในเครื่องเลย**:
 1. ดับเบิลคลิก **`4 build-installer.bat`**
-2. ระบบจะแพ็คไฟล์ทั้งหมด + Runtime ลงในโฟลเดอร์ `dist/NodeHotkey`
-3. หากลงโปรแกรมฟรี **Inno Setup** ไว้ในเครื่อง สามารถคอมไพล์ออกมาเป็นไฟล์ติดตั้ง **`dist/NodeHotkey-Setup-v3.0.0.exe`** ได้ทันที!
-
----
-
-1. เปิดหน้าเว็บควบคุม **[http://localhost:3000](http://localhost:3000)**
-2. ตั้งค่า Proxy IP / User-Agent ประจำจอ (ถ้ามี) แล้วกดปุ่ม **`➕ Launch`** บนการ์ดจอนั้นๆ เพื่อเปิดเกมได้ทันที!
-3. ปรับแต่งโปรไฟล์คำสั่ง และกดปุ่ม **`🔍 Validate Profile`** เพื่อสแกนตรวจสอบความถูกต้อง และกดปุ่มลอย **`💾`** เพื่อบันทึกใช้งาน!
+2. ระบบจะแพ็คไฟล์โปรแกรม + Node.js Portable Runtime ลงในโฟลเดอร์ `dist/NodeHotkey`
+3. สคริปต์จะใช้ **Inno Setup** คอมไพล์ออกมาเป็นไฟล์ติดตั้งตัวเดียวจบ **`dist/NodeHotkey-Setup-v3.1.0.exe`**
+   - 🔒 **Data Protection:** ตัวสร้างตัวติดตั้งจะกรองโปรไฟล์ส่วนตัวออก และใช้ Default Config ที่สะอาด (ไม่ติดพิกัดหน้าจอลบหรือ Proxy ส่วนตัว)
+   - 🔄 **Safe Upgrade:** ผู้ใช้ปลายทางสามารถดาวน์โหลดเวอร์ชันใหม่ไป **"ติดตั้งทับ"** ได้ทันที โดยที่พิกัดจอ, พ็อกซี่, และโปรไฟล์ที่สร้างไว้จะไม่หาย 100%
 
 ---
 

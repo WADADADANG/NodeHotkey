@@ -366,8 +366,24 @@ function createOverlayWindow() {
   });
 }
 
+function ensureGlobalConfigExists() {
+  try {
+    const globalJsonPath = path.join(PROJECT_DIR, 'configs', 'global.json');
+    const defaultJsonPath = path.join(PROJECT_DIR, 'configs', 'global.default.json');
+    if (!fs.existsSync(globalJsonPath) && fs.existsSync(defaultJsonPath)) {
+      const configsDir = path.join(PROJECT_DIR, 'configs');
+      if (!fs.existsSync(configsDir)) fs.mkdirSync(configsDir, { recursive: true });
+      fs.copyFileSync(defaultJsonPath, globalJsonPath);
+      console.log('[Launcher] 🚀 Initialized global.json from global.default.json template');
+    }
+  } catch (e) {
+    console.error('[Launcher] Failed to initialize global config:', e.message);
+  }
+}
+
 function isOverlayEnabledInConfig() {
   try {
+    ensureGlobalConfigExists();
     const globalJsonPath = path.join(PROJECT_DIR, 'configs', 'global.json');
     if (fs.existsSync(globalJsonPath)) {
       const parsed = JSON.parse(fs.readFileSync(globalJsonPath, 'utf8'));
@@ -403,6 +419,7 @@ function syncOverlayOnEngineState(running) {
 
 function getWebPortFromConfig() {
   try {
+    ensureGlobalConfigExists();
     const globalJsonPath = path.join(PROJECT_DIR, 'configs', 'global.json');
     if (fs.existsSync(globalJsonPath)) {
       const parsed = JSON.parse(fs.readFileSync(globalJsonPath, 'utf8'));
@@ -754,6 +771,7 @@ ipcMain.handle('bot:get-status', () => ({
 // Global Settings Direct Disk Persistence IPC
 ipcMain.handle('config:get-global', async () => {
   try {
+    ensureGlobalConfigExists();
     const globalJsonPath = path.join(PROJECT_DIR, 'configs', 'global.json');
     if (fs.existsSync(globalJsonPath)) {
       return JSON.parse(fs.readFileSync(globalJsonPath, 'utf8'));

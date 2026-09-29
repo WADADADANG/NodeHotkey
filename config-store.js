@@ -6,6 +6,7 @@ const { convertLegacyProfileToNodeWorkflow, isNodeWorkflowProfile } = require('.
 const CONFIGS_DIR = path.join(__dirname, 'configs');
 const PROFILES_DIR = path.join(CONFIGS_DIR, 'profiles');
 const GLOBAL_CONFIG_PATH = path.join(CONFIGS_DIR, 'global.json');
+const GLOBAL_DEFAULT_PATH = path.join(CONFIGS_DIR, 'global.default.json');
 const LEGACY_CONFIG_PATH = path.join(__dirname, 'config.json');
 
 // File Hash & Internal Save Lock Tracking
@@ -130,6 +131,16 @@ function readConfig() {
     clientProxies: {}
   };
 
+  // Auto-initialize global.json from default template if missing
+  if (!fs.existsSync(GLOBAL_CONFIG_PATH) && fs.existsSync(GLOBAL_DEFAULT_PATH)) {
+    try {
+      fs.copyFileSync(GLOBAL_DEFAULT_PATH, GLOBAL_CONFIG_PATH);
+      console.log(`[Config Store] 🚀 Initialized fresh global.json from global.default.json template`);
+    } catch (e) {
+      console.error(`[Config Store Error] Failed to initialize global.json from default template:`, e.message);
+    }
+  }
+
   if (fs.existsSync(GLOBAL_CONFIG_PATH)) {
     try {
       const globalRaw = fs.readFileSync(GLOBAL_CONFIG_PATH, 'utf8');
@@ -141,7 +152,9 @@ function readConfig() {
         activeProfiles = [gParsed.activeProfile];
       }
       if (gParsed.disabledClients) disabledClients = gParsed.disabledClients;
-      if (gParsed.globalSettings) globalSettings = gParsed.globalSettings;
+      if (gParsed.globalSettings) {
+        globalSettings = { ...globalSettings, ...gParsed.globalSettings };
+      }
     } catch (e) {
       console.error(`[Config Store Error] Failed to read global.json:`, e.message);
     }

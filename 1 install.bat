@@ -18,6 +18,13 @@ echo.
 echo [3/3] Installing Playwright Browsers...
 call npx playwright install
 echo.
+if not exist "configs\global.json" (
+    if exist "configs\global.default.json" (
+        copy /Y "configs\global.default.json" "configs\global.json" > nul
+        echo [SUCCESS] Initialized fresh configs\global.json from template!
+    )
+)
+echo.
 echo ===================================================
 echo [SUCCESS] INSTALLATION COMPLETE!
 echo You can now run "NodeHotkey Launcher.bat" or "3 start.bat"

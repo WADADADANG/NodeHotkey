@@ -124,12 +124,51 @@ if (fs.existsSync(path.join(rootDir, 'launcher'))) {
   );
 }
 
-console.log('      ⏳ Copying configs/ directory (profiles & global settings)...');
-copyFolderSync(
-  path.join(rootDir, 'configs'),
-  path.join(appDistDir, 'configs'),
-  (fullPath, name) => name.toLowerCase().endsWith('.md')
-);
+console.log('      ⏳ Packaging clean configs/ directory (Public Profiles & Clean Template)...');
+const distConfigsDir = path.join(appDistDir, 'configs');
+const distProfilesDir = path.join(distConfigsDir, 'profiles');
+if (!fs.existsSync(distConfigsDir)) fs.mkdirSync(distConfigsDir, { recursive: true });
+if (!fs.existsSync(distProfilesDir)) fs.mkdirSync(distProfilesDir, { recursive: true });
+
+// 1. Copy clean global.default.json as global.json and global.default.json
+const defaultGlobalSrc = path.join(rootDir, 'configs', 'global.default.json');
+if (fs.existsSync(defaultGlobalSrc)) {
+  fs.copyFileSync(defaultGlobalSrc, path.join(distConfigsDir, 'global.json'));
+  fs.copyFileSync(defaultGlobalSrc, path.join(distConfigsDir, 'global.default.json'));
+  console.log('      ✓ Injected clean default global.json (Personal settings & window coordinates protected)');
+} else {
+  const currentGlobalSrc = path.join(rootDir, 'configs', 'global.json');
+  if (fs.existsSync(currentGlobalSrc)) {
+    fs.copyFileSync(currentGlobalSrc, path.join(distConfigsDir, 'global.json'));
+    console.warn('      ⚠️ global.default.json not found, copied live global.json as fallback');
+  }
+}
+
+// 2. Selectively package public profiles (Default and [Ex] tutorials only)
+const srcProfilesDir = path.join(rootDir, 'configs', 'profiles');
+if (fs.existsSync(srcProfilesDir)) {
+  const profileEntries = fs.readdirSync(srcProfilesDir, { withFileTypes: true });
+  let publicCount = 0;
+  let privateCount = 0;
+
+  for (const entry of profileEntries) {
+    if (entry.name.toLowerCase().endsWith('.md')) {
+      fs.copyFileSync(path.join(srcProfilesDir, entry.name), path.join(distProfilesDir, entry.name));
+      continue;
+    }
+    if (!entry.isFile() || !entry.name.endsWith('.json')) continue;
+
+    // Public profiles include Default.json and official [Ex] example workflows
+    const isPublic = entry.name === 'Default.json' || entry.name.startsWith('[Ex] ');
+    if (isPublic) {
+      fs.copyFileSync(path.join(srcProfilesDir, entry.name), path.join(distProfilesDir, entry.name));
+      publicCount++;
+    } else {
+      privateCount++;
+    }
+  }
+  console.log(`      ✓ Packaged ${publicCount} public workflow profiles (🔒 ${privateCount} private/custom profiles omitted)`);
+}
 
 console.log('      ⏳ Copying node_modules/ (Production Dependencies)...');
 copyFolderSync(

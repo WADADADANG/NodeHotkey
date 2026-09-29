@@ -47,8 +47,12 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "silenticon"; Description: "Create Silent/Background Mode Desktop Shortcut"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; Package all prepared files from dist/NodeHotkey
-Source: "dist\NodeHotkey\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; 1. Package application files (excluding user configurations to protect user data on upgrades)
+Source: "dist\NodeHotkey\*"; DestDir: "{app}"; Excludes: "configs\global.json,configs\profiles\Default.json"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+; 2. Safe Config Preservation: Only write initial configs if they do NOT exist on the user's PC yet
+Source: "dist\NodeHotkey\configs\global.json"; DestDir: "{app}\configs"; Flags: onlyifdoesntexist
+Source: "dist\NodeHotkey\configs\profiles\Default.json"; DestDir: "{app}\configs\profiles"; Flags: onlyifdoesntexist
 
 [Icons]
 ; Start Menu Shortcuts
