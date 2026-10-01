@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Full Buff",
   "canvas": {
-    "zoom": 0.576780484746483,
+    "zoom": 0.7950463825935207,
     "pan": {
-      "x": -957,
-      "y": -1
+      "x": -930,
+      "y": -158
     }
   },
   "nodes": [
@@ -29,8 +29,8 @@
       "type": "trigger",
       "title": "Btn First Buff",
       "position": {
-        "x": 970,
-        "y": 2540
+        "x": 920,
+        "y": 2550
       },
       "data": {
         "enabled": true,
@@ -44,7 +44,7 @@
       "type": "branch",
       "title": "Check Full Buff",
       "position": {
-        "x": 1310,
+        "x": 1270,
         "y": 3100
       },
       "data": {
@@ -59,8 +59,8 @@
       "type": "sequencer",
       "title": "Full Buff",
       "position": {
-        "x": 1710,
-        "y": 3200
+        "x": 1840,
+        "y": 3210
       },
       "data": {
         "enabled": true,
@@ -144,7 +144,7 @@
       "type": "control",
       "title": "Action Controller",
       "position": {
-        "x": 1710,
+        "x": 1570,
         "y": 3090
       },
       "data": {
@@ -161,8 +161,8 @@
       "type": "branch",
       "title": "Check First Buff",
       "position": {
-        "x": 1300,
-        "y": 2540
+        "x": 1220,
+        "y": 2550
       },
       "data": {
         "enabled": true,
@@ -176,8 +176,8 @@
       "type": "control",
       "title": "AC Stop First Buff",
       "position": {
-        "x": 1680,
-        "y": 2530
+        "x": 1510,
+        "y": 2540
       },
       "data": {
         "enabled": true,
@@ -193,8 +193,8 @@
       "type": "sequencer",
       "title": "First Buff",
       "position": {
-        "x": 1680,
-        "y": 2640
+        "x": 1780,
+        "y": 2660
       },
       "data": {
         "enabled": true,
@@ -383,14 +383,15 @@
       "type": "tts",
       "title": "Text to Speech (TTS)",
       "position": {
-        "x": 3250,
-        "y": 1380
+        "x": 3180,
+        "y": 1300
       },
       "data": {
         "enabled": true,
         "text": "สแกนไม่พบปาร์ตี้",
         "voice": "en-US-JennyNeural",
         "volume": 100,
+        "waitForPrevious": false,
         "actionId": "1788970221662"
       }
     },
@@ -399,7 +400,7 @@
       "type": "tts",
       "title": "Text to Speech (TTS)",
       "position": {
-        "x": 4180,
+        "x": 4230,
         "y": 1830
       },
       "data": {
@@ -407,6 +408,7 @@
         "text": "บัฟเสร็จแล้ว",
         "voice": "en-US-JennyNeural",
         "volume": 100,
+        "waitForPrevious": false,
         "actionId": "1788970282798"
       }
     },
@@ -415,7 +417,7 @@
       "type": "key_press",
       "title": "Single Key Press",
       "position": {
-        "x": 4490,
+        "x": 4540,
         "y": 1730
       },
       "data": {
@@ -424,7 +426,8 @@
         "keys": [
           "Z"
         ],
-        "actionId": "1788970297861"
+        "actionId": "1788970297861",
+        "targetKey": "Z"
       }
     },
     {
@@ -432,7 +435,7 @@
       "type": "party_slot",
       "title": "party_slot",
       "position": {
-        "x": 4180,
+        "x": 4230,
         "y": 1630
       },
       "data": {
@@ -450,7 +453,7 @@
       "type": "tts",
       "title": "Text to Speech (TTS)",
       "position": {
-        "x": 4490,
+        "x": 4540,
         "y": 1840
       },
       "data": {
@@ -458,6 +461,7 @@
         "text": "เกิดข้อผิดพลาด",
         "voice": "en-US-JennyNeural",
         "volume": 100,
+        "waitForPrevious": false,
         "actionId": "1788970337332"
       }
     },
@@ -483,13 +487,14 @@
       "title": "Text to Speech (TTS)",
       "position": {
         "x": 2530,
-        "y": 1000
+        "y": 1020
       },
       "data": {
         "enabled": true,
         "text": "กำลังสแกน",
         "voice": "th-TH-PremwadeeNeural",
         "volume": 100,
+        "waitForPrevious": false,
         "actionId": "1789127455286"
       }
     },
@@ -498,8 +503,8 @@
       "type": "party_scanner",
       "title": "party_scanner",
       "position": {
-        "x": 2820,
-        "y": 890
+        "x": 2810,
+        "y": 910
       },
       "data": {
         "enabled": true,
@@ -517,8 +522,8 @@
       "type": "party_buff",
       "title": "party_buff",
       "position": {
-        "x": 3310,
-        "y": 1000
+        "x": 3430,
+        "y": 1040
       },
       "data": {
         "enabled": true,
@@ -580,6 +585,7 @@
         "text": "",
         "voice": "en-US-JennyNeural",
         "volume": 100,
+        "waitForPrevious": false,
         "actionId": "1789577251338"
       }
     },
@@ -604,8 +610,8 @@
       "type": "var_set",
       "title": "Set isFullBuffPartyScanner",
       "position": {
-        "x": 1850,
-        "y": 650
+        "x": 1860,
+        "y": 660
       },
       "data": {
         "enabled": true,
@@ -643,7 +649,7 @@
       "title": "Set isFullBuffPartyScanner",
       "position": {
         "x": 2530,
-        "y": 1230
+        "y": 1250
       },
       "data": {
         "enabled": true,
@@ -662,8 +668,8 @@
       "type": "var_set",
       "title": "Set isFullBuffPartyScanner",
       "position": {
-        "x": 2870,
-        "y": 1360
+        "x": 3180,
+        "y": 1530
       },
       "data": {
         "enabled": true,
@@ -682,8 +688,8 @@
       "type": "var_set",
       "title": "Set isFullBuffPartyScanner",
       "position": {
-        "x": 3600,
-        "y": 1560
+        "x": 3790,
+        "y": 1520
       },
       "data": {
         "enabled": true,
@@ -702,7 +708,7 @@
       "type": "var_set",
       "title": "Set isFullBuffPartyScanner",
       "position": {
-        "x": 4180,
+        "x": 4230,
         "y": 1440
       },
       "data": {
@@ -742,8 +748,8 @@
       "type": "reroute",
       "title": "Reroute",
       "position": {
-        "x": 4190,
-        "y": 550
+        "x": 4290,
+        "y": 520
       },
       "data": {
         "enabled": true,
@@ -755,8 +761,8 @@
       "type": "reroute",
       "title": "Reroute",
       "position": {
-        "x": 3960,
-        "y": 1660
+        "x": 4110,
+        "y": 1450
       },
       "data": {
         "enabled": true,
@@ -769,7 +775,7 @@
       "title": "Reroute",
       "position": {
         "x": 3080,
-        "y": 1230
+        "y": 1310
       },
       "data": {
         "enabled": true,
@@ -803,53 +809,92 @@
       }
     },
     {
-      "id": "node_1790566246084_94",
-      "type": "reroute",
-      "title": "Reroute",
+      "id": "node_1790856126935",
+      "type": "var_set",
+      "title": "Set isFirstBuff",
       "position": {
-        "x": 2870,
-        "y": 1230
+        "x": 1510,
+        "y": 2660
       },
       "data": {
         "enabled": true,
-        "actionId": "1790566246084_94"
+        "varName": "isFirstBuff",
+        "varType": "boolean",
+        "scope": "global",
+        "targetClient": "all",
+        "initialValue": "false",
+        "operation": "set_true",
+        "opValue": "1",
+        "actionId": "1790856126935"
+      }
+    },
+    {
+      "id": "node_1790856701350_9932",
+      "type": "var_set",
+      "title": "Set isFirstBuff",
+      "position": {
+        "x": 2080,
+        "y": 2540
+      },
+      "data": {
+        "enabled": true,
+        "varName": "isFirstBuff",
+        "varType": "boolean",
+        "scope": "global",
+        "targetClient": "all",
+        "initialValue": "false",
+        "operation": "set_false",
+        "opValue": "1",
+        "actionId": "1790856701350_9932"
+      }
+    },
+    {
+      "id": "node_1790856844169",
+      "type": "var_set",
+      "title": "Set isFullBuff",
+      "position": {
+        "x": 1570,
+        "y": 3210
+      },
+      "data": {
+        "enabled": true,
+        "varName": "isFullBuff",
+        "varType": "boolean",
+        "scope": "global",
+        "targetClient": "all",
+        "initialValue": "false",
+        "operation": "set_true",
+        "opValue": "1",
+        "actionId": "1790856844169"
+      }
+    },
+    {
+      "id": "node_1790856881723_8051",
+      "type": "var_set",
+      "title": "Set isFullBuff",
+      "position": {
+        "x": 2150,
+        "y": 3090
+      },
+      "data": {
+        "enabled": true,
+        "varName": "isFullBuff",
+        "varType": "boolean",
+        "scope": "global",
+        "targetClient": "all",
+        "initialValue": "false",
+        "operation": "set_false",
+        "opValue": "1",
+        "actionId": "1790856881723_8051"
       }
     }
   ],
   "connections": [
     {
-      "id": "conn_1787587501662",
-      "fromNodeId": "node_1787587482706",
-      "fromPort": "onFalse",
-      "toNodeId": "node_1787587497257",
-      "toPort": "exec_in"
-    },
-    {
       "id": "conn_1787587600277",
       "fromNodeId": "node_1787587482706",
       "fromPort": "onTrue",
       "toNodeId": "node_1787587597191",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1787587639461",
-      "fromNodeId": "node_1786881084148",
-      "fromPort": "exec_out",
-      "toNodeId": "node_1787587482706",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1787587790063",
-      "fromNodeId": "node_1786881149621",
-      "fromPort": "exec_out",
-      "toNodeId": "node_1787587786808",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1787587803400",
-      "fromNodeId": "node_1787587786808",
-      "fromPort": "onFalse",
-      "toNodeId": "node_1787587800432",
       "toPort": "exec_in"
     },
     {
@@ -1049,18 +1094,159 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1790566246084_in",
-      "fromNodeId": "node_1790566179128",
-      "fromPort": "out",
-      "toNodeId": "node_1790566246084_94",
-      "toPort": "in"
+      "id": "conn_1790856719818",
+      "fromNodeId": "node_1787587800432",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1790856701350_9932",
+      "toPort": "exec_in"
     },
     {
-      "id": "conn_1790566246084_out",
-      "fromNodeId": "node_1790566246084_94",
+      "id": "conn_1790856764377",
+      "fromNodeId": "node_1786881149621",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1787587786808",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790856770958",
+      "fromNodeId": "node_1787587786808",
+      "fromPort": "onFalse",
+      "toNodeId": "node_1790856126935",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790856777192",
+      "fromNodeId": "node_1790856126935",
+      "fromPort": "next",
+      "toNodeId": "node_1787587800432",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790856823943",
+      "fromNodeId": "node_1787587795123",
+      "fromPort": "next",
+      "toNodeId": "node_1790856701350_9932",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790856839078",
+      "fromNodeId": "node_1786881084148",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1787587482706",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790856848949",
+      "fromNodeId": "node_1787587482706",
+      "fromPort": "onFalse",
+      "toNodeId": "node_1790856844169",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790856864867",
+      "fromNodeId": "node_1790856844169",
+      "fromPort": "next",
+      "toNodeId": "node_1787587497257",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790856888533",
+      "fromNodeId": "node_1787587597191",
+      "fromPort": "next",
+      "toNodeId": "node_1790856881723_8051",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790856890606",
+      "fromNodeId": "node_1787587497257",
+      "fromPort": "onComplete",
+      "toNodeId": "node_1790856881723_8051",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790856945399",
+      "fromNodeId": "node_1790566179128",
       "fromPort": "out",
       "toNodeId": "node_1789712245422_6511",
       "toPort": "exec_in"
+    }
+  ],
+  "targetUrlKeyword": "universe.flyff.com/play",
+  "enableOverlay": false,
+  "suspendHotkey": "END",
+  "ghostMouseJitter": {
+    "enabled": false,
+    "intervalMin": 8000,
+    "intervalMax": 25000,
+    "maxOffset": 12
+  },
+  "clientAliases": {
+    "1": "1",
+    "2": "2",
+    "3": "3",
+    "4": "4",
+    "5": "5",
+    "6": "6",
+    "7": "7",
+    "8": "8"
+  },
+  "clientUserAgents": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "4": "",
+    "5": "",
+    "6": "",
+    "7": "",
+    "8": ""
+  },
+  "clientProxies": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "4": "",
+    "5": "",
+    "6": "",
+    "7": "",
+    "8": ""
+  },
+  "clientBrowsers": {
+    "1": "1-app",
+    "2": "1-app",
+    "3": "1-app",
+    "4": "1-app",
+    "5": "1-app",
+    "6": "1-app",
+    "7": "1-app",
+    "8": "1-app"
+  },
+  "variables": [
+    {
+      "id": "var_nzj16an",
+      "name": "isFullBuffPartyScanner",
+      "type": "boolean",
+      "scope": "global",
+      "targetClient": "all",
+      "defaultValue": "false",
+      "description": ""
+    },
+    {
+      "id": "var_joainqv",
+      "name": "isFullBuff",
+      "type": "boolean",
+      "scope": "global",
+      "targetClient": "all",
+      "defaultValue": "false",
+      "description": ""
+    },
+    {
+      "id": "var_cjpvoh9",
+      "name": "isFirstBuff",
+      "type": "boolean",
+      "scope": "global",
+      "targetClient": "all",
+      "defaultValue": "false",
+      "description": ""
     }
   ]
 }

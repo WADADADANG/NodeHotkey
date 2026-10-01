@@ -72,7 +72,8 @@
         ],
         "interval": 3000,
         "executeImmediately": true,
-        "actionId": "1786687513945"
+        "actionId": "1786687513945",
+        "targetKey": "1"
       }
     }
   ],
@@ -98,5 +99,54 @@
       "toNodeId": "node_1786687513945",
       "toPort": "exec_in"
     }
-  ]
+  ],
+  "targetUrlKeyword": "universe.flyff.com/play",
+  "enableOverlay": false,
+  "suspendHotkey": "END",
+  "ghostMouseJitter": {
+    "enabled": false,
+    "intervalMin": 8000,
+    "intervalMax": 25000,
+    "maxOffset": 12
+  },
+  "clientAliases": {
+    "1": "1",
+    "2": "2",
+    "3": "3",
+    "4": "4",
+    "5": "5",
+    "6": "6",
+    "7": "7",
+    "8": "8"
+  },
+  "clientUserAgents": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "4": "",
+    "5": "",
+    "6": "",
+    "7": "",
+    "8": ""
+  },
+  "clientProxies": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "4": "",
+    "5": "",
+    "6": "",
+    "7": "",
+    "8": ""
+  },
+  "clientBrowsers": {
+    "1": "1-app",
+    "2": "1-app",
+    "3": "1-app",
+    "4": "1-app",
+    "5": "1-app",
+    "6": "1-app",
+    "7": "1-app",
+    "8": "1-app"
+  }
 }

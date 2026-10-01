@@ -239,9 +239,11 @@ function writeConfig(fullConfig) {
     const existingGlobal = fs.readFileSync(GLOBAL_CONFIG_PATH, 'utf8');
     if (existingGlobal !== newGlobalContent) {
       fs.writeFileSync(GLOBAL_CONFIG_PATH, newGlobalContent, 'utf8');
+      internalWriteLocks.set('global.json', Date.now());
     }
   } else {
     fs.writeFileSync(GLOBAL_CONFIG_PATH, newGlobalContent, 'utf8');
+    internalWriteLocks.set('global.json', Date.now());
   }
 
   // Save profile files and handle deletions
@@ -479,6 +481,42 @@ function getGlobalSettings() {
   return null;
 }
 
+// Save only globalSettings without rewriting or touching any profile files
+function saveGlobalSettingsOnly(globalSettingsPartial) {
+  ensureDirs();
+  try {
+    let globalData = {
+      activeProfile: 'Default',
+      activeProfiles: ['Default'],
+      disabledClients: [],
+      globalSettings: {}
+    };
+    if (fs.existsSync(GLOBAL_CONFIG_PATH)) {
+      const raw = fs.readFileSync(GLOBAL_CONFIG_PATH, 'utf8');
+      globalData = JSON.parse(raw);
+    }
+    globalData.globalSettings = { ...(globalData.globalSettings || {}), ...globalSettingsPartial };
+    const newContent = JSON.stringify(globalData, null, 2);
+    if (fs.existsSync(GLOBAL_CONFIG_PATH)) {
+      const existing = fs.readFileSync(GLOBAL_CONFIG_PATH, 'utf8');
+      if (existing === newContent) return true;
+    }
+    fs.writeFileSync(GLOBAL_CONFIG_PATH, newContent, 'utf8');
+    internalWriteLocks.set('global.json', Date.now());
+    return true;
+  } catch (e) {
+    console.error(`[Config Store Error] Failed to save global settings:`, e.message);
+    return false;
+  }
+}
+
+function isInternalRecentWrite(filename) {
+  if (!filename) return false;
+  const base = path.basename(filename);
+  const lockTime = internalWriteLocks.get(base) || internalWriteLocks.get(filename) || 0;
+  return (Date.now() - lockTime) < 2500;
+}
+
 module.exports = {
   readConfig,
   writeConfig,
@@ -487,7 +525,10 @@ module.exports = {
   initProfileWatcher,
   migrateLegacyConfig,
   getGlobalSettings,
+  saveGlobalSettingsOnly,
+  isInternalRecentWrite,
   CONFIGS_DIR,
   PROFILES_DIR,
   GLOBAL_CONFIG_PATH
 };
+

@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Follow Leader Party",
   "canvas": {
-    "zoom": 1.0442744734957345,
+    "zoom": 0.5270760000000002,
     "pan": {
-      "x": -1812,
-      "y": -874
+      "x": -1261,
+      "y": -400
     }
   },
   "nodes": [
@@ -30,7 +30,7 @@
       "title": "Party Slot Selector 1",
       "position": {
         "x": 1790,
-        "y": 300
+        "y": 290
       },
       "data": {
         "enabled": true,
@@ -47,8 +47,8 @@
       "type": "key_press",
       "title": "Key Press Z 1",
       "position": {
-        "x": 2090,
-        "y": 410
+        "x": 2100,
+        "y": 390
       },
       "data": {
         "enabled": true,
@@ -56,7 +56,8 @@
         "keys": [
           "Z"
         ],
-        "actionId": "1790426751748"
+        "actionId": "1790426751748",
+        "targetKey": "Z"
       }
     },
     {
@@ -65,7 +66,7 @@
       "title": "Key Press Z 2",
       "position": {
         "x": 2100,
-        "y": 610
+        "y": 590
       },
       "data": {
         "enabled": true,
@@ -73,7 +74,8 @@
         "keys": [
           "Z"
         ],
-        "actionId": "1790426770515_6395"
+        "actionId": "1790426770515_6395",
+        "targetKey": "Z"
       }
     },
     {
@@ -82,7 +84,7 @@
       "title": "Party Slot Selector 2",
       "position": {
         "x": 1790,
-        "y": 500
+        "y": 490
       },
       "data": {
         "enabled": true,
@@ -108,7 +110,8 @@
         "keys": [
           "Z"
         ],
-        "actionId": "1790426783508_5957"
+        "actionId": "1790426783508_5957",
+        "targetKey": "Z"
       }
     },
     {
@@ -117,7 +120,7 @@
       "title": "Party Slot Selector 3",
       "position": {
         "x": 1790,
-        "y": 680
+        "y": 690
       },
       "data": {
         "enabled": true,
@@ -143,7 +146,8 @@
         "keys": [
           "Z"
         ],
-        "actionId": "1790426786586_3139"
+        "actionId": "1790426786586_3139",
+        "targetKey": "Z"
       }
     },
     {
@@ -178,7 +182,8 @@
         "keys": [
           "Z"
         ],
-        "actionId": "1790426788842_4038"
+        "actionId": "1790426788842_4038",
+        "targetKey": "Z"
       }
     },
     {
@@ -205,7 +210,7 @@
       "title": "Key Press Z 6",
       "position": {
         "x": 2100,
-        "y": 1380
+        "y": 1390
       },
       "data": {
         "enabled": true,
@@ -213,7 +218,8 @@
         "keys": [
           "Z"
         ],
-        "actionId": "1790426793286_7200"
+        "actionId": "1790426793286_7200",
+        "targetKey": "Z"
       }
     },
     {
@@ -222,7 +228,7 @@
       "title": "Party Slot Selector 6",
       "position": {
         "x": 1790,
-        "y": 1280
+        "y": 1290
       },
       "data": {
         "enabled": true,
@@ -556,8 +562,8 @@
       "type": "reroute",
       "title": "Reroute",
       "position": {
-        "x": 2320,
-        "y": 500
+        "x": 2330,
+        "y": 490
       },
       "data": {
         "enabled": true,
@@ -830,47 +836,12 @@
       }
     },
     {
-      "id": "node_1790567098411",
-      "type": "trigger",
-      "title": "Global Trigger ใช้สำหรับเทส เพื่อ คืนสถานะตัวแปร",
-      "position": {
-        "x": 370,
-        "y": 1110
-      },
-      "data": {
-        "enabled": true,
-        "triggerType": "keyboard",
-        "triggerValue": "NUMPAD 0",
-        "actionId": "1790567098411"
-      }
-    },
-    {
-      "id": "node_1790567109102",
-      "type": "var_set",
-      "title": "Set isScanningPartyFollowLeader",
-      "position": {
-        "x": 680,
-        "y": 1110
-      },
-      "data": {
-        "enabled": true,
-        "varName": "isScanningPartyFollowLeader",
-        "varType": "boolean",
-        "scope": "global",
-        "targetClient": "all",
-        "initialValue": "false",
-        "operation": "set_false",
-        "opValue": "1",
-        "actionId": "1790567109102"
-      }
-    },
-    {
       "id": "node_1790574361477",
       "type": "screenshot",
       "title": "Screenshot (Diagnostic) 1",
       "position": {
         "x": 2450,
-        "y": 430
+        "y": 410
       },
       "data": {
         "enabled": true,
@@ -1376,13 +1347,6 @@
       "toPort": "in"
     },
     {
-      "id": "conn_1790567116234",
-      "fromNodeId": "node_1790567098411",
-      "fromPort": "exec_out",
-      "toNodeId": "node_1790567109102",
-      "toPort": "exec_in"
-    },
-    {
       "id": "conn_1790567300155",
       "fromNodeId": "node_1790485624092",
       "fromPort": "onInactive",
@@ -1501,5 +1465,54 @@
       "toNodeId": "node_1790575369015",
       "toPort": "in"
     }
-  ]
+  ],
+  "targetUrlKeyword": "universe.flyff.com/play",
+  "enableOverlay": false,
+  "suspendHotkey": "END",
+  "ghostMouseJitter": {
+    "enabled": false,
+    "intervalMin": 8000,
+    "intervalMax": 25000,
+    "maxOffset": 12
+  },
+  "clientAliases": {
+    "1": "1",
+    "2": "2",
+    "3": "3",
+    "4": "4",
+    "5": "5",
+    "6": "6",
+    "7": "7",
+    "8": "8"
+  },
+  "clientUserAgents": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "4": "",
+    "5": "",
+    "6": "",
+    "7": "",
+    "8": ""
+  },
+  "clientProxies": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "4": "",
+    "5": "",
+    "6": "",
+    "7": "",
+    "8": ""
+  },
+  "clientBrowsers": {
+    "1": "1-app",
+    "2": "1-app",
+    "3": "1-app",
+    "4": "1-app",
+    "5": "1-app",
+    "6": "1-app",
+    "7": "1-app",
+    "8": "1-app"
+  }
 }

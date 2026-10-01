@@ -375,11 +375,49 @@ function isTargetMatched(targetClientString, clientStr) {
     return targets.includes(clientStr);
 }
 
+const keyHoldPulseTimers = {};
+
+function ensureKeyHoldPulse(act) {
+    if (!act || !activeHoldStates[act.id]) return;
+    if (keyHoldPulseTimers[act.id]) return;
+
+    const targetKey = act.targetKey || '1';
+    const targets = getActionTargets(act.targetClient).map(x => parseInt(x, 10));
+    const formattedKey = formatKeyForPlaywright(targetKey);
+
+    keyHoldPulseTimers[act.id] = setInterval(async () => {
+        if (!activeHoldStates[act.id] || global.isSuspended) {
+            clearInterval(keyHoldPulseTimers[act.id]);
+            delete keyHoldPulseTimers[act.id];
+            return;
+        }
+        for (let t of targets) {
+            const page = clientPages[t];
+            if (!page || page.isClosed()) continue;
+            try {
+                const cdp = await getCDPSession(t);
+                if (cdp) {
+                    await cdp.send('Input.dispatchKeyEvent', {
+                        type: 'rawKeyDown',
+                        key: formattedKey,
+                        code: formattedKey
+                    }).catch(() => { });
+                }
+            } catch (e) { }
+        }
+    }, 1500);
+}
+
 function releaseHeldKeyForAction(act) {
     if (!act) return;
+    if (keyHoldPulseTimers[act.id]) {
+        clearInterval(keyHoldPulseTimers[act.id]);
+        delete keyHoldPulseTimers[act.id];
+    }
     if (activeHoldStates[act.id]) {
         const targetKey = act.targetKey || '1';
         let targets = getActionTargets(act.targetClient).map(x => parseInt(x, 10));
+        console.log(`⚓ [Action] Released Key Hold for "${act.name || act.id}" (${targetKey}) on Client(s) [${targets.join(', ')}]`);
         for (let t of targets) {
             const page = clientPages[t];
             if (page) {
@@ -393,8 +431,9 @@ function releaseHeldKeyForAction(act) {
                 }
                 if (typeof pressKeyHoldUp === 'function') {
                     pressKeyHoldUp(page, targetKey).catch(() => { });
-                } else {
-                    page.keyboard.up(targetKey).catch(() => { });
+                } else if (page.keyboard) {
+                    const formattedKey = formatKeyForPlaywright(targetKey);
+                    page.keyboard.up(formattedKey).catch(() => { });
                 }
             }
         }
@@ -416,14 +455,39 @@ function releaseAllHeldKeys() {
         clearTimeout(forwardHoldTimers[key]);
         delete forwardHoldTimers[key];
     }
+    for (let actId in keyHoldPulseTimers) {
+        clearInterval(keyHoldPulseTimers[actId]);
+        delete keyHoldPulseTimers[actId];
+    }
 }
 
-const { readConfig, writeConfig } = require('./config-store');
+// Preserve running key holds across config reloads (only release if node removed or disabled)
+function syncRunningKeyHolds() {
+    for (let actionId in activeHoldStates) {
+        if (activeHoldStates[actionId]) {
+            const matchingAct = activeActions.find(a => 
+                a.id === actionId || 
+                a.id === `node_${actionId}` || 
+                a.nodeId === actionId ||
+                (a.nodeId && `node_${a.nodeId}` === actionId)
+            );
+            if (!matchingAct || !matchingAct.enabled || (matchingAct.mode !== 'key_hold' && matchingAct.type !== 'key_hold')) {
+                console.log(`⚓ [Action] Key Hold action "${actionId}" is no longer active in config. Releasing...`);
+                const oldAct = activeActions.find(a => a.id === actionId) || { id: actionId, targetKey: '1', targetClient: '1' };
+                releaseHeldKeyForAction(oldAct);
+                activeHoldStates[actionId] = false;
+            } else {
+                ensureKeyHoldPulse(matchingAct);
+            }
+        }
+    }
+}
+
+const { readConfig, writeConfig, saveGlobalSettingsOnly, isInternalRecentWrite, CONFIGS_DIR } = require('./config-store');
 
 // Helper to load config from JSON file
 function loadConfigFromFile() {
     try {
-        releaseAllHeldKeys();
         const parsed = readConfig();
         if (!parsed) return;
 
@@ -540,6 +604,9 @@ function loadConfigFromFile() {
         // Sync state of active loops
         syncRunningLoops();
 
+        // Sync state of active key holds (preserve running key holds across reloads)
+        syncRunningKeyHolds();
+
         // Sync Python overlay process setting (actual spawn handled by sendOverlayUpdate below)
         const enableOverlayVal = (globalSet && globalSet.enableOverlay !== undefined) ? globalSet.enableOverlay : ((primaryProfile && primaryProfile.enableOverlay !== undefined) ? primaryProfile.enableOverlay : true);
         lastEnableOverlaySetting = !!enableOverlayVal;
@@ -559,13 +626,14 @@ function loadConfigFromFile() {
     }
 }
 
-const { CONFIGS_DIR } = require('./config-store');
-
 let watchDebounceTimer = null;
 function watchConfigChanges() {
     if (fs.existsSync(CONFIGS_DIR)) {
         fs.watch(CONFIGS_DIR, { recursive: true }, (eventType, filename) => {
             if (filename && filename.endsWith('.json')) {
+                if (typeof isInternalRecentWrite === 'function' && isInternalRecentWrite(filename)) {
+                    return; // Ignore internal writes from NodeHotkey itself (window bounds or auto-saves)
+                }
                 if (watchDebounceTimer) clearTimeout(watchDebounceTimer);
                 watchDebounceTimer = setTimeout(() => {
                     console.log(`\n[Config] ${filename} modification detected. Reloading...`);
@@ -1789,10 +1857,14 @@ function flushWindowBoundsToConfig() {
         boundsSaveTimer = null;
     }
     try {
-        const fullCfg = readConfig();
-        if (fullCfg && fullCfg.globalSettings) {
-            fullCfg.globalSettings.clientWindowBounds = clientWindowBounds;
-            writeConfig(fullCfg);
+        if (typeof saveGlobalSettingsOnly === 'function') {
+            saveGlobalSettingsOnly({ clientWindowBounds });
+        } else {
+            const fullCfg = readConfig();
+            if (fullCfg && fullCfg.globalSettings) {
+                fullCfg.globalSettings.clientWindowBounds = clientWindowBounds;
+                writeConfig(fullCfg);
+            }
         }
     } catch (e) { }
 }
@@ -1867,10 +1939,14 @@ async function saveActiveClientsWindowBounds() {
     }
     if (updated) {
         try {
-            const fullCfg = readConfig();
-            if (fullCfg && fullCfg.globalSettings) {
-                fullCfg.globalSettings.clientWindowBounds = clientWindowBounds;
-                writeConfig(fullCfg);
+            if (typeof saveGlobalSettingsOnly === 'function') {
+                saveGlobalSettingsOnly({ clientWindowBounds });
+            } else {
+                const fullCfg = readConfig();
+                if (fullCfg && fullCfg.globalSettings) {
+                    fullCfg.globalSettings.clientWindowBounds = clientWindowBounds;
+                    writeConfig(fullCfg);
+                }
             }
         } catch (e) { }
     }
@@ -2918,15 +2994,24 @@ async function toggleKeyHoldAction(action, callStack) {
                 } else {
                     await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: formattedKey, code: formattedKey }).catch(() => { });
                 }
-            } else {
+            } else if (page.keyboard) {
                 if (nextState) {
-                    await pressKeyHoldDown(page, targetKey);
+                    await page.keyboard.down(formattedKey).catch(() => { });
                 } else {
-                    await pressKeyHoldUp(page, targetKey);
+                    await page.keyboard.up(formattedKey).catch(() => { });
                 }
             }
         } catch (e) {
             console.error(`[Action Error] Failed toggle key hold on Client ${t}:`, e.message);
+        }
+    }
+
+    if (nextState) {
+        ensureKeyHoldPulse(action);
+    } else {
+        if (keyHoldPulseTimers[action.id]) {
+            clearInterval(keyHoldPulseTimers[action.id]);
+            delete keyHoldPulseTimers[action.id];
         }
     }
 

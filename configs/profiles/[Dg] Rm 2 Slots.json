@@ -40,7 +40,8 @@
         ],
         "interval": 1100,
         "executeImmediately": true,
-        "actionId": "1787293396523"
+        "actionId": "1787293396523",
+        "targetKey": "1"
       }
     },
     {
@@ -74,7 +75,8 @@
         ],
         "interval": 1000,
         "executeImmediately": true,
-        "actionId": "1787293446004"
+        "actionId": "1787293446004",
+        "targetKey": "2"
       }
     },
     {
@@ -93,7 +95,8 @@
         ],
         "interval": 1000,
         "executeImmediately": true,
-        "actionId": "1787293461532_774"
+        "actionId": "1787293461532_774",
+        "targetKey": "2"
       }
     },
     {
@@ -139,7 +142,8 @@
         "keys": [
           "6"
         ],
-        "actionId": "1787293516138"
+        "actionId": "1787293516138",
+        "targetKey": "6"
       }
     },
     {
@@ -158,7 +162,8 @@
         ],
         "interval": 15550,
         "executeImmediately": false,
-        "actionId": "1787293583114"
+        "actionId": "1787293583114",
+        "targetKey": "3"
       }
     },
     {
@@ -177,7 +182,8 @@
         ],
         "interval": 15550,
         "executeImmediately": false,
-        "actionId": "1787293609787_6681"
+        "actionId": "1787293609787_6681",
+        "targetKey": "3"
       }
     },
     {
@@ -460,7 +466,8 @@
         "keys": [
           "5"
         ],
-        "actionId": "1789806049103"
+        "actionId": "1789806049103",
+        "targetKey": "5"
       }
     }
   ],
@@ -598,5 +605,54 @@
       "toNodeId": "node_1789806049103",
       "toPort": "exec_in"
     }
-  ]
+  ],
+  "targetUrlKeyword": "universe.flyff.com/play",
+  "enableOverlay": false,
+  "suspendHotkey": "END",
+  "ghostMouseJitter": {
+    "enabled": false,
+    "intervalMin": 8000,
+    "intervalMax": 25000,
+    "maxOffset": 12
+  },
+  "clientAliases": {
+    "1": "1",
+    "2": "2",
+    "3": "3",
+    "4": "4",
+    "5": "5",
+    "6": "6",
+    "7": "7",
+    "8": "8"
+  },
+  "clientUserAgents": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "4": "",
+    "5": "",
+    "6": "",
+    "7": "",
+    "8": ""
+  },
+  "clientProxies": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "4": "",
+    "5": "",
+    "6": "",
+    "7": "",
+    "8": ""
+  },
+  "clientBrowsers": {
+    "1": "1-app",
+    "2": "1-app",
+    "3": "1-app",
+    "4": "1-app",
+    "5": "1-app",
+    "6": "1-app",
+    "7": "1-app",
+    "8": "1-app"
+  }
 }

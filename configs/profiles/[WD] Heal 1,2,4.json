@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Heal 1,2,4",
   "canvas": {
-    "zoom": 0.775449318381383,
+    "zoom": 0.7448935211943765,
     "pan": {
-      "x": -342,
-      "y": -279
+      "x": -395,
+      "y": -688
     }
   },
   "nodes": [
@@ -41,7 +41,8 @@
         "interval": 2300,
         "jitter": 100,
         "executeImmediately": true,
-        "actionId": "1786680205039"
+        "actionId": "1786680205039",
+        "targetKey": "1"
       }
     },
     {
@@ -61,7 +62,8 @@
         "interval": 1000,
         "jitter": 200,
         "executeImmediately": true,
-        "actionId": "1786680432366"
+        "actionId": "1786680432366",
+        "targetKey": "2"
       }
     },
     {
@@ -81,7 +83,8 @@
         "interval": 1000,
         "jitter": 200,
         "executeImmediately": true,
-        "actionId": "1786680465713_967"
+        "actionId": "1786680465713_967",
+        "targetKey": "2"
       }
     },
     {
@@ -98,10 +101,11 @@
         "keys": [
           "2"
         ],
-        "interval": 1000,
+        "interval": 1100,
         "jitter": 200,
         "executeImmediately": true,
-        "actionId": "1786680473923_7676"
+        "actionId": "1786680473923_7676",
+        "targetKey": "2"
       }
     },
     {
@@ -139,8 +143,8 @@
       "type": "control",
       "title": "AC Start Heal Rain All",
       "position": {
-        "x": 1820,
-        "y": 1070
+        "x": 1740,
+        "y": 1140
       },
       "data": {
         "enabled": true,
@@ -188,7 +192,8 @@
         ],
         "interval": 10800,
         "executeImmediately": false,
-        "actionId": "1786684521954"
+        "actionId": "1786684521954",
+        "targetKey": "3"
       }
     },
     {
@@ -207,7 +212,8 @@
         ],
         "interval": 10000,
         "executeImmediately": false,
-        "actionId": "1786684538557_1206"
+        "actionId": "1786684538557_1206",
+        "targetKey": "3"
       }
     },
     {
@@ -226,7 +232,8 @@
         ],
         "interval": 6000,
         "executeImmediately": false,
-        "actionId": "1786684545395_4783"
+        "actionId": "1786684545395_4783",
+        "targetKey": "3"
       }
     },
     {
@@ -279,7 +286,8 @@
           "6"
         ],
         "delayAfter": 300,
-        "actionId": "1786878166325"
+        "actionId": "1786878166325",
+        "targetKey": "6"
       }
     },
     {
@@ -298,7 +306,8 @@
         ],
         "delayAfter": 300,
         "cooldownPresetId": "skill_ringmaster_barrier-of-life",
-        "actionId": "1786878453563"
+        "actionId": "1786878453563",
+        "targetKey": "8"
       }
     },
     {
@@ -364,7 +373,8 @@
         "keys": [
           "4"
         ],
-        "actionId": "1786878859448"
+        "actionId": "1786878859448",
+        "targetKey": "4"
       }
     },
     {
@@ -381,7 +391,8 @@
         "keys": [
           "2"
         ],
-        "actionId": "1786878936138_453"
+        "actionId": "1786878936138_453",
+        "targetKey": "2"
       }
     },
     {
@@ -398,7 +409,8 @@
         "keys": [
           "3"
         ],
-        "actionId": "1786878970687_1373"
+        "actionId": "1786878970687_1373",
+        "targetKey": "3"
       }
     },
     {
@@ -415,7 +427,8 @@
         "keys": [
           "3"
         ],
-        "actionId": "1786878970687_6631"
+        "actionId": "1786878970687_6631",
+        "targetKey": "3"
       }
     },
     {
@@ -438,8 +451,8 @@
       "type": "trigger",
       "title": "Btn Start Heal Rain Tab",
       "position": {
-        "x": 1170,
-        "y": 1290
+        "x": 1160,
+        "y": 1390
       },
       "data": {
         "enabled": true,
@@ -453,8 +466,8 @@
       "type": "forwarder",
       "title": "Heal Rain Tab 4",
       "position": {
-        "x": 1500,
-        "y": 1160
+        "x": 1750,
+        "y": 1460
       },
       "data": {
         "enabled": true,
@@ -471,8 +484,8 @@
       "type": "control",
       "title": "AC Stop Heal Rain 4",
       "position": {
-        "x": 2140,
-        "y": 1170
+        "x": 2370,
+        "y": 1550
       },
       "data": {
         "enabled": true,
@@ -512,10 +525,11 @@
         "keys": [
           "1"
         ],
-        "interval": 1500,
+        "interval": 1200,
         "jitter": 100,
         "executeImmediately": true,
-        "actionId": "1786879715668_3660"
+        "actionId": "1786879715668_3660",
+        "targetKey": "1"
       }
     },
     {
@@ -561,7 +575,8 @@
           "8"
         ],
         "cooldownPresetId": "skill_knight_heart-of-sacrifice",
-        "actionId": "1787759322547"
+        "actionId": "1787759322547",
+        "targetKey": "8"
       }
     },
     {
@@ -569,8 +584,8 @@
       "type": "key_press",
       "title": "Key Press",
       "position": {
-        "x": 2400,
-        "y": 980
+        "x": 2030,
+        "y": 1010
       },
       "data": {
         "enabled": true,
@@ -578,7 +593,8 @@
         "keys": [
           "Z"
         ],
-        "actionId": "1789626505874"
+        "actionId": "1789626505874",
+        "targetKey": "Z"
       }
     },
     {
@@ -586,14 +602,96 @@
       "type": "trigger",
       "title": "Btn Start Heal Rain 3",
       "position": {
-        "x": 1170,
-        "y": 1160
+        "x": 1160,
+        "y": 1260
       },
       "data": {
         "enabled": true,
         "triggerType": "keyboard",
         "triggerValue": "TAB",
         "actionId": "1789943917001_1634"
+      }
+    },
+    {
+      "id": "node_1790835806746",
+      "type": "emergency_stop",
+      "title": "Emergency Stop All",
+      "position": {
+        "x": 2070,
+        "y": 1550
+      },
+      "data": {
+        "enabled": true,
+        "stopScope": "client",
+        "targetClient": "4",
+        "showOverlayNotice": true,
+        "actionId": "1790835806746"
+      }
+    },
+    {
+      "id": "node_1790845654431",
+      "type": "forwarder",
+      "title": "Key Forwarder",
+      "position": {
+        "x": 1750,
+        "y": 1270
+      },
+      "data": {
+        "enabled": true,
+        "targetKey": "2",
+        "keys": [
+          "2"
+        ],
+        "targetClient": "1",
+        "actionId": "1790845654431"
+      }
+    },
+    {
+      "id": "node_1790854414603",
+      "type": "condition_group",
+      "title": "Condition Group",
+      "position": {
+        "x": 1450,
+        "y": 1260
+      },
+      "data": {
+        "enabled": true,
+        "logicMode": "OR",
+        "conditions": [
+          {
+            "type": "variable",
+            "varName": "isFullBuffPartyScanner",
+            "varType": "boolean",
+            "rule": "is_true",
+            "value": "",
+            "actionId": "",
+            "actionRule": "is_running",
+            "targetClient": "1",
+            "clientRule": "is_active"
+          },
+          {
+            "type": "variable",
+            "varName": "isWorking",
+            "varType": "boolean",
+            "rule": "is_true",
+            "value": ""
+          },
+          {
+            "type": "variable",
+            "varName": "isFirstBuff",
+            "varType": "boolean",
+            "rule": "is_true",
+            "value": ""
+          },
+          {
+            "type": "variable",
+            "varName": "isFullBuff",
+            "varType": "boolean",
+            "rule": "is_true",
+            "value": ""
+          }
+        ],
+        "actionId": "1790854414603"
       }
     }
   ],
@@ -725,13 +823,6 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1786879480840",
-      "fromNodeId": "node_1786879318638",
-      "fromPort": "next",
-      "toNodeId": "node_1786879464145",
-      "toPort": "exec_in"
-    },
-    {
       "id": "conn_1786879738200",
       "fromNodeId": "node_1786879681523",
       "fromPort": "exec_out",
@@ -774,18 +865,106 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1789944192482",
-      "fromNodeId": "node_1786879304240",
-      "fromPort": "exec_out",
-      "toNodeId": "node_1786879318638",
+      "id": "conn_1790845563320",
+      "fromNodeId": "node_1786879318638",
+      "fromPort": "onKeyDown",
+      "toNodeId": "node_1790835806746",
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1790552717165",
+      "id": "conn_1790845565612",
+      "fromNodeId": "node_1790835806746",
+      "fromPort": "next",
+      "toNodeId": "node_1786879464145",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790855169474",
       "fromNodeId": "node_1789943917001_1634",
       "fromPort": "exec_out",
+      "toNodeId": "node_1790854414603",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790855172380",
+      "fromNodeId": "node_1786879304240",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1790854414603",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790855174848",
+      "fromNodeId": "node_1790854414603",
+      "fromPort": "onTrue",
+      "toNodeId": "node_1790845654431",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1790855185755",
+      "fromNodeId": "node_1790854414603",
+      "fromPort": "onFalse",
       "toNodeId": "node_1786879318638",
       "toPort": "exec_in"
     }
-  ]
+  ],
+  "variables": [
+    {
+      "id": "var_iy2gqxd",
+      "name": "isFullBuffPartyScanner",
+      "type": "boolean",
+      "scope": "global",
+      "targetClient": "all",
+      "defaultValue": "false",
+      "description": ""
+    }
+  ],
+  "targetUrlKeyword": "universe.flyff.com/play",
+  "enableOverlay": false,
+  "suspendHotkey": "END",
+  "ghostMouseJitter": {
+    "enabled": false,
+    "intervalMin": 8000,
+    "intervalMax": 25000,
+    "maxOffset": 12
+  },
+  "clientAliases": {
+    "1": "1",
+    "2": "2",
+    "3": "3",
+    "4": "4",
+    "5": "5",
+    "6": "6",
+    "7": "7",
+    "8": "8"
+  },
+  "clientUserAgents": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "4": "",
+    "5": "",
+    "6": "",
+    "7": "",
+    "8": ""
+  },
+  "clientProxies": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "4": "",
+    "5": "",
+    "6": "",
+    "7": "",
+    "8": ""
+  },
+  "clientBrowsers": {
+    "1": "1-app",
+    "2": "1-app",
+    "3": "1-app",
+    "4": "1-app",
+    "5": "1-app",
+    "6": "1-app",
+    "7": "1-app",
+    "8": "1-app"
+  }
 }

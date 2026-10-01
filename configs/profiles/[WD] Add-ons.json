@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Add-ons",
   "canvas": {
-    "zoom": 0.5913568134993129,
+    "zoom": 0.8111890445806761,
     "pan": {
-      "x": -111,
-      "y": -1170
+      "x": -899,
+      "y": -769
     }
   },
   "nodes": [
@@ -38,7 +38,8 @@
         "keys": [
           "0"
         ],
-        "actionId": "1786880041877"
+        "actionId": "1786880041877",
+        "targetKey": "0"
       }
     },
     {
@@ -62,7 +63,7 @@
       "title": "Knight Loop FP 5",
       "position": {
         "x": 1010,
-        "y": 1200
+        "y": 1190
       },
       "data": {
         "enabled": true,
@@ -72,7 +73,8 @@
         ],
         "interval": 8000,
         "executeImmediately": true,
-        "actionId": "1786880617990"
+        "actionId": "1786880617990",
+        "targetKey": "3"
       }
     },
     {
@@ -81,7 +83,7 @@
       "title": "AC Stop Knight Loop FP 5",
       "position": {
         "x": 1010,
-        "y": 1410
+        "y": 1400
       },
       "data": {
         "enabled": true,
@@ -104,7 +106,10 @@
         "enabled": true,
         "targetClient": "3",
         "targetKey": "6",
-        "actionId": "1786882811325"
+        "actionId": "1786882811325",
+        "keys": [
+          "6"
+        ]
       }
     },
     {
@@ -119,7 +124,10 @@
         "enabled": true,
         "targetClient": "5",
         "targetKey": "1",
-        "actionId": "1786882832042"
+        "actionId": "1786882832042",
+        "keys": [
+          "1"
+        ]
       }
     },
     {
@@ -167,7 +175,8 @@
           "8"
         ],
         "cooldownPresetId": "skill_knight_heart-of-sacrifice",
-        "actionId": "1786885743555"
+        "actionId": "1786885743555",
+        "targetKey": "8"
       }
     },
     {
@@ -186,7 +195,8 @@
         ],
         "interval": 8000,
         "executeImmediately": true,
-        "actionId": "1786887573634_8323"
+        "actionId": "1786887573634_8323",
+        "targetKey": "3"
       }
     },
     {
@@ -252,7 +262,8 @@
           "5"
         ],
         "cooldownPresetId": "skill_ringmaster_merkaba-hanzelrusha",
-        "actionId": "1787489813291"
+        "actionId": "1787489813291",
+        "targetKey": "5"
       }
     },
     {
@@ -284,7 +295,8 @@
         "keys": [
           "LEFT ALT + 3"
         ],
-        "actionId": "1787667512836"
+        "actionId": "1787667512836",
+        "targetKey": "LEFT ALT + 3"
       }
     },
     {
@@ -316,7 +328,8 @@
         "keys": [
           "LEFT ALT + 9"
         ],
-        "actionId": "1787667577344"
+        "actionId": "1787667577344",
+        "targetKey": "LEFT ALT + 9"
       }
     },
     {
@@ -325,7 +338,7 @@
       "title": "Psy Loop MP",
       "position": {
         "x": 1060,
-        "y": 780
+        "y": 770
       },
       "data": {
         "enabled": true,
@@ -335,7 +348,8 @@
         ],
         "interval": 6550,
         "executeImmediately": false,
-        "actionId": "1788519552906"
+        "actionId": "1788519552906",
+        "targetKey": "4"
       }
     },
     {
@@ -344,7 +358,7 @@
       "title": "AC Stop Psy Loop MP 3",
       "position": {
         "x": 1060,
-        "y": 990
+        "y": 980
       },
       "data": {
         "enabled": true,
@@ -370,7 +384,8 @@
           "1"
         ],
         "cooldownPresetId": "skill_knight_power-stomp",
-        "actionId": "1789523381451"
+        "actionId": "1789523381451",
+        "targetKey": "1"
       }
     },
     {
@@ -402,7 +417,8 @@
         "keys": [
           "LEFT ALT + 0"
         ],
-        "actionId": "1789673582290"
+        "actionId": "1789673582290",
+        "targetKey": "LEFT ALT + 0"
       }
     },
     {
@@ -436,7 +452,8 @@
         ],
         "interval": 1700,
         "executeImmediately": true,
-        "actionId": "1790153214598"
+        "actionId": "1790153214598",
+        "targetKey": "2"
       }
     },
     {
@@ -445,7 +462,7 @@
       "title": "AC Stop Knight Loop FP 6",
       "position": {
         "x": 1050,
-        "y": 1840
+        "y": 1830
       },
       "data": {
         "enabled": true,
@@ -462,7 +479,7 @@
       "title": "Knight Loop FP 6",
       "position": {
         "x": 1050,
-        "y": 1640
+        "y": 1620
       },
       "data": {
         "enabled": true,
@@ -472,7 +489,8 @@
         ],
         "interval": 8000,
         "executeImmediately": true,
-        "actionId": "1790391002753_5002"
+        "actionId": "1790391002753_5002",
+        "targetKey": "3"
       }
     },
     {
@@ -487,7 +505,10 @@
         "enabled": true,
         "targetClient": "6",
         "targetKey": "1",
-        "actionId": "1790391002753_6644"
+        "actionId": "1790391002753_6644",
+        "keys": [
+          "1"
+        ]
       }
     },
     {
@@ -517,7 +538,10 @@
         "enabled": true,
         "targetClient": "1",
         "targetKey": "7",
-        "actionId": "1790393640169"
+        "actionId": "1790393640169",
+        "keys": [
+          "7"
+        ]
       }
     }
   ],
@@ -648,5 +672,54 @@
       "toNodeId": "node_1790393640169",
       "toPort": "exec_in"
     }
-  ]
+  ],
+  "targetUrlKeyword": "universe.flyff.com/play",
+  "enableOverlay": false,
+  "suspendHotkey": "END",
+  "ghostMouseJitter": {
+    "enabled": false,
+    "intervalMin": 8000,
+    "intervalMax": 25000,
+    "maxOffset": 12
+  },
+  "clientAliases": {
+    "1": "1",
+    "2": "2",
+    "3": "3",
+    "4": "4",
+    "5": "5",
+    "6": "6",
+    "7": "7",
+    "8": "8"
+  },
+  "clientUserAgents": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "4": "",
+    "5": "",
+    "6": "",
+    "7": "",
+    "8": ""
+  },
+  "clientProxies": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "4": "",
+    "5": "",
+    "6": "",
+    "7": "",
+    "8": ""
+  },
+  "clientBrowsers": {
+    "1": "1-app",
+    "2": "1-app",
+    "3": "1-app",
+    "4": "1-app",
+    "5": "1-app",
+    "6": "1-app",
+    "7": "1-app",
+    "8": "1-app"
+  }
 }

@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 0.6408672052738701,
     "pan": {
-      "x": -240,
-      "y": -2273
+      "x": -1326,
+      "y": -2231
     }
   },
   "nodes": [
@@ -88,7 +88,8 @@
           "2"
         ],
         "cooldownPresetId": "skill_ringmaster_heal-rain",
-        "actionId": "1787581180868"
+        "actionId": "1787581180868",
+        "targetKey": "2"
       }
     },
     {
@@ -106,7 +107,8 @@
           "CTRL + 9"
         ],
         "cooldownPresetId": "skill_assist_moon-beam",
-        "actionId": "1787581198443"
+        "actionId": "1787581198443",
+        "targetKey": "CTRL + 9"
       }
     },
     {
@@ -124,7 +126,8 @@
           "5"
         ],
         "cooldownPresetId": "skill_ringmaster_merkaba-hanzelrusha",
-        "actionId": "1787581220198"
+        "actionId": "1787581220198",
+        "targetKey": "5"
       }
     },
     {
@@ -141,7 +144,8 @@
         "keys": [
           "3"
         ],
-        "actionId": "1787583385460"
+        "actionId": "1787583385460",
+        "targetKey": "3"
       }
     },
     {
@@ -158,7 +162,8 @@
         "keys": [
           "3"
         ],
-        "actionId": "1787585306026_9735"
+        "actionId": "1787585306026_9735",
+        "targetKey": "3"
       }
     },
     {
@@ -176,7 +181,8 @@
           "5"
         ],
         "cooldownPresetId": "skill_ringmaster_merkaba-hanzelrusha",
-        "actionId": "1787585306026_5962"
+        "actionId": "1787585306026_5962",
+        "targetKey": "5"
       }
     },
     {
@@ -194,7 +200,8 @@
           "CTRL + 9"
         ],
         "cooldownPresetId": "skill_assist_moon-beam",
-        "actionId": "1787585306026_578"
+        "actionId": "1787585306026_578",
+        "targetKey": "CTRL + 9"
       }
     },
     {
@@ -212,7 +219,8 @@
           "2"
         ],
         "cooldownPresetId": "skill_ringmaster_heal-rain",
-        "actionId": "1787585306026_110"
+        "actionId": "1787585306026_110",
+        "targetKey": "2"
       }
     },
     {
@@ -232,7 +240,7 @@
             "id": "item_0",
             "name": "Heal Rain 2",
             "interval": 4000,
-            "jitter": 2000,
+            "jitter": 1000,
             "executeImmediately": true,
             "enabled": true
           },
@@ -286,7 +294,8 @@
         "keys": [
           "3"
         ],
-        "actionId": "1787585346514_6502"
+        "actionId": "1787585346514_6502",
+        "targetKey": "3"
       }
     },
     {
@@ -304,7 +313,8 @@
           "5"
         ],
         "cooldownPresetId": "skill_ringmaster_merkaba-hanzelrusha",
-        "actionId": "1787585346514_5361"
+        "actionId": "1787585346514_5361",
+        "targetKey": "5"
       }
     },
     {
@@ -322,7 +332,8 @@
           "CTRL + 9"
         ],
         "cooldownPresetId": "skill_assist_moon-beam",
-        "actionId": "1787585346514_5378"
+        "actionId": "1787585346514_5378",
+        "targetKey": "CTRL + 9"
       }
     },
     {
@@ -340,7 +351,8 @@
           "2"
         ],
         "cooldownPresetId": "skill_ringmaster_heal-rain",
-        "actionId": "1787585346514_2481"
+        "actionId": "1787585346514_2481",
+        "targetKey": "2"
       }
     },
     {
@@ -360,7 +372,7 @@
             "id": "item_0",
             "name": "Heal Rain 4",
             "interval": 4000,
-            "jitter": 2000,
+            "jitter": 1000,
             "executeImmediately": true,
             "enabled": true
           },
@@ -423,7 +435,8 @@
           "6"
         ],
         "cooldownPresetId": "skill_ringmaster_gvur-tialla",
-        "actionId": "1787585392867"
+        "actionId": "1787585392867",
+        "targetKey": "6"
       }
     },
     {
@@ -438,7 +451,10 @@
         "enabled": true,
         "targetClient": "3",
         "targetKey": "1",
-        "actionId": "1787761524195"
+        "actionId": "1787761524195",
+        "keys": [
+          "1"
+        ]
       }
     },
     {
@@ -457,7 +473,8 @@
         ],
         "interval": 10650,
         "executeImmediately": false,
-        "actionId": "1787761572525"
+        "actionId": "1787761572525",
+        "targetKey": "4"
       }
     },
     {
@@ -599,7 +616,10 @@
         "targetClient": "1",
         "targetKey": "7",
         "cooldownPresetId": "skill_ringmaster_holycross",
-        "actionId": "1789718483059"
+        "actionId": "1789718483059",
+        "keys": [
+          "7"
+        ]
       }
     },
     {
@@ -618,7 +638,8 @@
         ],
         "interval": 20050,
         "executeImmediately": true,
-        "actionId": "1789719767272"
+        "actionId": "1789719767272",
+        "targetKey": "3"
       }
     },
     {
@@ -652,7 +673,8 @@
         "keys": [
           "7"
         ],
-        "actionId": "1790400199096"
+        "actionId": "1790400199096",
+        "targetKey": "7"
       }
     },
     {
@@ -669,7 +691,8 @@
         "keys": [
           "7"
         ],
-        "actionId": "1790400395670"
+        "actionId": "1790400395670",
+        "targetKey": "7"
       }
     }
   ],
@@ -842,5 +865,54 @@
       "toNodeId": "node_1790400395670",
       "toPort": "exec_in"
     }
-  ]
+  ],
+  "targetUrlKeyword": "universe.flyff.com/play",
+  "enableOverlay": false,
+  "suspendHotkey": "END",
+  "ghostMouseJitter": {
+    "enabled": false,
+    "intervalMin": 8000,
+    "intervalMax": 25000,
+    "maxOffset": 12
+  },
+  "clientAliases": {
+    "1": "1",
+    "2": "2",
+    "3": "3",
+    "4": "4",
+    "5": "5",
+    "6": "6",
+    "7": "7",
+    "8": "8"
+  },
+  "clientUserAgents": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "4": "",
+    "5": "",
+    "6": "",
+    "7": "",
+    "8": ""
+  },
+  "clientProxies": {
+    "1": "",
+    "2": "",
+    "3": "",
+    "4": "",
+    "5": "",
+    "6": "",
+    "7": "",
+    "8": ""
+  },
+  "clientBrowsers": {
+    "1": "1-app",
+    "2": "1-app",
+    "3": "1-app",
+    "4": "1-app",
+    "5": "1-app",
+    "6": "1-app",
+    "7": "1-app",
+    "8": "1-app"
+  }
 }

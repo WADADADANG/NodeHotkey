@@ -1,13 +1,18 @@
 {
   "activeProfile": "Default",
   "activeProfiles": [
-    "Default"
+    "Default",
+    "[WD] Add-ons",
+    "[WD] Follow Leader Party",
+    "[WD] Full Buff",
+    "[WD] Heal 1,2,4"
   ],
   "disabledClients": [],
   "globalSettings": {
     "targetUrlKeyword": "universe.flyff.com/play",
-    "enableOverlay": false,
+    "enableOverlay": true,
     "suspendHotkey": "END",
+    "webPort": 3088,
     "ghostMouseJitter": {
       "enabled": false,
       "intervalMin": 8000,
@@ -77,13 +82,13 @@
         "x": -967,
         "y": 147,
         "w": 974,
-        "h": 525
+        "h": 532
       },
       "5": {
         "x": -7,
-        "y": 705,
+        "y": 696,
         "w": 888,
-        "h": 712
+        "h": 721
       },
       "6": {
         "x": -7,
@@ -92,13 +97,12 @@
         "h": 705
       },
       "7": {
-        "x": 867,
+        "x": 863,
         "y": 0,
-        "w": 1700,
+        "w": 1704,
         "h": 1417
       }
     },
-    "webPort": 3088,
     "gpuAcceleration": true
   }
 }
