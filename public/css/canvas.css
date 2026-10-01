@@ -1589,6 +1589,29 @@ body.canvas-is-drafting-wire .canvas-node.node-reroute .node-port {
   border-color: #3b82f6;
 }
 
+.inspector-input-sm,
+.inspector-select-sm {
+  box-sizing: border-box;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  height: 34px;
+  min-height: 34px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.inspector-input-sm:focus,
+.inspector-select-sm:focus {
+  border-color: #8b5cf6;
+}
+
 /* Client Selector Chips in Inspector */
 .client-chips-grid {
   display: flex;

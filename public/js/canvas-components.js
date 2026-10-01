@@ -268,6 +268,168 @@
           return window.nodeCanvas.renderSkillCooldownHelper(node);
         }
         return '';
+      },
+
+      condition_rules(field, value, node) {
+        const isEn = (typeof window !== 'undefined' && window.currentLang === 'en');
+        const conditions = Array.isArray(value) ? value : (Array.isArray(node?.data?.conditions) ? node.data.conditions : []);
+
+        const allVars = (typeof window.nodeCanvas?.getAvailableVariables === 'function')
+          ? window.nodeCanvas.getAvailableVariables()
+          : (window.nodeCanvas?.variables || []);
+
+        const checkableActionTypes = [
+          'loop', 'sequencer', 'cast_sequence', 'buff_sequence', 
+          'key_hold', 'loop_scheduler', 'party_scanner', 'party_buff', 'party_heal', 'party_slot'
+        ];
+        const actionNodes = (window.nodeCanvas?.nodes || []).filter(n => n.id !== node.id && checkableActionTypes.includes(n.type));
+
+        let conditionsHTML = '';
+        if (conditions.length === 0) {
+          conditionsHTML = `
+            <div style="font-size:12px; color:var(--muted); text-align:center; padding:18px 10px; background:rgba(0,0,0,0.2); border-radius:8px; border:1px dashed rgba(255,255,255,0.1); margin-bottom:10px;">
+              ${isEn ? 'No conditions added yet. Click <strong>+ Add Condition</strong> below.' : 'ยังไม่มีเงื่อนไขในกลุ่ม คลิกปุ่ม <strong>+ เพิ่มเงื่อนไข</strong> ด้านล่าง'}
+            </div>
+          `;
+        } else {
+          conditionsHTML = conditions.map((cond, idx) => {
+            const cType = cond.type || 'variable';
+            let detailHTML = '';
+
+            if (cType === 'variable') {
+              const varName = (cond.varName || '').trim();
+              const vType = cond.varType || 'boolean';
+              const rule = cond.rule || (vType === 'boolean' ? 'is_true' : 'equals');
+              const val = cond.value !== undefined ? cond.value : '';
+
+              detailHTML = `
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <div>
+                    <label style="font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px;">${isEn ? 'Variable Name' : 'เลือกตัวแปร'}</label>
+                    <select class="inspector-select-sm" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'varName', this.value)">
+                      <option value="">${isEn ? '-- Select Variable --' : '-- เลือกตัวแปร --'}</option>
+                      ${allVars.map(v => `<option value="${v.name}" ${v.name === varName ? 'selected' : ''}>${v.name} (${v.type || 'bool'})</option>`).join('')}
+                    </select>
+                  </div>
+                  <div style="display:flex; gap:8px;">
+                    <div style="flex:1;">
+                      <label style="font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px;">${isEn ? 'Rule' : 'เงื่อนไข'}</label>
+                      <select class="inspector-select-sm" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'rule', this.value)">
+                        ${vType === 'boolean' ? `
+                          <option value="is_true" ${rule === 'is_true' ? 'selected' : ''}>${isEn ? '🟢 Is True' : '🟢 เป็นจริง (True)'}</option>
+                          <option value="is_false" ${rule === 'is_false' ? 'selected' : ''}>${isEn ? '🔴 Is False' : '🔴 เป็นเท็จ (False)'}</option>
+                        ` : vType === 'number' ? `
+                          <option value="equals" ${rule === 'equals' ? 'selected' : ''}>== (เท่ากับ)</option>
+                          <option value="not_equals" ${rule === 'not_equals' ? 'selected' : ''}>!= (ไม่เท่ากับ)</option>
+                          <option value="greater_than" ${rule === 'greater_than' ? 'selected' : ''}>&gt; (มากกว่า)</option>
+                          <option value="less_than" ${rule === 'less_than' ? 'selected' : ''}>&lt; (น้อยกว่า)</option>
+                          <option value="greater_or_equal" ${rule === 'greater_or_equal' ? 'selected' : ''}>&gt;= (มากกว่าเท่ากับ)</option>
+                          <option value="less_or_equal" ${rule === 'less_or_equal' ? 'selected' : ''}>&lt;= (น้อยกว่าเท่ากับ)</option>
+                        ` : `
+                          <option value="equals" ${rule === 'equals' ? 'selected' : ''}>== (ตรงกับ)</option>
+                          <option value="not_equals" ${rule === 'not_equals' ? 'selected' : ''}>!= (ไม่ตรงกับ)</option>
+                        `}
+                      </select>
+                    </div>
+                    ${vType !== 'boolean' ? `
+                      <div style="flex:1;">
+                        <label style="font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px;">${isEn ? 'Compare Value' : 'ค่าเปรียบเทียบ'}</label>
+                        <input type="${vType === 'number' ? 'number' : 'text'}" class="inspector-input-sm" value="${val}" placeholder="Value..." onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'value', this.value)" />
+                      </div>
+                    ` : ''}
+                  </div>
+                </div>
+              `;
+            } else if (cType === 'action') {
+              const actId = (cond.actionId || '').trim();
+              const actRule = cond.actionRule || 'is_running';
+
+              detailHTML = `
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <div>
+                    <label style="font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px;">${isEn ? 'Target Action' : 'เลือก Action'}</label>
+                    <select class="inspector-select-sm" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'actionId', this.value)">
+                      <option value="">${isEn ? '-- Select Action --' : '-- เลือก Action --'}</option>
+                      ${actionNodes.map(n => {
+                        const id = n.data?.actionId || n.id;
+                        return `<option value="${id}" ${id === actId ? 'selected' : ''}>${n.title || n.type}</option>`;
+                      }).join('')}
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px;">${isEn ? 'Status' : 'สถานะ'}</label>
+                    <select class="inspector-select-sm" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'actionRule', this.value)">
+                      <option value="is_running" ${actRule === 'is_running' ? 'selected' : ''}>${isEn ? '🟢 Running (กำลังทำงาน)' : '🟢 กำลังทำงาน (Running)'}</option>
+                      <option value="is_stopped" ${actRule === 'is_stopped' ? 'selected' : ''}>${isEn ? '🔴 Stopped (หยุดทำงาน)' : '🔴 หยุดทำงาน (Stopped)'}</option>
+                    </select>
+                  </div>
+                </div>
+              `;
+            } else if (cType === 'client') {
+              const clientTarget = cond.targetClient || '1';
+              const clientRule = cond.clientRule || 'is_active';
+
+              detailHTML = `
+                <div style="display:flex; gap:8px;">
+                  <div style="flex:1;">
+                    <label style="font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px;">${isEn ? 'Target Client' : 'จอเป้าหมาย'}</label>
+                    <select class="inspector-select-sm" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'targetClient', this.value)">
+                      <option value="1" ${clientTarget === '1' ? 'selected' : ''}>Client 1</option>
+                      <option value="2" ${clientTarget === '2' ? 'selected' : ''}>Client 2</option>
+                      <option value="3" ${clientTarget === '3' ? 'selected' : ''}>Client 3</option>
+                      <option value="4" ${clientTarget === '4' ? 'selected' : ''}>Client 4</option>
+                      <option value="5" ${clientTarget === '5' ? 'selected' : ''}>Client 5</option>
+                    </select>
+                  </div>
+                  <div style="flex:1;">
+                    <label style="font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px;">${isEn ? 'Status' : 'สถานะ'}</label>
+                    <select class="inspector-select-sm" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'clientRule', this.value)">
+                      <option value="is_active" ${clientRule === 'is_active' ? 'selected' : ''}>${isEn ? '🟢 Active (เปิดอยู่)' : '🟢 เปิดอยู่ (Active)'}</option>
+                      <option value="is_inactive" ${clientRule === 'is_inactive' ? 'selected' : ''}>${isEn ? '🔴 Inactive (ปิดอยู่)' : '🔴 ปิดอยู่ (Inactive)'}</option>
+                    </select>
+                  </div>
+                </div>
+              `;
+            }
+
+            return `
+              <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px; margin-bottom:8px; display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                  <div style="display:flex; align-items:center; gap:6px; flex:1;">
+                    <span style="font-size:11px; font-weight:700; color:#a78bfa; background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.3); width:24px; height:24px; border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${idx + 1}</span>
+                    <select class="inspector-select-sm" style="height:28px; min-height:28px; padding:2px 8px; font-size:12px; font-weight:600; width:auto; flex:1;" onchange="window.nodeCanvas.updateConditionGroupItemType('${node.id}', ${idx}, this.value)">
+                      <option value="variable" ${cType === 'variable' ? 'selected' : ''}>🔹 ${isEn ? 'Variable' : 'ตัวแปร (Variable)'}</option>
+                      <option value="action" ${cType === 'action' ? 'selected' : ''}>⚡ ${isEn ? 'Action Status' : 'สถานะคำสั่ง (Action)'}</option>
+                      <option value="client" ${cType === 'client' ? 'selected' : ''}>🖥️ ${isEn ? 'Client Screen' : 'สถานะจอเกม (Client)'}</option>
+                    </select>
+                  </div>
+                  <button type="button" class="btn btn-ghost" style="padding:0 8px; height:28px; font-size:12px; color:#ef4444; border:1px solid rgba(239,68,68,0.25); background:rgba(239,68,68,0.08); border-radius:6px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;" onclick="window.nodeCanvas.removeConditionGroupItem('${node.id}', ${idx})" title="${isEn ? 'Delete condition' : 'ลบเงื่อนไขนี้'}">🗑️</button>
+                </div>
+                ${detailHTML}
+              </div>
+            `;
+          }).join('');
+        }
+
+        return `
+          <div class="inspector-field-group" style="margin-top:12px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+              <label class="inspector-label" style="margin:0;">${canvasT(field.labelKey, field.label || (isEn ? 'Condition Rules' : 'รายการเงื่อนไข'))}</label>
+              <span style="font-size:10px; font-weight:700; color:#a78bfa; background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.3); padding:2px 8px; border-radius:10px;">
+                ${conditions.length} ${isEn ? 'rule(s)' : 'เงื่อนไข'}
+              </span>
+            </div>
+            ${conditionsHTML}
+            <button type="button" class="btn btn-ghost" style="width:100%; border:1px dashed #8b5cf6; color:#a78bfa; font-size:12px; font-weight:600; padding:8px 0; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer;" onclick="window.nodeCanvas.addConditionGroupItem('${node.id}')">
+              ➕ ${isEn ? 'Add Condition' : 'เพิ่มเงื่อนไข'}
+            </button>
+          </div>
+
+          <div class="inspector-helper-box" style="margin-top:12px; font-size:11px; color:#94a3b8; background:rgba(139,92,246,0.08); border-left:3px solid #8b5cf6; padding:8px 12px; border-radius:4px; line-height:1.5;">
+            🟢 <strong>onTrue:</strong> ${isEn ? 'Executed when logic passes.' : 'ทำงานเมื่อผ่านเงื่อนไข'}<br>
+            🔴 <strong>onFalse:</strong> ${isEn ? 'Executed when logic fails (optional).' : 'ทำงานเมื่อไม่ผ่านเงื่อนไข (ปล่อยว่างได้)'}
+          </div>
+        `;
       }
     },
 
@@ -286,10 +448,20 @@
 
         if (item.format === 'boolean_on_off') {
           formattedVal = val !== false ? '🟢 ON' : '⚫ OFF';
+        } else if (item.format === 'logic_mode') {
+          formattedVal = (val === 'OR') ? 'OR (Any)' : 'AND (All)';
         } else if (typeof item.format === 'function') {
           formattedVal = item.format(val, node.data);
         } else if (typeof item.format === 'string') {
-          formattedVal = item.format.replace('{value}', val !== undefined ? val : '-');
+          let str = item.format;
+          if (str.includes('{count}')) {
+            const count = Array.isArray(val) ? val.length : 0;
+            str = str.replace('{count}', count);
+          }
+          if (str.includes('{value}')) {
+            str = str.replace('{value}', val !== undefined ? val : '-');
+          }
+          formattedVal = str;
         }
 
         rows.push(`

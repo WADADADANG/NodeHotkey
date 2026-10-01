@@ -268,6 +268,9 @@ forwarderNodeDef.execute({}, builtActions[0]).then(() => {
   const { nodeRegistry } = require('../node-registry');
   nodeRegistry.loadAll(null, true);
   assert.ok(nodeRegistry.has('condition_group'), 'condition_group node should be registered in nodeRegistry');
+  const cgDef = nodeRegistry.get('condition_group');
+  assert.ok(Array.isArray(cgDef.schema) && cgDef.schema.length > 0, 'condition_group must have modular UI component schema');
+  assert.ok(Array.isArray(cgDef.summaryFields) && cgDef.summaryFields.length > 0, 'condition_group must have summaryFields');
 
   const NodeDocsIcons = require('../public/js/components/node-docs-icons');
   const iconSvg = NodeDocsIcons.render('git-merge');

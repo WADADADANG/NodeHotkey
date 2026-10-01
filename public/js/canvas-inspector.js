@@ -2191,18 +2191,18 @@
           const val = cond.value !== undefined ? cond.value : '';
 
           detailHTML = `
-            <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; flex-direction:column; gap:8px;">
               <div>
-                <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:2px;">${isEn ? 'Variable Name' : 'เลือกตัวแปร'}</label>
-                <select class="inspector-select" style="font-size:11px; height:28px;" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'varName', this.value)">
+                <label style="font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px;">${isEn ? 'Variable Name' : 'เลือกตัวแปร'}</label>
+                <select class="inspector-select-sm" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'varName', this.value)">
                   <option value="">${isEn ? '-- Select Variable --' : '-- เลือกตัวแปร --'}</option>
                   ${allVars.map(v => `<option value="${v.name}" ${v.name === varName ? 'selected' : ''}>${v.name} (${v.type || 'bool'})</option>`).join('')}
                 </select>
               </div>
-              <div style="display:flex; gap:6px;">
+              <div style="display:flex; gap:8px;">
                 <div style="flex:1;">
-                  <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:2px;">${isEn ? 'Rule' : 'เงื่อนไข'}</label>
-                  <select class="inspector-select" style="font-size:11px; height:28px;" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'rule', this.value)">
+                  <label style="font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px;">${isEn ? 'Rule' : 'เงื่อนไข'}</label>
+                  <select class="inspector-select-sm" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'rule', this.value)">
                     ${vType === 'boolean' ? `
                       <option value="is_true" ${rule === 'is_true' ? 'selected' : ''}>${isEn ? '🟢 Is True' : '🟢 เป็นจริง (True)'}</option>
                       <option value="is_false" ${rule === 'is_false' ? 'selected' : ''}>${isEn ? '🔴 Is False' : '🔴 เป็นเท็จ (False)'}</option>
@@ -2221,8 +2221,8 @@
                 </div>
                 ${vType !== 'boolean' ? `
                   <div style="flex:1;">
-                    <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:2px;">${isEn ? 'Compare Value' : 'ค่าเปรียบเทียบ'}</label>
-                    <input type="${vType === 'number' ? 'number' : 'text'}" class="inspector-input" value="${val}" style="font-size:11px; height:28px;" placeholder="Value..." onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'value', this.value)" />
+                    <label style="font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px;">${isEn ? 'Compare Value' : 'ค่าเปรียบเทียบ'}</label>
+                    <input type="${vType === 'number' ? 'number' : 'text'}" class="inspector-input-sm" value="${val}" placeholder="Value..." onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'value', this.value)" />
                   </div>
                 ` : ''}
               </div>
@@ -2233,10 +2233,10 @@
           const actRule = cond.actionRule || 'is_running';
 
           detailHTML = `
-            <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; flex-direction:column; gap:8px;">
               <div>
-                <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:2px;">${isEn ? 'Target Action' : 'เลือก Action'}</label>
-                <select class="inspector-select" style="font-size:11px; height:28px;" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'actionId', this.value)">
+                <label style="font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px;">${isEn ? 'Target Action' : 'เลือก Action'}</label>
+                <select class="inspector-select-sm" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'actionId', this.value)">
                   <option value="">${isEn ? '-- Select Action --' : '-- เลือก Action --'}</option>
                   ${actionNodes.map(n => {
                     const id = n.data?.actionId || n.id;
@@ -2245,8 +2245,8 @@
                 </select>
               </div>
               <div>
-                <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:2px;">${isEn ? 'Status' : 'สถานะ'}</label>
-                <select class="inspector-select" style="font-size:11px; height:28px;" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'actionRule', this.value)">
+                <label style="font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px;">${isEn ? 'Status' : 'สถานะ'}</label>
+                <select class="inspector-select-sm" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'actionRule', this.value)">
                   <option value="is_running" ${actRule === 'is_running' ? 'selected' : ''}>${isEn ? '🟢 Running (กำลังทำงาน)' : '🟢 กำลังทำงาน (Running)'}</option>
                   <option value="is_stopped" ${actRule === 'is_stopped' ? 'selected' : ''}>${isEn ? '🔴 Stopped (หยุดทำงาน)' : '🔴 หยุดทำงาน (Stopped)'}</option>
                 </select>
@@ -2258,10 +2258,10 @@
           const clientRule = cond.clientRule || 'is_active';
 
           detailHTML = `
-            <div style="display:flex; gap:6px;">
+            <div style="display:flex; gap:8px;">
               <div style="flex:1;">
-                <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:2px;">${isEn ? 'Target Client' : 'จอเป้าหมาย'}</label>
-                <select class="inspector-select" style="font-size:11px; height:28px;" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'targetClient', this.value)">
+                <label style="font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px;">${isEn ? 'Target Client' : 'จอเป้าหมาย'}</label>
+                <select class="inspector-select-sm" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'targetClient', this.value)">
                   <option value="1" ${clientTarget === '1' ? 'selected' : ''}>Client 1</option>
                   <option value="2" ${clientTarget === '2' ? 'selected' : ''}>Client 2</option>
                   <option value="3" ${clientTarget === '3' ? 'selected' : ''}>Client 3</option>
@@ -2270,8 +2270,8 @@
                 </select>
               </div>
               <div style="flex:1;">
-                <label style="font-size:10px; color:var(--muted); display:block; margin-bottom:2px;">${isEn ? 'Status' : 'สถานะ'}</label>
-                <select class="inspector-select" style="font-size:11px; height:28px;" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'clientRule', this.value)">
+                <label style="font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px;">${isEn ? 'Status' : 'สถานะ'}</label>
+                <select class="inspector-select-sm" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'clientRule', this.value)">
                   <option value="is_active" ${clientRule === 'is_active' ? 'selected' : ''}>${isEn ? '🟢 Active (เปิดอยู่)' : '🟢 เปิดอยู่ (Active)'}</option>
                   <option value="is_inactive" ${clientRule === 'is_inactive' ? 'selected' : ''}>${isEn ? '🔴 Inactive (ปิดอยู่)' : '🔴 ปิดอยู่ (Inactive)'}</option>
                 </select>
@@ -2282,16 +2282,16 @@
 
         return `
           <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px; margin-bottom:8px; display:flex; flex-direction:column; gap:8px;">
-            <div style="display:flex; align-items:center; justify-content:space-between;">
-              <div style="display:flex; align-items:center; gap:6px;">
-                <span style="font-size:11px; font-weight:700; color:#a78bfa; background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.3); width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center;">${idx + 1}</span>
-                <select class="inspector-select" style="font-size:11px; height:24px; padding:0 6px; font-weight:600;" onchange="window.nodeCanvas.updateConditionGroupItemType('${node.id}', ${idx}, this.value)">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+              <div style="display:flex; align-items:center; gap:6px; flex:1;">
+                <span style="font-size:11px; font-weight:700; color:#a78bfa; background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.3); width:24px; height:24px; border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">${idx + 1}</span>
+                <select class="inspector-select-sm" style="height:28px; min-height:28px; padding:2px 8px; font-size:12px; font-weight:600; width:auto; flex:1;" onchange="window.nodeCanvas.updateConditionGroupItemType('${node.id}', ${idx}, this.value)">
                   <option value="variable" ${cType === 'variable' ? 'selected' : ''}>🔹 ${isEn ? 'Variable' : 'ตัวแปร (Variable)'}</option>
                   <option value="action" ${cType === 'action' ? 'selected' : ''}>⚡ ${isEn ? 'Action Status' : 'สถานะคำสั่ง (Action)'}</option>
                   <option value="client" ${cType === 'client' ? 'selected' : ''}>🖥️ ${isEn ? 'Client Screen' : 'สถานะจอเกม (Client)'}</option>
                 </select>
               </div>
-              <button type="button" class="btn btn-ghost" style="padding:2px 6px; height:24px; font-size:11px; color:#ef4444;" onclick="window.nodeCanvas.removeConditionGroupItem('${node.id}', ${idx})" title="${isEn ? 'Delete condition' : 'ลบเงื่อนไขนี้'}">🗑️</button>
+              <button type="button" class="btn btn-ghost" style="padding:0 8px; height:28px; font-size:12px; color:#ef4444; border:1px solid rgba(239,68,68,0.25); background:rgba(239,68,68,0.08); border-radius:6px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;" onclick="window.nodeCanvas.removeConditionGroupItem('${node.id}', ${idx})" title="${isEn ? 'Delete condition' : 'ลบเงื่อนไขนี้'}">🗑️</button>
             </div>
             ${detailHTML}
           </div>
