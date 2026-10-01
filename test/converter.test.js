@@ -269,6 +269,10 @@ forwarderNodeDef.execute({}, builtActions[0]).then(() => {
   nodeRegistry.loadAll(null, true);
   assert.ok(nodeRegistry.has('condition_group'), 'condition_group node should be registered in nodeRegistry');
 
+  const NodeDocsIcons = require('../public/js/components/node-docs-icons');
+  const iconSvg = NodeDocsIcons.render('git-merge');
+  assert.ok(iconSvg.startsWith('<svg'), 'NodeDocsIcons must render valid SVG element for git-merge');
+
   const condGroupWorkflow = {
     version: '3.1.0',
     name: 'Cond Group Profile',
