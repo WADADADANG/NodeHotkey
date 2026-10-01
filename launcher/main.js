@@ -100,50 +100,25 @@ function createTray() {
     const statusText = isBotRunning ? '🟢 Running' : '🔴 Stopped';
     const contextMenu = Menu.buildFromTemplate([
       {
-        label: `⚡ NodeHotkey Launcher (${statusText})`,
+        label: `⚡ NodeHotkey (${statusText})`,
         enabled: false
       },
       { type: 'separator' },
       {
-        label: isBotRunning ? '🛑 Stop Bot Engine' : '▶️ Start Bot Engine',
+        label: isBotRunning ? '🛑 Stop' : '▶️ Start',
         click: () => {
           if (isBotRunning) stopBotProcess();
           else startBotProcess();
         }
       },
       {
-        label: '🔄 Restart Bot Engine',
+        label: '🔄 Restart',
         enabled: isBotRunning,
         click: () => restartBotProcess()
       },
-      {
-        label: '🌐 Open Web Dashboard',
-        click: () => openWebDashboard()
-      },
-      {
-        label: '📂 Open Logs Folder',
-        click: () => openLogFolder()
-      },
-      {
-        label: '🪟 Toggle HUD Overlay',
-        click: () => {
-          isOverlayExplicitlyClosed = false;
-          if (overlayWindow && !overlayWindow.isDestroyed()) {
-            if (overlayWindow.isVisible()) {
-              overlayWindow.hide();
-              isOverlayExplicitlyClosed = true;
-            } else {
-              overlayWindow.showInactive();
-              ensureOverlayAlwaysOnTop();
-            }
-          } else {
-            createOverlayWindow();
-          }
-        }
-      },
       { type: 'separator' },
       {
-        label: '🗗 Show Launcher Window',
+        label: '🖥️ Show Launcher',
         click: () => {
           if (mainWindow) {
             mainWindow.show();
@@ -154,7 +129,7 @@ function createTray() {
         }
       },
       {
-        label: '❌ Exit All',
+        label: '❌ Exit',
         click: () => {
           exitApplicationCleanly();
         }
