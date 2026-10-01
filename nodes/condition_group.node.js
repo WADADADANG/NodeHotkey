@@ -25,11 +25,11 @@ module.exports = {
       key: 'logicMode',
       component: 'select',
       labelKey: 'inspector_combination_logic',
-      label: 'Combination Logic (Operator)',
+      label: 'Combination Logic',
       default: 'AND',
       options: [
-        { value: 'AND', label: 'AND — All conditions must match (ตรงทุกข้อ)' },
-        { value: 'OR', label: 'OR — Any condition matches (ตรงข้อใดข้อหนึ่ง)' }
+        { value: 'AND', labelKey: 'logic_and_short', label: 'AND (ตรงทุกข้อ)' },
+        { value: 'OR', labelKey: 'logic_or_short', label: 'OR (ตรงข้อใดข้อหนึ่ง)' }
       ]
     },
     {

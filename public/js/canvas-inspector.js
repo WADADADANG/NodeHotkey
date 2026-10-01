@@ -2301,10 +2301,10 @@
 
     return `
       <div class="inspector-field-group">
-        <label class="inspector-label">${isEn ? 'Combination Logic (Operator)' : 'ตรรกะการประเมินผลรวม'}</label>
+        <label class="inspector-label">${isEn ? 'Combination Logic' : 'ตรรกะเงื่อนไข (Logic)'}</label>
         <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'logicMode', this.value); window.nodeCanvas.render();">
-          <option value="AND" ${logicMode === 'AND' ? 'selected' : ''}>${isEn ? 'AND — All conditions must match (ตรงทุกข้อ)' : 'AND — ต้องตรงทุกข้อ (All Conditions Must Match)'}</option>
-          <option value="OR" ${logicMode === 'OR' ? 'selected' : ''}>${isEn ? 'OR — Any condition matches (ตรงข้อใดข้อหนึ่ง)' : 'OR — ขอแค่ข้อใดข้อหนึ่งตรง (Any Condition Matches)'}</option>
+          <option value="AND" ${logicMode === 'AND' ? 'selected' : ''}>${isEn ? 'AND (All match)' : 'AND (ตรงทุกข้อ)'}</option>
+          <option value="OR" ${logicMode === 'OR' ? 'selected' : ''}>${isEn ? 'OR (Any match)' : 'OR (ตรงข้อใดข้อหนึ่ง)'}</option>
         </select>
         <div style="font-size:10px; color:var(--muted); margin-top:3px;">
           ${logicMode === 'AND' 
