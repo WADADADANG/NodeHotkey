@@ -591,11 +591,18 @@
 
   renderVariableHelper(node) {
     const vName = node.data?.varName || 'myVar';
-    const vType = node.data?.varType || 'boolean';
+    const allVars = this.getAvailableVariables();
+    const vObj = allVars.find(v => v.name === vName);
+    const vType = vObj ? (vObj.type || 'boolean') : (node.data?.varType || 'boolean');
+
+    // Guarantee node.data.varType strictly mirrors the variable definition (Unreal-style strongly typed)
+    if (vObj && node.data && node.data.varType !== vObj.type) {
+      node.data.varType = vObj.type;
+    }
+
     const op = node.data?.operation || (vType === 'boolean' ? 'set_true' : 'set_value');
     const opVal = node.data?.opValue !== undefined ? node.data.opValue : (vType === 'number' ? 0 : '');
 
-    const allVars = this.getAvailableVariables();
     const hasCurrent = allVars.some(v => v.name === vName);
     const varOptions = allVars.map(v => {
       const typeIcon = v.type === 'number' ? '🔢' : (v.type === 'boolean' ? '🔘' : '📝');
@@ -662,20 +669,9 @@
     return `
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_var_name', 'Variable Name')}</label>
-        <div class="inspector-input-with-action">
-          <select class="inspector-select" onchange="window.nodeCanvas.selectVariableForNode('${node.id}', this.value)" style="font-family:'JetBrains Mono'; font-weight:700; color:#a855f7;">
-            ${!hasCurrent ? `<option value="${vName}" selected>⚠️ ${vName} (Custom)</option>` : ''}
-            ${varOptions || `<option value="${vName}" selected>${vName}</option>`}
-          </select>
-          <button type="button" class="inspector-btn-action" onclick="window.nodeCanvas.openVariableModal(null, '${node.id}')" title="สร้างตัวแปรใหม่ (Add Variable)">➕</button>
-        </div>
-      </div>
-      <div class="inspector-field-group">
-        <label class="inspector-label">${canvasT('inspector_var_type', 'Variable Type')}</label>
-        <select class="inspector-select" onchange="window.nodeCanvas.updateNodeData('${node.id}', 'varType', this.value); window.nodeCanvas.render(); window.nodeCanvas.openInspector('${node.id}');">
-          <option value="boolean" ${vType === 'boolean' ? 'selected' : ''}>${canvasT('var_type_boolean', '🔘 Boolean (True / False - Red)')}</option>
-          <option value="number" ${vType === 'number' ? 'selected' : ''}>${canvasT('var_type_number', '🔢 Number (Counter / Value - Cyan)')}</option>
-          <option value="string" ${vType === 'string' ? 'selected' : ''}>${canvasT('var_type_string', '📝 Text (String - Pink)')}</option>
+        <select class="inspector-select" onchange="window.nodeCanvas.selectVariableForNode('${node.id}', this.value)" style="font-family:'JetBrains Mono'; font-weight:700; color:#a855f7;">
+          ${!hasCurrent ? `<option value="${vName}" selected>⚠️ ${vName} (Custom)</option>` : ''}
+          ${varOptions || `<option value="${vName}" selected>${vName}</option>`}
         </select>
       </div>
       <div class="inspector-field-group">
