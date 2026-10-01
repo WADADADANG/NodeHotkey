@@ -1134,12 +1134,11 @@ export function confirmNewProfile() {
 
   const copyFrom = document.getElementById('copy-from-select').value;
   let newProfileData = {
-    version: '3.0.0',
+    version: '3.1.0',
     name: name,
     canvas: { zoom: 1, pan: { x: 0, y: 0 } },
     nodes: [],
     connections: [],
-    actions: [],
     targetUrlKeyword: 'universe.flyff.com',
     enableOverlay: false,
     suspendHotkey: ''
@@ -1460,7 +1459,7 @@ export function exportCurrentProfile() {
     profile.canvas = canvasData.canvas;
     profile.nodes = canvasData.nodes;
     profile.connections = canvasData.connections;
-    profile.actions = canvasData.actions;
+    delete profile.actions;
   } else if (profile.actions && Array.isArray(profile.actions)) {
     profile.actions.forEach(a => syncActionFromDom(a.id));
   }
@@ -1542,8 +1541,7 @@ export function validateAndSanitizeImportedProfile(parsed) {
       }
     },
     nodes: [],
-    connections: [],
-    actions: []
+    connections: []
   };
 
   // 2. Validate Nodes with Allowed Node Types

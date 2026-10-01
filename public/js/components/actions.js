@@ -1176,7 +1176,10 @@ export function syncActionFromDom(actionId) {
     if (delayMsEl) act.delayMs = parseInt(delayMsEl.value) || 1000;
   } else if (act.mode === 'forward') {
     const targetKeyEl = card.querySelector('.forward-target-key');
-    if (targetKeyEl) act.targetKey = targetKeyEl.value.trim();
+    if (targetKeyEl) {
+      act.targetKey = targetKeyEl.value.trim();
+      act.keys = [act.targetKey];
+    }
 
     const delayActEl = card.querySelector('.forward-delay-activation');
     if (delayActEl) act.delayActivation = !!delayActEl.checked;

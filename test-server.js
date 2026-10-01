@@ -493,8 +493,11 @@ const server = http.createServer((req, res) => {
         // Copy from specified profile or create blank
         if (!copyFrom || copyFrom.trim() === '') {
           config.profiles[name] = {
-            targetUrlKeyword: "universe.flyff.com",
-            actions: []
+            version: '3.1.0',
+            name: name,
+            canvas: { zoom: 1.0, pan: { x: 0, y: 0 } },
+            nodes: [],
+            connections: []
           };
         } else {
           const source = config.profiles[copyFrom] || config.profiles['Default'] || Object.values(config.profiles)[0];

@@ -25,10 +25,14 @@ module.exports = {
 
     const stack = (callStack instanceof Set) ? callStack : new Set(Array.isArray(callStack) ? callStack : []);
 
+    // Resolve key from targetKey first (set in Forwarder inspector), then fallback to keys[0], then '1'
+    const keyToForward = action.targetKey || (Array.isArray(action.keys) && action.keys.length > 0 ? action.keys[0] : '1');
+
     // Ensure action has keys formatted for single_press runner
     const act = {
       ...action,
-      keys: (action.keys && action.keys.length > 0) ? action.keys : (action.targetKey ? [action.targetKey] : ['1'])
+      targetKey: keyToForward,
+      keys: [keyToForward]
     };
 
     if (typeof global.runSinglePressAction === 'function') {

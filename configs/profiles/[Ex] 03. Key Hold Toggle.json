@@ -35,6 +35,9 @@
       "data": {
         "enabled": true,
         "targetKey": "1",
+        "keys": [
+          "1"
+        ],
         "targetClient": "1",
         "actionId": "1786882726805"
       }

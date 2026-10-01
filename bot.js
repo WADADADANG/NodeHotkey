@@ -2845,8 +2845,11 @@ async function runSinglePressAction(action, callStack) {
     const target = action.targetClient || '1';
     console.log(`⚡ [Action] Single Press: "${action.name}" on Client ${target}`);
     let allPassed = true;
-    if (action.keys && action.keys.length > 0) {
-        for (let key of action.keys) {
+    const keysToSend = (Array.isArray(action.keys) && action.keys.length > 0)
+        ? action.keys
+        : (action.targetKey ? [action.targetKey] : []);
+    if (keysToSend.length > 0) {
+        for (let key of keysToSend) {
             const ok = await sendKey(action, key, null, callStack);
             if (ok === false) {
                 allPassed = false;
@@ -2884,7 +2887,9 @@ async function runDelayOnlyAction(action, callStack) {
 
 async function toggleKeyHoldAction(action, callStack) {
     if (global.isSuspended) return;
-    const targetKey = (action.targetKey && action.targetKey.trim()) ? action.targetKey.trim() : '';
+    const targetKey = (action.targetKey && action.targetKey.trim()) 
+        ? action.targetKey.trim() 
+        : (Array.isArray(action.keys) && action.keys.length > 0 ? String(action.keys[0]).trim() : '');
     const target = action.targetClient || '1';
 
     if (!targetKey) {

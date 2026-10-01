@@ -92,7 +92,8 @@
         cleanData.controlOperation = d.controlOperation || 'toggle';
         cleanData.controlTargetIds = Array.isArray(d.controlTargetIds) ? d.controlTargetIds : (d.controlTargetId ? [d.controlTargetId] : []);
       } else if (type === 'forwarder') {
-        cleanData.targetKey = d.targetKey || '1';
+        cleanData.targetKey = d.targetKey || (Array.isArray(d.keys) && d.keys[0]) || '1';
+        cleanData.keys = [cleanData.targetKey];
         cleanData.targetClient = d.targetClient || 'all';
         if (d.delayActivation) {
           cleanData.delayActivation = true;
@@ -127,7 +128,8 @@
         if (d.cooldownPresetId) cleanData.cooldownPresetId = d.cooldownPresetId;
         if (d.customCooldownMs) cleanData.customCooldownMs = parseInt(d.customCooldownMs, 10);
       } else if (type === 'key_hold') {
-        cleanData.targetKey = d.targetKey || '1';
+        cleanData.targetKey = d.targetKey || (Array.isArray(d.keys) && d.keys[0]) || '1';
+        cleanData.keys = [cleanData.targetKey];
         cleanData.targetClient = d.targetClient || '1';
         if (d.cooldownPresetId) cleanData.cooldownPresetId = d.cooldownPresetId;
         if (d.customCooldownMs) cleanData.customCooldownMs = parseInt(d.customCooldownMs, 10);

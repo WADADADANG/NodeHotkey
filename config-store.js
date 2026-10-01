@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { convertLegacyProfileToNodeWorkflow, isNodeWorkflowProfile } = require('./converter');
+const { convertLegacyProfileToNodeWorkflow, isNodeWorkflowProfile, normalizeNodeWorkflow } = require('./converter');
 
 const CONFIGS_DIR = path.join(__dirname, 'configs');
 const PROFILES_DIR = path.join(CONFIGS_DIR, 'profiles');
@@ -171,9 +171,25 @@ function readConfig() {
         const pData = JSON.parse(pRaw);
         const name = pData.name || path.basename(f, '.json');
 
-        // Auto convert to Node Workflow v3.0.0 schema
+        // Auto convert to Pure Node Workflow v3.1.0 schema & normalize
+        const isLegacy = Array.isArray(pData.actions) && !Array.isArray(pData.nodes);
         const converted = convertLegacyProfileToNodeWorkflow(pData);
-        profiles[name] = sanitizeProfileIds(converted);
+        const { profile: normalized, modified } = normalizeNodeWorkflow(converted);
+        const sanitized = sanitizeProfileIds(normalized);
+        profiles[name] = sanitized;
+
+        // Auto-persist upgrade to disk so no profile remains in legacy format
+        if (isLegacy || modified || pData.version !== '3.1.0' || pData.actions) {
+          try {
+            const upgradedJson = JSON.stringify(sanitized, null, 2);
+            fs.writeFileSync(fPath, upgradedJson, 'utf8');
+            const newHash = crypto.createHash('sha1').update(upgradedJson).digest('hex');
+            lastKnownProfileHashes.set(f, newHash);
+            console.log(`[Config Store] 🚀 Auto-upgraded "${name}" (${f}) to Pure Node Workflow v3.1.0 on disk`);
+          } catch (writeErr) {
+            console.warn(`[Config Store Warning] Could not persist upgraded profile ${f}:`, writeErr.message);
+          }
+        }
       } catch (e) {
         console.error(`[Config Store Error] Failed to read profile file ${f}:`, e.message);
       }
@@ -239,15 +255,12 @@ function writeConfig(fullConfig) {
     validFilenames.add(filename);
     const pFile = path.join(PROFILES_DIR, filename);
 
-    const profileData = {
-      version: pData.version || '3.1.0',
-      name: pName,
-      canvas: pData.canvas || { zoom: 1.0, pan: { x: 0, y: 0 } },
-      nodes: pData.nodes || [],
-      connections: pData.connections || []
-    };
+    const converted = convertLegacyProfileToNodeWorkflow(pData);
+    const { profile: normalized } = normalizeNodeWorkflow(converted);
+    const sanitized = sanitizeProfileIds(normalized);
+    sanitized.name = pName;
 
-    const newContent = JSON.stringify(profileData, null, 2);
+    const newContent = JSON.stringify(sanitized, null, 2);
     if (fs.existsSync(pFile)) {
       try {
         const existingContent = fs.readFileSync(pFile, 'utf8');
@@ -282,15 +295,12 @@ function writeSingleProfile(profileName, pData) {
   const filename = `${sanitizedName}.json`;
   const pFile = path.join(PROFILES_DIR, filename);
 
-  const profileData = {
-    version: pData.version || '3.1.0',
-    name: profileName,
-    canvas: pData.canvas || { zoom: 1.0, pan: { x: 0, y: 0 } },
-    nodes: pData.nodes || [],
-    connections: pData.connections || []
-  };
+  const converted = convertLegacyProfileToNodeWorkflow(pData);
+  const { profile: normalized } = normalizeNodeWorkflow(converted);
+  const sanitized = sanitizeProfileIds(normalized);
+  sanitized.name = profileName;
 
-  const newContent = JSON.stringify(profileData, null, 2);
+  const newContent = JSON.stringify(sanitized, null, 2);
   fs.writeFileSync(pFile, newContent, 'utf8');
   const newHash = crypto.createHash('sha1').update(newContent).digest('hex');
   lastKnownProfileHashes.set(filename, newHash);
@@ -327,8 +337,20 @@ function readSingleProfile(profileName) {
   try {
     const pRaw = fs.readFileSync(targetFile, 'utf8');
     const pData = JSON.parse(pRaw);
+    const isLegacy = Array.isArray(pData.actions) && !Array.isArray(pData.nodes);
     const converted = convertLegacyProfileToNodeWorkflow(pData);
-    return sanitizeProfileIds(converted);
+    const { profile: normalized, modified } = normalizeNodeWorkflow(converted);
+    const sanitized = sanitizeProfileIds(normalized);
+
+    if (isLegacy || modified || pData.version !== '3.1.0' || pData.actions) {
+      try {
+        const upgradedJson = JSON.stringify(sanitized, null, 2);
+        fs.writeFileSync(targetFile, upgradedJson, 'utf8');
+        const newHash = crypto.createHash('sha1').update(upgradedJson).digest('hex');
+        lastKnownProfileHashes.set(path.basename(targetFile), newHash);
+      } catch (writeErr) { }
+    }
+    return sanitized;
   } catch (e) {
     console.error(`[Config Store Error] Failed to read single profile ${profileName}:`, e.message);
     return null;

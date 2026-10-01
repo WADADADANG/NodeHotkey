@@ -187,6 +187,7 @@ export function applyVirtualKeyboard() {
               node.data.keys = [finalVal];
             } else {
               node.data.keys = finalVal ? [finalVal] : ['1'];
+              node.data.targetKey = finalVal || '1';
             }
           } else if (targetType && (targetType.startsWith('sequencer_step_') || targetType.startsWith('macro_step_'))) {
             const stepIdx = parseInt(targetType.replace('sequencer_step_', '').replace('macro_step_', ''), 10);

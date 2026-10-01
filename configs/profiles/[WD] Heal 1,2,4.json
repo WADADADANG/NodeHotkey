@@ -459,6 +459,9 @@
       "data": {
         "enabled": true,
         "targetKey": "2",
+        "keys": [
+          "2"
+        ],
         "targetClient": "4",
         "actionId": "1786879318638"
       }

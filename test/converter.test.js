@@ -188,5 +188,80 @@ assert.strictEqual(dpsDownstream[0].node.data.actionId, 'act_dps_1');
 
 console.log('✅ Test 5 Passed!\n');
 
-console.log('🎉 All Multi-Active Profiles & Node Workflow Unit Tests Passed Successfully!');
+// Test 6: Key Forwarder Node & Action resolution
+console.log('Test 6: Testing Key Forwarder node resolution...');
+const forwarderNodeDef = require('../nodes/forwarder.node.js');
+const forwarderWorkflow = {
+  version: '3.1.0',
+  name: 'Forwarder Test',
+  nodes: [
+    {
+      id: 'node_fwd',
+      type: 'forwarder',
+      title: 'Heal Rain Forwarder',
+      data: {
+        targetKey: 'F2',
+        targetClient: 'all'
+      }
+    }
+  ],
+  connections: []
+};
+const fwdEngine = new NodeExecutionEngine(forwarderWorkflow);
+const builtActions = fwdEngine.buildActionsFromNodeWorkflow(forwarderWorkflow);
+assert.strictEqual(builtActions.length, 1);
+assert.strictEqual(builtActions[0].targetKey, 'F2');
+assert.deepStrictEqual(builtActions[0].keys, ['F2'], 'built action keys should match targetKey F2');
+
+// Test forwarder.node.js execute formatting
+let singlePressPassedAct = null;
+global.isSuspended = false;
+global.runSinglePressAction = async (act) => {
+  singlePressPassedAct = act;
+};
+forwarderNodeDef.execute({}, builtActions[0]).then(() => {
+  assert.ok(singlePressPassedAct, 'runSinglePressAction should have been called');
+  assert.deepStrictEqual(singlePressPassedAct.keys, ['F2'], 'forwarder node should forward key F2');
+  console.log('✅ Test 6 Passed!\n');
+
+  // Test 7: normalizeNodeWorkflow schema modernization & key synchronization
+  console.log('Test 7: Testing normalizeNodeWorkflow auto-upgrade & legacy actions purge...');
+  const unnormalizedProfile = {
+    version: '2.0.0',
+    name: 'Old Profile',
+    actions: [{ id: 'legacy_1', name: 'Old Action' }],
+    nodes: [
+      {
+        id: 'node_fwd_old',
+        type: 'forwarder',
+        data: { targetKey: 'F5' } // Missing keys array
+      },
+      {
+        id: 'node_hold_old',
+        type: 'key_hold',
+        data: { keys: ['SPACE'] } // Missing targetKey
+      }
+    ],
+    connections: []
+  };
+
+  const { profile: modernProfile, modified } = normalizeNodeWorkflow(unnormalizedProfile);
+  assert.strictEqual(modified, true, 'Profile should be flagged as modified during normalization');
+  assert.strictEqual(modernProfile.version, '3.1.0', 'Profile version should be upgraded to 3.1.0');
+  assert.strictEqual(modernProfile.actions, undefined, 'Legacy actions array must be deleted');
+  assert.ok(modernProfile.canvas, 'Canvas settings should be auto-created');
+  
+  // Forwarder key check
+  const fwdData = modernProfile.nodes[0].data;
+  assert.strictEqual(fwdData.targetKey, 'F5');
+  assert.deepStrictEqual(fwdData.keys, ['F5']);
+
+  // Key Hold key check
+  const holdData = modernProfile.nodes[1].data;
+  assert.strictEqual(holdData.targetKey, 'SPACE');
+  assert.deepStrictEqual(holdData.keys, ['SPACE']);
+
+  console.log('✅ Test 7 Passed!\n');
+  console.log('🎉 All Multi-Active Profiles & Node Workflow Unit Tests Passed Successfully!');
+});
 

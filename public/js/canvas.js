@@ -3317,7 +3317,7 @@ class NodeCanvasEditor {
     } else if (type === 'control') {
       initialData = { controlOperation: 'toggle', controlTargetIds: [], enabled: true };
     } else if (type === 'forwarder') {
-      initialData = { targetKey: '1', targetClient: 'all', delayAfter: 0, delayActivation: false, activationDelayMs: 1000, enabled: true };
+      initialData = { targetKey: '1', keys: ['1'], targetClient: 'all', delayAfter: 0, delayActivation: false, activationDelayMs: 1000, enabled: true };
     } else if (type === 'emergency_stop') {
       initialData = { stopScope: 'all', targetClient: '1', showOverlayNotice: true, enabled: true };
     } else if (type === 'sound') {

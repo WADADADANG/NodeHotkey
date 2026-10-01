@@ -258,6 +258,26 @@ class NodeExecutionEngine {
       knot: 'reroute'
     };
 
+    function resolveUnifiedActionKeys(nodeType, d) {
+      if (d.targetKey && typeof d.targetKey === 'string' && d.targetKey.trim()) {
+        const k = d.targetKey.trim();
+        return { targetKey: k, keys: (Array.isArray(d.keys) && d.keys.length > 1) ? d.keys : [k] };
+      }
+      if (Array.isArray(d.keys) && d.keys.length > 0) {
+        const valid = d.keys.map(k => String(k).trim()).filter(Boolean);
+        if (valid.length > 0) {
+          return { targetKey: valid[0], keys: valid };
+        }
+      }
+      if (typeof d.keys === 'string' && d.keys.trim()) {
+        const valid = d.keys.split(',').map(k => k.trim()).filter(Boolean);
+        if (valid.length > 0) {
+          return { targetKey: valid[0], keys: valid };
+        }
+      }
+      return { targetKey: '1', keys: ['1'] };
+    }
+
     const actions = [];
     nodes.forEach((node, idx) => {
       if (node.type === 'trigger') return; // Triggers are merged into downstream actions in memory
@@ -278,6 +298,8 @@ class NodeExecutionEngine {
         type: 'none',
         value: ''
       };
+
+      const { targetKey: resolvedTargetKey, keys: resolvedKeys } = resolveUnifiedActionKeys(node.type, d);
 
       actions.push({
         id: actionId,
@@ -307,7 +329,7 @@ class NodeExecutionEngine {
         timeoutMs: d.timeoutMs !== undefined ? d.timeoutMs : 5000,
         eventName: d.eventName || '',
         targetClient: d.targetClient || '1',
-        keys: Array.isArray(d.keys) ? d.keys : (d.keys ? [d.keys] : ['1']),
+        keys: resolvedKeys,
         interval: d.interval !== undefined ? d.interval : 1000,
         jitter: d.jitter !== undefined ? d.jitter : 0,
         executeImmediately: d.executeImmediately !== false,
@@ -318,7 +340,7 @@ class NodeExecutionEngine {
         delayAfter: d.delayAfter || 0,
         delayBuff: d.delayBuff !== undefined ? d.delayBuff : 800,
         delayMs: d.delayMs !== undefined ? d.delayMs : 1000,
-        targetKey: d.targetKey || (Array.isArray(d.keys) && d.keys[0] ? d.keys[0] : '1'),
+        targetKey: resolvedTargetKey,
         controlOperation: d.controlOperation || 'toggle',
         controlTargetIds: Array.isArray(d.controlTargetIds) ? d.controlTargetIds : (d.controlTargetId ? [d.controlTargetId] : []),
         conditionTargetId: d.conditionTargetId || '',

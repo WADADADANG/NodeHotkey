@@ -5,8 +5,94 @@
 
 function isNodeWorkflowProfile(profile) {
   if (!profile) return false;
-  const isV3 = profile.version === '3.0.0' || profile.version === '3.1.0';
-  return isV3 && Array.isArray(profile.nodes) && Array.isArray(profile.connections) && profile.nodes.length > 0;
+  const isV3 = typeof profile.version === 'string' && profile.version.startsWith('3.');
+  const hasNodes = Array.isArray(profile.nodes);
+  const hasConnections = Array.isArray(profile.connections);
+  const hasLegacyActions = Array.isArray(profile.actions) && profile.actions.length > 0;
+  return isV3 && hasNodes && hasConnections && !hasLegacyActions;
+}
+
+function normalizeNodeWorkflow(profile) {
+  if (!profile) return { profile, modified: false };
+
+  let modified = false;
+
+  if (profile.version !== '3.1.0') {
+    profile.version = '3.1.0';
+    modified = true;
+  }
+
+  if (profile.actions) {
+    delete profile.actions;
+    modified = true;
+  }
+
+  if (!profile.canvas) {
+    profile.canvas = { zoom: 1.0, pan: { x: 0, y: 0 } };
+    modified = true;
+  }
+
+  if (!Array.isArray(profile.nodes)) {
+    profile.nodes = [];
+    modified = true;
+  }
+
+  if (!Array.isArray(profile.connections)) {
+    profile.connections = [];
+    modified = true;
+  }
+
+  profile.nodes.forEach(node => {
+    if (!node) return;
+    if (!node.data) {
+      node.data = {};
+      modified = true;
+    }
+    const d = node.data;
+
+    // 1. Unified Key Synchronization for all key-related nodes
+    if (['forwarder', 'key_hold'].includes(node.type)) {
+      const rawKey = d.targetKey || (Array.isArray(d.keys) && d.keys[0]) || (typeof d.keys === 'string' && d.keys) || '1';
+      const cleanKey = String(rawKey).trim() || '1';
+      if (d.targetKey !== cleanKey) {
+        d.targetKey = cleanKey;
+        modified = true;
+      }
+      if (!Array.isArray(d.keys) || d.keys.length !== 1 || d.keys[0] !== cleanKey) {
+        d.keys = [cleanKey];
+        modified = true;
+      }
+    } else if (node.type === 'key_press') {
+      if (Array.isArray(d.keys) && d.keys.length > 0) {
+        const cleanKeys = d.keys.map(k => String(k).trim()).filter(Boolean);
+        if (d.targetKey !== cleanKeys[0]) {
+          d.targetKey = cleanKeys[0] || '1';
+          modified = true;
+        }
+      } else if (d.targetKey) {
+        const k = String(d.targetKey).trim() || '1';
+        d.targetKey = k;
+        d.keys = [k];
+        modified = true;
+      }
+    } else if (node.type === 'loop') {
+      if (Array.isArray(d.keys) && d.keys.length > 0) {
+        const cleanKeys = d.keys.map(k => String(k).trim()).filter(Boolean);
+        if (d.targetKey !== cleanKeys[0]) {
+          d.targetKey = cleanKeys[0] || '1';
+          modified = true;
+        }
+      }
+    }
+
+    // 2. Ensure enabled boolean
+    if (d.enabled === undefined) {
+      d.enabled = true;
+      modified = true;
+    }
+  });
+
+  return { profile, modified };
 }
 
 function convertLegacyProfileToNodeWorkflow(legacyProfile) {
@@ -20,12 +106,10 @@ function convertLegacyProfileToNodeWorkflow(legacyProfile) {
     };
   }
 
-  // If already in v3.1.0 node format, return as is
+  // If already in v3.1.0 node format, normalize and return
   if (isNodeWorkflowProfile(legacyProfile)) {
-    return {
-      ...legacyProfile,
-      version: '3.1.0'
-    };
+    const { profile } = normalizeNodeWorkflow(legacyProfile);
+    return profile;
   }
 
   const profileName = legacyProfile.name || 'Converted Profile';
@@ -107,6 +191,16 @@ function convertLegacyProfileToNodeWorkflow(legacyProfile) {
     const mainNodeX = hasTrigger ? 450 : 100;
     const nodeTitle = act.name || `Node ${index + 1} (${nodeType})`;
 
+    let resolvedTargetKey = '1';
+    let resolvedKeys = ['1'];
+    if (act.targetKey && typeof act.targetKey === 'string' && act.targetKey.trim()) {
+      resolvedTargetKey = act.targetKey.trim();
+      resolvedKeys = (Array.isArray(act.keys) && act.keys.length > 1) ? act.keys : [resolvedTargetKey];
+    } else if (Array.isArray(act.keys) && act.keys.length > 0) {
+      resolvedKeys = act.keys.map(k => String(k).trim()).filter(Boolean);
+      resolvedTargetKey = resolvedKeys[0] || '1';
+    }
+
     const nodeData = {
       actionId: actId,
       name: act.name || '',
@@ -121,7 +215,7 @@ function convertLegacyProfileToNodeWorkflow(legacyProfile) {
       headers: act.headers || '',
       payload: act.payload !== undefined ? act.payload : '',
       timeoutMs: act.timeoutMs !== undefined ? act.timeoutMs : 5000,
-      keys: Array.isArray(act.keys) ? act.keys : (act.keys ? [act.keys] : ['1']),
+      keys: resolvedKeys,
       interval: act.interval !== undefined ? act.interval : 1000,
       jitter: act.jitter !== undefined ? act.jitter : 0,
       executeImmediately: act.executeImmediately !== false,
@@ -129,7 +223,7 @@ function convertLegacyProfileToNodeWorkflow(legacyProfile) {
       cooldownPresetId: act.cooldownPresetId || '',
       customCooldownMs: act.customCooldownMs || 0,
       delayAfter: act.delayAfter || 0,
-      targetKey: act.targetKey || (Array.isArray(act.keys) && act.keys[0] ? act.keys[0] : '1'),
+      targetKey: resolvedTargetKey,
       controlOperation: act.controlOperation || 'toggle',
       controlTargetIds: Array.isArray(act.controlTargetIds) ? act.controlTargetIds : [],
       conditionTargetId: act.conditionTargetId || '',
@@ -215,5 +309,6 @@ function convertLegacyProfileToNodeWorkflow(legacyProfile) {
 
 module.exports = {
   isNodeWorkflowProfile,
-  convertLegacyProfileToNodeWorkflow
+  convertLegacyProfileToNodeWorkflow,
+  normalizeNodeWorkflow
 };
