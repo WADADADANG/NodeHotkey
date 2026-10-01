@@ -60,15 +60,19 @@
       } else if (type === 'delay') {
         cleanData.delayMs = d.delayMs !== undefined ? parseInt(d.delayMs, 10) : 1000;
       } else if (type === 'var_set' || type === 'variable') {
-        cleanData.varName = d.varName || (node.title ? node.title.replace(/^Set /, '') : 'myVar');
+        let cleanVarName = d.varName || (node.title && !['Set Variable', 'Set myVar', 'myVar', 'Variable'].includes(node.title) ? node.title.replace(/^Set /, '') : '');
+        if (cleanVarName === 'myVar' || cleanVarName === 'my_var') cleanVarName = '';
+        cleanData.varName = cleanVarName;
         cleanData.varType = d.varType || 'boolean';
         cleanData.scope = d.scope || 'client';
         cleanData.targetClient = d.targetClient || '1';
         cleanData.initialValue = d.initialValue !== undefined ? d.initialValue : 'false';
-        cleanData.operation = d.operation || 'set_value';
-        cleanData.opValue = d.opValue !== undefined ? d.opValue : '1';
+        cleanData.operation = d.operation || 'set_true';
+        cleanData.opValue = d.opValue !== undefined ? d.opValue : '';
       } else if (type === 'var_get') {
-        cleanData.varName = d.varName || (node.title ? node.title.replace(/^Get /, '') : 'myVar');
+        let cleanVarName = d.varName || (node.title && !['Get Variable', 'Get myVar', 'myVar', 'Variable'].includes(node.title) ? node.title.replace(/^Get /, '') : '');
+        if (cleanVarName === 'myVar' || cleanVarName === 'my_var') cleanVarName = '';
+        cleanData.varName = cleanVarName;
         cleanData.varType = d.varType || 'string';
         cleanData.scope = d.scope || 'client';
         cleanData.targetClient = d.targetClient || '1';

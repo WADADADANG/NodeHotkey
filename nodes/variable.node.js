@@ -17,7 +17,7 @@ module.exports = {
   inputs: ['in', 'val_in'],
   outputs: ['onComplete', 'val_out'],
   defaultData: {
-    varName: 'my_var',
+    varName: '',
     varType: 'boolean', // 'boolean' | 'number' | 'string'
     scope: 'client',    // 'client' | 'global'
     targetClient: '1',

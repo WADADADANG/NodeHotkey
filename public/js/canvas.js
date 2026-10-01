@@ -1379,13 +1379,15 @@ class NodeCanvasEditor {
           </div>
         `;
         } else if (node.type === 'var_get') {
-          const vName = node.data?.varName || node.title || 'myVar';
+          const vName = (node.data?.varName && node.data.varName !== 'myVar' && node.data.varName !== 'my_var')
+            ? node.data.varName
+            : (node.title && !['Get Variable', 'Get myVar', 'myVar', 'Variable'].includes(node.title) ? node.title.replace(/^Get /, '') : '');
           const vType = node.data?.varType || 'string';
           const defVal = node.data?.defaultValue !== undefined ? node.data.defaultValue : '';
           const typeColor = vType === 'number' ? '#06b6d4' : (vType === 'boolean' ? '#ef4444' : '#ec4899');
           bodyHTML = `
           <div class="node-info-row" style="margin-bottom:2px;">
-            <span style="font-family:'JetBrains Mono'; font-weight:700; color:var(--text); font-size:12px;">${vName}</span>
+            <span style="font-family:'JetBrains Mono'; font-weight:700; color:${vName ? 'var(--text)' : 'var(--text-muted)'}; font-size:12px; ${!vName ? 'font-style:italic;' : ''}">${vName || (typeof canvasT === 'function' ? canvasT('var_not_selected', '(ยังไม่เลือกตัวแปร)') : '(ยังไม่เลือกตัวแปร)')}</span>
           </div>
           <div class="node-info-row">
             <span style="font-size:10px; color:${typeColor}; font-weight:700;">● ${vType.toUpperCase()}</span>
@@ -1393,10 +1395,12 @@ class NodeCanvasEditor {
           </div>
         `;
         } else if (node.type === 'var_set' || node.type === 'variable') {
-          const vName = node.data?.varName || 'myVar';
+          const vName = (node.data?.varName && node.data.varName !== 'myVar' && node.data.varName !== 'my_var')
+            ? node.data.varName
+            : (node.title && !['Set Variable', 'Set myVar', 'myVar', 'Variable'].includes(node.title) ? node.title.replace(/^Set /, '') : '');
           const vType = node.data?.varType || 'boolean';
           const vScope = node.data?.scope || 'client';
-          const op = node.data?.operation || 'set_value';
+          const op = node.data?.operation || 'set_true';
           const scopeLabel = vScope === 'global' ? 'Global (All)' : `Client ${node.data?.targetClient || '1'}`;
           const typeMap = {
             boolean: '🔘 Boolean',
@@ -1414,7 +1418,7 @@ class NodeCanvasEditor {
           };
           bodyHTML = `
           <div class="node-info-row">
-            <span>Name:</span> <span class="node-info-value" style="color:var(--text); font-weight:700; font-family:'JetBrains Mono';">${vName}</span>
+            <span>Name:</span> <span class="node-info-value" style="color:${vName ? 'var(--text)' : 'var(--text-muted)'}; font-weight:700; font-family:'JetBrains Mono'; ${!vName ? 'font-style:italic;' : ''}">${vName || (typeof canvasT === 'function' ? canvasT('var_not_selected', '(ยังไม่เลือกตัวแปร)') : '(ยังไม่เลือกตัวแปร)')}</span>
           </div>
           <div class="node-info-row">
             <span>Type:</span> <span class="node-info-value" style="color:#a855f7; font-weight:700;">${typeMap[vType] || vType}</span>
@@ -3189,9 +3193,9 @@ class NodeCanvasEditor {
       sequencer: 'Cast Sequencer',
       loop_scheduler: 'Loop Scheduler',
       step_log: 'Log Message (📝)',
-      var_get: 'myVar',
-      var_set: 'Set myVar',
-      variable: 'Set myVar',
+      var_get: 'Get Variable',
+      var_set: 'Set Variable',
+      variable: 'Set Variable',
       tts: 'Text to Speech (TTS)',
       webhook_out: 'Discord / HTTP Webhook',
       format_text: 'Format Text'
@@ -3219,7 +3223,7 @@ class NodeCanvasEditor {
       };
     } else if (type === 'var_get') {
       initialData = {
-        varName: 'myVar',
+        varName: '',
         varType: 'string',
         defaultValue: '',
         scope: 'global',
@@ -3228,12 +3232,12 @@ class NodeCanvasEditor {
       };
     } else if (type === 'var_set' || type === 'variable') {
       initialData = {
-        varName: 'myVar',
+        varName: '',
         varType: 'boolean', // 'boolean' | 'number' | 'string'
         scope: 'global',
         targetClient: 'all',
         initialValue: 'false',
-        operation: 'set_value', // 'set_value' | 'toggle' | 'set_true' | 'set_false' | 'increment' | 'decrement' | 'reset'
+        operation: 'set_true', // 'set_value' | 'toggle' | 'set_true' | 'set_false' | 'increment' | 'decrement' | 'reset'
         opValue: '',
         enabled: true
       };
@@ -3554,14 +3558,30 @@ class NodeCanvasEditor {
   getAvailableVariables() {
     if (!Array.isArray(this.variables)) this.variables = [];
 
+    // Remove any legacy dummy placeholder variables (myVar / my_var)
+    this.variables = this.variables.filter(v => v && v.name && v.name !== 'myVar' && v.name !== 'my_var');
+
     // Auto-discovery from nodes on current canvas (var_set, variable, var_get, var_branch)
     const existingNames = new Set(this.variables.map(v => v.name));
 
     this.nodes.forEach(node => {
       if (node.type === 'var_set' || node.type === 'variable' || node.type === 'var_get' || node.type === 'var_branch') {
         const d = node.data || {};
-        const vName = d.varName || (d.conditionTargetId && String(d.conditionTargetId).startsWith('var:') ? String(d.conditionTargetId).replace('var:', '') : (node.title ? node.title.replace(/^(Get |Set )/, '') : null));
-        if (vName && !existingNames.has(vName)) {
+        
+        // Clean legacy dummy names on existing nodes
+        if (d.varName === 'myVar' || d.varName === 'my_var') {
+          d.varName = '';
+          if (node.title === 'myVar' || node.title === 'Set myVar' || node.title === 'Get myVar') {
+            node.title = (node.type === 'var_get' ? 'Get Variable' : 'Set Variable');
+          }
+        }
+
+        const vName = d.varName || (d.conditionTargetId && String(d.conditionTargetId).startsWith('var:') ? String(d.conditionTargetId).replace('var:', '') : null);
+        
+        // Never auto-create myVar, my_var, Variable, or empty placeholder variables
+        if (!vName || vName === 'myVar' || vName === 'my_var' || vName === 'Variable') return;
+
+        if (!existingNames.has(vName)) {
           existingNames.add(vName);
           const vType = d.varType || (node.type === 'var_get' ? 'string' : 'boolean');
           const defVal = d.defaultValue !== undefined
@@ -4008,7 +4028,7 @@ class NodeCanvasEditor {
     const vObj = allVars.find(v => v.name === varName);
 
     if (!node.data) node.data = {};
-    node.data.varName = varName;
+    node.data.varName = varName || '';
 
     if (vObj) {
       node.data.varType = vObj.type;
@@ -4020,10 +4040,16 @@ class NodeCanvasEditor {
       } else {
         node.title = 'Set ' + varName;
         if (vObj.type === 'boolean' && node.data.operation !== 'toggle' && node.data.operation !== 'set_value' && node.data.operation !== 'set_true' && node.data.operation !== 'set_false' && node.data.operation !== 'reset') {
-          node.data.operation = 'set_value';
+          node.data.operation = 'set_true';
         } else if (vObj.type === 'number' && node.data.operation !== 'set_value' && node.data.operation !== 'increment' && node.data.operation !== 'decrement' && node.data.operation !== 'reset') {
           node.data.operation = 'set_value';
         }
+      }
+    } else {
+      if (node.type === 'var_get') {
+        node.title = 'Get Variable';
+      } else {
+        node.title = 'Set Variable';
       }
     }
 

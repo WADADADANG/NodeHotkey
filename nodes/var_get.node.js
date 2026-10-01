@@ -18,7 +18,7 @@ module.exports = {
   inputs: [],   // No execution pins!
   outputs: ['val_out'], // Data output pin
   defaultData: {
-    varName: 'my_var',
+    varName: '',
     varType: 'string', // 'string' | 'number' | 'boolean'
     scope: 'client',    // 'client' | 'global'
     targetClient: '1',
