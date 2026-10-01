@@ -255,7 +255,10 @@ class NodeExecutionEngine {
       format_text: 'format_text',
       format: 'format_text',
       reroute: 'reroute',
-      knot: 'reroute'
+      knot: 'reroute',
+      condition_group: 'condition_group',
+      multi_condition: 'condition_group',
+      logic_gate: 'condition_group'
     };
 
     function resolveUnifiedActionKeys(nodeType, d) {
@@ -346,6 +349,8 @@ class NodeExecutionEngine {
         conditionTargetId: d.conditionTargetId || '',
         conditionRule: d.conditionRule || 'is_running',
         conditionValue: d.conditionValue !== undefined ? d.conditionValue : '',
+        logicMode: (d.logicMode || 'AND').toUpperCase(),
+        conditions: Array.isArray(d.conditions) ? d.conditions : [],
         stepTag: d.stepTag || 'STEP',
         showClient: d.showClient === true,
         defaultValue: d.defaultValue !== undefined ? d.defaultValue : '',

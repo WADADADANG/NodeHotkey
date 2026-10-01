@@ -86,6 +86,19 @@
       } else if (type === 'client_check' || type === 'check_client' || type === 'client_status') {
         cleanData.targetClient = String(d.targetClient || '1').split(',')[0].trim() || '1';
         cleanData.checkRule = d.checkRule || 'is_active';
+      } else if (type === 'condition_group') {
+        cleanData.logicMode = (d.logicMode || 'AND').toUpperCase();
+        cleanData.conditions = Array.isArray(d.conditions) ? d.conditions.map(c => ({
+          type: c.type || 'variable',
+          varName: c.varName || '',
+          varType: c.varType || 'boolean',
+          rule: c.rule || (c.varType === 'boolean' ? 'is_true' : 'equals'),
+          value: c.value !== undefined ? c.value : '',
+          actionId: c.actionId || '',
+          actionRule: c.actionRule || 'is_running',
+          targetClient: c.targetClient || '1',
+          clientRule: c.clientRule || 'is_active'
+        })) : [];
       } else if (type === 'reroute' || type === 'knot') {
         cleanData.enabled = d.enabled !== false;
       } else if (type === 'control') {

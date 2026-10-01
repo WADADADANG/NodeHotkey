@@ -3972,6 +3972,8 @@ function handleActionTrigger(act, firingTriggerId = null) {
         runActionCondition(act).catch(err => console.error(`Error in runActionCondition:`, err));
     } else if (act.mode === 'client_check' || act.mode === 'check_client' || act.mode === 'client_status' || act.mode === 'is_client_open' || act.mode === 'is_client_active') {
         runClientCheckAction(act).catch(err => console.error(`Error in runClientCheckAction:`, err));
+    } else if (act.mode === 'condition_group' || act.mode === 'multi_condition') {
+        runConditionGroupAction(act).catch(err => console.error(`Error in runConditionGroupAction:`, err));
     } else if (act.mode === 'reroute' || act.mode === 'knot') {
         runRerouteAction(act).catch(err => console.error(`Error in runRerouteAction:`, err));
     } else if (act.mode === 'sound_alert' || act.mode === 'sound') {
@@ -4138,6 +4140,8 @@ async function runChainedAction(action, callStack) {
         await runActionCondition(action, callStack).catch(err => console.error(`[Chain Error] runActionCondition:`, err));
     } else if (action.mode === 'client_check' || action.mode === 'check_client' || action.mode === 'client_status' || action.mode === 'is_client_open' || action.mode === 'is_client_active') {
         await runClientCheckAction(action, callStack).catch(err => console.error(`[Chain Error] runClientCheckAction:`, err));
+    } else if (action.mode === 'condition_group' || action.mode === 'multi_condition') {
+        await runConditionGroupAction(action, callStack).catch(err => console.error(`[Chain Error] runConditionGroupAction:`, err));
     } else if (action.mode === 'reroute' || action.mode === 'knot') {
         await runRerouteAction(action, callStack).catch(err => console.error(`[Chain Error] runRerouteAction:`, err));
     } else if (action.mode === 'sound_alert' || action.mode === 'sound') {
@@ -4376,6 +4380,8 @@ async function runActionControl(act, callStack) {
             await runActionCondition(targetAction, resolvedStack).catch(err => console.error(err));
         } else if (targetAction.mode === 'client_check' || targetAction.mode === 'check_client' || targetAction.mode === 'client_status' || targetAction.mode === 'is_client_open' || targetAction.mode === 'is_client_active') {
             await runClientCheckAction(targetAction, resolvedStack).catch(err => console.error(err));
+        } else if (targetAction.mode === 'condition_group' || targetAction.mode === 'multi_condition') {
+            await runConditionGroupAction(targetAction, resolvedStack).catch(err => console.error(err));
         } else if (targetAction.mode === 'reroute' || targetAction.mode === 'knot') {
             await runRerouteAction(targetAction, resolvedStack).catch(err => console.error(err));
         }
@@ -4530,6 +4536,109 @@ async function runClientCheckAction(act, callStack) {
 }
 global.runClientCheckAction = runClientCheckAction;
 global.isClientActive = isClientActive;
+
+async function runConditionGroupAction(act, callStack) {
+    if (global.isSuspended) return false;
+
+    const stackKey = `${act.id}:condition_group`;
+    const resolvedStack = (callStack instanceof Set) ? callStack : new Set(Array.isArray(callStack) ? callStack : []);
+    if (resolvedStack.has(stackKey)) {
+        console.warn(`[Condition Group] ⚠️ Circular stack detected: "${act.name}" — skipping.`);
+        return false;
+    }
+    resolvedStack.add(stackKey);
+
+    const conditions = Array.isArray(act.conditions) ? act.conditions : [];
+    const logicMode = (act.logicMode || 'AND').toUpperCase();
+
+    let overallPassed = true;
+
+    if (conditions.length > 0) {
+        const results = [];
+
+        for (let i = 0; i < conditions.length; i++) {
+            const cond = conditions[i];
+            if (!cond || typeof cond !== 'object') continue;
+
+            const condType = cond.type || 'variable';
+            let condPassed = false;
+
+            if (condType === 'variable') {
+                const rawVarName = (cond.varName || '').trim();
+                const isNamedVar = rawVarName.startsWith('var:');
+                const cleanVarName = isNamedVar ? rawVarName.replace('var:', '') : rawVarName;
+                const vType = cond.varType || 'boolean';
+                const rule = cond.rule || (vType === 'boolean' ? 'is_true' : 'equals');
+                const condVal = cond.value;
+
+                let varVal;
+                if (cleanVarName) {
+                    varVal = getNamedVariableValue(cleanVarName, act);
+                    if (varVal === undefined) {
+                        const targetAct = activeActions.find(a => (a.varName && a.varName === cleanVarName) || a.id === cleanVarName || a.nodeId === cleanVarName);
+                        if (targetAct) varVal = getVariableValue(targetAct);
+                    }
+                }
+
+                if (vType === 'boolean') {
+                    const boolVal = (varVal === true || String(varVal) === 'true');
+                    if (rule === 'is_true') condPassed = boolVal;
+                    else if (rule === 'is_false') condPassed = !boolVal;
+                    else condPassed = boolVal;
+                } else if (vType === 'number') {
+                    const numVal = typeof varVal === 'number' ? varVal : (parseFloat(varVal) || 0);
+                    const compareNum = parseFloat(condVal) || 0;
+                    if (rule === 'equals') condPassed = (numVal === compareNum);
+                    else if (rule === 'not_equals') condPassed = (numVal !== compareNum);
+                    else if (rule === 'greater_than') condPassed = (numVal > compareNum);
+                    else if (rule === 'less_than') condPassed = (numVal < compareNum);
+                    else if (rule === 'greater_or_equal') condPassed = (numVal >= compareNum);
+                    else if (rule === 'less_or_equal') condPassed = (numVal <= compareNum);
+                    else condPassed = (numVal === compareNum);
+                } else {
+                    const strVal = String(varVal !== undefined ? varVal : '');
+                    const compareStr = String(condVal !== undefined ? condVal : '');
+                    if (rule === 'equals') condPassed = (strVal === compareStr);
+                    else if (rule === 'not_equals') condPassed = (strVal !== compareStr);
+                    else condPassed = (strVal === compareStr);
+                }
+            } else if (condType === 'action') {
+                const targetId = (cond.actionId || '').trim();
+                const actionRule = cond.actionRule || 'is_running';
+                const isRunning = targetId ? isActionRunning(targetId) : false;
+                condPassed = (actionRule === 'is_running') ? isRunning : !isRunning;
+            } else if (condType === 'client') {
+                const targetClient = String(cond.targetClient || '1').trim();
+                const clientRule = cond.clientRule || 'is_active';
+                const active = isClientActive(targetClient);
+                condPassed = (clientRule === 'is_inactive') ? !active : active;
+            }
+
+            results.push(condPassed);
+        }
+
+        if (results.length > 0) {
+            if (logicMode === 'OR') {
+                overallPassed = results.some(r => r === true);
+            } else {
+                overallPassed = results.every(r => r === true);
+            }
+        }
+    }
+
+    console.log(`🧩 [Condition Group] "${act.name}": Evaluated ${conditions.length} condition(s) [Logic: ${logicMode}] -> Result: ${overallPassed ? 'TRUE' : 'FALSE'}`);
+
+    if (overallPassed) {
+        emitSignal(act.id, 'onTrue');
+        await fireChain(act, 'onTrue', resolvedStack);
+    } else {
+        emitSignal(act.id, 'onFalse');
+        await fireChain(act, 'onFalse', resolvedStack);
+    }
+
+    return overallPassed;
+}
+global.runConditionGroupAction = runConditionGroupAction;
 
 async function runRerouteAction(act, callStack) {
     if (global.isSuspended) return;
@@ -4783,6 +4892,7 @@ if (typeof module !== 'undefined') {
         resolveNodeInputData,
         getVariableKey,
         runActionCondition,
+        runConditionGroupAction,
         runEmergencyStopAction,
         runRerouteAction,
         stopAllLoops,

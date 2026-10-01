@@ -262,6 +262,76 @@ forwarderNodeDef.execute({}, builtActions[0]).then(() => {
   assert.deepStrictEqual(holdData.keys, ['SPACE']);
 
   console.log('✅ Test 7 Passed!\n');
-  console.log('🎉 All Multi-Active Profiles & Node Workflow Unit Tests Passed Successfully!');
+
+  // Test 8: Condition Group (Multi-Condition Evaluator)
+  console.log('Test 8: Testing Condition Group node & logic evaluation...');
+  const { nodeRegistry } = require('../node-registry');
+  nodeRegistry.loadAll(null, true);
+  assert.ok(nodeRegistry.has('condition_group'), 'condition_group node should be registered in nodeRegistry');
+
+  const condGroupWorkflow = {
+    version: '3.1.0',
+    name: 'Cond Group Profile',
+    nodes: [
+      {
+        id: 'node_cg_1',
+        type: 'condition_group',
+        title: 'Heal Check Group',
+        data: {
+          logicMode: 'AND',
+          conditions: [
+            { type: 'variable', varName: 'playerHp', varType: 'number', rule: 'less_than', value: '50' },
+            { type: 'client', targetClient: '1', clientRule: 'is_active' }
+          ]
+        }
+      }
+    ],
+    connections: []
+  };
+
+  const cgEngine = new NodeExecutionEngine(condGroupWorkflow);
+  const cgActions = cgEngine.buildActionsFromNodeWorkflow(condGroupWorkflow);
+  assert.strictEqual(cgActions.length, 1);
+  assert.strictEqual(cgActions[0].mode, 'condition_group');
+  assert.strictEqual(cgActions[0].logicMode, 'AND');
+  assert.strictEqual(cgActions[0].conditions.length, 2);
+
+  // Test execution of Condition Group via bot.runConditionGroupAction
+  const bot = require('../bot');
+  let emittedSignals = [];
+  global.emitSignal = (actionId, port) => {
+    emittedSignals.push({ actionId, port });
+  };
+  global.fireChain = async () => {};
+  global.activeClients = ['1'];
+  global.isSuspended = false;
+
+  // Case A: playerHp = 30 (< 50) and Client 1 is active -> AND should PASS (onTrue)
+  bot.setVariableValue('playerHp', 30, 'number');
+  emittedSignals = [];
+  bot.runConditionGroupAction(cgActions[0]).then((resA) => {
+    assert.strictEqual(resA, true, 'Case A: Both conditions match so AND should evaluate to true');
+    assert.ok(emittedSignals.some(s => s.port === 'onTrue'), 'Signal onTrue should be emitted');
+
+    // Case B: playerHp = 80 (not < 50) -> AND should FAIL (onFalse)
+    bot.setVariableValue('playerHp', 80, 'number');
+    emittedSignals = [];
+    bot.runConditionGroupAction(cgActions[0]).then((resB) => {
+      assert.strictEqual(resB, false, 'Case B: One condition failed so AND should evaluate to false');
+      assert.ok(emittedSignals.some(s => s.port === 'onFalse'), 'Signal onFalse should be emitted');
+
+      // Case C: Change logicMode to OR with playerHp = 80 -> Client 1 is still active -> OR should PASS (onTrue)
+      cgActions[0].logicMode = 'OR';
+      emittedSignals = [];
+      bot.runConditionGroupAction(cgActions[0]).then((resC) => {
+        assert.strictEqual(resC, true, 'Case C: One condition matched so OR should evaluate to true');
+        assert.ok(emittedSignals.some(s => s.port === 'onTrue'), 'Signal onTrue should be emitted');
+
+        console.log('✅ Test 8 Passed!\n');
+        console.log('🎉 All Multi-Active Profiles, Node Workflow & Condition Group Unit Tests Passed Successfully!');
+      });
+    });
+  });
 });
+
 

@@ -2,7 +2,7 @@
  * public/js/components/node-docs-data.js
  * NodeHotkey Interactive Documentation Catalog
  * 
- * Reusable data-driven catalog for all 29 Action Nodes.
+ * Reusable data-driven catalog for all 30 Action Nodes.
  * Categorized into 6 official categories matching the Canvas Studio:
  * 1. triggers  (Triggers & Events)
  * 2. actions   (Actions & Input)
@@ -281,6 +281,31 @@
       bestPracticeTh: 'ใช้ควบคุมความปลอดภัย เช่น ตรวจสอบว่าบอทกำลังทำงานอยู่หรือไม่ก่อนส่งคีย์ หรือใช้ตรวจสอบว่าหน้าต่างเกมเปิดอยู่หรือไม่',
       bestPracticeEn: 'Ideal for flow gating, e.g. checking whether a loop is already running before triggering it again.',
       exampleBlueprint: `[Branch] ──(True)──▶ [Do Action]\n         └──(False)─▶ [Log "Skipped"]`
+    },
+    {
+      type: 'condition_group',
+      titleTh: 'กลุ่มเงื่อนไขรวม (Condition Group)',
+      titleEn: 'Condition Group (Multi-Condition)',
+      category: 'flow',
+      icon: 'git-merge',
+      badge: 'AND / OR Gate',
+      color: '#8b5cf6',
+      descTh: 'รวมการตรวจสอบหลายเงื่อนไขไว้ในโหนดเดียว (รองรับตัวแปร, สถานะโหนด, และจอไคลเอนต์) พร้อมเลือกตรรกะ AND (ต้องผ่านทั้งหมด) หรือ OR (ผ่านข้อใดข้อหนึ่ง) เพื่อแยกสาย True / False โดยไม่ต้องต่อโหนดซ้อนกันยาวๆ',
+      descEn: 'Evaluates multiple simultaneous conditions (Variables, Action Statuses, Client Screens) inside a single node with AND / OR boolean logic, routing execution to True or False without messy node chains.',
+      inputs: [
+        { name: 'in', type: 'flow', descTh: 'รับสัญญาณสั่งการทำงาน', descEn: 'Execution flow in' }
+      ],
+      outputs: [
+        { name: 'onTrue', type: 'flow', descTh: 'ส่งสัญญาณออกเมื่อเงื่อนไขผ่านตามตรรกะที่กำหนด', descEn: 'Fires if condition group logic evaluates to TRUE' },
+        { name: 'onFalse', type: 'flow', descTh: 'ส่งสัญญาณออกเมื่อเงื่อนไขไม่ผ่าน (ปล่อยว่างได้)', descEn: 'Fires if condition group logic evaluates to FALSE' }
+      ],
+      parameters: [
+        { key: 'logicMode', nameTh: 'โหมดตรรกะ', nameEn: 'Logic Mode', type: 'select', default: 'AND', descTh: 'AND (ต้องผ่านครบทุกข้อ) หรือ OR (ผ่านข้อใดข้อหนึ่ง)', descEn: 'AND (all must match) or OR (any match)' },
+        { key: 'conditions', nameTh: 'รายการเงื่อนไข', nameEn: 'Condition Rules', type: 'array', default: [], descTh: 'รายการตรวจสอบตัวแปร, สถานะการทำงานของ Action หรือสถานะจอ Client 1-5', descEn: 'List of variable, action status, or client screen conditions' }
+      ],
+      bestPracticeTh: 'เหมาะสำหรับกรณีที่ต้องเช็กหลายตัวแปรพร้อมกัน เช่น ตรวจทั้ง (HP < 50% AND จอ Client 1 กำลังแอ็กทีฟ) หรือ (Mana < 30% OR Buff หมด) ช่วยให้กราฟอ่านง่าย ไม่รกสายเชื่อมต่อ',
+      bestPracticeEn: 'Ideal for compound decisions like (HP < 50 AND Client 1 is active), replacing messy multi-node branch cascades with one compact gate.',
+      exampleBlueprint: `[Trigger] ──▶ [Condition Group (HP < 50 AND Client 1 Active)] ──(True)──▶ [Use Potion]\n                                                               └──(False)─▶ [Next Check]`
     },
     {
       type: 'control',

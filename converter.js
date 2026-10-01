@@ -83,6 +83,15 @@ function normalizeNodeWorkflow(profile) {
           modified = true;
         }
       }
+    } else if (node.type === 'condition_group') {
+      if (!d.logicMode || (d.logicMode !== 'AND' && d.logicMode !== 'OR')) {
+        d.logicMode = 'AND';
+        modified = true;
+      }
+      if (!Array.isArray(d.conditions)) {
+        d.conditions = [];
+        modified = true;
+      }
     }
 
     // 2. Ensure enabled boolean

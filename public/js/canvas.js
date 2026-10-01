@@ -92,6 +92,7 @@ class NodeCanvasEditor {
       macro_group: canvasT('canvas_macro_group', isEn ? 'Macro Queue' : 'มาโคร (Macro)'),
       branch: canvasT('canvas_branch', isEn ? 'Action Branch' : 'เงื่อนไขสถานะ Action'),
       action_branch: canvasT('canvas_action_branch', isEn ? 'Action Branch' : 'เงื่อนไขสถานะ Action'),
+      condition_group: canvasT('canvas_condition_group', isEn ? 'Condition Group' : 'กลุ่มเงื่อนไข (Multi-Condition)'),
       client_check: canvasT('canvas_client_check', isEn ? 'Client Check' : 'ตรวจสอบสถานะจอ'),
       check_client: canvasT('canvas_client_check', isEn ? 'Client Check' : 'ตรวจสอบสถานะจอ'),
       reroute: canvasT('canvas_reroute', isEn ? 'Reroute (Knot)' : 'จุดดักสาย (Reroute)'),
@@ -785,6 +786,7 @@ class NodeCanvasEditor {
       var_branch: 'git-branch',
       variable_branch: 'git-branch',
       condition: 'git-branch',
+      condition_group: 'git-merge',
       client_check: 'app-window',
       check_client: 'app-window',
       client_status: 'app-window',
@@ -1128,6 +1130,17 @@ class NodeCanvasEditor {
           </div>
           <div class="node-info-row">
             <span>${isEn ? 'Status:' : 'สถานะ:'}</span> <span class="node-info-value">${ruleLabel}</span>
+          </div>
+        `;
+        } else if (node.type === 'condition_group') {
+          const mode = (node.data?.logicMode || 'AND').toUpperCase();
+          const count = Array.isArray(node.data?.conditions) ? node.data.conditions.length : 0;
+          bodyHTML = `
+          <div class="node-info-row">
+            <span>${isEn ? 'Logic:' : 'ตรรกะ:'}</span> <span class="node-info-value" style="font-weight:700; color:#a78bfa;">${mode === 'OR' ? 'OR (Any)' : 'AND (All)'}</span>
+          </div>
+          <div class="node-info-row">
+            <span>${isEn ? 'Rules:' : 'เงื่อนไข:'}</span> <span class="node-info-value">${count} ${isEn ? 'rule(s)' : 'ข้อ'}</span>
           </div>
         `;
         } else if (node.type === 'party_scanner') {
@@ -1742,7 +1755,7 @@ class NodeCanvasEditor {
             ${cooldownPinRowHTML}
           </div>
         `;
-      } else if (node.type === 'branch' || node.type === 'condition' || node.type === 'action_branch' || node.type === 'var_branch' || node.type === 'variable_branch') {
+      } else if (node.type === 'branch' || node.type === 'condition' || node.type === 'action_branch' || node.type === 'var_branch' || node.type === 'variable_branch' || node.type === 'condition_group') {
         pinsHTML = `
           <div class="node-pins-section">
             <div class="node-pin-row">
@@ -3160,6 +3173,7 @@ class NodeCanvasEditor {
       knot: 'Reroute',
       branch: 'Action Branch',
       action_branch: 'Action Branch',
+      condition_group: 'Condition Group',
       client_check: 'Client Check',
       check_client: 'Client Check',
       var_branch: 'Variable Branch',
@@ -3308,6 +3322,8 @@ class NodeCanvasEditor {
       initialData = { delayMs: 1000, enabled: true };
     } else if (type === 'action_branch' || type === 'branch' || type === 'condition') {
       initialData = { conditionTargetId: '', conditionRule: 'is_running', enabled: true };
+    } else if (type === 'condition_group') {
+      initialData = { logicMode: 'AND', conditions: [], enabled: true };
     } else if (type === 'reroute' || type === 'knot') {
       initialData = { enabled: true };
     } else if (type === 'client_check' || type === 'check_client') {
@@ -4772,6 +4788,7 @@ class NodeCanvasEditor {
         icon: renderCatIcon('git-branch'),
         name: canvasT('cat_flow', 'Logic & Flow'),
         items: [
+          { type: 'condition_group', icon: this.getNodeIcon('condition_group', 14), name: this.getNodeTypeLabel('condition_group') },
           { type: 'reroute', icon: this.getNodeIcon('reroute', 14), name: this.getNodeTypeLabel('reroute') },
           { type: 'client_check', icon: this.getNodeIcon('client_check', 14), name: this.getNodeTypeLabel('client_check') },
           { type: 'var_branch', icon: this.getNodeIcon('var_branch', 14), name: this.getNodeTypeLabel('var_branch') },
