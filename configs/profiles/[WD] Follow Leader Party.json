@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Follow Leader Party",
   "canvas": {
-    "zoom": 1.339894122821766,
+    "zoom": 0.4671921926446513,
     "pan": {
-      "x": -182,
-      "y": -899
+      "x": -609,
+      "y": -323
     }
   },
   "nodes": [
@@ -14,8 +14,8 @@
       "type": "trigger",
       "title": "Global Trigger",
       "position": {
-        "x": 370,
-        "y": 130
+        "x": 190,
+        "y": 120
       },
       "data": {
         "enabled": true,
@@ -38,7 +38,7 @@
         "targetSlot": 1,
         "scanRegion": "right",
         "delayAfterClick": 80,
-        "showOverlay": true,
+        "showOverlay": false,
         "actionId": "1790426723755"
       }
     },
@@ -48,7 +48,7 @@
       "title": "Key Press Z 1",
       "position": {
         "x": 2100,
-        "y": 390
+        "y": 400
       },
       "data": {
         "enabled": true,
@@ -66,7 +66,7 @@
       "title": "Key Press Z 2",
       "position": {
         "x": 2100,
-        "y": 590
+        "y": 610
       },
       "data": {
         "enabled": true,
@@ -84,7 +84,7 @@
       "title": "Party Slot Selector 2",
       "position": {
         "x": 1790,
-        "y": 490
+        "y": 500
       },
       "data": {
         "enabled": true,
@@ -92,7 +92,7 @@
         "targetSlot": 1,
         "scanRegion": "right",
         "delayAfterClick": 80,
-        "showOverlay": true,
+        "showOverlay": false,
         "actionId": "1790426770515_1955"
       }
     },
@@ -102,7 +102,7 @@
       "title": "Key Press Z 3",
       "position": {
         "x": 2100,
-        "y": 790
+        "y": 810
       },
       "data": {
         "enabled": true,
@@ -120,7 +120,7 @@
       "title": "Party Slot Selector 3",
       "position": {
         "x": 1790,
-        "y": 690
+        "y": 700
       },
       "data": {
         "enabled": true,
@@ -128,7 +128,7 @@
         "targetSlot": 1,
         "scanRegion": "right",
         "delayAfterClick": 80,
-        "showOverlay": true,
+        "showOverlay": false,
         "actionId": "1790426783508_4423"
       }
     },
@@ -138,7 +138,7 @@
       "title": "Key Press Z 4",
       "position": {
         "x": 2100,
-        "y": 990
+        "y": 1010
       },
       "data": {
         "enabled": true,
@@ -156,7 +156,7 @@
       "title": "Party Slot Selector 4",
       "position": {
         "x": 1790,
-        "y": 890
+        "y": 900
       },
       "data": {
         "enabled": true,
@@ -164,7 +164,7 @@
         "targetSlot": 1,
         "scanRegion": "right",
         "delayAfterClick": 80,
-        "showOverlay": true,
+        "showOverlay": false,
         "actionId": "1790426786586_1105"
       }
     },
@@ -174,7 +174,7 @@
       "title": "Key Press Z 5",
       "position": {
         "x": 2100,
-        "y": 1190
+        "y": 1210
       },
       "data": {
         "enabled": true,
@@ -192,7 +192,7 @@
       "title": "Party Slot Selector 5",
       "position": {
         "x": 1790,
-        "y": 1090
+        "y": 1100
       },
       "data": {
         "enabled": true,
@@ -200,7 +200,7 @@
         "targetSlot": 1,
         "scanRegion": "right",
         "delayAfterClick": 80,
-        "showOverlay": true,
+        "showOverlay": false,
         "actionId": "1790426788842_7563"
       }
     },
@@ -210,7 +210,7 @@
       "title": "Key Press Z 6",
       "position": {
         "x": 2100,
-        "y": 1390
+        "y": 1410
       },
       "data": {
         "enabled": true,
@@ -228,7 +228,7 @@
       "title": "Party Slot Selector 6",
       "position": {
         "x": 1790,
-        "y": 1290
+        "y": 1300
       },
       "data": {
         "enabled": true,
@@ -236,7 +236,7 @@
         "targetSlot": 1,
         "scanRegion": "right",
         "delayAfterClick": 80,
-        "showOverlay": true,
+        "showOverlay": false,
         "actionId": "1790426793286_5449"
       }
     },
@@ -246,7 +246,7 @@
       "title": "Client Check 1",
       "position": {
         "x": 1370,
-        "y": 210
+        "y": 200
       },
       "data": {
         "enabled": true,
@@ -335,8 +335,8 @@
       "type": "var_branch",
       "title": "Variable Branch",
       "position": {
-        "x": 690,
-        "y": 130
+        "x": 510,
+        "y": 120
       },
       "data": {
         "enabled": true,
@@ -353,8 +353,8 @@
       "type": "var_set",
       "title": "Set isScanningPartyFollowLeader",
       "position": {
-        "x": 690,
-        "y": 530
+        "x": 810,
+        "y": 350
       },
       "data": {
         "enabled": true,
@@ -373,8 +373,8 @@
       "type": "emergency_stop",
       "title": "Emergency Stop All",
       "position": {
-        "x": 950,
-        "y": 660
+        "x": 1070,
+        "y": 480
       },
       "data": {
         "enabled": true,
@@ -410,7 +410,7 @@
       "title": "Set isScanningPartyFollowLeader",
       "position": {
         "x": 3620,
-        "y": 1060
+        "y": 1080
       },
       "data": {
         "enabled": true,
@@ -430,7 +430,7 @@
       "title": "Emergency Stop All",
       "position": {
         "x": 3930,
-        "y": 1180
+        "y": 1200
       },
       "data": {
         "enabled": true,
@@ -459,7 +459,7 @@
       "title": "Reroute",
       "position": {
         "x": 2330,
-        "y": 1290
+        "y": 1310
       },
       "data": {
         "enabled": true,
@@ -485,7 +485,7 @@
       "title": "Reroute",
       "position": {
         "x": 2330,
-        "y": 1090
+        "y": 1100
       },
       "data": {
         "enabled": true,
@@ -511,7 +511,7 @@
       "title": "Reroute",
       "position": {
         "x": 2330,
-        "y": 890
+        "y": 900
       },
       "data": {
         "enabled": true,
@@ -524,7 +524,7 @@
       "title": "Reroute",
       "position": {
         "x": 1330,
-        "y": 880
+        "y": 890
       },
       "data": {
         "enabled": true,
@@ -859,7 +859,7 @@
       "title": "Screenshot (Diagnostic) 2",
       "position": {
         "x": 2450,
-        "y": 620
+        "y": 630
       },
       "data": {
         "enabled": true,
@@ -877,7 +877,7 @@
       "title": "Screenshot (Diagnostic) 3",
       "position": {
         "x": 2450,
-        "y": 820
+        "y": 830
       },
       "data": {
         "enabled": true,
@@ -895,7 +895,7 @@
       "title": "Screenshot (Diagnostic) 4",
       "position": {
         "x": 2450,
-        "y": 1010
+        "y": 1020
       },
       "data": {
         "enabled": true,
@@ -913,7 +913,7 @@
       "title": "Screenshot (Diagnostic) 5",
       "position": {
         "x": 2450,
-        "y": 1210
+        "y": 1220
       },
       "data": {
         "enabled": true,
@@ -931,7 +931,7 @@
       "title": "Screenshot (Diagnostic) 6",
       "position": {
         "x": 2450,
-        "y": 1410
+        "y": 1430
       },
       "data": {
         "enabled": true,
@@ -1467,7 +1467,7 @@
     }
   ],
   "targetUrlKeyword": "universe.flyff.com/play",
-  "enableOverlay": false,
+  "enableOverlay": true,
   "suspendHotkey": "END",
   "ghostMouseJitter": {
     "enabled": false,
@@ -1517,23 +1517,21 @@
   },
   "variables": [
     {
-      "id": "var_onoxiet",
+      "id": "var_izerkha",
       "name": "isWorking",
       "type": "boolean",
       "scope": "global",
       "targetClient": "all",
       "defaultValue": "false",
-      "resetOnPause": false,
       "description": ""
     },
     {
-      "id": "var_tnbww4j",
+      "id": "var_k39i4ac",
       "name": "isScanningPartyFollowLeader",
       "type": "boolean",
       "scope": "global",
       "targetClient": "all",
       "defaultValue": "false",
-      "resetOnPause": false,
       "description": ""
     }
   ]

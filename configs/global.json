@@ -1,7 +1,6 @@
 {
-  "activeProfile": "Default",
+  "activeProfile": "[WD] Add-ons",
   "activeProfiles": [
-    "Default",
     "[WD] Add-ons",
     "[WD] Follow Leader Party",
     "[WD] Full Buff",
@@ -10,7 +9,7 @@
   "disabledClients": [],
   "globalSettings": {
     "targetUrlKeyword": "universe.flyff.com/play",
-    "enableOverlay": false,
+    "enableOverlay": true,
     "suspendHotkey": "END",
     "webPort": 3088,
     "ghostMouseJitter": {
@@ -86,28 +85,28 @@
       },
       "5": {
         "x": -7,
-        "y": 696,
+        "y": 705,
         "w": 888,
-        "h": 721
+        "h": 712
       },
       "6": {
         "x": -7,
         "y": 0,
-        "w": 885,
-        "h": 705
+        "w": 883,
+        "h": 714
       },
       "7": {
-        "x": 863,
+        "x": 862,
         "y": 0,
-        "w": 1704,
+        "w": 1705,
         "h": 1417
       }
     },
     "gpuAcceleration": true
   },
   "creatorIdentity": {
-    "authorId": "usr_9a4f2b187c3e",
-    "authorSecret": "sec_8d249f018a3c4b72910e5d6a2f8b1c4e",
+    "authorId": "usr_06501ea0a0fc",
+    "authorSecret": "sec_9cda20c7c04f56c7e7c9f796230d01df",
     "authorName": "WADADADANG"
   }
 }

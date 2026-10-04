@@ -4,8 +4,8 @@
   "canvas": {
     "zoom": 0.8111890445806761,
     "pan": {
-      "x": -899,
-      "y": -769
+      "x": -412,
+      "y": -1943
     }
   },
   "nodes": [
@@ -83,7 +83,7 @@
       "title": "AC Stop Knight Loop FP 5",
       "position": {
         "x": 1010,
-        "y": 1400
+        "y": 1410
       },
       "data": {
         "enabled": true,
@@ -531,7 +531,7 @@
       "type": "key_hold",
       "title": "Key Hold",
       "position": {
-        "x": 830,
+        "x": 850,
         "y": 2610
       },
       "data": {
@@ -674,7 +674,7 @@
     }
   ],
   "targetUrlKeyword": "universe.flyff.com/play",
-  "enableOverlay": false,
+  "enableOverlay": true,
   "suspendHotkey": "END",
   "ghostMouseJitter": {
     "enabled": false,

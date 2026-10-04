@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[CW] Full Party Rm3-Psy1-Knight2",
   "canvas": {
-    "zoom": 0.6408672052738701,
+    "zoom": 0.7600178769455936,
     "pan": {
-      "x": -1326,
-      "y": -2231
+      "x": -295,
+      "y": -2020
     }
   },
   "nodes": [
@@ -14,8 +14,8 @@
       "type": "trigger",
       "title": "Btn Start",
       "position": {
-        "x": 850,
-        "y": 3200
+        "x": 500,
+        "y": 2840
       },
       "data": {
         "enabled": true,
@@ -495,47 +495,12 @@
       }
     },
     {
-      "id": "node_1787763138861",
-      "type": "variable",
-      "title": "Toggle Start/Stop",
-      "position": {
-        "x": 1180,
-        "y": 3200
-      },
-      "data": {
-        "enabled": true,
-        "varName": "Toggle Start/Stop",
-        "varType": "boolean",
-        "scope": "client",
-        "targetClient": "1",
-        "initialValue": "false",
-        "operation": "toggle",
-        "opValue": "1",
-        "actionId": "1787763138861"
-      }
-    },
-    {
-      "id": "node_1787763230675",
-      "type": "branch",
-      "title": "Branch (If / Else)",
-      "position": {
-        "x": 850,
-        "y": 3350
-      },
-      "data": {
-        "enabled": true,
-        "conditionTargetId": "1787763138861",
-        "conditionRule": "is_running",
-        "actionId": "1787763230675"
-      }
-    },
-    {
       "id": "node_1787763258553",
       "type": "emit_event",
       "title": "EmitEvent-Start",
       "position": {
-        "x": 1160,
-        "y": 3380
+        "x": 1370,
+        "y": 2940
       },
       "data": {
         "enabled": true,
@@ -548,8 +513,8 @@
       "type": "emit_event",
       "title": "EmitEvent-Stop",
       "position": {
-        "x": 1160,
-        "y": 3490
+        "x": 1370,
+        "y": 3130
       },
       "data": {
         "enabled": true,
@@ -578,7 +543,7 @@
       "title": "Global Trigger",
       "position": {
         "x": 860,
-        "y": 3710
+        "y": 3910
       },
       "data": {
         "enabled": true,
@@ -593,7 +558,7 @@
       "title": "Emergency Stop",
       "position": {
         "x": 1180,
-        "y": 3710
+        "y": 3910
       },
       "data": {
         "enabled": true,
@@ -694,6 +659,61 @@
         "actionId": "1790400395670",
         "targetKey": "7"
       }
+    },
+    {
+      "id": "node_1791103718083",
+      "type": "var_set",
+      "title": "Set isToggleStartStop",
+      "position": {
+        "x": 1100,
+        "y": 2800
+      },
+      "data": {
+        "varName": "isToggleStartStop",
+        "varType": "boolean",
+        "scope": "global",
+        "targetClient": "all",
+        "initialValue": "false",
+        "operation": "set_true",
+        "opValue": "1",
+        "enabled": true
+      }
+    },
+    {
+      "id": "node_1791103734361",
+      "type": "var_branch",
+      "title": "Variable Branch",
+      "position": {
+        "x": 800,
+        "y": 2840
+      },
+      "data": {
+        "conditionTargetId": "var:isToggleStartStop",
+        "varName": "isToggleStartStop",
+        "varType": "boolean",
+        "conditionRule": "is_false",
+        "conditionValue": "",
+        "enabled": true
+      }
+    },
+    {
+      "id": "node_1791103832379_7115",
+      "type": "var_set",
+      "title": "Set isToggleStartStop",
+      "position": {
+        "x": 1100,
+        "y": 2990
+      },
+      "data": {
+        "varName": "isToggleStartStop",
+        "varType": "boolean",
+        "scope": "global",
+        "targetClient": "all",
+        "initialValue": "false",
+        "operation": "set_false",
+        "opValue": "1",
+        "enabled": true
+      }
     }
   ],
   "connections": [
@@ -775,34 +795,6 @@
       "toPort": "exec_in"
     },
     {
-      "id": "conn_1787763142451",
-      "fromNodeId": "node_1787497176902",
-      "fromPort": "exec_out",
-      "toNodeId": "node_1787763138861",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1787763260953",
-      "fromNodeId": "node_1787763230675",
-      "fromPort": "onTrue",
-      "toNodeId": "node_1787763258553",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1787763264629",
-      "fromNodeId": "node_1787763138861",
-      "fromPort": "next",
-      "toNodeId": "node_1787763230675",
-      "toPort": "exec_in"
-    },
-    {
-      "id": "conn_1787763297437",
-      "fromNodeId": "node_1787763230675",
-      "fromPort": "onFalse",
-      "toNodeId": "node_1787763295218_9836",
-      "toPort": "exec_in"
-    },
-    {
       "id": "conn_1787763333301",
       "fromNodeId": "node_1787763319703",
       "fromPort": "exec_out",
@@ -864,10 +856,45 @@
       "fromPort": "item_5",
       "toNodeId": "node_1790400395670",
       "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1791103737064",
+      "fromNodeId": "node_1787497176902",
+      "fromPort": "exec_out",
+      "toNodeId": "node_1791103734361",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1791103784742",
+      "fromNodeId": "node_1791103734361",
+      "fromPort": "onTrue",
+      "toNodeId": "node_1791103718083",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1791103787823",
+      "fromNodeId": "node_1791103718083",
+      "fromPort": "next",
+      "toNodeId": "node_1787763258553",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1791103836136",
+      "fromNodeId": "node_1791103734361",
+      "fromPort": "onFalse",
+      "toNodeId": "node_1791103832379_7115",
+      "toPort": "exec_in"
+    },
+    {
+      "id": "conn_1791103838362",
+      "fromNodeId": "node_1791103832379_7115",
+      "fromPort": "next",
+      "toNodeId": "node_1787763295218_9836",
+      "toPort": "exec_in"
     }
   ],
   "targetUrlKeyword": "universe.flyff.com/play",
-  "enableOverlay": false,
+  "enableOverlay": true,
   "suspendHotkey": "END",
   "ghostMouseJitter": {
     "enabled": false,
@@ -914,5 +941,16 @@
     "6": "1-app",
     "7": "1-app",
     "8": "1-app"
-  }
+  },
+  "variables": [
+    {
+      "id": "var_xq5xvm9",
+      "name": "isToggleStartStop",
+      "type": "boolean",
+      "scope": "client",
+      "targetClient": "all",
+      "defaultValue": "false",
+      "description": ""
+    }
+  ]
 }

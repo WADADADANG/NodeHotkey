@@ -49,7 +49,7 @@
     }
   ],
   "targetUrlKeyword": "universe.flyff.com/play",
-  "enableOverlay": false,
+  "enableOverlay": true,
   "suspendHotkey": "END",
   "ghostMouseJitter": {
     "enabled": false,
