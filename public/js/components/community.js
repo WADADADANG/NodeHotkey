@@ -1,6 +1,7 @@
 /**
  * NodeHotkey Community Hub & Profile Workshop Client
  * Powered by Cloudflare D1 + Cloudflare Workers
+ * Pure In-App Custom Modals (No native browser alert/confirm/prompt)
  */
 
 const COMMUNITY_API_URL = 'https://nodehotkey-api.kitsada19972540.workers.dev';
@@ -57,22 +58,48 @@ function updateAuthorDisplayUI() {
   }
 }
 
-export async function promptChangeAuthorName() {
+// ─── Custom Modal: Change Author Name ───
+export async function openChangeAuthorModal() {
   if (!myIdentity) await fetchCreatorIdentity();
-  const current = myIdentity ? myIdentity.authorName : 'Player';
-  const newName = prompt('ระบุชื่อผู้สร้างที่ต้องการแสดงใน Community Hub (Author Name):', current);
-  if (!newName || newName.trim() === '' || newName.trim() === current) return;
+  const modal = document.getElementById('author-name-modal');
+  const input = document.getElementById('input-new-author-name');
+  if (!modal || !input) return;
+
+  input.value = myIdentity ? (myIdentity.authorName || '') : '';
+  modal.classList.add('show');
+  setTimeout(() => {
+    input.focus();
+    input.select();
+  }, 100);
+}
+
+export function closeChangeAuthorModal() {
+  const modal = document.getElementById('author-name-modal');
+  if (modal) modal.classList.remove('show');
+}
+
+export async function confirmChangeAuthorName() {
+  const input = document.getElementById('input-new-author-name');
+  if (!input) return;
+  const newName = input.value.trim();
+  if (!newName) {
+    if (typeof window.toast === 'function') {
+      window.toast('⚠️ กรุณาระบุชื่อผู้สร้างที่ต้องการ', 'warning');
+    }
+    return;
+  }
 
   try {
     const res = await fetch('/api/community/identity', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ authorName: newName.trim() })
+      body: JSON.stringify({ authorName: newName })
     });
     const data = await res.json();
     if (data.success && data.identity) {
       myIdentity = data.identity;
       updateAuthorDisplayUI();
+      closeChangeAuthorModal();
       if (typeof window.toast === 'function') {
         window.toast(`✅ อัปเดตชื่อผู้สร้างเป็น "${myIdentity.authorName}" เรียบร้อยแล้ว`, 'success');
       }
@@ -84,6 +111,68 @@ export async function promptChangeAuthorName() {
   }
 }
 
+// ─── Custom Modal: Confirm Delete Community Profile ───
+export function openCommunityDeleteModal(profileId, profileName) {
+  const modal = document.getElementById('community-delete-modal');
+  const desc = document.getElementById('community-delete-desc');
+  const idInput = document.getElementById('community-delete-id');
+  const nameInput = document.getElementById('community-delete-name');
+  if (!modal) return;
+
+  if (desc) desc.textContent = `คุณแน่ใจหรือไม่ว่าต้องการลบโปรไฟล์ "${profileName}" ออกจาก Community Hub? เมื่อลบแล้วผู้อื่นจะไม่สามารถดาวน์โหลดได้อีก`;
+  if (idInput) idInput.value = profileId;
+  if (nameInput) nameInput.value = profileName;
+
+  modal.classList.add('show');
+}
+
+export function closeCommunityDeleteModal() {
+  const modal = document.getElementById('community-delete-modal');
+  if (modal) modal.classList.remove('show');
+}
+
+export async function confirmDeleteCommunityProfile() {
+  const idInput = document.getElementById('community-delete-id');
+  const nameInput = document.getElementById('community-delete-name');
+  const profileId = idInput ? idInput.value : '';
+  const profileName = nameInput ? nameInput.value : '';
+  if (!profileId) return;
+
+  if (!myIdentity || !myIdentity.authorSecret) {
+    await fetchCreatorIdentity();
+  }
+
+  closeCommunityDeleteModal();
+
+  try {
+    const res = await fetch(`${COMMUNITY_API_URL}/api/profiles/delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: profileId,
+        author_secret: myIdentity ? myIdentity.authorSecret : ''
+      })
+    });
+
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.error || 'Delete failed');
+    }
+
+    if (typeof window.toast === 'function') {
+      window.toast(`🗑️ ลบโปรไฟล์ "${profileName}" ออกจาก Community Hub เรียบร้อยแล้ว`, 'info');
+    }
+
+    cachedCommunityProfiles = cachedCommunityProfiles.filter(p => p.id !== profileId);
+    renderCommunityProfiles();
+  } catch (err) {
+    if (typeof window.toast === 'function') {
+      window.toast(`❌ เกิดข้อผิดพลาดในการลบ: ${err.message}`, 'error');
+    }
+  }
+}
+
+// ─── Community Hub Main Modal ───
 export async function openCommunityHubModal() {
   const modal = document.getElementById('community-hub-modal');
   if (!modal) return;
@@ -273,7 +362,7 @@ export function renderCommunityProfiles() {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-profile-id');
       const name = btn.getAttribute('data-profile-name');
-      deleteMyCommunityProfile(id, name);
+      openCommunityDeleteModal(id, name);
     });
   });
 
@@ -343,44 +432,6 @@ export async function installCommunityProfile(profileId, profileName, btnEl = nu
     if (btnEl) {
       btnEl.disabled = false;
       btnEl.innerHTML = `<span>📥</span> ติดตั้ง`;
-    }
-  }
-}
-
-// Delete my community profile
-export async function deleteMyCommunityProfile(profileId, profileName) {
-  if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบโปรไฟล์ "${profileName}" ออกจาก Community Hub? (คนอื่นจะไม่สามารถดาวน์โหลดได้อีก)`)) {
-    return;
-  }
-
-  if (!myIdentity || !myIdentity.authorSecret) {
-    await fetchCreatorIdentity();
-  }
-
-  try {
-    const res = await fetch(`${COMMUNITY_API_URL}/api/profiles/delete`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: profileId,
-        author_secret: myIdentity.authorSecret
-      })
-    });
-
-    const data = await res.json();
-    if (!data.success) {
-      throw new Error(data.error || 'Delete failed');
-    }
-
-    if (typeof window.toast === 'function') {
-      window.toast(`🗑️ ลบโปรไฟล์ "${profileName}" ออกจาก Community Hub แล้ว`, 'info');
-    }
-
-    cachedCommunityProfiles = cachedCommunityProfiles.filter(p => p.id !== profileId);
-    renderCommunityProfiles();
-  } catch (err) {
-    if (typeof window.toast === 'function') {
-      window.toast(`❌ เกิดข้อผิดพลาดในการลบ: ${err.message}`, 'error');
     }
   }
 }
@@ -473,7 +524,9 @@ export async function submitShareProfile() {
   const existingCommunityId = communityIdInput ? communityIdInput.value.trim() : '';
 
   if (!publishedName) {
-    alert('กรุณากรอกชื่อโปรไฟล์ที่จะแชร์');
+    if (typeof window.toast === 'function') {
+      window.toast('⚠️ กรุณากรอกชื่อโปรไฟล์ที่จะแชร์', 'warning');
+    }
     return;
   }
 
@@ -548,7 +601,9 @@ export async function submitShareProfile() {
     loadCommunityProfiles();
 
   } catch (err) {
-    alert(`เกิดข้อผิดพลาดในการแชร์: ${err.message}`);
+    if (typeof window.toast === 'function') {
+      window.toast(`❌ เกิดข้อผิดพลาดในการแชร์: ${err.message}`, 'error');
+    }
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -603,6 +658,19 @@ export function initCommunityUI() {
     });
   }
 
+  // Handle Enter key on Change Author input
+  const authorInput = document.getElementById('input-new-author-name');
+  if (authorInput) {
+    authorInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        confirmChangeAuthorName();
+      } else if (e.key === 'Escape') {
+        closeChangeAuthorModal();
+      }
+    });
+  }
+
   // Expose global window hooks
   window.openCommunityHubModal = openCommunityHubModal;
   window.closeCommunityHubModal = closeCommunityHubModal;
@@ -610,7 +678,17 @@ export function initCommunityUI() {
   window.openShareProfileModal = openShareProfileModal;
   window.closeShareProfileModal = closeShareProfileModal;
   window.submitShareProfile = submitShareProfile;
-  window.promptChangeAuthorName = promptChangeAuthorName;
+
+  // Author Change Modal
+  window.openChangeAuthorModal = openChangeAuthorModal;
+  window.closeChangeAuthorModal = closeChangeAuthorModal;
+  window.confirmChangeAuthorName = confirmChangeAuthorName;
+  window.promptChangeAuthorName = openChangeAuthorModal; // Alias for backward compatibility
+
+  // Delete Confirm Modal
+  window.openCommunityDeleteModal = openCommunityDeleteModal;
+  window.closeCommunityDeleteModal = closeCommunityDeleteModal;
+  window.confirmDeleteCommunityProfile = confirmDeleteCommunityProfile;
 
   // Pre-fetch identity
   fetchCreatorIdentity();
