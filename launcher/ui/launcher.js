@@ -986,6 +986,16 @@
   if (btnLangTh) btnLangTh.onclick = () => applyLanguage('th');
   if (btnLangEn) btnLangEn.onclick = () => applyLanguage('en');
 
+  window.addEventListener('message', (e) => {
+    if (!e.data) return;
+    if (e.data.type === 'NODEHOTKEY_CHANGE_LANG_FROM_IFRAME') {
+      const newLang = e.data.lang;
+      if (newLang && (newLang === 'th' || newLang === 'en') && newLang !== currentLang) {
+        applyLanguage(newLang);
+      }
+    }
+  });
+
   // 4. Global Settings System (Load, Auto-Save, Hotkey Recording)
   let isRecordingKey = false;
 

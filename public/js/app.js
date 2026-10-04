@@ -1,4 +1,4 @@
-import { currentLang, changeLang, TRANSLATIONS, t } from './i18n.js';
+import { currentLang, changeLang, TRANSLATIONS, t } from './i18n.js?v=3.2.2';
 import {
   fullConfig,
   currentEditProfile,
@@ -55,7 +55,7 @@ import {
   openCommunityDeleteModal,
   closeCommunityDeleteModal,
   confirmDeleteCommunityProfile
-} from './components/community.js';
+} from './components/community.js?v=3.2.2';
 import {
   startRecordingKey,
   stopRecordingKey,
@@ -141,6 +141,11 @@ import { validateProfile, autoFixProfile } from './validator.js';
 window.changeLang = (lang) => {
   changeLang(lang, (newLang) => {
     updateLanguageUI();
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'NODEHOTKEY_CHANGE_LANG_FROM_IFRAME', lang: newLang }, '*');
+      }
+    } catch (e) {}
   });
 };
 
@@ -362,7 +367,7 @@ window.autoFixFromModal = function() {
 };
 
 function updateLanguageUI() {
-  const lang = currentLang;
+  const lang = window.currentLang || currentLang || 'th';
 
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
@@ -376,6 +381,24 @@ function updateLanguageUI() {
       }
     }
   });
+
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) {
+      el.placeholder = TRANSLATIONS[lang][key];
+    }
+  });
+
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    if (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) {
+      el.title = TRANSLATIONS[lang][key];
+    }
+  });
+
+  if (typeof window.renderCommunityProfiles === 'function') {
+    window.renderCommunityProfiles();
+  }
 
   const nameInput = document.getElementById('new-profile-name');
   if (nameInput) {

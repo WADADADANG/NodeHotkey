@@ -1,8 +1,11 @@
 /**
  * NodeHotkey Community Hub & Profile Workshop Client
  * Powered by Cloudflare D1 + Cloudflare Workers
+ * Fully localized with i18n support (TH / EN)
  * Pure In-App Custom Modals (No native browser alert/confirm/prompt)
  */
+
+import { t, currentLang } from '../i18n.js';
 
 const COMMUNITY_API_URL = 'https://nodehotkey-api.kitsada19972540.workers.dev';
 
@@ -13,13 +16,18 @@ let activeSort = 'downloads'; // 'downloads' | 'recent'
 let activeSearchQuery = '';
 let isLoading = false;
 
+function getActiveLang() {
+  return window.currentLang || currentLang || 'th';
+}
+
 // Format relative date or simple date
 function formatDate(dateStr) {
   if (!dateStr) return '';
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    const locale = getActiveLang() === 'th' ? 'th-TH' : 'en-US';
+    return d.toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' });
   } catch (e) {
     return dateStr;
   }
@@ -86,7 +94,7 @@ export async function confirmChangeAuthorName() {
   const newName = input.value.trim();
   if (!newName) {
     if (typeof window.toast === 'function') {
-      window.toast('⚠️ กรุณาระบุชื่อผู้สร้างที่ต้องการ', 'warning');
+      window.toast(getActiveLang() === 'en' ? '⚠️ Please enter an author name' : '⚠️ กรุณาระบุชื่อผู้สร้างที่ต้องการ', 'warning');
     }
     return;
   }
@@ -103,12 +111,13 @@ export async function confirmChangeAuthorName() {
       updateAuthorDisplayUI();
       closeChangeAuthorModal();
       if (typeof window.toast === 'function') {
-        window.toast(`✅ อัปเดตชื่อผู้สร้างเป็น "${myIdentity.authorName}" เรียบร้อยแล้ว`, 'success');
+        const msg = (t('authorModalSuccessToast') || '✅ Updated author name to "{name}" successfully').replace('{name}', myIdentity.authorName);
+        window.toast(msg, 'success');
       }
     }
   } catch (e) {
     if (typeof window.toast === 'function') {
-      window.toast(`❌ เกิดข้อผิดพลาดในการเปลี่ยนชื่อ: ${e.message}`, 'error');
+      window.toast(`❌ ${e.message}`, 'error');
     }
   }
 }
@@ -121,7 +130,8 @@ export function openCommunityDeleteModal(profileId, profileName) {
   const nameInput = document.getElementById('community-delete-name');
   if (!modal) return;
 
-  if (desc) desc.textContent = `คุณแน่ใจหรือไม่ว่าต้องการลบโปรไฟล์ "${profileName}" ออกจาก Community Hub? เมื่อลบแล้วผู้อื่นจะไม่สามารถดาวน์โหลดได้อีก`;
+  const descTemplate = t('deleteModalConfirmDesc') || 'Are you sure you want to delete profile "{name}" from Community Hub?';
+  if (desc) desc.textContent = descTemplate.replace('{name}', profileName);
   if (idInput) idInput.value = profileId;
   if (nameInput) nameInput.value = profileName;
 
@@ -162,14 +172,16 @@ export async function confirmDeleteCommunityProfile() {
     }
 
     if (typeof window.toast === 'function') {
-      window.toast(`🗑️ ลบโปรไฟล์ "${profileName}" ออกจาก Community Hub เรียบร้อยแล้ว`, 'info');
+      const msg = (t('deleteSuccessToast') || '🗑️ Deleted profile "{name}" from Community Hub successfully').replace('{name}', profileName);
+      window.toast(msg, 'info');
     }
 
     cachedCommunityProfiles = cachedCommunityProfiles.filter(p => p.id !== profileId);
     renderCommunityProfiles();
   } catch (err) {
     if (typeof window.toast === 'function') {
-      window.toast(`❌ เกิดข้อผิดพลาดในการลบ: ${err.message}`, 'error');
+      const msg = (t('deleteErrorToast') || '❌ Failed to delete: {error}').replace('{error}', err.message);
+      window.toast(msg, 'error');
     }
   }
 }
@@ -202,7 +214,7 @@ export async function loadCommunityProfiles() {
   container.innerHTML = `
     <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:50px 20px; color:var(--muted); gap:12px;">
       <div class="spinner" style="width:32px; height:32px; border:3px solid rgba(56,189,248,0.2); border-top-color:#38bdf8; border-radius:50%; animation:spin 0.8s linear infinite;"></div>
-      <div style="font-size:13px; font-weight:600;">กำลังโหลดโปรไฟล์จาก Cloudflare Community Hub...</div>
+      <div style="font-size:13px; font-weight:600;">${escapeHtml(t('communityLoading') || 'Loading profiles from Cloudflare Community Hub...')}</div>
     </div>
   `;
 
@@ -224,8 +236,8 @@ export async function loadCommunityProfiles() {
     container.innerHTML = `
       <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; color:#f87171; gap:10px;">
         <div style="font-size:24px;">⚠️</div>
-        <div style="font-size:13px; font-weight:600;">ไม่สามารถเชื่อมต่อ Community Hub ได้: ${escapeHtml(err.message)}</div>
-        <button type="button" class="btn btn-ghost" onclick="window.loadCommunityProfiles()" style="margin-top:8px; font-size:12px; padding:6px 14px;">🔄 ลองใหม่อีกครั้ง</button>
+        <div style="font-size:13px; font-weight:600;">${escapeHtml(err.message)}</div>
+        <button type="button" class="btn btn-ghost" onclick="window.loadCommunityProfiles()" style="margin-top:8px; font-size:12px; padding:6px 14px;">🔄 ${getActiveLang() === 'en' ? 'Retry' : 'ลองใหม่อีกครั้ง'}</button>
       </div>
     `;
   } finally {
@@ -246,12 +258,18 @@ export function renderCommunityProfiles() {
   }
 
   if (list.length === 0) {
+    const emptyTitle = t('communityEmptyTitle') || 'No profiles found in this category';
+    const emptyDesc = activeTab === 'my'
+      ? (t('communityEmptyDescMy') || "You haven't uploaded any profiles to Community Hub yet.")
+      : (t('communityEmptyDescAll') || 'No profiles match your search criteria or none uploaded yet.');
+    const shareFirstText = t('communityShareFirstBtn') || '🚀 Be the first to share your profile';
+
     container.innerHTML = `
       <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; text-align:center; color:var(--muted); gap:10px;">
         <div style="font-size:36px; opacity:0.6;">📦</div>
-        <div style="font-size:14px; font-weight:600; color:var(--text);">ไม่พบโปรไฟล์ในหมวดหมู่นี้</div>
-        <div style="font-size:12px; max-width:320px;">${activeTab === 'my' ? 'คุณยังไม่ได้อัปโหลดโปรไฟล์ใดๆ ขึ้น Community Hub' : 'ยังไม่มีโปรไฟล์ที่ตรงกับคำค้นหา หรือยังไม่มีผู้ใช้อัปโหลด'}</div>
-        <button type="button" class="btn btn-primary" onclick="window.openShareProfileModal()" style="margin-top:10px; font-size:12px; padding:6px 16px;">🚀 แชร์โปรไฟล์ของคุณเป็นคนแรก</button>
+        <div style="font-size:14px; font-weight:600; color:var(--text);">${escapeHtml(emptyTitle)}</div>
+        <div style="font-size:12px; max-width:320px;">${escapeHtml(emptyDesc)}</div>
+        <button type="button" class="btn btn-primary" onclick="window.openShareProfileModal()" style="margin-top:10px; font-size:12px; padding:6px 16px;">${escapeHtml(shareFirstText)}</button>
       </div>
     `;
     return;
@@ -279,7 +297,12 @@ export function renderCommunityProfiles() {
     card.style.boxShadow = '0 4px 16px rgba(0,0,0,0.3)';
     card.style.transition = 'all 0.2s ease';
 
-    const tagsArr = (p.tags || '').split(',').map(t => t.trim()).filter(Boolean);
+    const tagsArr = (p.tags || '').split(',').map(tag => tag.trim()).filter(Boolean);
+    const byAuthorText = (t('communityByAuthor') || 'By {author}').replace('{author}', `<strong style="color:#cbd5e1;">${escapeHtml(p.author_name || 'Anonymous')}</strong>`);
+    const downloadsText = (t('communityDownloadsCount') || '{count} downloads').replace('{count}', p.downloads_count || 0);
+    const installBtnText = t('communityInstallBtn') || '📥 Install';
+    const badgeMineText = t('communityBadgeMine') || '👑 Yours';
+    const noDescText = t('communityNoDesc') || 'No description provided';
 
     card.innerHTML = `
       <div>
@@ -289,18 +312,18 @@ export function renderCommunityProfiles() {
             <span style="font-size:10px; font-weight:700; background:rgba(56,189,248,0.12); color:#38bdf8; border:1px solid rgba(56,189,248,0.3); border-radius:4px; padding:1px 5px;">v${escapeHtml(p.version || '1.0.0')}</span>
           </div>
           ${isMine ? `
-            <span style="font-size:10px; font-weight:700; background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.4); border-radius:12px; padding:2px 8px; flex-shrink:0;">👑 ของคุณ</span>
+            <span style="font-size:10px; font-weight:700; background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.4); border-radius:12px; padding:2px 8px; flex-shrink:0;">${escapeHtml(badgeMineText)}</span>
           ` : ''}
         </div>
 
         <div style="font-size:11px; color:var(--muted); margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-          <span>👤 โดย <strong style="color:#cbd5e1;">${escapeHtml(p.author_name || 'Anonymous')}</strong></span>
+          <span>👤 ${byAuthorText}</span>
           <span>•</span>
           <span>🕒 ${formatDate(p.updated_at || p.created_at)}</span>
         </div>
 
         <p style="font-size:12px; color:#94a3b8; margin:0 0 10px 0; line-height:1.45; word-break:break-word; max-height:52px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;">
-          ${escapeHtml(p.description || 'ไม่มีคำอธิบาย')}
+          ${escapeHtml(p.description || noDescText)}
         </p>
 
         ${tagsArr.length > 0 ? `
@@ -315,23 +338,23 @@ export function renderCommunityProfiles() {
       <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:10px; margin-top:4px;">
         <div style="display:flex; align-items:center; gap:4px; font-size:11.5px; color:#38bdf8; font-weight:600;">
           <span>📥</span>
-          <span>${p.downloads_count || 0} ดาวน์โหลด</span>
+          <span>${escapeHtml(downloadsText)}</span>
         </div>
 
         <div style="display:flex; align-items:center; gap:6px;">
           <button type="button" class="btn btn-primary btn-install-profile" data-profile-id="${p.id}" data-profile-name="${escapeHtml(p.profile_name)}"
             style="padding:4px 12px; font-size:11.5px; font-weight:700; background:linear-gradient(135deg,#0284c7,#0369a1); border-radius:6px; color:#fff; display:flex; align-items:center; gap:4px; cursor:pointer;">
-            <span>📥</span> ติดตั้ง
+            ${escapeHtml(installBtnText)}
           </button>
 
           ${isMine ? `
             <button type="button" class="btn btn-ghost btn-update-mine" data-profile-id="${p.id}" data-profile-name="${escapeHtml(p.profile_name)}"
-              title="อัปเดตข้อมูลทับโปรไฟล์นี้"
+              title="${getActiveLang() === 'en' ? 'Update this profile' : 'อัปเดตข้อมูลทับโปรไฟล์นี้'}"
               style="padding:4px 8px; font-size:11px; border-color:rgba(245,158,11,0.4); color:#f59e0b; background:rgba(245,158,11,0.1); border-radius:6px; cursor:pointer;">
               🔄
             </button>
             <button type="button" class="btn btn-ghost btn-delete-mine" data-profile-id="${p.id}" data-profile-name="${escapeHtml(p.profile_name)}"
-              title="ลบออกจาก Community Hub"
+              title="${getActiveLang() === 'en' ? 'Delete from Community Hub' : 'ลบออกจาก Community Hub'}"
               style="padding:4px 8px; font-size:11px; border-color:rgba(239,68,68,0.4); color:#ef4444; background:rgba(239,68,68,0.1); border-radius:6px; cursor:pointer;">
               🗑️
             </button>
@@ -375,7 +398,7 @@ export function renderCommunityProfiles() {
 export async function installCommunityProfile(profileId, profileName, btnEl = null) {
   if (btnEl) {
     btnEl.disabled = true;
-    btnEl.innerHTML = `<span>⏳</span> กำลังติดตั้ง...`;
+    btnEl.innerHTML = `<span>⏳</span> ${escapeHtml(t('communityInstallingBtn') || 'Installing...')}`;
   }
 
   try {
@@ -413,7 +436,8 @@ export async function installCommunityProfile(profileId, profileName, btnEl = nu
     const installedName = installData.installedName || profile.profile_name;
 
     if (typeof window.toast === 'function') {
-      window.toast(`🎉 ติดตั้งโปรไฟล์ "${installedName}" ลงเครื่องสำเร็จแล้ว! พร้อมเปิดใช้งานทันที`, 'success');
+      const msg = (t('communityInstalledSuccess') || '🎉 Successfully installed profile "{name}"!').replace('{name}', installedName);
+      window.toast(msg, 'success');
     }
 
     // Refresh local app state if available
@@ -428,12 +452,13 @@ export async function installCommunityProfile(profileId, profileName, btnEl = nu
 
   } catch (err) {
     if (typeof window.toast === 'function') {
-      window.toast(`❌ การติดตั้งล้มเหลว: ${err.message}`, 'error');
+      const msg = (t('communityInstalledError') || '❌ Installation failed: {error}').replace('{error}', err.message);
+      window.toast(msg, 'error');
     }
   } finally {
     if (btnEl) {
       btnEl.disabled = false;
-      btnEl.innerHTML = `<span>📥</span> ติดตั้ง`;
+      btnEl.innerHTML = escapeHtml(t('communityInstallBtn') || '📥 Install');
     }
   }
 }
@@ -527,7 +552,7 @@ export async function submitShareProfile() {
 
   if (!publishedName) {
     if (typeof window.toast === 'function') {
-      window.toast('⚠️ กรุณากรอกชื่อโปรไฟล์ที่จะแชร์', 'warning');
+      window.toast(t('shareWarnNameRequired') || '⚠️ Please enter a profile name to share', 'warning');
     }
     return;
   }
@@ -549,7 +574,7 @@ export async function submitShareProfile() {
 
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = `<span>⏳</span> กำลังอัปโหลด...`;
+    btn.innerHTML = `<span>⏳</span> ${escapeHtml(t('shareSubmittingBtn') || 'Uploading...')}`;
   }
 
   try {
@@ -587,7 +612,8 @@ export async function submitShareProfile() {
     }
 
     if (typeof window.toast === 'function') {
-      window.toast(`🎉 แชร์โปรไฟล์ "${publishedName}" ขึ้น Community Hub เรียบร้อยแล้ว!`, 'success');
+      const msg = (t('shareSuccessToast') || '🎉 Shared profile "{name}" successfully!').replace('{name}', publishedName);
+      window.toast(msg, 'success');
     }
 
     closeShareProfileModal();
@@ -604,12 +630,13 @@ export async function submitShareProfile() {
 
   } catch (err) {
     if (typeof window.toast === 'function') {
-      window.toast(`❌ เกิดข้อผิดพลาดในการแชร์: ${err.message}`, 'error');
+      const msg = (t('shareErrorToast') || '❌ Failed to share: {error}').replace('{error}', err.message);
+      window.toast(msg, 'error');
     }
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = `<span>🚀</span> เผยแพร่ขึ้น Community Hub`;
+      btn.innerHTML = `<span>🚀</span> ${escapeHtml(t('shareSubmitBtn') || 'Publish to Community Hub')}`;
     }
   }
 }
@@ -677,6 +704,7 @@ export function initCommunityUI() {
   window.openCommunityHubModal = openCommunityHubModal;
   window.closeCommunityHubModal = closeCommunityHubModal;
   window.loadCommunityProfiles = loadCommunityProfiles;
+  window.renderCommunityProfiles = renderCommunityProfiles;
   window.openShareProfileModal = openShareProfileModal;
   window.closeShareProfileModal = closeShareProfileModal;
   window.submitShareProfile = submitShareProfile;

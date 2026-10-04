@@ -447,10 +447,75 @@ export const TRANSLATIONS = {
     wire_err_data_to_flow: "Cannot connect Data output ({fromPort}) to Execution Flow input ({toPort}).",
     wire_err_type_mismatch: "Incompatible data types: cannot feed {fromType} into {toType}.",
     wire_err_already_connected: "These pins are already connected.",
-    wire_connected_success: "Connected [{fromPort}] ➔ [{toPort}]",
     validator_invalid_connection_type: "Illegal connection: Flow and Data pins cannot be wired together between \"{fromNode}\" [{fromPort}] and \"{toNode}\" [{toPort}].",
     validator_incompatible_data_wire: "Type mismatch: Data wire from \"{fromNode}\" [{fromPort}] ({fromType}) is incompatible with \"{toNode}\" [{toPort}] ({toType}).",
-    validator_auto_fixed_wires: "Removed {count} illegal or incompatible wire connection(s)!"
+    validator_auto_fixed_wires: "Removed {count} illegal or incompatible wire connection(s)!",
+
+    // Community Hub
+    communityHubBtn: "Community Hub",
+    shareToCommunityBtn: "🚀 Share to Community",
+    communityModalTitle: "NodeHotkey Community Hub",
+    communityModalSubtitle: "Discover, download, and share Action Workflow profiles with the community",
+    communityAuthorLabel: "Your Author:",
+    communityEditAuthorBtn: "✏️ Edit",
+    communityTabAll: "🔥 All Profiles",
+    communityTabMy: "👑 My Uploads",
+    communitySearchPlaceholder: "🔍 Search profiles, descriptions, or tags...",
+    communitySortDownloads: "🔥 Most Downloaded",
+    communitySortRecent: "✨ Most Recent",
+    communityShareBtn: "🚀 Share Profile to Community",
+    communityLoading: "Loading profiles from Cloudflare Community Hub...",
+    communityEmptyTitle: "No profiles found in this category",
+    communityEmptyDescAll: "No profiles match your search criteria or none uploaded yet.",
+    communityEmptyDescMy: "You haven't uploaded any profiles to Community Hub yet.",
+    communityShareFirstBtn: "🚀 Be the first to share your profile",
+    communityDownloadsCount: "{count} downloads",
+    communityInstallBtn: "📥 Install",
+    communityInstallingBtn: "⏳ Installing...",
+    communityInstalledSuccess: "🎉 Successfully installed profile \"{name}\"! Ready to use.",
+    communityInstalledError: "❌ Installation failed: {error}",
+    communityBadgeMine: "👑 Yours",
+    communityByAuthor: "By {author}",
+    communityNoDesc: "No description provided",
+    communityFooterText: "⚡ Cloudflare Edge Server • 24/7 Always Active • Secured by Author Secret",
+    communityCloseBtn: "Close",
+
+    // Share Modal
+    shareModalTitle: "Share Profile to Community Hub",
+    shareSelectLabel: "Select local profile to share:",
+    shareNameLabel: "Display Name in Community: *",
+    shareNamePlaceholder: "e.g. RM Full Buff Party Pro",
+    shareVersionLabel: "Version:",
+    shareAuthorLabel: "Author Name:",
+    shareAuthorPlaceholder: "Your nickname or alias",
+    shareDescLabel: "Description / Usage instructions / Tips:",
+    shareDescPlaceholder: "Briefly explain what this profile does, e.g. 8-client buff sequence, auto-heal when HP < 50%, or mob farming skills...",
+    shareTagsLabel: "Search tags (comma separated):",
+    shareTagsPlaceholder: "Flyff, Buff, Healer, Farm, PvP",
+    shareSubmitBtn: "🚀 Publish to Community Hub",
+    shareSubmittingBtn: "⏳ Uploading...",
+    shareSuccessToast: "🎉 Shared profile \"{name}\" to Community Hub successfully!",
+    shareErrorToast: "❌ Failed to share: {error}",
+    shareWarnNameRequired: "⚠️ Please enter a profile name to share",
+
+    // Author Name Modal
+    authorModalTitle: "Change Author Name",
+    authorModalSubtitle: "Specify your nickname or alias to display as the creator in Community Hub",
+    authorModalInputLabel: "Author Name:",
+    authorModalInputPlaceholder: "e.g. WADADADANG",
+    authorModalSaveBtn: "✓ Save Name",
+    authorModalSuccessToast: "✅ Updated author name to \"{name}\" successfully",
+
+    // Delete Modal
+    deleteModalTitle: "Delete Profile from Community Hub",
+    deleteModalConfirmDesc: "Are you sure you want to delete profile \"{name}\" from Community Hub? Once deleted, others will no longer be able to download it.",
+    deleteModalConfirmBtn: "🗑️ Confirm Delete",
+    deleteSuccessToast: "🗑️ Deleted profile \"{name}\" from Community Hub successfully",
+    deleteErrorToast: "❌ Failed to delete: {error}",
+
+    profileManagerTitle: "PROFILE",
+    nodeWikiTitle: "Open Action Node Documentation & Blueprint Wiki",
+    communityRefreshBtnTitle: "Refresh profiles list"
   },
   th: {
     appTitle: "ศูนย์ควบคุมบอทอัตโนมัติ",
@@ -902,17 +967,85 @@ export const TRANSLATIONS = {
     wire_err_data_to_flow: "ไม่สามารถเชื่อมสายข้อมูล ({fromPort}) เข้ากับขาสั่งการทำงาน ({toPort}) ได้",
     wire_err_type_mismatch: "ชนิดข้อมูลไม่เข้ากัน: ไม่สามารถส่ง {fromType} เข้าช่อง {toType} ได้",
     wire_err_already_connected: "พอร์ตคู่นี้ถูกเชื่อมต่ออยู่แล้ว",
-    wire_connected_success: "เชื่อมต่อสาย [{fromPort}] ➔ [{toPort}] สำเร็จ",
     validator_invalid_connection_type: "พบสายเชื่อมผิดประเภท: ไม่สามารถต่อสาย Flow ข้ามกับ Data ระหว่าง \"{fromNode}\" [{fromPort}] และ \"{toNode}\" [{toPort}] ได้",
     validator_incompatible_data_wire: "ชนิดข้อมูลไม่ตรงกัน: สายข้อมูลจาก \"{fromNode}\" [{fromPort}] ({fromType}) ไม่สามารถส่งเข้า \"{toNode}\" [{toPort}] ({toType}) ได้",
-    validator_auto_fixed_wires: "ตัดสายเชื่อมต่อที่ผิดประเภทหรือชนิดข้อมูลไม่เข้ากันออก {count} เส้นเรียบร้อยแล้ว!"
+    validator_auto_fixed_wires: "ตัดสายเชื่อมต่อที่ผิดประเภทหรือชนิดข้อมูลไม่เข้ากันออก {count} เส้นเรียบร้อยแล้ว!",
+
+    // Community Hub
+    communityHubBtn: "คอมมูนิตี้ฮับ",
+    shareToCommunityBtn: "🚀 แชร์ขึ้น Community Hub",
+    communityModalTitle: "NodeHotkey Community Hub",
+    communityModalSubtitle: "ค้นหา ดาวน์โหลด และแบ่งปันโปรไฟล์ Action Workflow ร่วมกับคอมมูนิตี้",
+    communityAuthorLabel: "ผู้สร้างของคุณ:",
+    communityEditAuthorBtn: "✏️ แก้ไข",
+    communityTabAll: "🔥 โปรไฟล์ทั้งหมด",
+    communityTabMy: "👑 ที่ฉันอัปโหลด",
+    communitySearchPlaceholder: "🔍 ค้นหาชื่อโปรไฟล์, คำอธิบาย, หรือแท็ก...",
+    communitySortDownloads: "🔥 ยอดดาวน์โหลดสูงสุด",
+    communitySortRecent: "✨ อัปเดตล่าสุด",
+    communityShareBtn: "🚀 แชร์โปรไฟล์ขึ้นคอมมูนิตี้",
+    communityLoading: "กำลังโหลดโปรไฟล์จาก Cloudflare Community Hub...",
+    communityEmptyTitle: "ไม่พบโปรไฟล์ในหมวดหมู่นี้",
+    communityEmptyDescAll: "ยังไม่มีโปรไฟล์ที่ตรงกับคำค้นหา หรือยังไม่มีผู้ใช้อัปโหลด",
+    communityEmptyDescMy: "คุณยังไม่ได้อัปโหลดโปรไฟล์ใดๆ ขึ้น Community Hub",
+    communityShareFirstBtn: "🚀 แชร์โปรไฟล์ของคุณเป็นคนแรก",
+    communityDownloadsCount: "{count} ดาวน์โหลด",
+    communityInstallBtn: "📥 ติดตั้ง",
+    communityInstallingBtn: "⏳ กำลังติดตั้ง...",
+    communityInstalledSuccess: "🎉 ติดตั้งโปรไฟล์ \"{name}\" ลงเครื่องสำเร็จแล้ว! พร้อมเปิดใช้งานทันที",
+    communityInstalledError: "❌ การติดตั้งล้มเหลว: {error}",
+    communityBadgeMine: "👑 ของคุณ",
+    communityByAuthor: "โดย {author}",
+    communityNoDesc: "ไม่มีคำอธิบาย",
+    communityFooterText: "⚡ เซิร์ฟเวอร์ Cloudflare Edge รวดเร็ว ไม่มีปิดหลับ ปลอดภัยด้วย Author Secret Verification",
+    communityCloseBtn: "ปิด",
+
+    // Share Modal
+    shareModalTitle: "แชร์โปรไฟล์ขึ้น Community Hub",
+    shareSelectLabel: "เลือกโปรไฟล์ในเครื่องที่จะแชร์:",
+    shareNameLabel: "ชื่อที่จะแสดงในคอมมูนิตี้: *",
+    shareNamePlaceholder: "เช่น RM Full Buff Party Pro",
+    shareVersionLabel: "เวอร์ชัน:",
+    shareAuthorLabel: "ชื่อผู้สร้าง (Author Name):",
+    shareAuthorPlaceholder: "ชื่อเล่นหรือฉายาของคุณ",
+    shareDescLabel: "คำอธิบาย / วิธีใช้งาน / ข้อควรระวัง:",
+    shareDescPlaceholder: "เขียนอธิบายสั้นๆ ว่าโปรไฟล์นี้ใช้สำหรับทำอะไร เช่น เซ็ตบัพพระ 8 จอ, ฮีลอัตโนมัติเมื่อเลือดต่ำกว่า 50%, หรือกดสกิลฟาร์มมอน...",
+    shareTagsLabel: "แท็กค้นหา (คั่นด้วยจุลภาค ,):",
+    shareTagsPlaceholder: "Flyff, Buff, Healer, Farm, PvP",
+    shareSubmitBtn: "🚀 เผยแพร่ขึ้น Community Hub",
+    shareSubmittingBtn: "⏳ กำลังอัปโหลด...",
+    shareSuccessToast: "🎉 แชร์โปรไฟล์ \"{name}\" ขึ้น Community Hub เรียบร้อยแล้ว!",
+    shareErrorToast: "❌ เกิดข้อผิดพลาดในการแชร์: {error}",
+    shareWarnNameRequired: "⚠️ กรุณากรอกชื่อโปรไฟล์ที่จะแชร์",
+
+    // Author Name Modal
+    authorModalTitle: "เปลี่ยนชื่อผู้สร้าง (Author Name)",
+    authorModalSubtitle: "ระบุชื่อเล่นหรือฉายาของคุณ เพื่อใช้แสดงเป็นชื่อผู้สร้างโปรไฟล์ใน Community Hub",
+    authorModalInputLabel: "ชื่อผู้สร้าง:",
+    authorModalInputPlaceholder: "เช่น WADADADANG",
+    authorModalSaveBtn: "✓ บันทึกชื่อ",
+    authorModalSuccessToast: "✅ อัปเดตชื่อผู้สร้างเป็น \"{name}\" เรียบร้อยแล้ว",
+
+    // Delete Modal
+    deleteModalTitle: "ลบโปรไฟล์ออกจาก Community Hub",
+    deleteModalConfirmDesc: "คุณแน่ใจหรือไม่ว่าต้องการลบโปรไฟล์ \"{name}\" ออกจาก Community Hub? เมื่อลบแล้วผู้อื่นจะไม่สามารถดาวน์โหลดได้อีก",
+    deleteModalConfirmBtn: "🗑️ ยืนยันลบ",
+    deleteSuccessToast: "🗑️ ลบโปรไฟล์ \"{name}\" ออกจาก Community Hub เรียบร้อยแล้ว",
+    deleteErrorToast: "❌ เกิดข้อผิดพลาดในการลบ: {error}",
+
+    profileManagerTitle: "โปรไฟล์",
+    nodeWikiTitle: "เปิดคู่มือการใช้งาน Action Node (Node Wiki & Blueprint Reference)",
+    communityRefreshBtnTitle: "รีเฟรชข้อมูลโปรไฟล์"
   }
 };
 
 export function changeLang(lang, onLangChangeCallback) {
   currentLang = lang;
   window.currentLang = lang;
-  localStorage.setItem('lang', lang);
+  try {
+    localStorage.setItem('lang', lang);
+    localStorage.setItem('nodehotkey_lang', lang);
+  } catch (e) {}
   if (typeof onLangChangeCallback === 'function') {
     onLangChangeCallback(lang);
   }
