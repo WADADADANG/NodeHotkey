@@ -603,7 +603,7 @@
 /* Node Elements on Canvas */
 .canvas-node {
   position: absolute;
-  width: 220px;
+  width: 232px;
   background: var(--node-bg);
   border: 1.5px solid var(--node-border);
   border-radius: 14px;
@@ -992,18 +992,25 @@ body.canvas-is-drafting-wire .canvas-node.node-reroute .node-port {
   gap: 6px;
   font-size: 11px;
   color: #94a3b8;
+  overflow: hidden;
 }
 
 .node-info-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
 }
 
 .node-info-value {
   font-family: 'JetBrains Mono', monospace;
   font-weight: 600;
   color: #60a5fa;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Node Main Content Container (Anchors ports relative to the node body, excluding bottom validation banners) */
@@ -2385,6 +2392,67 @@ body.canvas-is-drafting-wire .canvas-node.node-reroute .node-port {
 @keyframes varModalZoom {
   from { opacity: 0; transform: scale(0.92); }
   to { opacity: 1; transform: scale(1); }
+}
+
+/* Variable Modal Toggle Card & Switch */
+.var-toggle-card {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-bottom: 14px;
+}
+
+.var-toggle-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
+.var-toggle-card.active {
+  background: rgba(168, 85, 247, 0.08);
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+.var-switch-track {
+  width: 40px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.var-toggle-card.active .var-switch-track {
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  border-color: #a855f7;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.45);
+}
+
+.var-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateX(0);
+}
+
+.var-toggle-card.active .var-switch-knob {
+  transform: translateX(18px);
 }
 
 /* Fullscreen Modal Support */

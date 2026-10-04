@@ -25,6 +25,26 @@ module.exports = {
   summaryFields: [
     { key: 'message', label: 'Message', format: val => val ? (val.length > 20 ? val.substring(0, 18) + '...' : val) : '(From Pin)' }
   ],
+  doc: {
+    titleTh: 'บันทึกข้อความ (Log Message / Print String)',
+    titleEn: 'Log Message / Print String',
+    badge: 'Diagnostics',
+    descTh: 'พิมพ์ข้อความตรวจสอบและส่งสัญญาณ Log ออก Console Terminal รองรับทั้งพิมพ์ข้อความตรงๆ หรือรับค่า Dynamic ผ่านสาย Data Wire (msg_in)',
+    descEn: 'Emits dedicated log messages to console and log files. Supports dynamic input from Data Wire (msg_in).',
+    inputs: [
+      { name: 'in', type: 'flow', descTh: 'รับสัญญาณสั่งบันทึกข้อความ', descEn: 'Execution flow in' },
+      { name: 'msg_in', type: 'data', descTh: 'รับข้อมูลข้อความ/ตัวแปรผ่านสาย Data Wire', descEn: 'Dynamic message or variable data input' }
+    ],
+    outputs: [
+      { name: 'onComplete', type: 'flow', descTh: 'ส่งสัญญาณออกทำงานต่อเนื่องหลังบันทึกเสร็จ', descEn: 'Fires downstream after log is emitted' }
+    ],
+    parameters: [
+      { key: 'message', nameTh: 'ข้อความบันทึก', nameEn: 'Log Message', type: 'string', default: '', descTh: 'ข้อความที่ต้องการบันทึก (หรือเว้นว่างเพื่อรับจาก msg_in)', descEn: 'Message text to display in log' }
+    ],
+    bestPracticeTh: 'ใช้ต่อจากโหนดคำนวณ หรือ Format Text เพื่อพิมพ์ค่าตัวแปรออกมาดูใน Terminal หรือใส่ตามทางแยกเพื่อดูว่าโปรแกรมวิ่งไปทางไหน',
+    bestPracticeEn: 'Wire downstream of Format Text or arithmetic nodes to inspect dynamic values in terminal.',
+    exampleBlueprint: '[Format Text] ──(msg_out)──▶ (msg_in)[Log Message] ──▶ [Next]'
+  },
 
   async execute(context, action, callStack = []) {
     if (global.isSuspended) return false;

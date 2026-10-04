@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Full Buff",
   "canvas": {
-    "zoom": 0.7950463825935207,
+    "zoom": 1.0582067352319764,
     "pan": {
-      "x": -930,
-      "y": -158
+      "x": -1095,
+      "y": -1024
     }
   },
   "nodes": [
@@ -1246,6 +1246,16 @@
       "scope": "global",
       "targetClient": "all",
       "defaultValue": "false",
+      "description": ""
+    },
+    {
+      "id": "var_6b10fk1",
+      "name": "isScanningPartyFollowLeader",
+      "type": "boolean",
+      "scope": "global",
+      "targetClient": "all",
+      "defaultValue": "false",
+      "resetOnPause": false,
       "description": ""
     }
   ]

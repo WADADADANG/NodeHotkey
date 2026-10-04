@@ -903,6 +903,50 @@ assert.strictEqual(bot.getVariableValue({ varName: 'activeStatus', _profileName:
 
 console.log('✅ Test 18 Passed: Variable Auto-Reset on Pause (resetOnPause) verified!\n');
 
+// 19. Test Node Registry Doc Integration & Live Wiki Sync
+console.log('Test 19: Testing Node Registry Documentation & Live Wiki Synchronization...');
+const stepDef = nodeRegistry.get('step_log');
+assert.ok(stepDef.doc, 'step_log should contain doc metadata');
+assert.strictEqual(stepDef.doc.badge, 'Diagnostics');
+assert.ok(stepDef.doc.descTh.includes('Console Terminal'));
+
+// Ingest into NodeDocsData
+const NodeDocsData = require('../public/js/components/node-docs-data');
+assert.ok(typeof NodeDocsData.syncWithRegistry === 'function', 'NodeDocsData should have syncWithRegistry');
+
+NodeDocsData.syncWithRegistry(nodeRegistry.getAll());
+const updatedDoc = NodeDocsData.getNodeDoc('step_log');
+assert.ok(updatedDoc, 'Should retrieve updated step_log doc');
+assert.strictEqual(updatedDoc.badge, 'Diagnostics');
+assert.ok(updatedDoc.inputs.some(p => p.name === 'msg_in'), 'Wiki inputs should now include msg_in data wire');
+assert.ok(updatedDoc.parameters.some(p => p.key === 'message'), 'Wiki parameters should reflect real schema key message');
+
+const webhookDoc = NodeDocsData.getNodeDoc('webhook_out');
+const msgParam = webhookDoc.parameters.find(p => p.key === 'message');
+assert.ok(msgParam, 'webhook_out should have message parameter');
+assert.strictEqual(msgParam.defaultEn, 'Important alert notification');
+assert.strictEqual(msgParam.defaultTh, 'บอทแจ้งเตือนเหตุการณ์สำคัญ');
+
+// Test dynamic custom node registration
+NodeDocsData.syncWithRegistry([{
+  type: 'custom_auto_healer',
+  title: 'Custom Auto Healer',
+  category: 'vision',
+  inputs: ['in', 'hp_in'],
+  outputs: ['onHeal', 'onSkip'],
+  schema: [{ key: 'healThreshold', label: 'HP Threshold', component: 'number' }]
+}]);
+
+const customDoc = NodeDocsData.getNodeDoc('custom_auto_healer');
+assert.ok(customDoc, 'Custom node should be automatically registered into wiki catalog');
+assert.strictEqual(customDoc.type, 'custom_auto_healer');
+assert.strictEqual(customDoc.category, 'vision');
+assert.ok(customDoc.inputs.some(p => p.name === 'hp_in' && p.type === 'data'));
+assert.ok(customDoc.outputs.some(p => p.name === 'onHeal'));
+assert.ok(customDoc.parameters.some(p => p.key === 'healThreshold'));
+
+console.log('✅ Test 19 Passed: Node Registry Doc & Live Wiki Sync verified!\n');
+
 console.log('🎉 All Step Log & Unreal Blueprint Variable Tests Passed Successfully!');
 process.exit(0);
 })();

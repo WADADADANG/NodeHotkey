@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "[WD] Follow Leader Party",
   "canvas": {
-    "zoom": 0.5270760000000002,
+    "zoom": 1.339894122821766,
     "pan": {
-      "x": -1261,
-      "y": -400
+      "x": -182,
+      "y": -899
     }
   },
   "nodes": [
@@ -1514,5 +1514,27 @@
     "6": "1-app",
     "7": "1-app",
     "8": "1-app"
-  }
+  },
+  "variables": [
+    {
+      "id": "var_onoxiet",
+      "name": "isWorking",
+      "type": "boolean",
+      "scope": "global",
+      "targetClient": "all",
+      "defaultValue": "false",
+      "resetOnPause": false,
+      "description": ""
+    },
+    {
+      "id": "var_tnbww4j",
+      "name": "isScanningPartyFollowLeader",
+      "type": "boolean",
+      "scope": "global",
+      "targetClient": "all",
+      "defaultValue": "false",
+      "resetOnPause": false,
+      "description": ""
+    }
+  ]
 }

@@ -8,14 +8,9 @@
     "[WD] Heal 1,2,4"
   ],
   "disabledClients": [],
-  "creatorIdentity": {
-    "authorId": "usr_9a4f2b187c3e",
-    "authorSecret": "sec_8d249f018a3c4b72910e5d6a2f8b1c4e",
-    "authorName": "WADADADANG"
-  },
   "globalSettings": {
     "targetUrlKeyword": "universe.flyff.com/play",
-    "enableOverlay": true,
+    "enableOverlay": false,
     "suspendHotkey": "END",
     "webPort": 3088,
     "ghostMouseJitter": {
@@ -109,5 +104,10 @@
       }
     },
     "gpuAcceleration": true
+  },
+  "creatorIdentity": {
+    "authorId": "usr_9a4f2b187c3e",
+    "authorSecret": "sec_8d249f018a3c4b72910e5d6a2f8b1c4e",
+    "authorName": "WADADADANG"
   }
 }

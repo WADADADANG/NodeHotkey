@@ -639,7 +639,8 @@ const server = http.createServer((req, res) => {
         dataOutputs: def.dataOutputs || [],
         defaultData: def.defaultData || {},
         schema: def.schema || null,
-        summaryFields: def.summaryFields || null
+        summaryFields: def.summaryFields || null,
+        doc: def.doc || null
       }));
       sendJSON(res, 200, { success: true, nodes: list });
     } catch (e) {

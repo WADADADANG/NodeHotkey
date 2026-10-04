@@ -1922,4 +1922,5 @@ window.resolveExternalChangeReload = resolveExternalChangeReload;
 window.resolveExternalChangeOverwrite = resolveExternalChangeOverwrite;
 window.resolveExternalChangeBackgroundUpdate = resolveExternalChangeBackgroundUpdate;
 window.resolveExternalChangeSwitchAndReload = resolveExternalChangeSwitchAndReload;
+window.commitConfigToBackend = commitConfigToBackend;
 

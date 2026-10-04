@@ -96,6 +96,7 @@
       this.renderCategorySelect();
       this.renderNodeList();
       this.renderNodeDetails(this.selectedType);
+      global._activeNodeDocsInstance = this;
     }
 
     setLanguage(newLang) {
@@ -347,7 +348,13 @@
                     ? (param.descEn || param.descTh || '-')
                     : (param.descTh || param.descEn || '-');
                   const pType = param.type || 'string';
-                  const defVal = param.default !== undefined && param.default !== '' ? JSON.stringify(param.default) : '-';
+                  let rawDef = param.default;
+                  if (isEn && param.defaultEn !== undefined) {
+                    rawDef = param.defaultEn;
+                  } else if (!isEn && param.defaultTh !== undefined) {
+                    rawDef = param.defaultTh;
+                  }
+                  const defVal = rawDef !== undefined && rawDef !== '' ? JSON.stringify(rawDef) : '-';
 
                   return `
                     <tr>
@@ -376,7 +383,11 @@
       `;
 
       // 5. Blueprint Wiring Example
-      if (node.exampleBlueprint) {
+      const blueprint = isEn
+        ? (node.exampleBlueprintEn || node.exampleBlueprint)
+        : (node.exampleBlueprintTh || node.exampleBlueprint);
+
+      if (blueprint) {
         html += `
           <div class="node-docs-section">
             <div class="node-docs-sec-head">
@@ -386,7 +397,7 @@
               <div class="node-docs-code-head">
                 <span>${isEn ? 'Recommended Workflow Pattern' : 'รูปแบบผังงานแนะนำ'}</span>
               </div>
-              <pre class="node-docs-code-pre"><code>${node.exampleBlueprint}</code></pre>
+              <pre class="node-docs-code-pre"><code>${blueprint}</code></pre>
             </div>
           </div>
         `;

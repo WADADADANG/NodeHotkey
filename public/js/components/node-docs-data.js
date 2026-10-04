@@ -95,7 +95,7 @@
       ],
       parameters: [
         { key: 'webhookUrl', nameTh: 'URL ของ Webhook', nameEn: 'Webhook URL', type: 'string', default: '', descTh: 'เช่น https://discord.com/api/webhooks/...', descEn: 'Target HTTP webhook URL' },
-        { key: 'message', nameTh: 'ข้อความ', nameEn: 'Message Body', type: 'string', default: 'บอทแจ้งเตือนเหตุการณ์สำคัญ', descTh: 'ข้อความที่จะส่งเข้าห้องแชท', descEn: 'Payload message body' }
+        { key: 'message', nameTh: 'ข้อความ', nameEn: 'Message Body', type: 'string', defaultTh: 'บอทแจ้งเตือนเหตุการณ์สำคัญ', defaultEn: 'Important alert notification', default: 'Important alert notification', descTh: 'ข้อความที่จะส่งเข้าห้องแชท', descEn: 'Payload message body' }
       ],
       bestPracticeTh: 'ใช้แจ้งเตือนเข้ามือถือผ่าน Discord เมื่อตัวละครตาย หรือเมื่อปาร์ตี้หลุด',
       bestPracticeEn: 'Send notifications to your phone via Discord whenever party wipe occurs or boss appears.',
@@ -481,7 +481,9 @@
       ],
       bestPracticeTh: 'ตั้งค่า scanRegion เป็น "right" สำหรับหน้าต่างปาร์ตี้ที่วางไว้ฝั่งขวา เพื่อเพิ่มความเร็วในการสแกนขึ้น 2-3 เท่า',
       bestPracticeEn: 'Set scanRegion to "right" if your party window is docked on the right to speed up frame processing.',
-      exampleBlueprint: `[Party Scanner] ──(Found)────▶ [TTS "พบปาร์ตี้แล้ว"]\n                └──(NotFound)─▶ [Screenshot Diagnostic]`
+      exampleBlueprintTh: `[Party Scanner] ──(Found)────▶ [TTS "พบปาร์ตี้แล้ว"]\n                └──(NotFound)─▶ [Screenshot Diagnostic]`,
+      exampleBlueprintEn: `[Party Scanner] ──(Found)────▶ [TTS "Party Detected"]\n                └──(NotFound)─▶ [Screenshot Diagnostic]`,
+      exampleBlueprint: `[Party Scanner] ──(Found)────▶ [TTS "Party Detected"]\n                └──(NotFound)─▶ [Screenshot Diagnostic]`
     },
     {
       type: 'party_slot',
@@ -689,11 +691,13 @@
         { name: 'msg_out', type: 'data', descTh: 'ข้อความที่ประกอบเสร็จเรียบร้อยแล้ว', descEn: 'Formatted string output' }
       ],
       parameters: [
-        { key: 'template', nameTh: 'ข้อความเทมเพลต', nameEn: 'Template String', type: 'string', default: 'สมาชิก {val_a} อยู่ในสถานะ {val_b}', descTh: 'ใส่ชื่อพินในวงเล็บปีกกา เช่น {val_a}', descEn: 'Template string with {pins}' }
+        { key: 'template', nameTh: 'ข้อความเทมเพลต', nameEn: 'Template String', type: 'string', defaultTh: 'สมาชิก {val_a} อยู่ในสถานะ {val_b}', defaultEn: 'Party member {val_a} is currently {val_b}', default: 'Party member {val_a} is currently {val_b}', descTh: 'ใส่ชื่อพินในวงเล็บปีกกา เช่น {val_a}', descEn: 'Template string with {pins}' }
       ],
       bestPracticeTh: 'ต่อสาย msg_out เข้าสู่พิน text_in ของโหนด Text-To-Speech เพื่อให้อ่านเสียงข้อความไดนามิกตามสถานการณ์จริง',
       bestPracticeEn: 'Pipe `msg_out` into the `text_in` pin of TTS to speak dynamic game status.',
-      exampleBlueprint: `[Format Text: "เตือนภัย จอ {val_a}"] ──(msg_out)──▶ [Text To Speech]`
+      exampleBlueprintTh: `[Format Text: "เตือนภัย จอ {val_a}"] ──(msg_out)──▶ [Text To Speech]`,
+      exampleBlueprintEn: `[Format Text: "Alert Screen {val_a}"] ──(msg_out)──▶ [Text To Speech]`,
+      exampleBlueprint: `[Format Text: "Alert Screen {val_a}"] ──(msg_out)──▶ [Text To Speech]`
     },
 
     // ═════════════════════════════════════════════════════════════
@@ -742,13 +746,15 @@
         { name: 'onError', type: 'flow', descTh: 'ส่งสัญญาณออกเมื่อระบบเสียงผิดพลาด', descEn: 'Fires if audio playback fails' }
       ],
       parameters: [
-        { key: 'text', nameTh: 'ข้อความที่จะพูด', nameEn: 'Speech Text', type: 'string', default: 'บอทเริ่มทำงานแล้ว', descTh: 'ข้อความภาษาไทยหรืออังกฤษที่ต้องการให้อ่าน', descEn: 'Text to speak' },
+        { key: 'text', nameTh: 'ข้อความที่จะพูด', nameEn: 'Speech Text', type: 'string', defaultTh: 'บอทเริ่มทำงานแล้ว', defaultEn: 'Bot started successfully', default: 'Bot started successfully', descTh: 'ข้อความภาษาไทยหรืออังกฤษที่ต้องการให้อ่าน', descEn: 'Text to speak' },
         { key: 'voice', nameTh: 'เสียงพากย์', nameEn: 'Voice Persona', type: 'select', default: 'th-TH-PremwadeeNeural', descTh: 'เลือกเสียง (เปรมวดี / นิวัฒน์ / เสียงอังกฤษ)', descEn: 'Neural voice persona' },
         { key: 'waitForPrevious', nameTh: 'รอให้เสียงก่อนหน้าจบก่อน', nameEn: 'Wait For Previous', type: 'boolean', default: true, descTh: 'ป้องกันเสียงพูดตีกันเมื่อมีหลายโหนดยิงพร้อมกัน', descEn: 'Queue voice to avoid overlaps' }
       ],
       bestPracticeTh: 'เปิดสวิตช์ "waitForPrevious: true" ไว้เสมอ เมื่อมีโหนด TTS หลายจอ เพื่อให้ระบบเข้าคิวพูดทีละประโยคอย่างชัดเจน',
       bestPracticeEn: 'Keep `waitForPrevious: true` enabled across multi-client flows to ensure clear, sequential speech.',
-      exampleBlueprint: `[Key Press: Z] ──▶ [TTS: "กำลังวิ่งตามหัวหน้าตี้ (waitForPrevious: True)"]`
+      exampleBlueprintTh: `[Key Press: Z] ──▶ [TTS: "กำลังวิ่งตามหัวหน้าตี้ (waitForPrevious: True)"]`,
+      exampleBlueprintEn: `[Key Press: Z] ──▶ [TTS: "Following party leader (waitForPrevious: True)"]`,
+      exampleBlueprint: `[Key Press: Z] ──▶ [TTS: "Following party leader (waitForPrevious: True)"]`
     },
     {
       type: 'sound',
@@ -792,7 +798,7 @@
         { name: 'next', type: 'flow', descTh: 'ส่งสัญญาณออกทำงานต่อเนื่อง', descEn: 'Execution next' }
       ],
       parameters: [
-        { key: 'text', nameTh: 'ข้อความบันทึก', nameEn: 'Log Message', type: 'string', default: 'ผ่านขั้นตอนที่ 1 เรียบร้อย', descTh: 'ข้อความที่ต้องการบันทึก', descEn: 'Log text content' },
+        { key: 'text', nameTh: 'ข้อความบันทึก', nameEn: 'Log Message', type: 'string', defaultTh: 'ผ่านขั้นตอนที่ 1 เรียบร้อย', defaultEn: 'Step 1 completed successfully', default: 'Step 1 completed successfully', descTh: 'ข้อความที่ต้องการบันทึก', descEn: 'Log text content' },
         { key: 'stepTag', nameTh: 'แท็กหัวข้อ', nameEn: 'Step Tag', type: 'string', default: 'STEP', descTh: 'แท็กกำกับ เช่น [PARTY], [BUFF], [DEBUG]', descEn: 'Log tag prefix' }
       ],
       bestPracticeTh: 'ใส่ไว้ตามจุดแยกสำคัญเพื่อตรวจเช็คย้อนหลังในหน้า Logs ว่าบอทวิ่งผ่านเส้นไหนบ้าง',
@@ -846,11 +852,192 @@
     }
   }
 
+  const REGISTRY_CATEGORY_MAP = {
+    'triggers': 'triggers',
+    'trigger': 'triggers',
+    'actions & input': 'actions',
+    'action': 'actions',
+    'actions': 'actions',
+    'logic & flow': 'flow',
+    'flow': 'flow',
+    'control': 'flow',
+    'vision & party': 'vision',
+    'vision': 'vision',
+    'party': 'vision',
+    'variables & data': 'data',
+    'data': 'data',
+    'variable': 'data',
+    'safety & utilities': 'safety',
+    'utility & debug': 'safety',
+    'safety': 'safety',
+    'utility': 'safety',
+    'system': 'safety'
+  };
+
+  /**
+   * Synchronize Wiki Catalog with Live Node Registry
+   * Single Source of Truth: Ingests modular node definitions from /nodes/*.node.js
+   * @param {Array<Object>} nodesList - Node definitions from NodeRegistry / /api/nodes
+   */
+  function syncWithRegistry(nodesList) {
+    if (!Array.isArray(nodesList)) return;
+
+    for (const node of nodesList) {
+      if (!node || !node.type) continue;
+      const cleanType = String(node.type).trim().toLowerCase();
+      const doc = node.doc || {};
+
+      let catId = 'actions';
+      if (node.category) {
+        const lowerCat = String(node.category).trim().toLowerCase();
+        catId = REGISTRY_CATEGORY_MAP[lowerCat] || 'actions';
+      }
+
+      // Format Inputs
+      const formattedInputs = [];
+      if (doc.inputs && Array.isArray(doc.inputs) && doc.inputs.length > 0) {
+        formattedInputs.push(...doc.inputs);
+      } else if (Array.isArray(node.inputs)) {
+        node.inputs.forEach(pinName => {
+          const isDataPin = pinName.endsWith('_in') || pinName === 'data' || pinName === 'val_in' || pinName === 'msg_in';
+          formattedInputs.push({
+            name: pinName,
+            type: isDataPin ? 'data' : 'flow',
+            descTh: isDataPin ? `รับข้อมูล Data Wire (${pinName})` : 'รับสัญญาณกระตุ้นการทำงาน',
+            descEn: isDataPin ? `Data input pin (${pinName})` : 'Execution flow input'
+          });
+        });
+      }
+
+      // Format Outputs
+      const formattedOutputs = [];
+      if (doc.outputs && Array.isArray(doc.outputs) && doc.outputs.length > 0) {
+        formattedOutputs.push(...doc.outputs);
+      } else {
+        if (Array.isArray(node.outputs)) {
+          node.outputs.forEach(pinName => {
+            const isDataPin = pinName.endsWith('_out') || pinName === 'val_out';
+            let thDesc = `สัญญาณ ${pinName}`;
+            if (pinName === 'onComplete') thDesc = 'ทำงานสำเร็จ ส่งสัญญาณต่อไป';
+            else if (pinName === 'onError') thDesc = 'ส่งสัญญาณเมื่อเกิดข้อผิดพลาด';
+            else if (pinName === 'onTrue') thDesc = 'ส่งสัญญาณเมื่อเงื่อนไขเป็นจริง';
+            else if (pinName === 'onFalse') thDesc = 'ส่งสัญญาณเมื่อเงื่อนไขเป็นเท็จ';
+            else if (pinName === 'val_out') thDesc = 'ส่งค่าตัวแปรออกผ่านสาย Data Wire';
+
+            formattedOutputs.push({
+              name: pinName,
+              type: isDataPin ? 'data' : 'flow',
+              descTh: thDesc,
+              descEn: `Flow / Data signal (${pinName})`
+            });
+          });
+        }
+        if (Array.isArray(node.dataOutputs)) {
+          node.dataOutputs.forEach(pin => {
+            const pinName = typeof pin === 'string' ? pin : pin.name;
+            const pinLabel = (typeof pin === 'object' && pin.label) ? pin.label : pinName;
+            formattedOutputs.push({
+              name: pinName,
+              type: 'data',
+              descTh: `ส่งค่า Data Wire: ${pinLabel}`,
+              descEn: `Data output pin: ${pinLabel}`
+            });
+          });
+        }
+      }
+
+      // Format Parameters
+      const formattedParams = [];
+      if (doc.parameters && Array.isArray(doc.parameters) && doc.parameters.length > 0) {
+        formattedParams.push(...doc.parameters);
+      } else if (Array.isArray(node.schema) && node.schema.length > 0) {
+        node.schema.forEach(field => {
+          formattedParams.push({
+            key: field.key,
+            nameTh: field.label || field.key,
+            nameEn: field.labelKey || field.key,
+            type: field.component === 'checkbox' ? 'boolean' : (field.component === 'number' ? 'number' : (field.component === 'select' ? 'select' : 'string')),
+            default: (node.defaultData && node.defaultData[field.key] !== undefined) ? node.defaultData[field.key] : '',
+            descTh: field.placeholder || (field.label || field.key),
+            descEn: field.labelKey || field.key
+          });
+        });
+      }
+
+      const existing = CATALOG_MAP.get(cleanType);
+      if (existing) {
+        if (doc.titleTh) existing.titleTh = doc.titleTh;
+        if (doc.titleEn) existing.titleEn = doc.titleEn;
+        if (doc.descTh) existing.descTh = doc.descTh;
+        if (doc.descEn) existing.descEn = doc.descEn;
+        if (doc.badge) existing.badge = doc.badge;
+        if (doc.bestPracticeTh) existing.bestPracticeTh = doc.bestPracticeTh;
+        if (doc.exampleBlueprint) existing.exampleBlueprint = doc.exampleBlueprint;
+        if (doc.exampleBlueprintTh) existing.exampleBlueprintTh = doc.exampleBlueprintTh;
+        if (doc.exampleBlueprintEn) existing.exampleBlueprintEn = doc.exampleBlueprintEn;
+        if (node.icon) existing.icon = node.icon;
+        if (node.color) existing.color = node.color;
+        if (formattedInputs.length > 0) existing.inputs = formattedInputs;
+        if (formattedOutputs.length > 0) existing.outputs = formattedOutputs;
+        if (formattedParams.length > 0) existing.parameters = formattedParams;
+      } else {
+        const newNodeEntry = {
+          type: cleanType,
+          titleTh: doc.titleTh || node.title || `โหนด ${cleanType}`,
+          titleEn: doc.titleEn || node.title || cleanType,
+          category: doc.category || catId,
+          icon: node.icon || 'layers',
+          badge: doc.badge || 'Modular Node',
+          color: node.color || '#3b82f6',
+          descTh: doc.descTh || `โหนดประมวลผล ${node.title || cleanType} ในระบบ Action Node Workflow`,
+          descEn: doc.descEn || `Action node ${node.title || cleanType} executed in the node workflow graph.`,
+          inputs: formattedInputs.length > 0 ? formattedInputs : [{ name: 'in', type: 'flow', descTh: 'รับสัญญาณคำสั่ง', descEn: 'Execution in' }],
+          outputs: formattedOutputs.length > 0 ? formattedOutputs : [{ name: 'next', type: 'flow', descTh: 'ส่งสัญญาณออกทำงานต่อเนื่อง', descEn: 'Execution next' }],
+          parameters: formattedParams,
+          bestPracticeTh: doc.bestPracticeTh || 'ต่อพิน in เพื่อรับคำสั่ง และต่อพินเอาต์พุตไปยังโหนดที่ต้องการให้ทำงานถัดไป',
+          bestPracticeEn: doc.bestPracticeEn || 'Wire input flow to start execution and output pins to downstream nodes.',
+          exampleBlueprint: doc.exampleBlueprint || `[In] ──▶ [${node.title || cleanType}] ──▶ [Next]`,
+          exampleBlueprintTh: doc.exampleBlueprintTh || undefined,
+          exampleBlueprintEn: doc.exampleBlueprintEn || undefined
+        };
+        registerCustomNodeDoc(newNodeEntry);
+      }
+    }
+  }
+
+  // Auto-connect with window.clientNodeRegistry if available
+  if (typeof window !== 'undefined') {
+    const setupRegistrySync = () => {
+      if (window.clientNodeRegistry) {
+        if (window.clientNodeRegistry.isLoaded) {
+          syncWithRegistry(window.clientNodeRegistry.getAll());
+        }
+        window.clientNodeRegistry.onUpdate((allNodes) => {
+          syncWithRegistry(allNodes);
+          if (global._activeNodeDocsInstance) {
+            try {
+              global._activeNodeDocsInstance.renderCategorySelect();
+              global._activeNodeDocsInstance.renderNodeList();
+              global._activeNodeDocsInstance.renderNodeDetails(global._activeNodeDocsInstance.selectedType);
+            } catch (e) {}
+          }
+        });
+      }
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setupRegistrySync);
+    } else {
+      setupRegistrySync();
+    }
+  }
+
   const NodeDocsData = {
     categories: NODE_DOCS_CATEGORIES,
     catalog: NODE_DOCS_CATALOG,
     getNodeDoc: getNodeDoc,
-    registerCustomNodeDoc: registerCustomNodeDoc
+    registerCustomNodeDoc: registerCustomNodeDoc,
+    syncWithRegistry: syncWithRegistry
   };
 
   if (typeof module !== 'undefined' && module.exports) {
