@@ -873,6 +873,36 @@ assert.strictEqual(holdEventFired, true, 'global.toggleKeyHoldAction must be cal
 
 console.log('✅ Test 17 Passed: Key Hold Node Schema & Target Key verified!\n');
 
+// Test 18: Variable Auto-Reset on Pause (resetOnPause flag)
+console.log('Test 18: Testing Variable Auto-Reset on Pause (resetOnPause flag)...');
+assert.ok(typeof bot.resetVariablesOnPause === 'function', 'bot.resetVariablesOnPause must be a function');
+
+global.activeProfileObjects = [{
+  name: 'TestProfile',
+  variables: [
+    { name: 'isScanningPartyFollowLeader', varType: 'boolean', defaultValue: false, resetOnPause: true },
+    { name: 'bossKillCount', varType: 'number', defaultValue: 0, resetOnPause: false },
+    { name: 'activeStatus', varType: 'string', defaultValue: 'IDLE', resetOnPause: true }
+  ]
+}];
+
+bot.setVariableValue({ varName: 'isScanningPartyFollowLeader', _profileName: 'TestProfile', targetClient: '1' }, true, '1');
+bot.setVariableValue({ varName: 'bossKillCount', _profileName: 'TestProfile', targetClient: '1' }, 15, '1');
+bot.setVariableValue({ varName: 'activeStatus', _profileName: 'TestProfile', targetClient: '1' }, 'RUNNING', '1');
+
+assert.strictEqual(bot.getVariableValue({ varName: 'isScanningPartyFollowLeader', _profileName: 'TestProfile', targetClient: '1' }, '1'), true);
+assert.strictEqual(bot.getVariableValue({ varName: 'bossKillCount', _profileName: 'TestProfile', targetClient: '1' }, '1'), 15);
+assert.strictEqual(bot.getVariableValue({ varName: 'activeStatus', _profileName: 'TestProfile', targetClient: '1' }, '1'), 'RUNNING');
+
+// Execute reset on pause
+bot.resetVariablesOnPause();
+
+assert.strictEqual(bot.getVariableValue({ varName: 'isScanningPartyFollowLeader', _profileName: 'TestProfile', targetClient: '1' }, '1'), false, 'isScanningPartyFollowLeader should reset to false');
+assert.strictEqual(bot.getVariableValue({ varName: 'bossKillCount', _profileName: 'TestProfile', targetClient: '1' }, '1'), 15, 'bossKillCount should remain 15 (resetOnPause = false)');
+assert.strictEqual(bot.getVariableValue({ varName: 'activeStatus', _profileName: 'TestProfile', targetClient: '1' }, '1'), 'IDLE', 'activeStatus should reset to IDLE');
+
+console.log('✅ Test 18 Passed: Variable Auto-Reset on Pause (resetOnPause) verified!\n');
+
 console.log('🎉 All Step Log & Unreal Blueprint Variable Tests Passed Successfully!');
 process.exit(0);
 })();

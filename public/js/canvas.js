@@ -3595,6 +3595,7 @@ class NodeCanvasEditor {
             scope: d.scope || 'global',
             targetClient: d.targetClient || 'all',
             defaultValue: String(defVal),
+            resetOnPause: d.resetOnPause === true || d.resetOnPause === 'true',
             description: ''
           });
         }
@@ -3626,6 +3627,7 @@ class NodeCanvasEditor {
             scope: v.scope || 'global',
             targetClient: v.targetClient || 'all',
             defaultValue: v.defaultValue !== undefined ? String(v.defaultValue) : '',
+            resetOnPause: v.resetOnPause === true || v.resetOnPause === 'true',
             description: v.description || '',
             fromProfile: pName,
             isSharedAcrossProfiles: true,
@@ -3648,6 +3650,7 @@ class NodeCanvasEditor {
             scope: d.scope || 'global',
             targetClient: d.targetClient || 'all',
             defaultValue: d.defaultValue !== undefined ? String(d.defaultValue) : (d.initialValue !== undefined ? String(d.initialValue) : ''),
+            resetOnPause: d.resetOnPause === true || d.resetOnPause === 'true',
             description: '',
             fromProfile: pName,
             isSharedAcrossProfiles: true,
@@ -3712,9 +3715,10 @@ class NodeCanvasEditor {
             <span class="variable-name" title="${v.name}">${v.name}</span>
             <span class="var-type-badge ${typeBadgeClass}">${typeIcon} ${v.type}</span>
           </div>
-          <div class="variable-card-meta">
+          <div class="variable-card-meta" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
             <span>${scopeLabel}</span>
             <span style="font-family:'JetBrains Mono'; opacity:0.85;">Def: ${v.defaultValue !== undefined ? v.defaultValue : '-'}</span>
+            ${v.resetOnPause ? `<span style="color:#f59e0b; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3); border-radius:4px; padding:1px 5px; font-size:9.5px; font-weight:700;">🔄 ${canvasT('var_badge_auto_reset', 'รีเซ็ตเมื่อหยุด')}</span>` : ''}
           </div>
           ${v.description ? `<div style="font-size:10px; color:#94a3b8; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${v.description}">${v.description}</div>` : ''}
           <div class="variable-actions">
@@ -3864,6 +3868,7 @@ class NodeCanvasEditor {
     const defaultValue = vObj ? (vObj.defaultValue !== undefined ? vObj.defaultValue : '') : (varType === 'boolean' ? 'false' : (varType === 'number' ? '0' : ''));
     const varScope = vObj ? (vObj.scope || 'global') : 'global';
     const desc = vObj ? (vObj.description || '') : '';
+    const resetOnPause = vObj ? (vObj.resetOnPause === true || vObj.resetOnPause === 'true') : false;
 
     modalEl.innerHTML = `
       <div class="variable-modal-dialog">
@@ -3905,6 +3910,19 @@ class NodeCanvasEditor {
             <div id="modal-var-default-container">
               ${this.renderDefaultValueInputHTML(varType, defaultValue)}
             </div>
+          </div>
+
+          <div class="inspector-field-group" style="margin-bottom:12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:pointer;" onclick="const cb = document.getElementById('modal-var-reset-on-pause'); if (event.target !== cb) cb.checked = !cb.checked;">
+            <div style="flex:1;">
+              <div style="font-size:12px; font-weight:700; color:#f1f5f9; display:flex; align-items:center; gap:6px;">
+                <span>🔄</span>
+                <span>${canvasT('var_reset_on_pause_label', 'รีเซ็ตเมื่อหยุดบอท (Reset on Pause / END)')}</span>
+              </div>
+              <span style="font-size:10.5px; color:var(--muted); display:block; margin-top:2px; line-height:1.4;">
+                ${canvasT('var_reset_on_pause_hint', 'เมื่อกดปุ่ม END หรือสั่งหยุดบอทชั่วคราว จะคืนค่าตัวแปรนี้กลับเป็นค่าเริ่มต้นอัตโนมัติ')}
+              </span>
+            </div>
+            <input type="checkbox" id="modal-var-reset-on-pause" ${resetOnPause ? 'checked' : ''} style="width:18px; height:18px; accent-color:#8b5cf6; cursor:pointer;" onclick="event.stopPropagation();" />
           </div>
 
           <div class="inspector-field-group" style="margin-bottom:16px;">
@@ -3954,6 +3972,8 @@ class NodeCanvasEditor {
     const targetClient = 'all';
     let defaultValue = defaultInput ? defaultInput.value.trim() : '';
     if (type === 'boolean' && defaultValue !== 'true' && defaultValue !== 'false') defaultValue = 'false';
+    const resetOnPauseInput = document.getElementById('modal-var-reset-on-pause');
+    const resetOnPause = !!(resetOnPauseInput && resetOnPauseInput.checked);
     const description = descInput ? descInput.value.trim() : '';
 
     if (!Array.isArray(this.variables)) this.variables = [];
@@ -3968,6 +3988,7 @@ class NodeCanvasEditor {
         existing.scope = scope;
         existing.targetClient = targetClient;
         existing.defaultValue = defaultValue;
+        existing.resetOnPause = resetOnPause;
         existing.description = description;
       }
     } else {
@@ -3977,6 +3998,7 @@ class NodeCanvasEditor {
         dup.scope = scope;
         dup.targetClient = targetClient;
         dup.defaultValue = defaultValue;
+        dup.resetOnPause = resetOnPause;
         dup.description = description;
       } else {
         this.variables.push({
@@ -3986,6 +4008,7 @@ class NodeCanvasEditor {
           scope,
           targetClient,
           defaultValue,
+          resetOnPause,
           description
         });
       }

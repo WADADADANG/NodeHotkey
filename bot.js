@@ -222,6 +222,8 @@ global.schedulerTokens = schedulerTokens;
 global.sequencerTokens = sequencerTokens;
 let activePartyTargetRouters = {};
 global.activePartyTargetRouters = activePartyTargetRouters;
+let activeProfileObjects = [];
+global.activeProfileObjects = activeProfileObjects;
 let isSystemInitialized = false;
 let overlayProcess = null;
 let lastEnableOverlaySetting = true;
@@ -498,8 +500,14 @@ function loadConfigFromFile() {
         console.log(`[Config] Active profiles (${activeProfileNames.length}): [${activeProfileNames.join(', ')}]`);
 
         const activeProfileObjs = activeProfileNames
-            .map(pName => parsed.profiles[pName])
+            .map(pName => {
+                const prof = parsed.profiles[pName];
+                if (prof && !prof.name) prof.name = pName;
+                return prof;
+            })
             .filter(Boolean);
+        activeProfileObjects = activeProfileObjs;
+        global.activeProfileObjects = activeProfileObjects;
 
         const primaryProfile = activeProfileObjs[0] || { actions: [] };
         const globalSet = parsed.globalSettings || {};
@@ -711,6 +719,125 @@ function abortableSleep(ms, actionId) {
 }
 global.abortableSleep = abortableSleep;
 
+// Auto-reset variables marked with resetOnPause to their default values on pause
+function resetVariablesOnPause() {
+    try {
+        let profilesToCheck = (activeProfileObjects && activeProfileObjects.length > 0) ? activeProfileObjects : [];
+        if (profilesToCheck.length === 0) {
+            const parsed = readConfig();
+            if (parsed && parsed.profiles) {
+                const activeNames = Array.isArray(parsed.activeProfiles)
+                    ? parsed.activeProfiles
+                    : (parsed.activeProfile ? [parsed.activeProfile] : Object.keys(parsed.profiles));
+                profilesToCheck = activeNames.map(pName => {
+                    const prof = parsed.profiles[pName];
+                    if (prof && !prof.name) prof.name = pName;
+                    return prof;
+                }).filter(Boolean);
+            }
+        }
+
+        if (!global.profileVariables) global.profileVariables = {};
+        if (!global.profileVariables['__SHARED__']) global.profileVariables['__SHARED__'] = {};
+
+        let resetCount = 0;
+        const resetDetails = [];
+        const processedVars = new Set();
+
+        profilesToCheck.forEach(prof => {
+            const pName = prof.name || 'Active';
+            const vars = Array.isArray(prof.variables) ? prof.variables : [];
+
+            const processVarDef = (v) => {
+                if (!v) return;
+                const shouldReset = v.resetOnPause === true || v.resetOnPause === 'true';
+                if (!shouldReset) return;
+
+                const varId = (v.varName || v.name || (v.conditionTargetId && String(v.conditionTargetId).startsWith('var:') ? String(v.conditionTargetId).replace('var:', '') : '') || '').trim();
+                if (!varId) return;
+
+                const dedupeKey = `${pName}:${varId}`;
+                if (processedVars.has(dedupeKey)) return;
+                processedVars.add(dedupeKey);
+
+                const vType = v.varType || v.type || 'boolean';
+                const init = v.defaultValue !== undefined ? v.defaultValue : (v.initialValue !== undefined ? v.initialValue : '');
+                let parsed;
+                if (vType === 'boolean') {
+                    parsed = (init === true || String(init) === 'true');
+                } else if (vType === 'number') {
+                    parsed = parseFloat(init) || 0;
+                } else {
+                    parsed = String(init !== undefined ? init : '');
+                }
+
+                // Reset in profile bucket
+                if (!global.profileVariables[pName]) global.profileVariables[pName] = {};
+                if (!global.profileVariables[pName][varId]) global.profileVariables[pName][varId] = {};
+                const currentKeys = Object.keys(global.profileVariables[pName][varId]);
+                if (currentKeys.length === 0) {
+                    global.profileVariables[pName][varId]['global'] = parsed;
+                } else {
+                    currentKeys.forEach(k => {
+                        global.profileVariables[pName][varId][k] = parsed;
+                    });
+                }
+                global.profileVariables[pName][varId]['global'] = parsed;
+
+                // If cross-profile shared or present in __SHARED__
+                const isShared = v.scope === 'global' || v.scope === 'shared' || v.scope === 'cross_profile' || (global.profileVariables['__SHARED__'] && global.profileVariables['__SHARED__'][varId]);
+                if (isShared) {
+                    if (!global.profileVariables['__SHARED__']) global.profileVariables['__SHARED__'] = {};
+                    if (!global.profileVariables['__SHARED__'][varId]) global.profileVariables['__SHARED__'][varId] = {};
+                    const sharedKeys = Object.keys(global.profileVariables['__SHARED__'][varId]);
+                    if (sharedKeys.length === 0) {
+                        global.profileVariables['__SHARED__'][varId]['global'] = parsed;
+                    } else {
+                        sharedKeys.forEach(k => {
+                            global.profileVariables['__SHARED__'][varId][k] = parsed;
+                        });
+                    }
+                    global.profileVariables['__SHARED__'][varId]['global'] = parsed;
+
+                    // Synchronize across any other profile buckets holding this variable
+                    Object.keys(global.profileVariables).forEach(otherPName => {
+                        if (global.profileVariables[otherPName] && global.profileVariables[otherPName][varId]) {
+                            Object.keys(global.profileVariables[otherPName][varId]).forEach(k => {
+                                global.profileVariables[otherPName][varId][k] = parsed;
+                            });
+                            global.profileVariables[otherPName][varId]['global'] = parsed;
+                        }
+                    });
+                }
+
+                resetDetails.push(`${varId}=${parsed}`);
+                resetCount++;
+            };
+
+            // 1. Check profile.variables
+            vars.forEach(processVarDef);
+
+            // 2. Check variable nodes on canvas
+            const nodes = Array.isArray(prof.nodes) ? prof.nodes : [];
+            nodes.forEach(node => {
+                if ((node.type === 'var_set' || node.type === 'variable' || node.type === 'var_get' || node.type === 'var_branch') && node.data) {
+                    const d = node.data;
+                    if (d.resetOnPause === true || d.resetOnPause === 'true') {
+                        processVarDef(d);
+                    }
+                }
+            });
+        });
+
+        if (resetCount > 0) {
+            console.log(`[System Pause] 🔄 Auto-reset ${resetCount} variable(s) (resetOnPause): [${resetDetails.join(', ')}]`);
+        }
+    } catch (err) {
+        console.error(`[System Pause] Error auto-resetting variables on pause:`, err);
+    }
+}
+global.resetVariablesOnPause = resetVariablesOnPause;
+
 global.toggleSuspendState = function (forcedState) {
     if (forcedState !== undefined) {
         global.isSuspended = forcedState;
@@ -729,6 +856,9 @@ global.toggleSuspendState = function (forcedState) {
 
         // Stop all loops
         stopAllLoops();
+
+        // Auto-reset runtime variables flagged with resetOnPause to default value
+        resetVariablesOnPause();
 
         // Release all key holds
         for (let actionId in activeHoldStates) {
@@ -4982,6 +5112,7 @@ if (typeof module !== 'undefined') {
         runRerouteAction,
         stopAllLoops,
         releaseAllHeldKeys,
-        resetClientWindowBounds
+        resetClientWindowBounds,
+        resetVariablesOnPause
     };
 }
