@@ -446,6 +446,16 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  function reloadEngine(reason = '') {
+    if (typeof global.loadConfigFromFile === 'function') {
+      try {
+        global.loadConfigFromFile();
+      } catch (err) {
+        console.warn(`[Server] Error calling loadConfigFromFile (${reason}):`, err.message);
+      }
+    }
+  }
+
   // --- POST /api/config → save profile settings or full config ---
   if (urlPath === '/api/config' && req.method === 'POST') {
     let body = '';
@@ -456,9 +466,7 @@ const server = http.createServer((req, res) => {
         if (payload && payload.profiles) {
           writeConfig(payload);
           console.log(`[Server] Saved full config (active: ${payload.activeProfile})`);
-          if (typeof global.loadConfigFromFile === 'function') {
-            try { global.loadConfigFromFile(); } catch (err) { console.warn('[Server] Error calling loadConfigFromFile:', err.message); }
-          }
+          reloadEngine('Save Full Config');
           sendJSON(res, 200, { success: true });
         } else if (payload && payload.profileName && payload.profileData) {
           const config = readConfig();
@@ -466,9 +474,7 @@ const server = http.createServer((req, res) => {
           config.profiles[payload.profileName] = payload.profileData;
           writeConfig(config);
           console.log(`[Server] Saved profile: ${payload.profileName}`);
-          if (typeof global.loadConfigFromFile === 'function') {
-            try { global.loadConfigFromFile(); } catch (err) { console.warn('[Server] Error calling loadConfigFromFile:', err.message); }
-          }
+          reloadEngine('Save Profile');
           sendJSON(res, 200, { success: true });
         } else {
           sendJSON(res, 400, { error: 'Invalid payload structure' });
@@ -505,6 +511,7 @@ const server = http.createServer((req, res) => {
         }
         writeConfig(config);
         console.log(`[Server] Created profile: ${name}`);
+        reloadEngine('New Profile');
         sendJSON(res, 200, { success: true });
       } catch (e) {
         sendJSON(res, 400, { error: 'Invalid payload' });
@@ -531,6 +538,7 @@ const server = http.createServer((req, res) => {
         }
         writeConfig(config);
         console.log(`[Server] Deleted profile: ${name}`);
+        reloadEngine('Delete Profile');
         sendJSON(res, 200, { success: true, activeProfiles: config.activeProfiles });
       } catch (e) {
         sendJSON(res, 400, { error: 'Invalid payload' });
@@ -569,6 +577,7 @@ const server = http.createServer((req, res) => {
           }
           writeConfig(config);
           console.log(`[Server] Renamed profile "${oldName}" to "${trimmedNew}"`);
+          reloadEngine('Rename Profile');
         }
         sendJSON(res, 200, { success: true, activeProfiles: config.activeProfiles });
       } catch (e) {
@@ -602,6 +611,7 @@ const server = http.createServer((req, res) => {
         if (!name || !profileData) return sendJSON(res, 400, { error: 'Missing name or profileData' });
         writeSingleProfile(name, profileData);
         console.log(`[Server] 💾 Overwrote profile on disk: "${name}"`);
+        reloadEngine('Overwrite Profile');
         return sendJSON(res, 200, { success: true });
       } catch (e) {
         return sendJSON(res, 400, { error: 'Invalid JSON payload' });
@@ -651,6 +661,7 @@ const server = http.createServer((req, res) => {
         config.activeProfiles = [name];
         writeConfig(config);
         console.log(`[Server] Active profile set to: ${name}`);
+        reloadEngine('Activate Profile');
         sendJSON(res, 200, { success: true, activeProfiles: config.activeProfiles });
       } catch (e) {
         sendJSON(res, 400, { error: 'Invalid payload' });
@@ -671,6 +682,7 @@ const server = http.createServer((req, res) => {
         config.activeProfile = config.activeProfiles[0] || '';
         writeConfig(config);
         console.log(`[Server] Batch set active profiles: [${config.activeProfiles.join(', ')}]`);
+        reloadEngine('Set Active Profiles');
         sendJSON(res, 200, { success: true, activeProfiles: config.activeProfiles, activeProfile: config.activeProfile });
       } catch (e) {
         sendJSON(res, 400, { error: 'Invalid payload' });
@@ -701,6 +713,7 @@ const server = http.createServer((req, res) => {
         config.activeProfile = config.activeProfiles[0] || '';
         writeConfig(config);
         console.log(`[Server] Profile "${name}" active status: ${shouldBeActive}. Active profiles: [${config.activeProfiles.join(', ')}]`);
+        reloadEngine('Toggle Profile Active');
         sendJSON(res, 200, { success: true, activeProfiles: config.activeProfiles, activeProfile: config.activeProfile });
       } catch (e) {
         sendJSON(res, 400, { error: 'Invalid payload' });
