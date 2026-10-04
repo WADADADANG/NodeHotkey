@@ -21,6 +21,21 @@
       background: rgba(239, 68, 68, 0.18) !important;
       color: #fff !important;
     }
+
+    .community-tab.active {
+      background: #1e293b !important;
+      color: #38bdf8 !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .community-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(56, 189, 248, 0.4) !important;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.45) !important;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 
@@ -79,6 +94,13 @@
 
     <!-- Profile Actions Buttons: Right Section (Compact Pro Dropdown) -->
     <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; position: relative;">
+      <!-- 0. Community Hub Button -->
+      <button type="button" class="btn btn-ghost" onclick="window.openCommunityHubModal()"
+        style="padding: 4px 12px; font-size: 11px; font-weight: 700; height: 30px; border-color: rgba(16,185,129,0.4); color: #34d399; background: rgba(16,185,129,0.1); border-radius: 6px; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+        <span>🌐</span>
+        <span data-i18n="communityHubBtn">Community Hub</span>
+      </button>
+
       <!-- 1. Primary Action: + New Profile -->
       <button type="button" class="btn btn-ghost" onclick="openNewProfileModal()"
         style="padding: 4px 12px; font-size: 11px; font-weight: 700; height: 30px; border-color: rgba(56,189,248,0.4); color: #38bdf8; background: rgba(56,189,248,0.1); border-radius: 6px; display: flex; align-items: center; gap: 5px;">
@@ -117,6 +139,12 @@
           </button>
 
           <div style="height: 1px; background: rgba(255,255,255,0.08); margin: 4px 0;"></div>
+
+          <button type="button" class="btn-action-item"
+            onclick="window.closeProfileActionsDropdown(); window.openShareProfileModal();"
+            style="width: 100%; text-align: left; padding: 7px 10px; font-size: 11.5px; font-weight: 600; color: #34d399; background: transparent; border: none; border-radius: 5px; cursor: pointer; display: flex; align-items: center; transition: background 0.12s;">
+            <span>🚀 Share to Community</span>
+          </button>
 
           <button type="button" class="btn-action-item"
             onclick="window.closeProfileActionsDropdown(); exportCurrentProfile();"
@@ -726,6 +754,162 @@
         <button class="btn" id="validator-autofix-btn" onclick="autoFixFromModal()"
           style="padding:8px 22px; font-size:13px; font-weight:700; background:linear-gradient(135deg,#a855f7,#7c3aed); color:#fff; border-radius:8px; border:1px solid rgba(168,85,247,0.4); display:none;"
           data-i18n="btnAutoFixAll">⚡ Auto-Fix All Issues</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ COMMUNITY HUB MODAL ════════ -->
+  <div class="modal-bg" id="community-hub-modal">
+    <div class="modal" style="max-width: 960px; width: 92vw; height: 86vh; display: flex; flex-direction: column; padding: 20px 24px; background: #0c1222; border: 1px solid rgba(56,189,248,0.25); border-radius: 14px; box-shadow: 0 25px 60px rgba(0,0,0,0.85);">
+      
+      <!-- Modal Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="font-size: 24px;">🌐</div>
+          <div>
+            <h2 style="font-size: 18px; font-weight: 800; color: #f8fafc; margin: 0; display: flex; align-items: center; gap: 8px;">
+              NodeHotkey Community Hub
+              <span style="font-size: 10px; background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); border-radius: 20px; padding: 2px 8px; font-weight: 700;">Cloudflare D1</span>
+            </h2>
+            <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">
+              ค้นหา ดาวน์โหลด และแบ่งปันโปรไฟล์ Action Workflow ร่วมกับคอมมูนิตี้
+            </div>
+          </div>
+        </div>
+
+        <!-- Author Tag & Close -->
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px 10px; font-size: 11.5px; display: flex; align-items: center; gap: 6px;">
+            <span style="color: #94a3b8;">ผู้สร้างของคุณ:</span>
+            <strong id="community-current-author" style="color: #38bdf8;">Loading...</strong>
+            <button type="button" class="btn btn-ghost" onclick="window.promptChangeAuthorName()" title="เปลี่ยนชื่อผู้สร้าง"
+              style="padding: 2px 6px; font-size: 10px; border-color: rgba(56,189,248,0.3); color: #38bdf8; height: 20px; border-radius: 4px; cursor: pointer;">✏️ แก้ไข</button>
+          </div>
+          <button type="button" class="btn btn-ghost" onclick="window.closeCommunityHubModal()"
+            style="padding: 4px 10px; font-size: 14px; color: #94a3b8; border-color: rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer;">✕</button>
+        </div>
+      </div>
+
+      <!-- Controls Toolbar -->
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 14px 0 10px 0; flex-wrap: wrap;">
+        <!-- Left: Search & Filter Tabs -->
+        <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 300px;">
+          <!-- Tabs -->
+          <div style="display: flex; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 2px;">
+            <button type="button" id="tab-community-all" class="community-tab active"
+              style="background: transparent; border: none; padding: 5px 12px; font-size: 11.5px; font-weight: 700; color: #94a3b8; border-radius: 6px; cursor: pointer; transition: all 0.15s;">
+              🔥 โปรไฟล์ทั้งหมด
+            </button>
+            <button type="button" id="tab-community-my" class="community-tab"
+              style="background: transparent; border: none; padding: 5px 12px; font-size: 11.5px; font-weight: 700; color: #94a3b8; border-radius: 6px; cursor: pointer; transition: all 0.15s;">
+              👑 ที่ฉันอัปโหลด
+            </button>
+          </div>
+
+          <!-- Search Input -->
+          <div style="position: relative; flex: 1;">
+            <input type="text" id="community-search-input" placeholder="🔍 ค้นหาชื่อโปรไฟล์, คำอธิบาย, หรือแท็ก..."
+              style="width: 100%; background: #131d31; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 6px 12px; color: #f1f5f9; font-size: 12px; outline: none;">
+          </div>
+        </div>
+
+        <!-- Right: Sort & Share CTA -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <select id="community-sort-select"
+            style="background: #131d31; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 6px 10px; color: #cbd5e1; font-size: 11.5px; font-weight: 600; outline: none; cursor: pointer;">
+            <option value="downloads">🔥 ยอดดาวน์โหลดสูงสุด</option>
+            <option value="recent">✨ อัปเดตล่าสุด</option>
+          </select>
+
+          <button type="button" class="btn btn-ghost" onclick="window.loadCommunityProfiles()" title="รีเฟรชข้อมูล"
+            style="padding: 6px 10px; font-size: 12px; border-color: rgba(255,255,255,0.15); border-radius: 8px; cursor: pointer;">
+            🔄
+          </button>
+
+          <button type="button" class="btn" onclick="window.openShareProfileModal()"
+            style="padding: 6px 14px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #10b981, #059669); color: #fff; border-radius: 8px; border: 1px solid rgba(16,185,129,0.4); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+            <span>🚀</span> แชร์โปรไฟล์ขึ้นคอมมูนิตี้
+          </button>
+        </div>
+      </div>
+
+      <!-- Profiles List Scroll Container -->
+      <div id="community-profiles-container"
+        style="flex: 1; overflow-y: auto; padding-right: 4px; margin-top: 4px; border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; background: rgba(0,0,0,0.2);">
+      </div>
+
+      <!-- Modal Footer -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; margin-top: 12px; font-size: 11px; color: #64748b;">
+        <div>⚡ เซิร์ฟเวอร์ Cloudflare Edge รวดเร็ว ไม่มีปิดหลับ ปลอดภัยด้วย Author Secret Verification</div>
+        <button type="button" class="btn btn-ghost" onclick="window.closeCommunityHubModal()" style="padding: 5px 16px; font-size: 12px; border-radius: 6px;">ปิด</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ SHARE TO COMMUNITY MODAL ════════ -->
+  <div class="modal-bg" id="share-profile-modal">
+    <div class="modal" style="max-width: 540px; width: 90vw; display: flex; flex-direction: column; padding: 20px 24px; background: #0c1222; border: 1px solid rgba(16,185,129,0.3); border-radius: 14px; box-shadow: 0 25px 60px rgba(0,0,0,0.9);">
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;">
+        <h2 style="font-size: 17px; font-weight: 800; color: #f8fafc; margin: 0; display: flex; align-items: center; gap: 8px;">
+          <span>🚀</span> แชร์โปรไฟล์ขึ้น Community Hub
+        </h2>
+        <button type="button" class="btn btn-ghost" onclick="window.closeShareProfileModal()"
+          style="padding: 4px 8px; font-size: 13px; color: #94a3b8; border-color: transparent; cursor: pointer;">✕</button>
+      </div>
+
+      <input type="hidden" id="share-community-id" value="">
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <!-- Profile Select -->
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;">เลือกโปรไฟล์ในเครื่องที่จะแชร์:</label>
+          <select id="share-profile-select"
+            style="width: 100%; background: #131d31; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 7px 10px; color: #f1f5f9; font-size: 12px; outline: none;"></select>
+        </div>
+
+        <!-- Published Title & Version -->
+        <div style="display: flex; gap: 10px;">
+          <div style="flex: 1;">
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;">ชื่อที่จะแสดงในคอมมูนิตี้: *</label>
+            <input type="text" id="share-profile-name" placeholder="เช่น RM Full Buff Party Pro"
+              style="width: 100%; background: #131d31; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 7px 10px; color: #f1f5f9; font-size: 12px; outline: none;">
+          </div>
+          <div style="width: 110px;">
+            <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;">เวอร์ชัน:</label>
+            <input type="text" id="share-profile-version" value="1.0.0" placeholder="1.0.0"
+              style="width: 100%; background: #131d31; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 7px 10px; color: #f1f5f9; font-size: 12px; outline: none;">
+          </div>
+        </div>
+
+        <!-- Author Name -->
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;">ชื่อผู้สร้าง (Author Name):</label>
+          <input type="text" id="share-author-name" placeholder="ชื่อเล่นหรือฉายาของคุณ"
+            style="width: 100%; background: #131d31; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 7px 10px; color: #f1f5f9; font-size: 12px; outline: none;">
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;">คำอธิบาย / วิธีใช้งาน / ข้อควรระวัง:</label>
+          <textarea id="share-profile-desc" rows="3" placeholder="เขียนอธิบายสั้นๆ ว่าโปรไฟล์นี้ใช้สำหรับทำอะไร เช่น เซ็ตบัพพระ 8 จอ, ฮีลอัตโนมัติเมื่อเลือดต่ำกว่า 50%, หรือกดสกิลฟาร์มมอน..."
+            style="width: 100%; background: #131d31; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 7px 10px; color: #f1f5f9; font-size: 12px; outline: none; resize: vertical;"></textarea>
+        </div>
+
+        <!-- Tags -->
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; margin-bottom: 4px;">แท็กค้นหา (คั่นด้วยจุลภาค ,):</label>
+          <input type="text" id="share-profile-tags" placeholder="Flyff, Buff, Healer, Farm, PvP"
+            style="width: 100%; background: #131d31; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 7px 10px; color: #f1f5f9; font-size: 12px; outline: none;">
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 18px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 14px;">
+        <button type="button" class="btn btn-ghost" onclick="window.closeShareProfileModal()" style="padding: 7px 16px; font-size: 12px;">ยกเลิก</button>
+        <button type="button" class="btn" id="btn-submit-share-profile" onclick="window.submitShareProfile()"
+          style="padding: 7px 20px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg,#10b981,#059669); color: #fff; border-radius: 8px; border: 1px solid rgba(16,185,129,0.4); cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <span>🚀</span> เผยแพร่ขึ้น Community Hub
+        </button>
       </div>
     </div>
   </div>

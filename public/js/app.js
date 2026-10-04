@@ -41,6 +41,16 @@ import {
   clearDirty
 } from './state.js';
 import {
+  initCommunityUI,
+  openCommunityHubModal,
+  closeCommunityHubModal,
+  loadCommunityProfiles,
+  openShareProfileModal,
+  closeShareProfileModal,
+  submitShareProfile,
+  promptChangeAuthorName
+} from './components/community.js';
+import {
   startRecordingKey,
   stopRecordingKey,
   startRecordingSuspendHotkey,
@@ -237,6 +247,15 @@ window.toggleSuspendState = toggleSuspendState;
 window.toast = toast;
 window.addLog = addLog;
 window.clearLogs = clearLogs;
+
+// ─── Community Hub Functions ───
+window.openCommunityHubModal = openCommunityHubModal;
+window.closeCommunityHubModal = closeCommunityHubModal;
+window.loadCommunityProfiles = loadCommunityProfiles;
+window.openShareProfileModal = openShareProfileModal;
+window.closeShareProfileModal = closeShareProfileModal;
+window.submitShareProfile = submitShareProfile;
+window.promptChangeAuthorName = promptChangeAuthorName;
 
 // ─── Validator Modal Functions ───
 window.openValidatorModal = function() {
@@ -445,6 +464,7 @@ async function initApp() {
   updateLanguageUI();
   renderClientToggles();
   checkAppUpdate();
+  initCommunityUI();
 
   // Multi-select custom dropdown behavior without Ctrl key
   window.addEventListener('mousedown', (e) => {

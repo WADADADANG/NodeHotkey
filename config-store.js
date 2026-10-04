@@ -110,6 +110,61 @@ function sanitizeProfileIds(profile) {
   return profile;
 }
 
+// --- Persistent Creator Identity Management ---
+function getCreatorIdentity(ensureSaved = true) {
+  ensureDirs();
+  let gData = {};
+  if (fs.existsSync(GLOBAL_CONFIG_PATH)) {
+    try {
+      gData = JSON.parse(fs.readFileSync(GLOBAL_CONFIG_PATH, 'utf8'));
+    } catch (e) { gData = {}; }
+  }
+  if (gData.creatorIdentity && gData.creatorIdentity.authorId && gData.creatorIdentity.authorSecret) {
+    return gData.creatorIdentity;
+  }
+  const newIdentity = {
+    authorId: `usr_${crypto.randomBytes(6).toString('hex')}`,
+    authorSecret: `sec_${crypto.randomBytes(16).toString('hex')}`,
+    authorName: `User_${Math.floor(1000 + Math.random() * 9000)}`
+  };
+  gData.creatorIdentity = newIdentity;
+  if (ensureSaved) {
+    try {
+      fs.writeFileSync(GLOBAL_CONFIG_PATH, JSON.stringify(gData, null, 2), 'utf8');
+      internalWriteLocks.set('global.json', Date.now());
+      console.log(`[Config Store] 🆔 Generated persistent Creator Identity: ${newIdentity.authorId} (${newIdentity.authorName})`);
+    } catch (e) {
+      console.error(`[Config Store Error] Could not save new creatorIdentity:`, e.message);
+    }
+  }
+  return newIdentity;
+}
+
+function updateCreatorIdentity(fields = {}) {
+  ensureDirs();
+  let gData = {};
+  if (fs.existsSync(GLOBAL_CONFIG_PATH)) {
+    try {
+      gData = JSON.parse(fs.readFileSync(GLOBAL_CONFIG_PATH, 'utf8'));
+    } catch (e) { gData = {}; }
+  }
+  if (!gData.creatorIdentity) {
+    gData.creatorIdentity = getCreatorIdentity(false);
+  }
+  if (fields.authorName && typeof fields.authorName === 'string') {
+    gData.creatorIdentity.authorName = fields.authorName.trim().slice(0, 40);
+  }
+  try {
+    fs.writeFileSync(GLOBAL_CONFIG_PATH, JSON.stringify(gData, null, 2), 'utf8');
+    internalWriteLocks.set('global.json', Date.now());
+    console.log(`[Config Store] 🆔 Updated Creator Identity: ${gData.creatorIdentity.authorName}`);
+    return gData.creatorIdentity;
+  } catch (e) {
+    console.error(`[Config Store Error] Failed to update creatorIdentity:`, e.message);
+    return null;
+  }
+}
+
 // Read and assemble full configuration object
 function readConfig() {
   ensureDirs();
@@ -159,6 +214,8 @@ function readConfig() {
       console.error(`[Config Store Error] Failed to read global.json:`, e.message);
     }
   }
+
+  const creatorIdentity = getCreatorIdentity(true);
 
   const profiles = {};
   if (fs.existsSync(PROFILES_DIR)) {
@@ -211,6 +268,7 @@ function readConfig() {
     activeProfiles,
     disabledClients,
     globalSettings,
+    creatorIdentity,
     profiles
   };
 }
@@ -226,12 +284,14 @@ function writeConfig(fullConfig) {
     : [];
   const disabledClients = fullConfig.disabledClients || [];
   const globalSettings = fullConfig.globalSettings || {};
+  const creatorIdentity = fullConfig.creatorIdentity || getCreatorIdentity(false);
 
   const globalData = {
     activeProfile,
     activeProfiles,
     disabledClients,
-    globalSettings
+    globalSettings,
+    creatorIdentity
   };
 
   const newGlobalContent = JSON.stringify(globalData, null, 2);
@@ -526,6 +586,8 @@ module.exports = {
   migrateLegacyConfig,
   getGlobalSettings,
   saveGlobalSettingsOnly,
+  getCreatorIdentity,
+  updateCreatorIdentity,
   isInternalRecentWrite,
   CONFIGS_DIR,
   PROFILES_DIR,

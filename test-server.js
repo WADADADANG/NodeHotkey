@@ -2,7 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const { readConfig, writeConfig, readSingleProfile, writeSingleProfile, initProfileWatcher } = require('./config-store');
+const { readConfig, writeConfig, readSingleProfile, writeSingleProfile, initProfileWatcher, getCreatorIdentity, updateCreatorIdentity } = require('./config-store');
 const { checkForUpdates, getUpdateStatus } = require('./update-checker');
 
 // Profile External Event Stream (SSE)
@@ -747,6 +747,90 @@ const server = http.createServer((req, res) => {
       }
     });
     return;
+  }
+
+  // --- GET /api/community/identity → Get local client Creator Identity ---
+  if (urlPath === '/api/community/identity' && req.method === 'GET') {
+    const identity = getCreatorIdentity(true);
+    return sendJSON(res, 200, { success: true, identity });
+  }
+
+  // --- POST /api/community/identity → Update Author Nickname ---
+  if (urlPath === '/api/community/identity' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', () => {
+      try {
+        const { authorName } = JSON.parse(body || '{}');
+        const updated = updateCreatorIdentity({ authorName });
+        return sendJSON(res, 200, { success: true, identity: updated });
+      } catch (e) {
+        return sendJSON(res, 400, { error: e.message });
+      }
+    });
+    return;
+  }
+
+  // --- POST /api/community/install → Install Community Profile to local disk ---
+  if (urlPath === '/api/community/install' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', () => {
+      try {
+        const { profileName, profileData, overwrite = false } = JSON.parse(body);
+        if (!profileName || !profileData) {
+          return sendJSON(res, 400, { error: 'profileName and profileData are required' });
+        }
+
+        const config = readConfig();
+        let targetName = profileName.trim();
+
+        if (config.profiles[targetName] && !overwrite) {
+          let counter = 2;
+          let candidate = `${targetName} (Community)`;
+          while (config.profiles[candidate]) {
+            candidate = `${targetName} (Community ${counter})`;
+            counter++;
+          }
+          targetName = candidate;
+        }
+
+        const cleanData = typeof profileData === 'string' ? JSON.parse(profileData) : profileData;
+        cleanData.name = targetName;
+
+        writeSingleProfile(targetName, cleanData);
+        console.log(`[Server] 📥 Installed Community Profile as: "${targetName}"`);
+        reloadEngine('Install Community Profile');
+
+        broadcastProfileEvent({
+          type: 'PROFILE_EXTERNAL_CHANGE',
+          profileName: targetName,
+          changeType: 'created',
+          timestamp: Date.now()
+        });
+
+        return sendJSON(res, 200, { success: true, installedName: targetName });
+      } catch (e) {
+        return sendJSON(res, 500, { error: e.message });
+      }
+    });
+    return;
+  }
+
+  // --- GET /api/community/profile-for-share → Get profile data prepared for sharing ---
+  if (urlPath === '/api/community/profile-for-share' && req.method === 'GET') {
+    try {
+      const urlObj = new URL(req.url, `http://localhost:${PORT}`);
+      const profileName = urlObj.searchParams.get('name');
+      const config = readConfig();
+      const targetName = profileName || config.activeProfile || 'Default';
+      const profile = readSingleProfile(targetName) || config.profiles[targetName];
+      if (!profile) return sendJSON(res, 404, { error: 'Profile not found' });
+      const identity = getCreatorIdentity(true);
+      return sendJSON(res, 200, { success: true, profileName: targetName, profile, identity });
+    } catch (e) {
+      return sendJSON(res, 500, { error: e.message });
+    }
   }
 
   // --- POST /api/open-folder → open folder in Windows Explorer ---
