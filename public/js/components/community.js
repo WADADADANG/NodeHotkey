@@ -73,6 +73,8 @@ export async function openChangeAuthorModal() {
   }, 100);
 }
 
+export const promptChangeAuthorName = openChangeAuthorModal;
+
 export function closeChangeAuthorModal() {
   const modal = document.getElementById('author-name-modal');
   if (modal) modal.classList.remove('show');

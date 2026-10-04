@@ -48,7 +48,13 @@ import {
   openShareProfileModal,
   closeShareProfileModal,
   submitShareProfile,
-  promptChangeAuthorName
+  promptChangeAuthorName,
+  openChangeAuthorModal,
+  closeChangeAuthorModal,
+  confirmChangeAuthorName,
+  openCommunityDeleteModal,
+  closeCommunityDeleteModal,
+  confirmDeleteCommunityProfile
 } from './components/community.js';
 import {
   startRecordingKey,
@@ -256,6 +262,12 @@ window.openShareProfileModal = openShareProfileModal;
 window.closeShareProfileModal = closeShareProfileModal;
 window.submitShareProfile = submitShareProfile;
 window.promptChangeAuthorName = promptChangeAuthorName;
+window.openChangeAuthorModal = openChangeAuthorModal;
+window.closeChangeAuthorModal = closeChangeAuthorModal;
+window.confirmChangeAuthorName = confirmChangeAuthorName;
+window.openCommunityDeleteModal = openCommunityDeleteModal;
+window.closeCommunityDeleteModal = closeCommunityDeleteModal;
+window.confirmDeleteCommunityProfile = confirmDeleteCommunityProfile;
 
 // ─── Validator Modal Functions ───
 window.openValidatorModal = function() {
