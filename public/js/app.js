@@ -54,8 +54,9 @@ import {
   confirmChangeAuthorName,
   openCommunityDeleteModal,
   closeCommunityDeleteModal,
-  confirmDeleteCommunityProfile
-} from './components/community.js?v=3.2.2';
+  confirmDeleteCommunityProfile,
+  installCommunityProfile
+} from './components/community.js?v=3.2.3';
 import {
   startRecordingKey,
   stopRecordingKey,
@@ -273,6 +274,7 @@ window.confirmChangeAuthorName = confirmChangeAuthorName;
 window.openCommunityDeleteModal = openCommunityDeleteModal;
 window.closeCommunityDeleteModal = closeCommunityDeleteModal;
 window.confirmDeleteCommunityProfile = confirmDeleteCommunityProfile;
+window.installCommunityProfile = installCommunityProfile;
 
 // ─── Validator Modal Functions ───
 window.openValidatorModal = function() {

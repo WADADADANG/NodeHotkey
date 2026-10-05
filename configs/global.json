@@ -1,15 +1,12 @@
 {
-  "activeProfile": "[WD] Add-ons",
+  "activeProfile": "Test2",
   "activeProfiles": [
-    "[WD] Add-ons",
-    "[WD] Follow Leader Party",
-    "[WD] Full Buff",
-    "[WD] Heal 1,2,4"
+    "Test2"
   ],
   "disabledClients": [],
   "globalSettings": {
     "targetUrlKeyword": "universe.flyff.com/play",
-    "enableOverlay": true,
+    "enableOverlay": false,
     "suspendHotkey": "END",
     "webPort": 3088,
     "ghostMouseJitter": {

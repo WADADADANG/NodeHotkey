@@ -947,7 +947,44 @@ assert.ok(customDoc.parameters.some(p => p.key === 'healThreshold'));
 
 console.log('✅ Test 19 Passed: Node Registry Doc & Live Wiki Sync verified!\n');
 
-console.log('🎉 All Step Log & Unreal Blueprint Variable Tests Passed Successfully!');
+// 20. Test Community Hub Vector SVG Icons & Clean i18n
+console.log('Test 20: Testing Community Hub Vector SVG Icons & Emoji-Free i18n...');
+const NodeDocsIcons = require('../public/js/components/node-docs-icons');
+assert.ok(NodeDocsIcons, 'NodeDocsIcons should be available');
+const requiredCommunityIcons = ['globe', 'flame', 'crown', 'rocket', 'user', 'clock', 'download', 'refresh-cw', 'trash-2', 'pencil', 'alert-triangle', 'package'];
+requiredCommunityIcons.forEach(icon => {
+  assert.ok(NodeDocsIcons.defs[icon], `NodeDocsIcons should define SVG for "${icon}"`);
+  const svgHtml = NodeDocsIcons.render(icon, { size: 16 });
+  assert.ok(svgHtml.includes('<svg') && svgHtml.includes('viewBox="0 0 24 24"'), `render("${icon}") should produce valid SVG tag`);
+});
+
+const fs = require('fs');
+const path = require('path');
+const i18nContent = fs.readFileSync(path.join(__dirname, '../public/js/i18n.js'), 'utf8');
+const indexContent = fs.readFileSync(path.join(__dirname, '../public/index.html'), 'utf8');
+
+// Ensure emojis are not present in community modal titles and buttons
+assert.ok(!indexContent.includes('<span>🌐</span>\n        <span data-i18n="communityHubBtn">'), 'Community Hub navbar button should use SVG');
+assert.ok(!indexContent.includes('<div style="font-size: 24px;">🌐</div>'), 'Community Hub modal header should use SVG');
+assert.ok(!indexContent.includes('🔥 โปรไฟล์ทั้งหมด'), 'Community tab all should use SVG');
+assert.ok(!indexContent.includes('👑 ที่ฉันอัปโหลด'), 'Community tab my should use SVG');
+
+console.log('✅ Test 20 Passed: Community Hub Vector SVG Icons & Emoji-Free i18n verified!\n');
+
+// 21. Test Community Hub Clean Profile Layout (Preview removed cleanly)
+console.log('Test 21: Testing Community Hub Clean Profile Layout...');
+const communityContent = fs.readFileSync(path.join(__dirname, '../public/js/components/community.js'), 'utf8');
+assert.ok(communityContent.includes('installCommunityProfile'), 'community.js should export installCommunityProfile');
+assert.ok(!communityContent.includes('btn-preview-profile'), 'community.js should not render preview button');
+assert.ok(!communityContent.includes('community-card-banner'), 'community.js should not render preview banner');
+
+// Verify public/index.html clean state
+assert.ok(!indexContent.includes('id="community-preview-modal"'), 'index.html should not contain preview modal');
+assert.ok(!indexContent.includes('community-preview.js'), 'index.html should not load community-preview.js');
+
+console.log('✅ Test 21 Passed: Community Hub Clean Profile Layout verified!\n');
+
+console.log('🎉 All Step Log, Blueprint Variable, Community Icon & Clean Hub Tests Passed Successfully!');
 process.exit(0);
 })();
 

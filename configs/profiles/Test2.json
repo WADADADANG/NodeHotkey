@@ -2,10 +2,10 @@
   "version": "3.1.0",
   "name": "Test2",
   "canvas": {
-    "zoom": 0.7013024636219192,
+    "zoom": 0.5010756310103697,
     "pan": {
-      "x": -73,
-      "y": -744
+      "x": -324,
+      "y": -663
     }
   },
   "nodes": [
@@ -15,7 +15,7 @@
       "title": "Trigger (NUMPAD 1)",
       "position": {
         "x": 120,
-        "y": 990
+        "y": 970
       },
       "data": {
         "enabled": true,
@@ -35,9 +35,11 @@
       "data": {
         "enabled": true,
         "targetClient": "4",
+        "scanRegion": "auto",
         "scanIntervalMs": 250,
         "lowHpThreshold": 70,
         "showOverlay": true,
+        "readNames": false,
         "actionId": "party_scanner_1"
       }
     },
@@ -47,13 +49,15 @@
       "title": "Party Buff (Cycle Members)",
       "position": {
         "x": 1220,
-        "y": 1320
+        "y": 1340
       },
       "data": {
         "enabled": true,
         "targetClient": "4",
+        "scanRegion": "auto",
         "delayAfterClick": 80,
         "showOverlay": true,
+        "readNames": false,
         "actionId": "party_buff_1"
       }
     },
@@ -155,6 +159,7 @@
         "text": "แจกบัฟปาร์ตี้ครบทุกคนเรียบร้อยแล้ว",
         "voice": "th-TH-PremwadeeNeural",
         "volume": 100,
+        "waitForPrevious": false,
         "actionId": "tts_complete_1"
       }
     },
@@ -163,14 +168,15 @@
       "type": "tts",
       "title": "TTS: ไม่พบปาร์ตี้",
       "position": {
-        "x": 850,
-        "y": 1720
+        "x": 1190,
+        "y": 1860
       },
       "data": {
         "enabled": true,
         "text": "สแกนไม่พบหน้าต่างปาร์ตี้ค่ะ",
         "voice": "th-TH-PremwadeeNeural",
         "volume": 100,
+        "waitForPrevious": false,
         "actionId": "tts_error_1"
       }
     },
@@ -179,11 +185,16 @@
       "type": "screenshot",
       "title": "Screenshot: Diagnostic",
       "position": {
-        "x": 850,
-        "y": 1470
+        "x": 1180,
+        "y": 1670
       },
       "data": {
         "enabled": true,
+        "targetClient": "1",
+        "captureRegion": "full",
+        "subfolder": "client_1",
+        "prefix": "error_snap",
+        "annotate": true,
         "actionId": "snap_error_1"
       }
     },
@@ -193,7 +204,7 @@
       "title": "Cast Sequencer",
       "position": {
         "x": 510,
-        "y": 990
+        "y": 970
       },
       "data": {
         "enabled": true,
@@ -242,9 +253,9 @@
       },
       "data": {
         "enabled": true,
-        "soundSource": "preset",
         "soundPreset": "ding",
         "volume": 47,
+        "repeatCount": 1,
         "actionId": "1789137894350"
       }
     },
@@ -260,6 +271,7 @@
         "enabled": true,
         "targetClient": "4",
         "targetSlot": 1,
+        "scanRegion": "auto",
         "delayAfterClick": 150,
         "showOverlay": true,
         "actionId": "1789137923937"
@@ -357,7 +369,7 @@
     }
   ],
   "targetUrlKeyword": "universe.flyff.com/play",
-  "enableOverlay": true,
+  "enableOverlay": false,
   "suspendHotkey": "END",
   "ghostMouseJitter": {
     "enabled": false,
@@ -404,5 +416,6 @@
     "6": "1-app",
     "7": "1-app",
     "8": "1-app"
-  }
+  },
+  "variables": []
 }

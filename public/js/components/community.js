@@ -44,6 +44,34 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+const COMMUNITY_ICONS = {
+  'download': '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+  'crown': '<path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>',
+  'user': '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  'clock': '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  'refresh-cw': '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+  'trash-2': '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+  'rocket': '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>',
+  'box': '<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+  'alert-triangle': '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/>',
+  'check': '<polyline points="20 6 9 17 4 12"/>',
+  'zap': '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  'eye': '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>'
+};
+
+function renderCommunityIcon(name, options = {}) {
+  if (typeof window !== 'undefined' && window.NodeDocsIcons && typeof window.NodeDocsIcons.render === 'function') {
+    return window.NodeDocsIcons.render(name, options);
+  }
+  const inner = COMMUNITY_ICONS[name] || '';
+  if (!inner) return '';
+  const size = options.size || 14;
+  const strokeWidth = options.strokeWidth || 2;
+  const className = options.className || '';
+  const style = options.style ? `style="${options.style}"` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" class="${className}" ${style}>${inner}</svg>`;
+}
+
 export async function fetchCreatorIdentity() {
   try {
     const res = await fetch('/api/community/identity');
@@ -235,9 +263,12 @@ export async function loadCommunityProfiles() {
   } catch (err) {
     container.innerHTML = `
       <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center; color:#f87171; gap:10px;">
-        <div style="font-size:24px;">⚠️</div>
+        <div style="color:#ef4444;">${renderCommunityIcon('alert-triangle', { size: 32 })}</div>
         <div style="font-size:13px; font-weight:600;">${escapeHtml(err.message)}</div>
-        <button type="button" class="btn btn-ghost" onclick="window.loadCommunityProfiles()" style="margin-top:8px; font-size:12px; padding:6px 14px;">🔄 ${getActiveLang() === 'en' ? 'Retry' : 'ลองใหม่อีกครั้ง'}</button>
+        <button type="button" class="btn btn-ghost" onclick="window.loadCommunityProfiles()" style="margin-top:8px; font-size:12px; padding:6px 14px; display:inline-flex; align-items:center; gap:6px;">
+          ${renderCommunityIcon('refresh-cw', { size: 13 })}
+          <span>${getActiveLang() === 'en' ? 'Retry' : 'ลองใหม่อีกครั้ง'}</span>
+        </button>
       </div>
     `;
   } finally {
@@ -262,14 +293,17 @@ export function renderCommunityProfiles() {
     const emptyDesc = activeTab === 'my'
       ? (t('communityEmptyDescMy') || "You haven't uploaded any profiles to Community Hub yet.")
       : (t('communityEmptyDescAll') || 'No profiles match your search criteria or none uploaded yet.');
-    const shareFirstText = t('communityShareFirstBtn') || '🚀 Be the first to share your profile';
+    const shareFirstText = t('communityShareFirstBtn') || 'Be the first to share your profile';
 
     container.innerHTML = `
       <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; text-align:center; color:var(--muted); gap:10px;">
-        <div style="font-size:36px; opacity:0.6;">📦</div>
+        <div style="color:#64748b; opacity:0.8;">${renderCommunityIcon('box', { size: 38 })}</div>
         <div style="font-size:14px; font-weight:600; color:var(--text);">${escapeHtml(emptyTitle)}</div>
         <div style="font-size:12px; max-width:320px;">${escapeHtml(emptyDesc)}</div>
-        <button type="button" class="btn btn-primary" onclick="window.openShareProfileModal()" style="margin-top:10px; font-size:12px; padding:6px 16px;">${escapeHtml(shareFirstText)}</button>
+        <button type="button" class="btn btn-primary" onclick="window.openShareProfileModal()" style="margin-top:10px; font-size:12px; padding:6px 16px; display:inline-flex; align-items:center; gap:6px;">
+          ${renderCommunityIcon('rocket', { size: 14 })}
+          <span>${escapeHtml(shareFirstText)}</span>
+        </button>
       </div>
     `;
     return;
@@ -300,8 +334,8 @@ export function renderCommunityProfiles() {
     const tagsArr = (p.tags || '').split(',').map(tag => tag.trim()).filter(Boolean);
     const byAuthorText = (t('communityByAuthor') || 'By {author}').replace('{author}', `<strong style="color:#cbd5e1;">${escapeHtml(p.author_name || 'Anonymous')}</strong>`);
     const downloadsText = (t('communityDownloadsCount') || '{count} downloads').replace('{count}', p.downloads_count || 0);
-    const installBtnText = t('communityInstallBtn') || '📥 Install';
-    const badgeMineText = t('communityBadgeMine') || '👑 Yours';
+    const installBtnText = t('communityInstallBtn') || 'Install';
+    const badgeMineText = t('communityBadgeMine') || 'Yours';
     const noDescText = t('communityNoDesc') || 'No description provided';
 
     card.innerHTML = `
@@ -312,14 +346,23 @@ export function renderCommunityProfiles() {
             <span style="font-size:10px; font-weight:700; background:rgba(56,189,248,0.12); color:#38bdf8; border:1px solid rgba(56,189,248,0.3); border-radius:4px; padding:1px 5px;">v${escapeHtml(p.version || '1.0.0')}</span>
           </div>
           ${isMine ? `
-            <span style="font-size:10px; font-weight:700; background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.4); border-radius:12px; padding:2px 8px; flex-shrink:0;">${escapeHtml(badgeMineText)}</span>
+            <span style="font-size:10px; font-weight:700; background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.4); border-radius:12px; padding:2px 8px; flex-shrink:0; display:inline-flex; align-items:center; gap:4px;">
+              ${renderCommunityIcon('crown', { size: 11 })}
+              <span>${escapeHtml(badgeMineText)}</span>
+            </span>
           ` : ''}
         </div>
 
-        <div style="font-size:11px; color:var(--muted); margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-          <span>👤 ${byAuthorText}</span>
-          <span>•</span>
-          <span>🕒 ${formatDate(p.updated_at || p.created_at)}</span>
+        <div style="font-size:11px; color:var(--muted); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+          <span style="display:inline-flex; align-items:center; gap:4px;">
+            ${renderCommunityIcon('user', { size: 12, style: 'color:#94a3b8;' })}
+            <span>${byAuthorText}</span>
+          </span>
+          <span style="opacity:0.4;">•</span>
+          <span style="display:inline-flex; align-items:center; gap:4px;">
+            ${renderCommunityIcon('clock', { size: 12, style: 'color:#94a3b8;' })}
+            <span>${formatDate(p.updated_at || p.created_at)}</span>
+          </span>
         </div>
 
         <p style="font-size:12px; color:#94a3b8; margin:0 0 10px 0; line-height:1.45; word-break:break-word; max-height:52px; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;">
@@ -336,27 +379,28 @@ export function renderCommunityProfiles() {
       </div>
 
       <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.06); padding-top:10px; margin-top:4px;">
-        <div style="display:flex; align-items:center; gap:4px; font-size:11.5px; color:#38bdf8; font-weight:600;">
-          <span>📥</span>
+        <div style="display:flex; align-items:center; gap:5px; font-size:11.5px; color:#38bdf8; font-weight:600;">
+          ${renderCommunityIcon('download', { size: 13 })}
           <span>${escapeHtml(downloadsText)}</span>
         </div>
 
         <div style="display:flex; align-items:center; gap:6px;">
           <button type="button" class="btn btn-primary btn-install-profile" data-profile-id="${p.id}" data-profile-name="${escapeHtml(p.profile_name)}"
-            style="padding:4px 12px; font-size:11.5px; font-weight:700; background:linear-gradient(135deg,#0284c7,#0369a1); border-radius:6px; color:#fff; display:flex; align-items:center; gap:4px; cursor:pointer;">
-            ${escapeHtml(installBtnText)}
+            style="padding:5px 14px; font-size:12px; font-weight:700; background:linear-gradient(135deg,#0284c7,#0369a1); border-radius:6px; color:#fff; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+            ${renderCommunityIcon('download', { size: 13 })}
+            <span>${escapeHtml(installBtnText)}</span>
           </button>
 
           ${isMine ? `
             <button type="button" class="btn btn-ghost btn-update-mine" data-profile-id="${p.id}" data-profile-name="${escapeHtml(p.profile_name)}"
               title="${getActiveLang() === 'en' ? 'Update this profile' : 'อัปเดตข้อมูลทับโปรไฟล์นี้'}"
-              style="padding:4px 8px; font-size:11px; border-color:rgba(245,158,11,0.4); color:#f59e0b; background:rgba(245,158,11,0.1); border-radius:6px; cursor:pointer;">
-              🔄
+              style="width:28px; height:28px; padding:0; display:inline-flex; align-items:center; justify-content:center; border-color:rgba(245,158,11,0.4); color:#f59e0b; background:rgba(245,158,11,0.1); border-radius:6px; cursor:pointer;">
+              ${renderCommunityIcon('refresh-cw', { size: 12 })}
             </button>
             <button type="button" class="btn btn-ghost btn-delete-mine" data-profile-id="${p.id}" data-profile-name="${escapeHtml(p.profile_name)}"
               title="${getActiveLang() === 'en' ? 'Delete from Community Hub' : 'ลบออกจาก Community Hub'}"
-              style="padding:4px 8px; font-size:11px; border-color:rgba(239,68,68,0.4); color:#ef4444; background:rgba(239,68,68,0.1); border-radius:6px; cursor:pointer;">
-              🗑️
+              style="width:28px; height:28px; padding:0; display:inline-flex; align-items:center; justify-content:center; border-color:rgba(239,68,68,0.4); color:#ef4444; background:rgba(239,68,68,0.1); border-radius:6px; cursor:pointer;">
+              ${renderCommunityIcon('trash-2', { size: 12 })}
             </button>
           ` : ''}
         </div>
@@ -398,7 +442,7 @@ export function renderCommunityProfiles() {
 export async function installCommunityProfile(profileId, profileName, btnEl = null) {
   if (btnEl) {
     btnEl.disabled = true;
-    btnEl.innerHTML = `<span>⏳</span> ${escapeHtml(t('communityInstallingBtn') || 'Installing...')}`;
+    btnEl.innerHTML = `<span class="spinner" style="display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite;"></span> <span>${escapeHtml(t('communityInstallingBtn') || 'Installing...')}</span>`;
   }
 
   try {
@@ -458,7 +502,7 @@ export async function installCommunityProfile(profileId, profileName, btnEl = nu
   } finally {
     if (btnEl) {
       btnEl.disabled = false;
-      btnEl.innerHTML = escapeHtml(t('communityInstallBtn') || '📥 Install');
+      btnEl.innerHTML = `${renderCommunityIcon('download', { size: 13 })} <span>${escapeHtml(t('communityInstallBtn') || 'Install')}</span>`;
     }
   }
 }
@@ -574,7 +618,7 @@ export async function submitShareProfile() {
 
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = `<span>⏳</span> ${escapeHtml(t('shareSubmittingBtn') || 'Uploading...')}`;
+    btn.innerHTML = `<span class="spinner" style="display:inline-block; width:12px; height:12px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.8s linear infinite;"></span> <span>${escapeHtml(t('shareSubmittingBtn') || 'Uploading...')}</span>`;
   }
 
   try {
@@ -636,7 +680,7 @@ export async function submitShareProfile() {
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = `<span>🚀</span> ${escapeHtml(t('shareSubmitBtn') || 'Publish to Community Hub')}`;
+      btn.innerHTML = `${renderCommunityIcon('rocket', { size: 14 })} <span>${escapeHtml(t('shareSubmitBtn') || 'Publish to Community Hub')}</span>`;
     }
   }
 }
@@ -708,6 +752,7 @@ export function initCommunityUI() {
   window.openShareProfileModal = openShareProfileModal;
   window.closeShareProfileModal = closeShareProfileModal;
   window.submitShareProfile = submitShareProfile;
+  window.installCommunityProfile = installCommunityProfile;
 
   // Author Change Modal
   window.openChangeAuthorModal = openChangeAuthorModal;

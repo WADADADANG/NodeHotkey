@@ -96,8 +96,8 @@
     <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; position: relative;">
       <!-- 0. Community Hub Button -->
       <button type="button" class="btn btn-ghost" onclick="window.openCommunityHubModal()"
-        style="padding: 4px 12px; font-size: 11px; font-weight: 700; height: 30px; border-color: rgba(16,185,129,0.4); color: #34d399; background: rgba(16,185,129,0.1); border-radius: 6px; display: flex; align-items: center; gap: 5px; cursor: pointer;">
-        <span>🌐</span>
+        style="padding: 4px 12px; font-size: 11px; font-weight: 700; height: 30px; border-color: rgba(16,185,129,0.4); color: #34d399; background: rgba(16,185,129,0.1); border-radius: 6px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         <span data-i18n="communityHubBtn">Community Hub</span>
       </button>
 
@@ -142,8 +142,9 @@
 
           <button type="button" class="btn-action-item"
             onclick="window.closeProfileActionsDropdown(); window.openShareProfileModal();"
-            style="width: 100%; text-align: left; padding: 7px 10px; font-size: 11.5px; font-weight: 600; color: #34d399; background: transparent; border: none; border-radius: 5px; cursor: pointer; display: flex; align-items: center; transition: background 0.12s;">
-            <span data-i18n="shareToCommunityBtn">🚀 Share to Community</span>
+            style="width: 100%; text-align: left; padding: 7px 10px; font-size: 11.5px; font-weight: 600; color: #34d399; background: transparent; border: none; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: background 0.12s;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+            <span data-i18n="shareToCommunityBtn">Share to Community</span>
           </button>
 
           <button type="button" class="btn-action-item"
@@ -757,8 +758,10 @@
       
       <!-- Modal Header -->
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 14px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="font-size: 24px;">🌐</div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.3); color: #38bdf8; flex-shrink: 0; box-shadow: 0 0 16px rgba(56,189,248,0.2);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
           <div>
             <h2 style="font-size: 18px; font-weight: 800; color: #f8fafc; margin: 0; display: flex; align-items: center; gap: 8px;">
               <span data-i18n="communityModalTitle">NodeHotkey Community Hub</span>
@@ -773,15 +776,19 @@
         <!-- Author Tag & Close -->
         <div style="display: flex; align-items: center; gap: 12px;">
           <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px 10px; font-size: 11.5px; display: flex; align-items: center; gap: 6px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             <span style="color: #94a3b8;" data-i18n="communityAuthorLabel">ผู้สร้างของคุณ:</span>
             <strong id="community-current-author" style="color: #38bdf8;">Loading...</strong>
             <button type="button" class="btn btn-ghost" onclick="window.openChangeAuthorModal()" data-i18n-title="communityEditAuthorBtn"
-              style="padding: 2px 6px; font-size: 10px; border-color: rgba(56,189,248,0.3); color: #38bdf8; height: 20px; border-radius: 4px; cursor: pointer;">
-              <span data-i18n="communityEditAuthorBtn">✏️ แก้ไข</span>
+              style="padding: 2px 8px; font-size: 10px; border-color: rgba(56,189,248,0.3); color: #38bdf8; height: 20px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+              <span data-i18n="communityEditAuthorBtn">แก้ไข</span>
             </button>
           </div>
           <button type="button" class="btn btn-ghost" onclick="window.closeCommunityHubModal()"
-            style="padding: 4px 10px; font-size: 14px; color: #94a3b8; border-color: rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer;">✕</button>
+            style="width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center; color: #94a3b8; border-color: rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
       </div>
 
@@ -790,21 +797,25 @@
         <!-- Left: Search & Filter Tabs -->
         <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 300px;">
           <!-- Tabs -->
-          <div style="display: flex; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 2px;">
-            <button type="button" id="tab-community-all" class="community-tab active" data-i18n="communityTabAll"
-              style="background: transparent; border: none; padding: 5px 12px; font-size: 11.5px; font-weight: 700; color: #94a3b8; border-radius: 6px; cursor: pointer; transition: all 0.15s;">
-              🔥 โปรไฟล์ทั้งหมด
+          <div style="display: flex; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 2px; gap: 2px;">
+            <button type="button" id="tab-community-all" class="community-tab active"
+              style="background: transparent; border: none; padding: 5px 12px; font-size: 11.5px; font-weight: 700; color: #94a3b8; border-radius: 6px; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+              <span data-i18n="communityTabAll">โปรไฟล์ทั้งหมด</span>
             </button>
-            <button type="button" id="tab-community-my" class="community-tab" data-i18n="communityTabMy"
-              style="background: transparent; border: none; padding: 5px 12px; font-size: 11.5px; font-weight: 700; color: #94a3b8; border-radius: 6px; cursor: pointer; transition: all 0.15s;">
-              👑 ที่ฉันอัปโหลด
+            <button type="button" id="tab-community-my" class="community-tab"
+              style="background: transparent; border: none; padding: 5px 12px; font-size: 11.5px; font-weight: 700; color: #94a3b8; border-radius: 6px; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
+              <span data-i18n="communityTabMy">ที่ฉันอัปโหลด</span>
             </button>
           </div>
 
-          <!-- Search Input -->
-          <div style="position: relative; flex: 1;">
-            <input type="text" id="community-search-input" data-i18n-placeholder="communitySearchPlaceholder" placeholder="🔍 ค้นหาชื่อโปรไฟล์, คำอธิบาย, หรือแท็ก..."
-              style="width: 100%; background: #131d31; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 6px 12px; color: #f1f5f9; font-size: 12px; outline: none;">
+          <!-- Search Input with Vector Icon -->
+          <div style="position: relative; flex: 1; display: flex; align-items: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              style="position: absolute; left: 10px; pointer-events: none;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="community-search-input" data-i18n-placeholder="communitySearchPlaceholder" placeholder="ค้นหาชื่อโปรไฟล์, คำอธิบาย, หรือแท็ก..."
+              style="width: 100%; background: #131d31; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 6px 12px 6px 30px; color: #f1f5f9; font-size: 12px; outline: none;">
           </div>
         </div>
 
@@ -812,18 +823,19 @@
         <div style="display: flex; align-items: center; gap: 10px;">
           <select id="community-sort-select"
             style="background: #131d31; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 6px 10px; color: #cbd5e1; font-size: 11.5px; font-weight: 600; outline: none; cursor: pointer;">
-            <option value="downloads" data-i18n="communitySortDownloads">🔥 ยอดดาวน์โหลดสูงสุด</option>
-            <option value="recent" data-i18n="communitySortRecent">✨ อัปเดตล่าสุด</option>
+            <option value="downloads" data-i18n="communitySortDownloads">ยอดดาวน์โหลดสูงสุด</option>
+            <option value="recent" data-i18n="communitySortRecent">อัปเดตล่าสุด</option>
           </select>
 
           <button type="button" class="btn btn-ghost" onclick="window.loadCommunityProfiles()" title="รีเฟรชข้อมูล" data-i18n-title="communityRefreshBtnTitle"
-            style="padding: 6px 10px; font-size: 12px; border-color: rgba(255,255,255,0.15); border-radius: 8px; cursor: pointer;">
-            🔄
+            style="width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-color: rgba(255,255,255,0.15); border-radius: 8px; cursor: pointer; color: #94a3b8;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
           </button>
 
           <button type="button" class="btn" onclick="window.openShareProfileModal()"
             style="padding: 6px 14px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #10b981, #059669); color: #fff; border-radius: 8px; border: 1px solid rgba(16,185,129,0.4); display: flex; align-items: center; gap: 6px; cursor: pointer;">
-            <span data-i18n="communityShareBtn">🚀 แชร์โปรไฟล์ขึ้นคอมมูนิตี้</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+            <span data-i18n="communityShareBtn">แชร์โปรไฟล์ขึ้นคอมมูนิตี้</span>
           </button>
         </div>
       </div>
@@ -835,7 +847,10 @@
 
       <!-- Modal Footer -->
       <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; margin-top: 12px; font-size: 11px; color: #64748b;">
-        <div data-i18n="communityFooterText">⚡ เซิร์ฟเวอร์ Cloudflare Edge รวดเร็ว ไม่มีปิดหลับ ปลอดภัยด้วย Author Secret Verification</div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span data-i18n="communityFooterText">เซิร์ฟเวอร์ Cloudflare Edge รวดเร็ว ไม่มีปิดหลับ ปลอดภัยด้วย Author Secret Verification</span>
+        </div>
         <button type="button" class="btn btn-ghost" onclick="window.closeCommunityHubModal()" data-i18n="communityCloseBtn" style="padding: 5px 16px; font-size: 12px; border-radius: 6px;">ปิด</button>
       </div>
     </div>
@@ -847,10 +862,13 @@
       
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;">
         <h2 style="font-size: 17px; font-weight: 800; color: #f8fafc; margin: 0; display: flex; align-items: center; gap: 8px;">
-          <span data-i18n="shareModalTitle">🚀 แชร์โปรไฟล์ขึ้น Community Hub</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+          <span data-i18n="shareModalTitle">แชร์โปรไฟล์ขึ้น Community Hub</span>
         </h2>
         <button type="button" class="btn btn-ghost" onclick="window.closeShareProfileModal()"
-          style="padding: 4px 8px; font-size: 13px; color: #94a3b8; border-color: transparent; cursor: pointer;">✕</button>
+          style="width: 28px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center; color: #94a3b8; border: none; cursor: pointer;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
 
       <input type="hidden" id="share-community-id" value="">
@@ -903,7 +921,8 @@
         <button type="button" class="btn btn-ghost" onclick="window.closeShareProfileModal()" data-i18n="btnCancel" style="padding: 7px 16px; font-size: 12px;">ยกเลิก</button>
         <button type="button" class="btn" id="btn-submit-share-profile" onclick="window.submitShareProfile()"
           style="padding: 7px 20px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg,#10b981,#059669); color: #fff; border-radius: 8px; border: 1px solid rgba(16,185,129,0.4); cursor: pointer; display: flex; align-items: center; gap: 6px;">
-          <span data-i18n="shareSubmitBtn">🚀 เผยแพร่ขึ้น Community Hub</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+          <span data-i18n="shareSubmitBtn">เผยแพร่ขึ้น Community Hub</span>
         </button>
       </div>
     </div>
@@ -914,10 +933,13 @@
     <div class="modal" style="max-width: 440px; width: 90vw; padding: 22px 24px; background: #0c1222; border: 1px solid rgba(56,189,248,0.35); border-radius: 14px; box-shadow: 0 25px 60px rgba(0,0,0,0.9);">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <h2 style="font-size: 16px; font-weight: 800; color: #f8fafc; margin: 0; display: flex; align-items: center; gap: 8px;">
-          <span data-i18n="authorModalTitle">✏️ เปลี่ยนชื่อผู้สร้าง (Author Name)</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+          <span data-i18n="authorModalTitle">เปลี่ยนชื่อผู้สร้าง (Author Name)</span>
         </h2>
         <button type="button" class="btn btn-ghost" onclick="window.closeChangeAuthorModal()"
-          style="padding: 2px 8px; font-size: 13px; color: #94a3b8; border: none; cursor: pointer;">✕</button>
+          style="width: 26px; height: 26px; padding: 0; display: inline-flex; align-items: center; justify-content: center; color: #94a3b8; border: none; cursor: pointer;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
       <p style="font-size: 12px; color: #94a3b8; margin: 0 0 16px 0; line-height: 1.45;" data-i18n="authorModalSubtitle">
         ระบุชื่อเล่นหรือฉายาของคุณ เพื่อใช้แสดงเป็นชื่อผู้สร้างโปรไฟล์ใน Community Hub
@@ -932,8 +954,9 @@
       <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 14px;">
         <button type="button" class="btn btn-ghost" onclick="window.closeChangeAuthorModal()" data-i18n="btnCancel" style="padding: 6px 16px; font-size: 12px;">ยกเลิก</button>
         <button type="button" class="btn btn-primary" onclick="window.confirmChangeAuthorName()"
-          style="padding: 6px 20px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #0284c7, #0369a1); border-radius: 8px; color: #fff; cursor: pointer;">
-          <span data-i18n="authorModalSaveBtn">✓ บันทึกชื่อ</span>
+          style="padding: 6px 20px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #0284c7, #0369a1); border-radius: 8px; color: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="authorModalSaveBtn">บันทึกชื่อ</span>
         </button>
       </div>
     </div>
@@ -944,10 +967,13 @@
     <div class="modal" style="max-width: 440px; width: 90vw; padding: 22px 24px; background: #0c1222; border: 1px solid rgba(239,68,68,0.35); border-radius: 14px; box-shadow: 0 25px 60px rgba(0,0,0,0.9);">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <h2 style="font-size: 16px; font-weight: 800; color: #ef4444; margin: 0; display: flex; align-items: center; gap: 8px;">
-          <span data-i18n="deleteModalTitle">🗑️ ลบโปรไฟล์ออกจาก Community Hub</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+          <span data-i18n="deleteModalTitle">ลบโปรไฟล์ออกจาก Community Hub</span>
         </h2>
         <button type="button" class="btn btn-ghost" onclick="window.closeCommunityDeleteModal()"
-          style="padding: 2px 8px; font-size: 13px; color: #94a3b8; border: none; cursor: pointer;">✕</button>
+          style="width: 26px; height: 26px; padding: 0; display: inline-flex; align-items: center; justify-content: center; color: #94a3b8; border: none; cursor: pointer;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
       <p id="community-delete-desc" style="font-size: 12px; color: #cbd5e1; margin: 0 0 18px 0; line-height: 1.5;"></p>
       
@@ -957,8 +983,9 @@
       <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 14px;">
         <button type="button" class="btn btn-ghost" onclick="window.closeCommunityDeleteModal()" data-i18n="btnCancel" style="padding: 6px 16px; font-size: 12px;">ยกเลิก</button>
         <button type="button" class="btn" onclick="window.confirmDeleteCommunityProfile()"
-          style="padding: 6px 20px; font-size: 12px; font-weight: 700; background: #ef4444; border: 1px solid rgba(239,68,68,0.5); border-radius: 8px; color: #fff; cursor: pointer;">
-          <span data-i18n="deleteModalConfirmBtn">🗑️ ยืนยันลบ</span>
+          style="padding: 6px 20px; font-size: 12px; font-weight: 700; background: #ef4444; border: 1px solid rgba(239,68,68,0.5); border-radius: 8px; color: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+          <span data-i18n="deleteModalConfirmBtn">ยืนยันลบ</span>
         </button>
       </div>
     </div>
@@ -974,7 +1001,7 @@
   <script src="/js/canvas.js?v=3.2.1"></script>
   <script src="/js/canvas-inspector.js?v=3.2.1"></script>
   <script src="/js/canvas-serializer.js?v=3.2.1"></script>
-  <script type="module" src="/js/app.js?v=3.2.2"></script>
+  <script type="module" src="/js/app.js?v=3.2.3"></script>
 </body>
 
 </html>
