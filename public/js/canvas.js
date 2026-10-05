@@ -3561,6 +3561,13 @@ class NodeCanvasEditor {
     // Remove any legacy dummy placeholder variables (myVar / my_var)
     this.variables = this.variables.filter(v => v && v.name && v.name !== 'myVar' && v.name !== 'my_var');
 
+    // Ensure every local variable has a persistent id
+    this.variables.forEach(v => {
+      if (!v.id) {
+        v.id = 'var_' + (v.name ? v.name.replace(/[^a-zA-Z0-9_]/g, '_') : Math.random().toString(36).substring(2, 9));
+      }
+    });
+
     // Auto-discovery from nodes on current canvas (var_set, variable, var_get, var_branch)
     const existingNames = new Set(this.variables.map(v => v.name));
 
@@ -3589,7 +3596,7 @@ class NodeCanvasEditor {
             : (d.initialValue !== undefined ? d.initialValue : (vType === 'boolean' ? 'false' : (vType === 'number' ? '0' : '')));
 
           this.variables.push({
-            id: 'var_' + Math.random().toString(36).substring(2, 9),
+            id: 'var_' + vName.replace(/[^a-zA-Z0-9_]/g, '_'),
             name: vName,
             type: vType,
             scope: d.scope || 'global',
@@ -3615,13 +3622,14 @@ class NodeCanvasEditor {
         const profObj = window.fullConfig.profiles[pName];
         if (!profObj) return;
 
-        // From profile's variables array
+        // From profile's variables array (use deterministic stable ID)
         const vars = Array.isArray(profObj.variables) ? profObj.variables : [];
         vars.forEach(v => {
-          if (existingNames.has(v.name)) return;
+          if (!v || !v.name || existingNames.has(v.name)) return;
           existingNames.add(v.name);
+          const stableId = v.id || `xvar_${pName}_${v.name}`;
           crossProfileVars.push({
-            id: 'xvar_' + Math.random().toString(36).substring(2, 9),
+            id: stableId,
             name: v.name,
             type: v.type || v.varType || 'boolean',
             scope: v.scope || 'global',
@@ -3631,11 +3639,11 @@ class NodeCanvasEditor {
             description: v.description || '',
             fromProfile: pName,
             isSharedAcrossProfiles: true,
-            isReadOnly: true
+            isReadOnly: false
           });
         });
 
-        // From variable nodes on that profile's canvas (discover all, regardless of scope)
+        // From variable nodes on that profile's canvas (use deterministic stable ID)
         const nodes = Array.isArray(profObj.nodes) ? profObj.nodes : [];
         nodes.forEach(node => {
           if (node.type !== 'var_set' && node.type !== 'variable' && node.type !== 'var_get' && node.type !== 'var_branch') return;
@@ -3643,8 +3651,9 @@ class NodeCanvasEditor {
           const vName = d.varName || (d.conditionTargetId && String(d.conditionTargetId).startsWith('var:') ? String(d.conditionTargetId).replace('var:', '') : (node.title ? node.title.replace(/^(Get |Set )/, '') : null));
           if (!vName || existingNames.has(vName)) return;
           existingNames.add(vName);
+          const stableId = `xvar_${pName}_${vName}`;
           crossProfileVars.push({
-            id: 'xvar_' + Math.random().toString(36).substring(2, 9),
+            id: stableId,
             name: vName,
             type: d.varType || 'boolean',
             scope: d.scope || 'global',
@@ -3654,7 +3663,7 @@ class NodeCanvasEditor {
             description: '',
             fromProfile: pName,
             isSharedAcrossProfiles: true,
-            isReadOnly: true
+            isReadOnly: false
           });
         });
       });
@@ -3728,10 +3737,10 @@ class NodeCanvasEditor {
             <button type="button" class="btn-var-spawn btn-var-set" onclick="window.nodeCanvas.spawnVariableNode('${v.name}', 'var_set')" title="วางโหนด Set Variable ลง Canvas">
               ✏️ ${canvasT('var_spawn_set', 'Set')}
             </button>
-            <button type="button" class="btn-var-icon" onclick="window.nodeCanvas.openVariableModal('${v.id}')" title="${canvasT('var_btn_edit_tooltip', 'แก้ไขตัวแปร (Edit)')}">
+            <button type="button" class="btn-var-icon" onclick="window.nodeCanvas.openVariableModal('${v.id}', null, '${v.name}')" title="${canvasT('var_btn_edit_tooltip', 'แก้ไขตัวแปร (Edit)')}">
               ⚙️
             </button>
-            <button type="button" class="btn-var-icon btn-var-del" onclick="window.nodeCanvas.deleteVariable('${v.id}')" title="${canvasT('var_btn_del_tooltip', 'ลบตัวแปร (Delete)')}">
+            <button type="button" class="btn-var-icon btn-var-del" onclick="window.nodeCanvas.deleteVariable('${v.id}', '${v.name}')" title="${canvasT('var_btn_del_tooltip', 'ลบตัวแปร (Delete)')}">
               🗑️
             </button>
           </div>
@@ -3800,17 +3809,17 @@ class NodeCanvasEditor {
     }
   }
 
-  deleteVariable(varId) {
-    let v = (this.variables || []).find(it => it.id === varId);
+  deleteVariable(varId, varNameFallback = null) {
+    let v = (this.variables || []).find(it => (varId && it.id === varId) || (varId && it.name === varId) || (varNameFallback && it.name === varNameFallback));
     let sourceProfileName = null;
     if (!v) {
       const allAvail = (typeof this.getAvailableVariables === 'function') ? this.getAvailableVariables() : [];
-      const found = allAvail.find(it => it.id === varId);
+      const found = allAvail.find(it => (varId && it.id === varId) || (varId && it.name === varId) || (varNameFallback && it.name === varNameFallback));
       if (found && found.fromProfile && window.fullConfig?.profiles?.[found.fromProfile]) {
         sourceProfileName = found.fromProfile;
         const pObj = window.fullConfig.profiles[sourceProfileName];
         if (Array.isArray(pObj.variables)) {
-          v = pObj.variables.find(it => it.name === found.name || it.id === varId) || found;
+          v = pObj.variables.find(it => it.name === found.name || it.id === varId || (varNameFallback && it.name === varNameFallback)) || found;
         } else {
           v = found;
         }
@@ -3893,14 +3902,14 @@ class NodeCanvasEditor {
     }
   }
 
-  openVariableModal(varId = null, targetNodeId = null) {
+  openVariableModal(varId = null, targetNodeId = null, varNameFallback = null) {
     let vObj = null;
     let sourceProfileName = null;
-    if (varId) {
-      vObj = (this.variables || []).find(it => it.id === varId);
+    if (varId || varNameFallback) {
+      vObj = (this.variables || []).find(it => (varId && it.id === varId) || (varId && it.name === varId) || (varNameFallback && it.name === varNameFallback));
       if (!vObj) {
         const allAvail = (typeof this.getAvailableVariables === 'function') ? this.getAvailableVariables() : [];
-        const found = allAvail.find(it => it.id === varId);
+        const found = allAvail.find(it => (varId && it.id === varId) || (varId && it.name === varId) || (varNameFallback && it.name === varNameFallback));
         if (found) {
           vObj = found;
           sourceProfileName = found.fromProfile || null;
@@ -3917,7 +3926,7 @@ class NodeCanvasEditor {
     }
 
     const isEdit = !!vObj;
-    const varName = vObj ? vObj.name : '';
+    const varName = vObj ? vObj.name : (varNameFallback || '');
     const varType = vObj ? (vObj.type || 'boolean') : 'boolean';
     const defaultValue = vObj ? (vObj.defaultValue !== undefined ? vObj.defaultValue : '') : (varType === 'boolean' ? 'false' : (varType === 'number' ? '0' : ''));
     const varScope = vObj ? (vObj.scope || 'global') : 'global';
@@ -3935,7 +3944,7 @@ class NodeCanvasEditor {
           <button type="button" style="background:transparent; border:none; color:var(--muted); font-size:16px; cursor:pointer;" onclick="window.nodeCanvas.closeVariableModal()">✕</button>
         </div>
 
-        <form id="var-editor-form" onsubmit="event.preventDefault(); window.nodeCanvas.saveVariableFromModal('${varId || ''}', '${targetNodeId || ''}');">
+        <form id="var-editor-form" onsubmit="event.preventDefault(); window.nodeCanvas.saveVariableFromModal('${varId || (vObj ? vObj.id : '')}', '${targetNodeId || ''}', '${varName || ''}');">
           <div class="inspector-field-group" style="margin-bottom:12px;">
             <label class="inspector-label">${canvasT('var_name_label', 'ชื่อตัวแปร')} <span style="color:#ef4444;">*</span></label>
             <input type="text" id="modal-var-name" class="inspector-input" value="${varName}" placeholder="e.g. isBuffActive, comboCounter, bossHealth" required pattern="[A-Za-z0-9_]+" title="ใช้อักษรภาษาอังกฤษ ตัวเลข และ _ เท่านั้น (ห้ามเว้นวรรค)" style="font-family:'JetBrains Mono'; font-weight:700; color:#38bdf8;" />
@@ -4016,7 +4025,7 @@ class NodeCanvasEditor {
     if (modalEl) modalEl.classList.remove('show');
   }
 
-  saveVariableFromModal(varId, targetNodeId) {
+  saveVariableFromModal(varId, targetNodeId, originalName = null) {
     const nameInput = document.getElementById('modal-var-name');
     const typeSelect = document.getElementById('modal-var-type');
     const defaultInput = document.getElementById('modal-var-default');
@@ -4040,8 +4049,8 @@ class NodeCanvasEditor {
     let oldName = null;
     let savedInOtherProfile = false;
 
-    if (varId) {
-      let existing = this.variables.find(v => v.id === varId);
+    if (varId || originalName) {
+      let existing = this.variables.find(v => (varId && v.id === varId) || (varId && v.name === varId) || (originalName && v.name === originalName));
       if (existing) {
         oldName = existing.name;
         existing.name = rawName;
@@ -4054,11 +4063,11 @@ class NodeCanvasEditor {
       } else {
         // Cross-profile variable search & update
         const allAvail = (typeof this.getAvailableVariables === 'function') ? this.getAvailableVariables() : [];
-        const found = allAvail.find(v => v.id === varId);
+        const found = allAvail.find(v => (varId && v.id === varId) || (varId && v.name === varId) || (originalName && v.name === originalName));
         if (found && found.fromProfile && window.fullConfig?.profiles?.[found.fromProfile]) {
           const pObj = window.fullConfig.profiles[found.fromProfile];
           if (!Array.isArray(pObj.variables)) pObj.variables = [];
-          let targetVar = pObj.variables.find(v => v.name === found.name || v.id === varId);
+          let targetVar = pObj.variables.find(v => (varId && v.id === varId) || v.name === found.name || (originalName && v.name === originalName));
           if (targetVar) {
             oldName = targetVar.name;
             targetVar.name = rawName;
@@ -4070,7 +4079,7 @@ class NodeCanvasEditor {
             targetVar.description = description;
           } else {
             pObj.variables.push({
-              id: varId,
+              id: varId || ('var_' + Math.random().toString(36).substring(2, 9)),
               name: rawName,
               type,
               scope,
