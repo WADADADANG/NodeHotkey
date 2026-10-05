@@ -3714,8 +3714,11 @@ class NodeCanvasEditor {
       const typeBadgeClass = v.type === 'number' ? 'var-badge-number' : (v.type === 'boolean' ? 'var-badge-boolean' : 'var-badge-string');
       const typeIcon = v.type === 'number' ? '🔢' : (v.type === 'boolean' ? '🔘' : '📝');
       const isCrossProfile = v.isSharedAcrossProfiles && v.fromProfile;
-      const scopeLabel = isCrossProfile
+      const fullScopeTitle = isCrossProfile
         ? canvasT('var_shared_from', '🌐 แชร์จาก "{name}"').replace('{name}', v.fromProfile)
+        : '🌐 Global Scope';
+      const scopeDisplay = isCrossProfile
+        ? `📁 ${v.fromProfile}`
         : '🌐 Global';
 
       return `
@@ -3724,10 +3727,12 @@ class NodeCanvasEditor {
             <span class="variable-name" title="${v.name}">${v.name}</span>
             <span class="var-type-badge ${typeBadgeClass}">${typeIcon} ${v.type}</span>
           </div>
-          <div class="variable-card-meta" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-            <span>${scopeLabel}</span>
-            <span style="font-family:'JetBrains Mono'; opacity:0.85;">Def: ${v.defaultValue !== undefined ? v.defaultValue : '-'}</span>
-            ${v.resetOnPause ? `<span style="color:#f59e0b; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3); border-radius:4px; padding:1px 5px; font-size:9.5px; font-weight:700;">🔄 ${canvasT('var_badge_auto_reset', 'รีเซ็ตเมื่อหยุด')}</span>` : ''}
+          <div class="variable-card-meta" style="display:flex; align-items:center; justify-content:space-between; gap:6px; min-width:0;">
+            <div style="display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden;">
+              <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px; color:${isCrossProfile ? '#38bdf8' : 'inherit'}; font-weight:${isCrossProfile ? '600' : 'normal'};" title="${fullScopeTitle}">${scopeDisplay}</span>
+              <span style="font-family:'JetBrains Mono'; opacity:0.85; flex-shrink:0;">Def: ${v.defaultValue !== undefined ? v.defaultValue : '-'}</span>
+            </div>
+            ${v.resetOnPause ? `<span style="color:#f59e0b; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3); border-radius:4px; padding:1px 5px; font-size:9.5px; font-weight:700; flex-shrink:0; white-space:nowrap;" title="${canvasT('var_reset_on_pause_hint', 'รีเซ็ตเป็นค่าเริ่มต้นอัตโนมัติเมื่อหยุดบอท')}">🔄 ${canvasT('var_badge_auto_reset', 'รีเซ็ตเมื่อหยุด')}</span>` : ''}
           </div>
           ${v.description ? `<div style="font-size:10px; color:#94a3b8; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${v.description}">${v.description}</div>` : ''}
           <div class="variable-actions">
