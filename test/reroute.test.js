@@ -61,6 +61,6 @@ const knotAction = { id: 'test_knot', name: 'Reroute 1', mode: 'reroute' };
 bot.runRerouteAction(knotAction).then(() => {
   assert.ok(emittedSignals.some(s => s.event === 'out'), 'Should emit "out" signal');
   assert.ok(emittedSignals.some(s => s.chainEvent === 'out'), 'Should fireChain "out" event');
-  console.log('✅ Test 3 Passed: Reroute Action executed and emitted pass-through signal!\n');
   console.log('🎉 All Reroute Node (Knot) tests passed successfully!\n');
+  process.exit(0);
 });

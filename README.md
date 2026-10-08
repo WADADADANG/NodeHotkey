@@ -1,4 +1,4 @@
-# 🚀 NodeHotkey (v3.1.0) - Node-Based Visual Workflow Automation Suite - Background WebGL Multi-Client Automation Suite
+# 🚀 NodeHotkey (v3.2.0) - Node-Based Visual Workflow Automation Suite - Background WebGL Multi-Client Automation Suite
 
 เครื่องมืออัตโนมัติช่วยกดปุ่มคีย์บอร์ดและเมาส์ในเบราว์เซอร์แบบพื้นหลัง (Background Automation) ออกแบบมาสำหรับเกม HTML5 / WebGL เช่น **Flyff Universe** รองรับหลายจอพร้อมกัน ไม่แย่งเมาส์ ไม่กวนการทำงานของคอมพิวเตอร์
 
@@ -55,7 +55,7 @@
 หากต้องการส่งโปรแกรมให้คนอื่นใช้งานโดยที่**ผู้ใช้ปลายทางไม่ต้องลง Node.js ในเครื่องเลย**:
 1. ดับเบิลคลิก **`4 build-installer.bat`**
 2. ระบบจะแพ็คไฟล์โปรแกรม + Node.js Portable Runtime ลงในโฟลเดอร์ `dist/NodeHotkey`
-3. สคริปต์จะใช้ **Inno Setup** คอมไพล์ออกมาเป็นไฟล์ติดตั้งตัวเดียวจบ **`dist/NodeHotkey-Setup-v3.1.0.exe`**
+3. สคริปต์จะใช้ **Inno Setup** คอมไพล์ออกมาเป็นไฟล์ติดตั้งตัวเดียวจบ **`dist/NodeHotkey-Setup-v3.2.0.exe`**
    - 🔒 **Data Protection:** ตัวสร้างตัวติดตั้งจะกรองโปรไฟล์ส่วนตัวออก และใช้ Default Config ที่สะอาด (ไม่ติดพิกัดหน้าจอลบหรือ Proxy ส่วนตัว)
    - 🔄 **Safe Upgrade:** ผู้ใช้ปลายทางสามารถดาวน์โหลดเวอร์ชันใหม่ไป **"ติดตั้งทับ"** ได้ทันที โดยที่พิกัดจอ, พ็อกซี่, และโปรไฟล์ที่สร้างไว้จะไม่หาย 100%
 

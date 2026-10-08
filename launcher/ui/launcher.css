@@ -653,6 +653,19 @@ body.app-root-body {
   color: #f87171;
 }
 
+.btn-matrix-action.pip {
+  background: #0c4a6e;
+  border-color: #38bdf8;
+  color: #38bdf8;
+  transition: all 0.15s ease;
+}
+
+.btn-matrix-action.pip:hover {
+  background: #0284c7;
+  color: #fff;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+}
+
 .client-tiles-grid-4x2 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -714,6 +727,87 @@ body.app-root-body {
 .c-tile-badge.offline { background: rgba(255, 255, 255, 0.05); color: var(--text-dim); }
 .c-tile-badge.active { background: rgba(16, 185, 129, 0.2); color: #34d399; }
 .c-tile-badge.paused { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+.btn-c-del-slot {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0 2px;
+  opacity: 0.45;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.btn-c-del-slot:hover {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.c-matrix-tile.empty-slot {
+  background: rgba(15, 23, 42, 0.35);
+  border: 1px dashed rgba(148, 163, 184, 0.22);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 94px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.c-matrix-tile.empty-slot:hover {
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.45);
+  transform: translateY(-1px);
+}
+
+.empty-slot-icon {
+  font-size: 18px;
+  color: #38bdf8;
+  opacity: 0.8;
+}
+
+.empty-slot-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.c-matrix-tile.empty-slot:hover .empty-slot-label {
+  color: #fff;
+}
+
+.c-matrix-tile.add-new-slot {
+  background: rgba(16, 185, 129, 0.04);
+  border: 1px dashed rgba(16, 185, 129, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 94px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.c-matrix-tile.add-new-slot:hover {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.55);
+  transform: translateY(-1px);
+}
+
+.add-new-slot-icon {
+  font-size: 20px;
+  color: #34d399;
+}
+
+.add-new-slot-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #34d399;
+}
 
 .c-alias-input {
   width: 100%;
@@ -785,6 +879,27 @@ body.app-root-body {
   color: var(--text-dim);
 }
 .btn-c-close:hover { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #fff; }
+
+.btn-c-pip {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.15s ease;
+}
+.btn-c-pip:hover {
+  background: rgba(56, 189, 248, 0.3);
+  border-color: #38bdf8;
+  color: #fff;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+}
 
 /* Terminal Card */
 .terminal-card {

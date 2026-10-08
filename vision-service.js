@@ -408,6 +408,17 @@ class ClientPartyScanner {
                 continue;
             }
 
+            // 🚀 Zero-CPU Persistent Name Cache: If slot was already recognized in this session, return cached name with 0 CPU & 0ms overhead!
+            if (this.cachedNames && this.cachedNames.has(m.slot)) {
+                const cached = this.cachedNames.get(m.slot);
+                if (cached && cached.name) {
+                    m.name = cached.name;
+                    m.level = cached.level;
+                    m.isLeader = cached.isLeader;
+                    continue;
+                }
+            }
+
             try {
                 const textTop = Math.max(0, m.barY - 18);
                 // ขยายกรอบอ่านชื่อไปทางซ้าย 58px เพื่อให้อ่านครอบคลุมทั้ง Level (เช่น 147.) และชื่อตัวละครสั้นๆ ที่อยู่เยื้องซ้ายของหลอดเลือด
@@ -806,9 +817,11 @@ class VisionService {
             let frameBuffer = this.screencastManager.getLatestFrame(id);
             const session = this.screencastManager.streams.get(id);
             const now = Date.now();
-            const isStale = !session || !session.lastFrameTime || (now - session.lastFrameTime > 600);
+            // When game scene is idle, Chrome Compositor intentionally stops sending dirty frames.
+            // Re-using the latestBuffer avoids GPU pipeline stalls, texture readback, and 600ms micro-stutters.
+            const isStreamDead = !session || !session.lastFrameTime || (now - session.lastFrameTime > 6000);
 
-            if (!frameBuffer || isStale) {
+            if (!frameBuffer || (isStreamDead && !session?.latestBuffer)) {
                 try {
                     frameBuffer = await page.screenshot({
                         type: 'jpeg',

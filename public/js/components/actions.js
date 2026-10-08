@@ -365,9 +365,14 @@ export function toggleChainAccordion(actionId, event) {
 }
 
 export function getActionTargetsList(targetClientString) {
-  if (!targetClientString) return ['1'];
+  const gs = (window.fullConfig && window.fullConfig.globalSettings) || {};
+  const defaultSlots = (Array.isArray(gs.clientSlots) && gs.clientSlots.length > 0)
+    ? gs.clientSlots.map(String)
+    : ['1', '2', '3', '4', '5', '6', '7', '8'];
+
+  if (!targetClientString) return [defaultSlots[0] || '1'];
   if (targetClientString === 'all' || targetClientString === 'both') {
-    return ['1', '2', '3', '4', '5', '6', '7', '8'];
+    return defaultSlots;
   }
   return targetClientString.split(',').map(s => s.trim()).filter(Boolean);
 }
@@ -375,10 +380,14 @@ export function getActionTargetsList(targetClientString) {
 export function renderTargetClientSelector(act) {
   const selectedTargets = getActionTargetsList(act.targetClient);
   const isAllSelected = act.targetClient === 'all' || act.targetClient === 'both';
+  const gs = (window.fullConfig && window.fullConfig.globalSettings) || {};
+  const availableSlots = (Array.isArray(gs.clientSlots) && gs.clientSlots.length > 0)
+    ? gs.clientSlots
+    : [1, 2, 3, 4, 5, 6, 7, 8];
 
   let html = `<div class="client-btn-group" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">`;
 
-  for (let i = 1; i <= 8; i++) {
+  for (const i of availableSlots) {
     const isActive = activeClients.includes(i);
     const isSelected = isAllSelected || selectedTargets.includes(String(i));
     const activeColor = isSelected ? 'var(--primary)' : 'var(--bg-input)';
@@ -1269,16 +1278,22 @@ export function toggleClientSelection(btn, actionId) {
   const val = btn.getAttribute('data-value');
   let currentVal = act.targetClient || '1';
 
+  const gs = (window.fullConfig && window.fullConfig.globalSettings) || {};
+  const availableSlots = (Array.isArray(gs.clientSlots) && gs.clientSlots.length > 0)
+    ? gs.clientSlots
+    : [1, 2, 3, 4, 5, 6, 7, 8];
+  const firstSlotStr = String(availableSlots[0] || '1');
+
   let targets = [];
   if (currentVal === 'all' || currentVal === 'both') {
-    targets = ['1', '2', '3', '4', '5', '6', '7', '8'];
+    targets = availableSlots.map(String);
   } else {
     targets = currentVal.split(',').map(s => s.trim()).filter(Boolean);
   }
 
   if (val === 'all') {
     if (btn.classList.contains('selected')) {
-      act.targetClient = '1';
+      act.targetClient = firstSlotStr;
     } else {
       act.targetClient = 'all';
     }
@@ -1292,8 +1307,8 @@ export function toggleClientSelection(btn, actionId) {
     targets.sort((a, b) => parseInt(a) - parseInt(b));
 
     if (targets.length === 0) {
-      act.targetClient = '1';
-    } else if (targets.length === 8) {
+      act.targetClient = firstSlotStr;
+    } else if (targets.length === availableSlots.length) {
       act.targetClient = 'all';
     } else {
       act.targetClient = targets.join(',');

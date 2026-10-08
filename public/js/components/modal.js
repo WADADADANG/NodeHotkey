@@ -15,6 +15,14 @@ const USER_AGENT_POOL = [
   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
 ];
 
+function getClientSlots() {
+  const gs = fullConfig?.globalSettings || {};
+  if (Array.isArray(gs.clientSlots) && gs.clientSlots.length > 0) {
+    return gs.clientSlots;
+  }
+  return [1, 2, 3, 4, 5, 6, 7, 8];
+}
+
 export function openAntiDetectModal() {
   const modal = document.getElementById('antidetect-modal');
   const listContainer = document.getElementById('antidetect-client-list');
@@ -23,9 +31,10 @@ export function openAntiDetectModal() {
   const profile = fullConfig.profiles[currentEditProfile];
   const aliases = profile.clientAliases || {};
   const userAgents = profile.clientUserAgents || {};
+  const slots = getClientSlots();
 
   listContainer.innerHTML = '';
-  for (let i = 1; i <= 8; i++) {
+  for (const i of slots) {
     const alias = aliases[String(i)] || `Client ${i}`;
     const ua = userAgents[String(i)] || '';
 
@@ -81,7 +90,8 @@ export function randomizeUserAgent(idx) {
 }
 
 export function randomizeAllUserAgents() {
-  for (let i = 1; i <= 8; i++) {
+  const slots = getClientSlots();
+  for (const i of slots) {
     randomizeUserAgent(i);
   }
 }
@@ -98,7 +108,8 @@ export function saveAntiDetectSettings() {
   if (!profile) return;
   if (!profile.clientUserAgents) profile.clientUserAgents = {};
 
-  for (let i = 1; i <= 8; i++) {
+  const slots = getClientSlots();
+  for (const i of slots) {
     const input = document.getElementById(`anti-ua-${i}`);
     if (input) {
       profile.clientUserAgents[String(i)] = input.value.trim();
@@ -122,9 +133,10 @@ export function openProxyModal() {
   const aliases = profile.clientAliases || {};
   const proxies = profile.clientProxies || {};
   const trans = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+  const slots = getClientSlots();
 
   listContainer.innerHTML = '';
-  for (let i = 1; i <= 8; i++) {
+  for (const i of slots) {
     const alias = aliases[String(i)] || `Client ${i}`;
     const proxyVal = proxies[String(i)] || '';
 
@@ -171,7 +183,8 @@ export function saveProxySettings() {
   if (!profile) return;
   if (!profile.clientProxies) profile.clientProxies = {};
 
-  for (let i = 1; i <= 8; i++) {
+  const slots = getClientSlots();
+  for (const i of slots) {
     const input = document.getElementById(`proxy-input-${i}`);
     if (input) {
       profile.clientProxies[String(i)] = input.value.trim();
@@ -319,3 +332,54 @@ export function saveClientSettingsModal() {
     window.toast(`✓ Saved settings for Client ${sIdx}`, 'success');
   }
 }
+
+export async function clearClientModalProfileData() {
+  const idxEl = document.getElementById('client-settings-idx');
+  if (!idxEl) return;
+  const sIdx = idxEl.value;
+  const clientIndex = parseInt(sIdx, 10);
+  const clearBtn = document.getElementById('btn-client-modal-clear-profile');
+
+  const confirmMsg = currentLang === 'en'
+    ? `Are you sure you want to clear browser profile data for Client ${clientIndex}?\n\nThis will delete all cookies, cache, and login sessions for this client.`
+    : `คุณต้องการล้างข้อมูลโปรไฟล์ Browser ของ จอ ${clientIndex} ใช่หรือไม่?\n\nการกระทำนี้จะลบ Cookie, แคช และประวัติการล็อกอินเข้าเกมของจอนี้ทั้งหมด`;
+
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    if (clearBtn) {
+      clearBtn.textContent = currentLang === 'en' ? '⏳ Clearing...' : '⏳ กำลังลบ...';
+    }
+
+    const res = await fetch('/api/client/clear-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientIndex })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (typeof window.toast === 'function') {
+        window.toast(`✓ Cleared browser data for Client ${clientIndex}`, 'success');
+      }
+      if (clearBtn) {
+        clearBtn.textContent = currentLang === 'en' ? '✓ Cleared!' : '✓ ลบเรียบร้อย!';
+        setTimeout(() => {
+          clearBtn.textContent = '🗑️ ล้างข้อมูล Browser';
+        }, 2000);
+      }
+    } else {
+      if (typeof window.toast === 'function') {
+        window.toast(data.error || 'Failed to clear browser data', 'error');
+      } else {
+        alert(data.error);
+      }
+      if (clearBtn) clearBtn.textContent = '🗑️ ล้างข้อมูล Browser';
+    }
+  } catch (err) {
+    if (typeof window.toast === 'function') {
+      window.toast('Error: ' + err.message, 'error');
+    }
+    if (clearBtn) clearBtn.textContent = '🗑️ ล้างข้อมูล Browser';
+  }
+}
+window.clearClientModalProfileData = clearClientModalProfileData;

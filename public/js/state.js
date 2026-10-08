@@ -273,12 +273,13 @@ export function syncGlobalSettingsFromDOM() {
   }
 
   if (!gs.clientAliases) gs.clientAliases = {};
-  for (let i = 1; i <= 8; i++) {
+  const currentSlots = (Array.isArray(gs.clientSlots) && gs.clientSlots.length > 0) ? gs.clientSlots : [1, 2, 3, 4, 5, 6, 7, 8];
+  currentSlots.forEach(i => {
     const el = document.getElementById(`client-alias-${i}`);
     if (el) {
       gs.clientAliases[String(i)] = el.value.trim();
     }
-  }
+  });
 
   // Mirror globalSettings to all profiles for backward compatibility
   Object.values(fullConfig.profiles || {}).forEach(prof => {
@@ -976,10 +977,11 @@ export function loadGlobalSettingsToUI() {
   renderClientToggles(activeClients, disabledClients);
 
   const aliases = gs.clientAliases || {};
-  for (let i = 1; i <= 8; i++) {
+  const currentSlots = (Array.isArray(gs.clientSlots) && gs.clientSlots.length > 0) ? gs.clientSlots : [1, 2, 3, 4, 5, 6, 7, 8];
+  currentSlots.forEach(i => {
     const el = document.getElementById(`client-alias-${i}`);
     if (el) el.value = aliases[String(i)] || '';
-  }
+  });
 
   bindGlobalSettingsAutoSave();
 }
@@ -1022,10 +1024,13 @@ export function bindGlobalSettingsAutoSave() {
     if (el) el.addEventListener('input', debouncedAutoSave);
   });
 
-  for (let i = 1; i <= 8; i++) {
+  const boundSlots = (Array.isArray(window.fullConfig?.globalSettings?.clientSlots) && window.fullConfig.globalSettings.clientSlots.length > 0)
+    ? window.fullConfig.globalSettings.clientSlots
+    : [1, 2, 3, 4, 5, 6, 7, 8];
+  boundSlots.forEach(i => {
     const el = document.getElementById(`client-alias-${i}`);
     if (el) el.addEventListener('input', debouncedAutoSave);
-  }
+  });
 }
 
 export function loadProfileToUI(p) {
@@ -1262,7 +1267,11 @@ export function renderClientToggles(activeList = activeClients, disabledList = d
   const activeStrList = (activeList || []).map(String);
   const disabledStrList = (disabledList || []).map(String);
 
-  for (let clientIdx = 1; clientIdx <= 8; clientIdx++) {
+  const slots = (Array.isArray(gs.clientSlots) && gs.clientSlots.length > 0)
+    ? gs.clientSlots
+    : [1, 2, 3, 4, 5, 6, 7, 8];
+
+  for (const clientIdx of slots) {
     const sIdx = String(clientIdx);
     const customAlias = aliases[sIdx] || aliases[clientIdx] || '';
     const isActive = activeStrList.includes(sIdx);

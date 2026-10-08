@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NodeHotkey PiP Screen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="pip.css">
+</head>
+<body class="pip-body">
+  <div class="pip-container" id="pip-root">
+
+    <!-- Row 1: Title bar (whole bar is draggable, buttons are not) -->
+    <header class="pip-titlebar" id="pip-titlebar">
+      <div class="pip-title" title="ลากตรงนี้เพื่อย้ายหน้าต่าง">
+        <span class="pip-status-dot" id="pip-status-dot"></span>
+        <span class="pip-title-text" id="pip-title-text">จอลอย PiP</span>
+      </div>
+
+      <div class="pip-actions">
+        <!-- Opacity -->
+        <div class="pip-opacity-wrap">
+          <button type="button" class="pip-icon-btn" id="btn-opacity" title="ความโปร่งใส">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>
+            <span class="pip-opacity-value" id="pip-opacity-value">100%</span>
+          </button>
+          <div class="pip-popover" id="pip-opacity-popover" hidden>
+            <div class="pip-popover-title">ความโปร่งใส</div>
+            <div class="pip-opacity-options" id="pip-opacity-options">
+              <button type="button" data-op="1">100%</button>
+              <button type="button" data-op="0.8">80%</button>
+              <button type="button" data-op="0.6">60%</button>
+              <button type="button" data-op="0.4">40%</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Minimize to bubble -->
+        <button type="button" class="pip-icon-btn" id="btn-minimize" title="ย่อเป็นปุ่มลอย (คลิกปุ่มลอยเพื่อเปิดกลับ)">
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        </button>
+
+        <!-- Close -->
+        <button type="button" class="pip-icon-btn close" id="btn-close" title="ปิดจอลอย">
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Row 2: Screen tabs ("ทั้งหมด" + only the screens that are running) -->
+    <nav class="pip-tabs" id="pip-tabs" aria-label="เลือกจอ"></nav>
+
+    <!-- Viewport -->
+    <main class="pip-viewport" id="pip-viewport">
+      <div class="pip-grid" id="pip-grid"></div>
+      <div class="pip-empty" id="pip-empty" hidden>
+        <div class="pip-empty-icon">🎮</div>
+        <div class="pip-empty-title">ยังไม่มีจอเกมเปิดทำงาน</div>
+        <div class="pip-empty-sub">เปิดจอเกมจาก Launcher แล้วภาพจะขึ้นเองอัตโนมัติ</div>
+      </div>
+    </main>
+
+    <!-- Bubble (minimized) -->
+    <div class="pip-bubble" id="pip-bubble" hidden title="คลิกเพื่อเปิดจอลอยกลับ">
+      <span class="pip-bubble-label" id="pip-bubble-label">1</span>
+    </div>
+  </div>
+
+  <script src="pip.js"></script>
+</body>
+</html>

@@ -1369,8 +1369,12 @@
 
     let selectedList = [];
     const isAllSelected = !isSingleSelect && (rawVal === 'all' || rawVal === 'both');
+    const availableSlots = (window.fullConfig && window.fullConfig.globalSettings && Array.isArray(window.fullConfig.globalSettings.clientSlots) && window.fullConfig.globalSettings.clientSlots.length > 0)
+      ? window.fullConfig.globalSettings.clientSlots
+      : [1, 2, 3, 4, 5, 6, 7, 8];
+
     if (isAllSelected) {
-      selectedList = ['1', '2', '3', '4', '5', '6', '7', '8'];
+      selectedList = availableSlots.map(String);
     } else {
       selectedList = rawVal.split(',').map(s => s.trim()).filter(Boolean);
       if (isSingleSelect && selectedList.length > 1) {
@@ -1379,7 +1383,7 @@
     }
 
     let buttonsHTML = '<div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; align-items:center;">';
-    for (let i = 1; i <= 8; i++) {
+    for (const i of availableSlots) {
       const strI = String(i);
       const isSelected = isAllSelected || selectedList.includes(strI);
       const bg = isSelected ? '#3b82f6' : 'rgba(15,23,42,0.8)';
@@ -2658,8 +2662,13 @@
     const clientField = def && Array.isArray(def.schema) ? def.schema.find(f => f.key === 'targetClient') : null;
     const isSingleSelect = isVisionNode || node.type === 'client_check' || node.type === 'check_client' || node.type === 'client_status' || (clientField && (clientField.allowMultiple === false || clientField.singleSelect === true));
 
+    const availableSlots = (window.fullConfig && window.fullConfig.globalSettings && Array.isArray(window.fullConfig.globalSettings.clientSlots) && window.fullConfig.globalSettings.clientSlots.length > 0)
+      ? window.fullConfig.globalSettings.clientSlots
+      : [1, 2, 3, 4, 5, 6, 7, 8];
+    const firstSlotStr = String(availableSlots[0] || '1');
+
     if (isSingleSelect) {
-      const targetStr = (val === 'all' || val === 'both') ? '1' : String(val);
+      const targetStr = (val === 'all' || val === 'both') ? firstSlotStr : String(val);
       node.data.targetClient = targetStr;
       this.renderNodes();
       this.openInspector(node.id);
@@ -2668,17 +2677,17 @@
       return;
     }
 
-    let currentVal = node.data.targetClient || '1';
+    let currentVal = node.data.targetClient || firstSlotStr;
     let targets = [];
     if (currentVal === 'all' || currentVal === 'both') {
-      targets = ['1', '2', '3', '4', '5', '6', '7', '8'];
+      targets = availableSlots.map(String);
     } else {
       targets = String(currentVal).split(',').map(s => s.trim()).filter(Boolean);
     }
 
     if (val === 'all') {
       if (currentVal === 'all') {
-        node.data.targetClient = '1';
+        node.data.targetClient = firstSlotStr;
       } else {
         node.data.targetClient = 'all';
       }
@@ -2692,8 +2701,8 @@
       targets.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
 
       if (targets.length === 0) {
-        node.data.targetClient = '1';
-      } else if (targets.length === 8) {
+        node.data.targetClient = firstSlotStr;
+      } else if (targets.length === availableSlots.length) {
         node.data.targetClient = 'all';
       } else {
         node.data.targetClient = targets.join(',');

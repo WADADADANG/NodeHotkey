@@ -111,9 +111,16 @@ class NodeExecutionEngine {
 
     // Generic Flow Continuation group (completion / next) - explicitly excludes onStop, onKeyDown, etc.
     const genericCompletion = ['next', 'execout', 'oncomplete', 'onsuccess', 'onfired', 'onselected', 'out'];
+    const genericInputs = ['in', 'execin', 'triggerin', 'input'];
+
     const isConnGeneric = genericCompletion.includes(normConn);
     const isReqGeneric = genericCompletion.includes(normReq);
     if (isConnGeneric && isReqGeneric) return true;
+
+    const isConnGenericInput = genericInputs.includes(normConn);
+    const isReqGenericInput = genericInputs.includes(normReq);
+    if ((isConnGeneric && isReqGenericInput) || (isConnGenericInput && isReqGeneric)) return true;
+    if (isConnGenericInput && isReqGenericInput) return true;
 
     // Interval / Cycle aliases
     const intervalPorts = ['oneachcycle', 'oninterval', 'oncycle'];
@@ -186,6 +193,14 @@ class NodeExecutionEngine {
    * Dynamically build in-memory executable actions model from Pure Node Graph
    */
   buildInMemoryActions(profile) {
+    return NodeExecutionEngine.buildInMemoryActions(profile);
+  }
+
+  buildActionsFromNodeWorkflow(profile) {
+    return NodeExecutionEngine.buildInMemoryActions(profile);
+  }
+
+  static buildActionsFromNodeWorkflow(profile) {
     return NodeExecutionEngine.buildInMemoryActions(profile);
   }
 
@@ -387,3 +402,4 @@ class NodeExecutionEngine {
 }
 
 module.exports = NodeExecutionEngine;
+module.exports.NodeExecutionEngine = NodeExecutionEngine;

@@ -383,12 +383,12 @@ class SystemUpdater {
       try {
         const data = JSON.parse(fs.readFileSync(versionFilePath, 'utf8'));
         return {
-          version: data.version || '3.1.0',
+          version: data.version || '3.2.0',
           commit: data.commit || 'unknown'
         };
       } catch (e) {}
     }
-    return { version: '3.1.0', commit: 'unknown' };
+    return { version: '3.2.0', commit: 'unknown' };
   }
 
   saveLocalVersion(sha, version) {
@@ -402,7 +402,7 @@ class SystemUpdater {
         } catch (e) {}
       }
       fs.writeFileSync(versionFilePath, JSON.stringify({
-        version: currentVersion || '3.1.0',
+        version: currentVersion || '3.2.0',
         commit: (sha || '').slice(0, 7),
         updatedAt: new Date().toISOString()
       }, null, 2), 'utf8');

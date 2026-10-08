@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { convertLegacyProfileToNodeWorkflow, isNodeWorkflowProfile } = require('../converter');
+const { convertLegacyProfileToNodeWorkflow, isNodeWorkflowProfile, normalizeNodeWorkflow } = require('../converter');
 const NodeExecutionEngine = require('../execution-engine');
 
 console.log('🧪 Starting Phase 2 Profile Converter & Node Execution Engine Unit Tests...\n');
@@ -336,6 +336,7 @@ forwarderNodeDef.execute({}, builtActions[0]).then(() => {
 
         console.log('✅ Test 8 Passed!\n');
         console.log('🎉 All Multi-Active Profiles, Node Workflow & Condition Group Unit Tests Passed Successfully!');
+        process.exit(0);
       });
     });
   });

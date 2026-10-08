@@ -446,13 +446,15 @@
       statusRestarting: "กำลังรีสตาร์ท...",
       btnStartEngine: "เริ่มการทำงาน",
       btnStopEngine: "หยุดการทำงาน",
-      matrixTitle: "CLIENT CONTROL MATRIX (จอ 1 - 8)",
+      matrixTitle: "CLIENT CONTROL MATRIX",
       unitScreens: "จอ",
       btnLaunchAll: "🚀 เปิดทุกจอ",
       btnStopAll: "⏹️ ปิดทุกจอ",
       btnLaunchAllLoading: "⏳ กำลังเปิดทุกจอ...",
       cBtnLaunch: "➕ เปิดจอ",
       cBtnLaunching: "⏳ กำลังเปิด...",
+      emptySlotLabel: "เพิ่มจอ {i}",
+      addNewSlotLabel: "เพิ่มจอใหม่ (จอ {nextSlot})",
       cBtnPause: "⏸️ พักบอท",
       cBtnPauseTitle: "หยุดการกดสกิลในจอนี้ชั่วคราว",
       cBtnResume: "▶️ เปิดบอท",
@@ -464,6 +466,13 @@
       cAliasTitle: "คลิกเพื่อเปลี่ยนชื่อจอ",
       cSettingsTitle: "ตั้งค่า Proxy, User-Agent, Browser",
       cCloseTitle: "ปิดหน้าจอเกม",
+      delSlotModalTitle: "ยืนยันการลบช่องจอ",
+      delSlotModalDesc: "คุณต้องการลบช่อง <strong>Client {slot}</strong>{alias} ออกจากระบบใช่หรือไม่?",
+      delSlotModalHintHead: "ข้อมูลสำคัญ:",
+      delSlotModalHintText: "หลังลบ ตำแหน่งนี้จะกลายเป็นช่องว่าง <strong>[ ➕ เพิ่มจอ {slot} ]</strong> โดยจะไม่เปลี่ยนเลขประจำตัวของจออื่นๆ และคุณสามารถกดสร้างกลับมาใหม่เมื่อใดก็ได้",
+      delSlotModalCancel: "✕ ยกเลิก",
+      delSlotModalConfirm: "ยืนยันการลบ",
+      delSlotActiveAlert: "กรุณาปิดจอเกมก่อนทำการลบช่องจอ",
       termTitle: "Console Output & Real-time Logs",
       termSearchPlaceholder: "ค้นหา Logs...",
       filterAll: "ทั้งหมด",
@@ -505,12 +514,34 @@
       lblOfflineHead: "Bot Engine กำลังปิดอยู่ (Server Offline)",
       lblOfflineDesc: "Web Server และระบบบอทยังไม่ได้เริ่มทำงาน กรุณากดปุ่มด้านล่างเพื่อเริ่มใช้งาน Action Node Studio",
       lblOfflineBtn: "เริ่มการทำงาน Bot Engine",
-      modalSettingsTitle: "Client Settings",
-      modalBrowserLabel: "เลือก Browser Instance",
-      modalProxyLabel: "HTTP / SOCKS5 Proxy",
-      modalProxyHint: "ใช้แยก IP สำหรับแต่ละจอเพื่อป้องกันการตรวจจับ (IP Detection)",
-      modalSaveBtn: "💾 บันทึกการตั้งค่า",
+      modalSettingsTitle: "ตั้งค่า จอ {i} ({alias})",
+      modalBrowserLabel: "เบราว์เซอร์และโหมดแสดงผล",
+      modalOptChromeStd: "Google Chrome (Standard)",
+      modalOptChromeApp: "Google Chrome (App Mode)",
+      modalOptEdgeStd: "Microsoft Edge",
+      modalOptEdgeApp: "Microsoft Edge (App Mode)",
+      modalOptFirefox: "Mozilla Firefox",
+      modalUaLabel: "User-Agent (ป้องกันการตรวจจับ)",
+      modalUaRandom: "สุ่ม",
+      modalUaClear: "ล้าง",
+      modalUaPlaceholder: "ค่าเริ่มต้นของ Browser (เว้นว่างได้)",
+      modalProxyLabel: "การตั้งค่าเน็ตเวิร์ก / Proxy",
+      modalProxyClear: "ล้าง",
+      modalProxyHint: "แยก IP สำหรับแต่ละหน้าจอเพื่อความปลอดภัยในการเชื่อมต่อ",
+      modalBoundsTitle: "ตำแหน่งและขอบเขตหน้าต่าง",
+      modalBoundsResetBtn: "รีเซ็ตตำแหน่ง",
+      modalBoundsCoordLabel: "พิกัดหน้าต่าง:",
+      modalBoundsDefaultText: "Default (Auto / กลางจอหลัก)",
+      modalBoundsHint: "รีเซ็ตตำแหน่งหน้าต่างกลับมาตรงกลางจอหลัก หากหน้าต่างเกมหลุดออกนอกจอ",
+      modalBoundsResetDone: "✓ รีเซ็ตแล้ว",
+      modalClearProfileTitle: "แคชและโปรไฟล์เบราว์เซอร์",
+      modalClearProfileDesc: "ล้าง Cookie, แคช และประวัติการล็อกอินของจอนี้",
+      modalClearProfileBtn: "ล้างข้อมูล",
+      modalClearProfileDone: "✓ ล้างเรียบร้อย",
+      modalClearProfileActiveAlert: "กรุณาปิดหน้าต่างเกมของ จอ {i} ก่อนทำการล้างข้อมูล Browser",
+      modalClearProfileConfirm: "คุณต้องการล้างข้อมูลโปรไฟล์ Browser ของ จอ {i} ใช่หรือไม่?\n\nการกระทำนี้จะลบ Cookie, แคช และประวัติการล็อกอินเข้าเกมของจอนี้ทั้งหมด",
       modalCancelBtn: "ยกเลิก",
+      modalSaveBtn: "บันทึกการตั้งค่า",
       unsavedModalTitle: "ตรวจพบการแก้ไขที่ยังไม่ได้บันทึก",
       unsavedModalDesc: "คุณมีการแก้ไขผังในหน้า <strong>Action Node Studio</strong> ที่ยังไม่ได้กดบันทึก!<br/>หากทำการรีโหลดในตอนนี้ ข้อมูลที่คุณเพิ่งแก้ไขจะสูญหายทันที",
       unsavedModalHintTitle: "คำแนะนำ:",
@@ -591,13 +622,15 @@
       statusRestarting: "Restarting...",
       btnStartEngine: "Start Bot Engine",
       btnStopEngine: "Stop Bot Engine",
-      matrixTitle: "CLIENT CONTROL MATRIX (1 - 8)",
+      matrixTitle: "CLIENT CONTROL MATRIX",
       unitScreens: "Clients",
       btnLaunchAll: "🚀 Launch All",
       btnStopAll: "⏹️ Stop All",
       btnLaunchAllLoading: "⏳ Launching All...",
       cBtnLaunch: "➕ Launch",
       cBtnLaunching: "⏳ Launching...",
+      emptySlotLabel: "Add Client {i}",
+      addNewSlotLabel: "Add New Client ({nextSlot})",
       cBtnPause: "⏸️ Pause",
       cBtnPauseTitle: "Temporarily pause skills for this client",
       cBtnResume: "▶️ Resume",
@@ -609,6 +642,13 @@
       cAliasTitle: "Click to rename client alias",
       cSettingsTitle: "Proxy, User-Agent, Browser Settings",
       cCloseTitle: "Close Game Window",
+      delSlotModalTitle: "Confirm Delete Client Slot",
+      delSlotModalDesc: "Are you sure you want to delete <strong>Client {slot}</strong>{alias}?",
+      delSlotModalHintHead: "Important:",
+      delSlotModalHintText: "After deletion, this position will become an empty slot placeholder <strong>[ ➕ Add Client {slot} ]</strong> without shifting other client IDs, and you can recreate it at any time.",
+      delSlotModalCancel: "✕ Cancel",
+      delSlotModalConfirm: "Delete Slot",
+      delSlotActiveAlert: "Please close the client window before deleting this slot.",
       termTitle: "Console Output & Real-time Logs",
       termSearchPlaceholder: "Search logs...",
       filterAll: "All",
@@ -648,12 +688,34 @@
       lblOfflineHead: "Bot Engine is Offline",
       lblOfflineDesc: "Web Server and bot processes are stopped. Please start the engine below to use Action Node Studio.",
       lblOfflineBtn: "Start Bot Engine Now",
-      modalSettingsTitle: "Client Settings",
-      modalBrowserLabel: "Browser Instance Selection",
-      modalProxyLabel: "HTTP / SOCKS5 Proxy",
-      modalProxyHint: "Separate independent IP per client screen to prevent IP Detection",
-      modalSaveBtn: "💾 Save Settings",
+      modalSettingsTitle: "Client {i} Settings ({alias})",
+      modalBrowserLabel: "Browser Engine & Mode",
+      modalOptChromeStd: "Google Chrome (Standard)",
+      modalOptChromeApp: "Google Chrome (App Mode)",
+      modalOptEdgeStd: "Microsoft Edge",
+      modalOptEdgeApp: "Microsoft Edge (App Mode)",
+      modalOptFirefox: "Mozilla Firefox",
+      modalUaLabel: "User-Agent (Anti-Detect)",
+      modalUaRandom: "Random",
+      modalUaClear: "Clear",
+      modalUaPlaceholder: "Default Browser User-Agent (Empty)",
+      modalProxyLabel: "Network / Proxy Settings",
+      modalProxyClear: "Clear",
+      modalProxyHint: "Isolate IP per client screen for connection security",
+      modalBoundsTitle: "Window Position & Bounds",
+      modalBoundsResetBtn: "Reset Position",
+      modalBoundsCoordLabel: "Window Coordinates:",
+      modalBoundsDefaultText: "Default (Auto)",
+      modalBoundsHint: "Reset window position to the center of the primary display if off-screen",
+      modalBoundsResetDone: "✓ Reset Done",
+      modalClearProfileTitle: "Browser Cache & Profile",
+      modalClearProfileDesc: "Clear cookies, cache, and login session for this client",
+      modalClearProfileBtn: "Clear Data",
+      modalClearProfileDone: "✓ Cleared",
+      modalClearProfileActiveAlert: "Please close the game window for Client {i} before clearing its browser data.",
+      modalClearProfileConfirm: "Are you sure you want to clear browser profile data for Client {i}?\n\nThis will delete all saved cookies, cache, and login sessions for this client.",
       modalCancelBtn: "Cancel",
+      modalSaveBtn: "Save Settings",
       unsavedModalTitle: "Unsaved Changes Detected",
       unsavedModalDesc: "You have unsaved changes in <strong>Action Node Studio</strong>!<br/>Reloading right now will discard all your pending changes.",
       unsavedModalHintTitle: "Recommendation:",
@@ -712,10 +774,82 @@
 
   let currentLang = localStorage.getItem('nodehotkey_lang') || 'th';
 
+  function updateClientSettingsModalTexts(lang) {
+    const t = i18nDict[lang] || i18nDict.th;
+    const lblBrowser = document.getElementById('lbl-modal-browser-title');
+    const optChromeStd = document.getElementById('opt-browser-chrome-std');
+    const optChromeApp = document.getElementById('opt-browser-chrome-app');
+    const optEdgeStd = document.getElementById('opt-browser-edge-std');
+    const optEdgeApp = document.getElementById('opt-browser-edge-app');
+    const optFirefox = document.getElementById('opt-browser-firefox');
+    const lblUa = document.getElementById('lbl-modal-ua-title');
+    const btnRandomUa = document.getElementById('btn-modal-random-ua');
+    const btnClearUa = document.getElementById('btn-modal-clear-ua');
+    const inputUa = document.getElementById('modal-client-ua');
+    const lblProxy = document.getElementById('lbl-modal-proxy-title');
+    const btnClearProxy = document.getElementById('btn-modal-clear-proxy');
+    const lblProxyDesc = document.getElementById('lbl-modal-proxy-desc');
+    const lblBounds = document.getElementById('lbl-modal-bounds-title');
+    const btnResetBounds = document.getElementById('btn-modal-reset-bounds');
+    const lblBoundsCoord = document.getElementById('lbl-modal-bounds-coord');
+    const lblBoundsHint = document.getElementById('lbl-modal-bounds-hint');
+    const lblClearProfile = document.getElementById('lbl-modal-clear-profile-title');
+    const lblClearProfileDesc = document.getElementById('lbl-modal-clear-profile-desc');
+    const btnClearProfile = document.getElementById('btn-modal-clear-profile');
+    const btnCancel = document.getElementById('btn-modal-settings-cancel');
+    const btnSave = document.getElementById('btn-modal-settings-save');
+
+    if (lblBrowser) lblBrowser.textContent = t.modalBrowserLabel;
+    if (optChromeStd) optChromeStd.textContent = t.modalOptChromeStd;
+    if (optChromeApp) optChromeApp.textContent = t.modalOptChromeApp;
+    if (optEdgeStd) optEdgeStd.textContent = t.modalOptEdgeStd;
+    if (optEdgeApp) optEdgeApp.textContent = t.modalOptEdgeApp;
+    if (optFirefox) optFirefox.textContent = t.modalOptFirefox;
+    if (lblUa) lblUa.textContent = t.modalUaLabel;
+    if (btnRandomUa) btnRandomUa.textContent = t.modalUaRandom;
+    if (btnClearUa) btnClearUa.textContent = t.modalUaClear;
+    if (inputUa) inputUa.placeholder = t.modalUaPlaceholder;
+    if (lblProxy) lblProxy.textContent = t.modalProxyLabel;
+    if (btnClearProxy) btnClearProxy.textContent = t.modalProxyClear;
+    if (lblProxyDesc) lblProxyDesc.textContent = t.modalProxyHint;
+    if (lblBounds) lblBounds.textContent = t.modalBoundsTitle;
+    if (btnResetBounds) btnResetBounds.textContent = t.modalBoundsResetBtn;
+    if (lblBoundsCoord) lblBoundsCoord.textContent = t.modalBoundsCoordLabel;
+    if (lblBoundsHint) lblBoundsHint.textContent = t.modalBoundsHint;
+    if (lblClearProfile) lblClearProfile.textContent = t.modalClearProfileTitle;
+    if (lblClearProfileDesc) lblClearProfileDesc.textContent = t.modalClearProfileDesc;
+    if (btnClearProfile) btnClearProfile.textContent = t.modalClearProfileBtn;
+    if (btnCancel) btnCancel.textContent = t.modalCancelBtn;
+    if (btnSave) btnSave.textContent = t.modalSaveBtn;
+
+    const modal = document.getElementById('client-settings-modal');
+    if (modal && modal.style.display === 'flex') {
+      const idxInput = document.getElementById('modal-client-idx');
+      if (idxInput && idxInput.value) {
+        const clientIdx = parseInt(idxInput.value, 10);
+        const gs = (cachedConfig && cachedConfig.globalSettings) || {};
+        const aliases = gs.clientAliases || {};
+        const defaultAlias = lang === 'en' ? `Client ${clientIdx}` : `จอ ${clientIdx}`;
+        const alias = aliases[String(clientIdx)] || defaultAlias;
+        const nameSpan = document.getElementById('client-settings-modal-name');
+        if (nameSpan) {
+          nameSpan.textContent = t.modalSettingsTitle.replace('{i}', clientIdx).replace('{alias}', alias);
+        }
+        const boundsInfo = document.getElementById('modal-client-bounds-info');
+        const boundsMap = gs.clientWindowBounds || {};
+        const bounds = boundsMap[String(clientIdx)];
+        if (boundsInfo && (!bounds || typeof bounds.x !== 'number')) {
+          boundsInfo.textContent = t.modalBoundsDefaultText;
+        }
+      }
+    }
+  }
+
   function applyLanguage(lang) {
     currentLang = lang;
     try { localStorage.setItem('nodehotkey_lang', lang); } catch (e) {}
     const t = i18nDict[lang] || i18nDict.th;
+    updateClientSettingsModalTexts(lang);
     
     // Update breadcrumbs
     if (breadcrumbEl) {
@@ -784,8 +918,10 @@
 
     const launchAllBtn = document.getElementById('btn-matrix-launch-all');
     const stopAllBtn = document.getElementById('btn-matrix-stop-all');
+    const pipBtn = document.getElementById('btn-matrix-pip');
     if (launchAllBtn && !isLaunchingAll) launchAllBtn.textContent = t.btnLaunchAll;
     if (stopAllBtn) stopAllBtn.textContent = t.btnStopAll;
+    if (pipBtn) pipBtn.textContent = currentLang === 'en' ? '📺 PiP Screen' : '📺 จอลอย PiP';
 
     // Update Hero Toggle Button
     if (!isRunning && heroTitle) heroTitle.textContent = t.btnStartEngine;
@@ -1025,6 +1161,10 @@
     if (overlayCb) {
       overlayCb.checked = !!gs.enableOverlay;
     }
+    const pipCb = document.getElementById('setting-enable-pip');
+    if (pipCb) {
+      pipCb.checked = !!gs.enablePipOverlay;
+    }
     const gpuCb = document.getElementById('setting-gpu-acceleration');
     if (gpuCb) {
       gpuCb.checked = gs.gpuAcceleration !== false;
@@ -1057,6 +1197,7 @@
     try {
       const suspendKeyInput = document.getElementById('setting-suspend-key');
       const overlayCb = document.getElementById('setting-enable-overlay');
+      const pipCb = document.getElementById('setting-enable-pip');
       const gpuCb = document.getElementById('setting-gpu-acceleration');
       const jitterCb = document.getElementById('setting-enable-jitter');
       const jitterMin = document.getElementById('setting-jitter-min');
@@ -1068,6 +1209,7 @@
       const newSettings = {};
       if (suspendKeyInput) newSettings.suspendHotkey = suspendKeyInput.value.trim() || 'END';
       if (overlayCb) newSettings.enableOverlay = overlayCb.checked;
+      if (pipCb) newSettings.enablePipOverlay = pipCb.checked;
       if (gpuCb) newSettings.gpuAcceleration = gpuCb.checked;
       if (jitterCb) {
         newSettings.ghostMouseJitter = {
@@ -1542,10 +1684,16 @@
     if (!modal) return;
     idxInput.value = clientIdx;
     
+    const t = i18nDict[currentLang] || i18nDict.th;
+    updateClientSettingsModalTexts(currentLang);
+
     const gs = (cachedConfig && cachedConfig.globalSettings) || {};
     const aliases = gs.clientAliases || {};
-    const alias = aliases[String(clientIdx)] || `Client ${clientIdx}`;
-    if (nameSpan) nameSpan.textContent = `Client ${clientIdx} Settings (${alias})`;
+    const defaultAlias = currentLang === 'en' ? `Client ${clientIdx}` : `จอ ${clientIdx}`;
+    const alias = aliases[String(clientIdx)] || defaultAlias;
+    if (nameSpan) {
+      nameSpan.textContent = t.modalSettingsTitle.replace('{i}', clientIdx).replace('{alias}', alias);
+    }
 
     const browsers = gs.clientBrowsers || {};
     const proxies = gs.clientProxies || {};
@@ -1565,7 +1713,7 @@
         boundsInfo.textContent = `X: ${bounds.x}, Y: ${bounds.y} (${w}x${h})`;
         boundsInfo.style.color = '#38bdf8';
       } else {
-        boundsInfo.textContent = 'Default (Auto / กลางจอหลัก)';
+        boundsInfo.textContent = t.modalBoundsDefaultText;
         boundsInfo.style.color = '#94a3b8';
       }
     }
@@ -1606,25 +1754,85 @@
         body: JSON.stringify({ clientIndex: clientIdx })
       });
 
+      const t = i18nDict[currentLang] || i18nDict.th;
       if (boundsInfo) {
-        boundsInfo.textContent = 'Default (Auto / กลางจอหลัก)';
+        boundsInfo.textContent = t.modalBoundsDefaultText;
         boundsInfo.style.color = '#94a3b8';
       }
       if (resetBtn) {
-        const originalText = resetBtn.textContent;
-        resetBtn.textContent = '✓ Reset แล้ว!';
-        resetBtn.style.color = '#34d399';
-        resetBtn.style.borderColor = '#34d399';
+        resetBtn.textContent = t.modalBoundsResetDone;
+        resetBtn.style.color = '#38bdf8';
+        resetBtn.style.borderColor = 'rgba(56,189,248,0.4)';
         setTimeout(() => {
-          resetBtn.textContent = originalText;
-          resetBtn.style.color = '#f59e0b';
-          resetBtn.style.borderColor = '#f59e0b';
+          const curT = i18nDict[currentLang] || i18nDict.th;
+          resetBtn.textContent = curT.modalBoundsResetBtn;
+          resetBtn.style.color = '#cbd5e1';
+          resetBtn.style.borderColor = 'rgba(255,255,255,0.15)';
         }, 1800);
       }
     } catch (e) {
       console.warn('Failed to reset bounds:', e);
       if (boundsInfo) {
-        boundsInfo.textContent = 'Default (Auto / กลางจอหลัก)';
+        const t = i18nDict[currentLang] || i18nDict.th;
+        boundsInfo.textContent = t.modalBoundsDefaultText;
+      }
+    }
+  };
+
+  window.clearModalClientProfileData = async function() {
+    const idxInput = document.getElementById('modal-client-idx');
+    if (!idxInput) return;
+    const clientIdx = parseInt(idxInput.value, 10);
+    const clearBtn = document.getElementById('btn-modal-clear-profile');
+    const t = i18nDict[currentLang] || i18nDict.th;
+
+    const activeList = (cachedStatus && cachedStatus.activeClients) ? cachedStatus.activeClients.map(Number) : [];
+    if (activeList.includes(clientIdx)) {
+      alert(t.modalClearProfileActiveAlert.replace('{i}', clientIdx));
+      return;
+    }
+
+    const confirmMsg = t.modalClearProfileConfirm.replace('{i}', clientIdx);
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      if (clearBtn) {
+        clearBtn.disabled = true;
+        clearBtn.textContent = currentLang === 'en' ? 'Clearing...' : 'กำลังลบ...';
+      }
+
+      const res = await fetch(getServerUrl('/api/client/clear-profile'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientIndex: clientIdx })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        if (clearBtn) {
+          clearBtn.textContent = t.modalClearProfileDone;
+          clearBtn.style.color = '#38bdf8';
+          clearBtn.style.borderColor = 'rgba(56,189,248,0.4)';
+          setTimeout(() => {
+            clearBtn.disabled = false;
+            const curT = i18nDict[currentLang] || i18nDict.th;
+            clearBtn.textContent = curT.modalClearProfileBtn;
+            clearBtn.style.color = '#f87171';
+            clearBtn.style.borderColor = 'rgba(239,68,68,0.3)';
+          }, 2000);
+        }
+      } else {
+        alert(data.error || 'Failed to clear browser data');
+        if (clearBtn) {
+          clearBtn.disabled = false;
+          clearBtn.textContent = t.modalClearProfileBtn;
+        }
+      }
+    } catch (err) {
+      alert('Error clearing browser data: ' + err.message);
+      if (clearBtn) {
+        clearBtn.disabled = false;
+        clearBtn.textContent = t.modalClearProfileBtn;
       }
     }
   };
@@ -1676,14 +1884,16 @@
       launchAllBtn.style.opacity = '0.7';
     }
 
-    for (let i = 1; i <= 8; i++) {
-      launchingClients.add(i);
-    }
+    const gs = (cachedConfig && cachedConfig.globalSettings) || {};
+    let slots = Array.isArray(gs.clientSlots) ? gs.clientSlots.slice() : [1, 2, 3, 4, 5, 6, 7, 8];
+    if (slots.length === 0) slots = [1];
+    slots.sort((a, b) => a - b);
+
+    slots.forEach(i => launchingClients.add(i));
     renderLauncherClientCards(cachedStatus, cachedConfig);
 
-    for (let i = 1; i <= 8; i++) {
+    slots.forEach(i => {
       try {
-        const gs = (cachedConfig && cachedConfig.globalSettings) || {};
         const browsers = gs.clientBrowsers || {};
         const browserChoice = browsers[String(i)] || '1';
 
@@ -1693,7 +1903,7 @@
           body: JSON.stringify({ clientIndex: i, browserChoice })
         }).catch(() => {});
       } catch (e) {}
-    }
+    });
 
     setTimeout(() => {
       isLaunchingAll = false;
@@ -1709,7 +1919,10 @@
   };
 
   window.stopAllClients = async function() {
-    for (let i = 1; i <= 8; i++) {
+    const gs = (cachedConfig && cachedConfig.globalSettings) || {};
+    const slots = Array.isArray(gs.clientSlots) ? gs.clientSlots.slice() : [1, 2, 3, 4, 5, 6, 7, 8];
+    const activeList = (cachedStatus && cachedStatus.activeClients) ? cachedStatus.activeClients.map(Number) : slots;
+    activeList.forEach(i => {
       try {
         fetch(getServerUrl('/api/client/close'), {
           method: 'POST',
@@ -1717,8 +1930,118 @@
           body: JSON.stringify({ clientIndex: i })
         }).catch(() => {});
       } catch (e) {}
-    }
+    });
     setTimeout(syncBackendStatus, 1000);
+  };
+
+  window.addClientSlot = async function(slotIdx) {
+    try {
+      if (!cachedConfig) {
+        const res = await fetch(getServerUrl('/api/config'));
+        cachedConfig = await res.json();
+      }
+      if (!cachedConfig.globalSettings) cachedConfig.globalSettings = {};
+      let slots = Array.isArray(cachedConfig.globalSettings.clientSlots)
+        ? cachedConfig.globalSettings.clientSlots.slice()
+        : [1, 2, 3, 4, 5, 6, 7, 8];
+      const targetSlot = parseInt(slotIdx, 10);
+      if (!slots.includes(targetSlot)) {
+        slots.push(targetSlot);
+        slots.sort((a, b) => a - b);
+      }
+      cachedConfig.globalSettings.clientSlots = slots;
+
+      await fetch(getServerUrl('/api/config'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cachedConfig)
+      });
+      syncBackendStatus();
+    } catch (e) {
+      console.warn('Failed to add client slot:', e);
+    }
+  };
+
+  let pendingDeleteSlot = null;
+
+  window.closeDeleteSlotModal = function() {
+    pendingDeleteSlot = null;
+    const modal = document.getElementById('delete-slot-confirm-modal');
+    if (modal) modal.style.display = 'none';
+  };
+
+  window.deleteClientSlot = function(slotIdx) {
+    const targetSlot = parseInt(slotIdx, 10);
+    const activeList = (cachedStatus && cachedStatus.activeClients) ? cachedStatus.activeClients.map(Number) : [];
+    const t = i18nDict[currentLang] || i18nDict.th;
+
+    if (activeList.includes(targetSlot)) {
+      alert(t.delSlotActiveAlert || 'กรุณาปิดจอเกมก่อนทำการลบช่องจอ');
+      return;
+    }
+
+    pendingDeleteSlot = targetSlot;
+
+    const modal = document.getElementById('delete-slot-confirm-modal');
+    if (!modal) {
+      if (confirm(`คุณต้องการลบช่อง Client ${targetSlot} ออกจากระบบใช่หรือไม่?`)) {
+        window.confirmExecuteDeleteSlot();
+      }
+      return;
+    }
+
+    const gs = (cachedConfig && cachedConfig.globalSettings) || {};
+    const aliases = gs.clientAliases || {};
+    const aliasVal = aliases[String(targetSlot)] || aliases[targetSlot];
+    const aliasHtml = aliasVal ? ` <span style="color:#38bdf8;">(${escapeHtml(aliasVal)})</span>` : '';
+
+    const titleEl = document.getElementById('lbl-del-slot-modal-title');
+    const descEl = document.getElementById('lbl-del-slot-modal-desc');
+    const hintHeadEl = document.getElementById('lbl-del-slot-modal-hint-head');
+    const hintTextEl = document.getElementById('lbl-del-slot-modal-hint-text');
+    const cancelBtn = document.getElementById('btn-del-slot-modal-cancel');
+    const confirmBtn = document.getElementById('lbl-del-slot-modal-confirm-btn');
+
+    if (titleEl) titleEl.textContent = t.delSlotModalTitle || 'ยืนยันการลบช่องจอ';
+    if (descEl) descEl.innerHTML = (t.delSlotModalDesc || 'คุณต้องการลบช่อง <strong>Client {slot}</strong>{alias} ออกจากระบบใช่หรือไม่?')
+      .replace('{slot}', targetSlot)
+      .replace('{alias}', aliasHtml);
+    if (hintHeadEl) hintHeadEl.textContent = t.delSlotModalHintHead || 'ข้อมูลสำคัญ:';
+    if (hintTextEl) hintTextEl.innerHTML = (t.delSlotModalHintText || 'หลังลบ ตำแหน่งนี้จะกลายเป็นช่องว่าง <strong>[ ➕ เพิ่มจอ {slot} ]</strong> โดยจะไม่เปลี่ยนเลขประจำตัวของจออื่นๆ และคุณสามารถกดสร้างกลับมาใหม่เมื่อใดก็ได้')
+      .replace('{slot}', targetSlot);
+    if (cancelBtn) cancelBtn.textContent = t.delSlotModalCancel || '✕ ยกเลิก';
+    if (confirmBtn) confirmBtn.textContent = t.delSlotModalConfirm || 'ยืนยันการลบ';
+
+    modal.style.display = 'flex';
+  };
+
+  window.confirmExecuteDeleteSlot = async function() {
+    if (pendingDeleteSlot === null || pendingDeleteSlot === undefined) return;
+    const targetSlot = pendingDeleteSlot;
+    window.closeDeleteSlotModal();
+
+    try {
+      if (!cachedConfig) {
+        const res = await fetch(getServerUrl('/api/config'));
+        cachedConfig = await res.json();
+      }
+      if (!cachedConfig.globalSettings) cachedConfig.globalSettings = {};
+      let slots = Array.isArray(cachedConfig.globalSettings.clientSlots)
+        ? cachedConfig.globalSettings.clientSlots.slice()
+        : [1, 2, 3, 4, 5, 6, 7, 8];
+      slots = slots.filter(s => s !== targetSlot);
+      if (slots.length === 0) slots = [1]; // Always keep at least 1 slot
+      cachedConfig.globalSettings.clientSlots = slots;
+
+      await fetch(getServerUrl('/api/config'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cachedConfig)
+      });
+      syncBackendStatus();
+    } catch (e) {
+      console.warn('Failed to delete client slot:', e);
+    }
   };
 
   function renderLauncherClientCards(data, config) {
@@ -1732,8 +2055,26 @@
     const aliases = gs.clientAliases || (data && data.clientAliases) || {};
     const browsers = gs.clientBrowsers || {};
 
+    let slots = Array.isArray(gs.clientSlots) ? gs.clientSlots.slice() : [1, 2, 3, 4, 5, 6, 7, 8];
+    if (slots.length === 0) slots = [1];
+    slots = slots.map(Number).sort((a, b) => a - b);
+
+    const maxSlot = Math.max(...slots, 1);
     let html = '';
-    for (let i = 1; i <= 8; i++) {
+
+    for (let i = 1; i <= maxSlot; i++) {
+      if (!slots.includes(i)) {
+        // Empty Slot Card (Placeholder for deleted slot in the middle)
+        const emptyLabel = (t.emptySlotLabel || 'เพิ่มจอ {i}').replace('{i}', i);
+        html += `
+          <div class="c-matrix-tile empty-slot" onclick="addClientSlot(${i})" title="${emptyLabel}">
+            <div class="empty-slot-icon">➕</div>
+            <div class="empty-slot-label">${emptyLabel}</div>
+          </div>
+        `;
+        continue;
+      }
+
       const sIdx = String(i);
       const alias = aliases[sIdx] || aliases[i] || '';
       const isActive = activeList.includes(sIdx);
@@ -1750,6 +2091,11 @@
       let actionButtons = isLaunching
         ? `<button class="btn-c-action launch" style="opacity:0.7; pointer-events:none;">${t.cBtnLaunching}</button>`
         : `<button class="btn-c-action launch" onclick="launchClient(${i})">${t.cBtnLaunch}</button>`;
+
+      let delBtn = '';
+      if (!isActive && !isLaunching) {
+        delBtn = `<button type="button" class="btn-c-del-slot" onclick="event.stopPropagation(); deleteClientSlot(${i})" title="ลบช่องจอ ${i}">🗑️</button>`;
+      }
 
       if (isActive) {
         if (isPaused) {
@@ -1775,6 +2121,7 @@
             <div class="c-tile-title-box">
               <span>${bIcon} Client ${i}</span>
               <button type="button" class="btn-c-gear" onclick="openClientSettingsModal(${i})" title="${t.cSettingsTitle}">⚙️</button>
+              ${delBtn}
             </div>
             ${statusBadge}
           </div>
@@ -1785,8 +2132,25 @@
         </div>
       `;
     }
+
+    // Trailing Add Button Card
+    const nextSlot = maxSlot + 1;
+    const addLabel = (t.addNewSlotLabel || 'เพิ่มจอใหม่ (จอ {nextSlot})').replace('{nextSlot}', nextSlot);
+    html += `
+      <div class="c-matrix-tile add-new-slot" onclick="addClientSlot(${nextSlot})" title="${addLabel}">
+        <div class="add-new-slot-icon">➕</div>
+        <div class="add-new-slot-label">${addLabel}</div>
+      </div>
+    `;
+
     grid.innerHTML = html;
   }
+
+  window.toggleClientPiP = function(clientId) {
+    if (window.launcherAPI && window.launcherAPI.togglePiP) {
+      window.launcherAPI.togglePiP(clientId);
+    }
+  };
 
   // Sync Diagnostics & Client Statuses from Backend API
   async function syncBackendStatus() {
@@ -1832,7 +2196,10 @@
           const curT = i18nDict[currentLang] || i18nDict.th;
           valClientsCount.textContent = `${data.activeClients.length} ${curT.unitScreens || 'จอ'}`;
           const badgeCount = document.getElementById('badge-clients-count');
-          if (badgeCount) badgeCount.textContent = `${data.activeClients.length}/8`;
+          const totalSlots = (cachedConfig && cachedConfig.globalSettings && Array.isArray(cachedConfig.globalSettings.clientSlots))
+            ? cachedConfig.globalSettings.clientSlots.length
+            : 8;
+          if (badgeCount) badgeCount.textContent = `${data.activeClients.length}/${totalSlots}`;
         }
 
         // Update Active Profile Name
@@ -2483,4 +2850,14 @@
       e.stopPropagation();
     }
   }, true);
+
+  // Close modals on Escape key
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const delModal = document.getElementById('delete-slot-confirm-modal');
+      if (delModal && delModal.style.display !== 'none') {
+        window.closeDeleteSlotModal();
+      }
+    }
+  });
 })();

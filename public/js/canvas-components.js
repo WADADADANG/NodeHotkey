@@ -66,10 +66,14 @@
           if (node.data) node.data[field.key || 'targetClient'] = rawVal;
         }
 
+        const availableSlots = (window.fullConfig && window.fullConfig.globalSettings && Array.isArray(window.fullConfig.globalSettings.clientSlots) && window.fullConfig.globalSettings.clientSlots.length > 0)
+          ? window.fullConfig.globalSettings.clientSlots
+          : [1, 2, 3, 4, 5, 6, 7, 8];
+
         let selectedList = [];
         const isAllSelected = !isSingleSelect && (rawVal === 'all' || rawVal === 'both');
         if (isAllSelected) {
-          selectedList = ['1', '2', '3', '4', '5', '6', '7', '8'];
+          selectedList = availableSlots.map(String);
         } else {
           selectedList = rawVal.split(',').map(s => s.trim()).filter(Boolean);
           if (isSingleSelect && selectedList.length > 1) {
@@ -81,7 +85,7 @@
 
         let clientBadge = '';
         if (isSingleSelect) {
-          const currentTarget = selectedList[0] || '1';
+          const currentTarget = selectedList[0] || String(availableSlots[0] || '1');
           clientBadge = isEn ? `Client ${currentTarget} (Single)` : `จอที่ ${currentTarget} (จอเดียว)`;
         } else if (rawVal === 'all') {
           clientBadge = isEn ? 'All Clients' : 'ทุกจอเกม';
@@ -94,7 +98,7 @@
         }
 
         let buttonsHTML = '';
-        for (let i = 1; i <= 8; i++) {
+        for (const i of availableSlots) {
           const strI = String(i);
           const isSelected = isAllSelected || selectedList.includes(strI);
           const bg = isSelected ? '#3b82f6' : 'rgba(15,23,42,0.8)';

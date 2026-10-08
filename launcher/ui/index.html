@@ -22,7 +22,7 @@
         <div class="brand-logo-gem">⚡</div>
         <div class="brand-title-wrap">
           <span class="brand-name-text">NodeHotkey</span>
-          <span class="brand-badge-text" id="brand-badge-version"><span class="brand-badge-dot"></span> Studio Pro v3.1</span>
+          <span class="brand-badge-text" id="brand-badge-version"><span class="brand-badge-dot"></span> Studio Pro v3.2</span>
         </div>
       </div>
 
@@ -198,9 +198,10 @@
             <div class="matrix-panel-head">
               <div class="matrix-title-group">
                 <span style="font-size:13px;">🎮</span>
-                <span style="font-weight:800; font-size:12px; color:#fff;" id="matrix-title-label">CLIENT CONTROL MATRIX (จอ 1 - 8)</span>
+                <span style="font-weight:800; font-size:12px; color:#fff;" id="matrix-title-label">CLIENT CONTROL MATRIX</span>
               </div>
               <div class="matrix-action-buttons">
+                <button id="btn-matrix-pip" class="btn-matrix-action pip" onclick="if(window.launcherAPI&&window.launcherAPI.togglePiP)window.launcherAPI.togglePiP('master')" title="เปิด/ปิด หน้าต่างลอยส่องจอเกม (Picture-in-Picture) พร้อมแถบสลับจอและโหมดตารางในตัว">📺 จอลอย PiP</button>
                 <button id="btn-matrix-launch-all" class="btn-matrix-action launch" onclick="window.launchAllClients && window.launchAllClients()">🚀 เปิดทุกจอ</button>
                 <button id="btn-matrix-stop-all" class="btn-matrix-action stop" onclick="window.stopAllClients && window.stopAllClients()">⏹️ ปิดทุกจอ</button>
               </div>
@@ -315,6 +316,18 @@
                 <div class="setting-desc" id="lbl-setting-overlay-desc">แสดงแถบสถานะโปร่งแสงบนหน้าจอเกมแบบ Real-time (เปิด/ปิด อัตโนมัติตามบอท)</div>
               </div>
               <input type="checkbox" id="setting-enable-overlay" class="setting-checkbox" onchange="window.saveSettingsFromUI()" style="width:18px; height:18px; cursor:pointer; accent-color:#10b981;" />
+            </div>
+          </div>
+
+          <!-- 1.2 PiP Floating Screen Overlay (Picture-in-Picture) -->
+          <div class="settings-card-box">
+            <div class="setting-row-head" id="lbl-setting-head-pip">📱 PiP Floating Screen Overlay (ส่องจออิสระ)</div>
+            <div class="setting-row-body" style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+              <div>
+                <div class="setting-label" id="lbl-setting-pip-title">เปิดใช้งาน PiP Floating Screen Overlay</div>
+                <div class="setting-desc" id="lbl-setting-pip-desc">เปิดหน้าต่างลอยส่องจอเกมอื่น ๆ พร้อมแถบสลับจอ [1] - [8] และโหมดตาราง CCTV ในตัว (เปิด/ปิด อัตโนมัติตามบอท)</div>
+              </div>
+              <input type="checkbox" id="setting-enable-pip" class="setting-checkbox" onchange="window.saveSettingsFromUI()" style="width:18px; height:18px; cursor:pointer; accent-color:#0284c7;" />
             </div>
           </div>
 
@@ -484,76 +497,101 @@
   </main>
 
   <!-- ════════ CLIENT INDIVIDUAL SETTINGS MODAL (ORIGINAL SYSTEM) ════════ -->
+  <!-- ════════ CLIENT INDIVIDUAL SETTINGS MODAL ════════ -->
   <div class="modal-overlay" id="client-settings-modal" style="display:none;" onclick="if(event.target===this) closeClientSettingsModal()">
-    <div class="modal-card" style="width: 500px; max-width: 94%;">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed var(--border); padding-bottom:10px; margin-bottom:12px;">
-        <h3 id="client-settings-modal-title" style="margin:0; font-size:14px; font-weight:800; color:#fff; display:flex; align-items:center; gap:6px;">
-          <span>⚙️</span>
+    <div class="modal-card" style="width: 500px; max-width: 94%; background: #0b1120; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); padding: 18px 20px;">
+      
+      <!-- Modal Header -->
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px; margin-bottom:16px;">
+        <h3 id="client-settings-modal-title" style="margin:0; font-size:13.5px; font-weight:700; color:#f1f5f9; display:flex; align-items:center; gap:8px;">
+          <span style="color:#94a3b8; font-size:14px;">⚙</span>
           <span id="client-settings-modal-name">Client Settings</span>
         </h3>
-        <button class="win-btn close" onclick="closeClientSettingsModal()" style="width:24px; height:24px; border-radius:4px;">✕</button>
+        <button class="win-btn close" onclick="closeClientSettingsModal()" style="width:24px; height:24px; border-radius:4px; opacity:0.75;">✕</button>
       </div>
 
       <input type="hidden" id="modal-client-idx" value="1" />
 
-      <div style="display:flex; flex-direction:column; gap:12px;">
+      <div style="display:flex; flex-direction:column; gap:14px;">
         
-        <!-- 1. Browser Selection Section (Top) -->
+        <!-- 1. Browser Selection Section -->
         <div>
-          <label style="font-size:11px; font-weight:700; color:#34d399; display:block; margin-bottom:5px;">🌐 BROWSER ENGINE & DISPLAY MODE</label>
-          <select id="modal-client-browser" style="width:100%; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:6px; padding:6px 10px; color:#fff; font-size:11.5px; outline:none;">
-            <option value="1" style="background:#0f172a; color:#fff;">🌐 Google Chrome (Recommended)</option>
-            <option value="1-app" style="background:#0f172a; color:#fff;">🚀 Google Chrome (App Mode)</option>
-            <option value="2" style="background:#0f172a; color:#fff;">🌊 Microsoft Edge</option>
-            <option value="2-app" style="background:#0f172a; color:#fff;">🚀 Microsoft Edge (App Mode)</option>
-            <option value="3" style="background:#0f172a; color:#fff;">🦊 Mozilla Firefox</option>
+          <label id="lbl-modal-browser-title" style="font-size:11px; font-weight:600; color:#cbd5e1; display:block; margin-bottom:6px; letter-spacing:0.2px;">
+            Browser Engine & Mode
+          </label>
+          <select id="modal-client-browser" style="width:100%; background:#131c31; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:7px 10px; color:#f8fafc; font-size:11.5px; outline:none;">
+            <option id="opt-browser-chrome-std" value="1" style="background:#0f172a; color:#fff;">Google Chrome (Standard)</option>
+            <option id="opt-browser-chrome-app" value="1-app" style="background:#0f172a; color:#fff;">Google Chrome (App Mode)</option>
+            <option id="opt-browser-edge-std" value="2" style="background:#0f172a; color:#fff;">Microsoft Edge</option>
+            <option id="opt-browser-edge-app" value="2-app" style="background:#0f172a; color:#fff;">Microsoft Edge (App Mode)</option>
+            <option id="opt-browser-firefox" value="3" style="background:#0f172a; color:#fff;">Mozilla Firefox</option>
           </select>
         </div>
 
-        <!-- 2. User-Agent (Anti-Detect) Section -->
+        <!-- 2. User-Agent Section -->
         <div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-            <label style="font-size:11px; font-weight:700; color:#38bdf8;">🌐 User-Agent (Anti-Detect)</label>
-            <div style="display:flex; gap:4px;">
-              <button type="button" class="btn-topbar-tool" onclick="randomizeModalUA()" style="padding:2px 7px; font-size:10px; border-color:#a855f7; color:#c084fc; background:rgba(168,85,247,0.1);">🎲 Random</button>
-              <button type="button" class="btn-topbar-tool" onclick="clearModalUA()" style="padding:2px 7px; font-size:10px;">✕ Clear</button>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <label id="lbl-modal-ua-title" style="font-size:11px; font-weight:600; color:#cbd5e1; letter-spacing:0.2px;">
+              User-Agent (Anti-Detect)
+            </label>
+            <div style="display:flex; gap:5px;">
+              <button type="button" id="btn-modal-random-ua" class="btn-topbar-tool" onclick="randomizeModalUA()" style="padding:2px 8px; font-size:10.5px; color:#94a3b8; border-color:rgba(255,255,255,0.12); background:rgba(255,255,255,0.04);">Random</button>
+              <button type="button" id="btn-modal-clear-ua" class="btn-topbar-tool" onclick="clearModalUA()" style="padding:2px 8px; font-size:10.5px; color:#94a3b8; border-color:rgba(255,255,255,0.12); background:rgba(255,255,255,0.04);">Clear</button>
             </div>
           </div>
-          <input type="text" id="modal-client-ua" placeholder="Default Browser User-Agent (Empty)" style="width:100%; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:6px; padding:6px 10px; color:#fff; font-family:var(--font-mono); font-size:11px; outline:none;" />
+          <input type="text" id="modal-client-ua" placeholder="Default Browser User-Agent (Empty)" style="width:100%; background:#131c31; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:7px 10px; color:#f8fafc; font-family:var(--font-mono); font-size:11px; outline:none;" />
         </div>
 
         <!-- 3. IP / Proxy Section -->
         <div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-            <label style="font-size:11px; font-weight:700; color:#c084fc;">🛡️ IP / Proxy Settings</label>
-            <button type="button" class="btn-topbar-tool" onclick="clearModalProxy()" style="padding:2px 7px; font-size:10px;">✕ Clear</button>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <label id="lbl-modal-proxy-title" style="font-size:11px; font-weight:600; color:#cbd5e1; letter-spacing:0.2px;">
+              Network / Proxy Settings
+            </label>
+            <button type="button" id="btn-modal-clear-proxy" class="btn-topbar-tool" onclick="clearModalProxy()" style="padding:2px 8px; font-size:10.5px; color:#94a3b8; border-color:rgba(255,255,255,0.12); background:rgba(255,255,255,0.04);">Clear</button>
           </div>
-          <input type="text" id="modal-client-proxy" placeholder="http://ip:port or socks5://ip:port or ip:port:user:pass" style="width:100%; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:6px; padding:6px 10px; color:#fff; font-family:var(--font-mono); font-size:11px; outline:none;" />
-          <span style="font-size:9.5px; color:var(--text-dim); margin-top:3px; display:block;">ใช้แยก IP สำหรับแต่ละจอเพื่อป้องกันการตรวจจับ (IP Detection)</span>
+          <input type="text" id="modal-client-proxy" placeholder="http://ip:port or socks5://ip:port or ip:port:user:pass" style="width:100%; background:#131c31; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:7px 10px; color:#f8fafc; font-family:var(--font-mono); font-size:11px; outline:none;" />
+          <span id="lbl-modal-proxy-desc" style="font-size:10px; color:#64748b; margin-top:4px; display:block;">แยก IP สำหรับแต่ละหน้าจอเพื่อความปลอดภัยในการเชื่อมต่อ</span>
         </div>
 
-        <!-- 4. Window Position & Screen Bounds Section -->
-        <div style="background:rgba(15,23,42,0.6); border:1px solid var(--border); border-radius:6px; padding:9px 11px;">
+        <!-- 4. Window Position & Bounds -->
+        <div style="background:rgba(18,26,45,0.5); border:1px solid rgba(255,255,255,0.07); border-radius:8px; padding:10px 12px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <label style="font-size:11px; font-weight:700; color:#34d399; display:flex; align-items:center; gap:5px;">
-              🪟 WINDOW POSITION & DISPLAY
+            <label id="lbl-modal-bounds-title" style="font-size:11px; font-weight:600; color:#cbd5e1; letter-spacing:0.2px;">
+              Window Position & Bounds
             </label>
-            <button type="button" id="btn-modal-reset-bounds" class="btn-topbar-tool" onclick="resetModalWindowBounds()" style="padding:2px 8px; font-size:10px; color:#f59e0b; border-color:#f59e0b; background:rgba(245,158,11,0.1); cursor:pointer;">
-              🔄 Reset Position (กลับจอหลัก)
+            <button type="button" id="btn-modal-reset-bounds" class="btn-topbar-tool" onclick="resetModalWindowBounds()" style="padding:2px 8px; font-size:10.5px; color:#cbd5e1; border-color:rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); cursor:pointer;">
+              Reset Position
             </button>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:var(--text-dim);">
-            <span>สถานะพิกัดหน้าต่าง:</span>
-            <span id="modal-client-bounds-info" style="font-family:var(--font-mono); font-weight:600; color:#38bdf8;">Default (Auto / กลางจอหลัก)</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#94a3b8;">
+            <span id="lbl-modal-bounds-coord">พิกัดหน้าต่าง:</span>
+            <span id="modal-client-bounds-info" style="font-family:var(--font-mono); font-weight:600; color:#e2e8f0;">Default (Auto)</span>
           </div>
-          <span style="font-size:9.5px; color:#64748b; margin-top:4px; display:block; line-height:1.3;">💡 หากหน้าต่างเกมหลุดออกนอกจอ (ตกขอบจอ หรือย้ายจอแล้วหาไม่เจอ) ให้กดปุ่ม Reset เพื่อดึงหน้าต่างกลับมาตรงกลางจอหลัก</span>
+          <span id="lbl-modal-bounds-hint" style="font-size:9.5px; color:#64748b; margin-top:4px; display:block; line-height:1.3;">รีเซ็ตตำแหน่งหน้าต่างกลับมาตรงกลางจอหลัก หากหน้าต่างเกมหลุดออกนอกจอ</span>
+        </div>
+
+        <!-- 5. Browser Profile Data & Cache Section -->
+        <div style="background:rgba(18,26,45,0.5); border:1px solid rgba(255,255,255,0.07); border-radius:8px; padding:10px 12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <label id="lbl-modal-clear-profile-title" style="font-size:11px; font-weight:600; color:#cbd5e1; display:block; margin-bottom:2px; letter-spacing:0.2px;">
+                Browser Cache & Profile
+              </label>
+              <span id="lbl-modal-clear-profile-desc" style="font-size:9.5px; color:#64748b; display:block;">ล้าง Cookie, แคช และประวัติการล็อกอินของจอนี้</span>
+            </div>
+            <button type="button" id="btn-modal-clear-profile" class="btn-topbar-tool" onclick="clearModalClientProfileData()" style="padding:4px 10px; font-size:11px; font-weight:600; color:#f87171; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.08); cursor:pointer;">
+              Clear Data
+            </button>
+          </div>
         </div>
 
       </div>
 
-      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05);">
-        <button class="btn-topbar-tool" onclick="closeClientSettingsModal()">Cancel</button>
-        <button class="btn-matrix-action launch" style="padding:6px 14px; font-size:11px;" onclick="saveClientSettingsFromModal()">💾 Save Settings</button>
+      <!-- Modal Footer -->
+      <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">
+        <button id="btn-modal-settings-cancel" class="btn-topbar-tool" onclick="closeClientSettingsModal()" style="padding:6px 14px; font-size:11px; color:#94a3b8; border-color:rgba(255,255,255,0.12);">Cancel</button>
+        <button id="btn-modal-settings-save" class="btn-primary" style="padding:6px 16px; font-size:11.5px; font-weight:600; border-radius:6px; background:#2563eb; color:#fff; border:1px solid #3b82f6; cursor:pointer;" onclick="saveClientSettingsFromModal()">Save Settings</button>
       </div>
     </div>
   </div>
@@ -635,6 +673,38 @@
         </button>
         <button type="button" onclick="window.executeStorageClear()" id="btn-storage-modal-confirm" style="padding:6px 16px; font-size:12px; font-weight:700; border-radius:6px; background:#ef4444; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
           <span>🔥</span> <span id="lbl-storage-modal-confirm-text">ยืนยันการลบ</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Client Slot Confirmation Modal -->
+  <div class="modal-overlay" id="delete-slot-confirm-modal" style="display:none; z-index:350;" onclick="if(event.target===this) window.closeDeleteSlotModal()">
+    <div class="modal-card" style="width: 440px; max-width: 94%; background: #0f172a; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 12px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px; margin-bottom:14px;">
+        <h3 style="margin:0; font-size:14px; font-weight:800; color:#f87171; display:flex; align-items:center; gap:8px;">
+          <span>🗑️</span>
+          <span id="lbl-del-slot-modal-title">ยืนยันการลบช่องจอ</span>
+        </h3>
+        <button class="win-btn close" onclick="window.closeDeleteSlotModal()" style="width:24px; height:24px; border-radius:4px;">✕</button>
+      </div>
+      <div class="modal-body" style="font-size:12px; color:#cbd5e1; line-height:1.6;">
+        <div id="lbl-del-slot-modal-desc" style="font-size:13px; font-weight:600; color:#fff;">
+          คุณต้องการลบช่อง Client นี้ใช่หรือไม่?
+        </div>
+        <div style="margin-top:12px; background:rgba(59, 130, 246, 0.08); border:1px solid rgba(59, 130, 246, 0.25); border-radius:8px; padding:10px 12px; font-size:11px; color:#93c5fd;">
+          💡 <strong id="lbl-del-slot-modal-hint-head">ข้อมูลสำคัญ:</strong>
+          <span id="lbl-del-slot-modal-hint-text">
+            หลังลบ ตำแหน่งนี้จะกลายเป็นช่องว่าง โดยจะไม่เปลี่ยนเลขประจำตัวของจออื่นๆ และคุณสามารถกดสร้างกลับมาใหม่เมื่อใดก็ได้
+          </span>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">
+        <button type="button" class="btn-topbar-tool" onclick="window.closeDeleteSlotModal()" id="btn-del-slot-modal-cancel" style="padding:6px 14px; font-size:11.5px; border-radius:6px; cursor:pointer;">
+          ✕ ยกเลิก
+        </button>
+        <button type="button" onclick="window.confirmExecuteDeleteSlot()" id="btn-del-slot-modal-confirm" style="padding:6px 16px; font-size:12px; font-weight:700; border-radius:6px; background:#ef4444; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
+          <span>🗑️</span> <span id="lbl-del-slot-modal-confirm-btn">ยืนยันการลบ</span>
         </button>
       </div>
     </div>

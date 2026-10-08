@@ -341,6 +341,158 @@ function createOverlayWindow() {
   });
 }
 
+// ============================================================================
+// PiP (PICTURE-IN-PICTURE) FLOATING WINDOWS (Independent Multi-Screen & Master)
+// ============================================================================
+const pipWindows = new Map(); // clientId (e.g. '1', '2', or 'master') -> BrowserWindow
+let latestActiveClients = [];
+let latestClientAliases = {};
+
+function getClientAliasesFromConfig() {
+  try {
+    const configPath = path.join(PROJECT_DIR, 'configs', 'global.json');
+    if (fs.existsSync(configPath)) {
+      const parsed = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      if (parsed && parsed.globalSettings && parsed.globalSettings.clientAliases) {
+        return parsed.globalSettings.clientAliases;
+      }
+    }
+  } catch (e) {}
+  return {};
+}
+
+function ensurePipAlwaysOnTop(win) {
+  if (!win || win.isDestroyed() || !win.isVisible()) return;
+  try {
+    win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    win.setAlwaysOnTop(true, 'screen-saver');
+    win.moveTop();
+  } catch (e) {}
+}
+
+function createPipWindow(targetClientId = 'master') {
+  const key = String(targetClientId || 'master');
+  let existingWin = pipWindows.get(key);
+  if (existingWin && !existingWin.isDestroyed()) {
+    existingWin.showInactive();
+    ensurePipAlwaysOnTop(existingWin);
+    existingWin.webContents.send('pip:set-client', key);
+    return existingWin;
+  }
+
+  // Calculate staggered initial position based on client index
+  let initialX = undefined;
+  let initialY = undefined;
+  try {
+    const { screen } = require('electron');
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { width: screenW, height: screenH } = primaryDisplay.workAreaSize;
+    const clientNum = parseInt(key, 10) || 1;
+    const offset = (clientNum - 1) * 35;
+    initialX = Math.max(20, screenW - 350 - offset);
+    initialY = Math.max(30, 80 + offset);
+  } catch (e) {}
+
+  const win = new BrowserWindow({
+    width: 346,
+    height: 258,
+    minWidth: 220,
+    minHeight: 140,
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    show: false,
+    skipTaskbar: true,
+    hasShadow: true,
+    resizable: true,
+    focusable: true,
+    x: initialX,
+    y: initialY,
+    icon: path.join(PROJECT_DIR, 'icon.ico'),
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  });
+
+  try {
+    win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    win.setAlwaysOnTop(true, 'screen-saver');
+    win.moveTop();
+  } catch (e) {}
+
+  win.loadFile(path.join(__dirname, 'ui', 'pip.html'), {
+    query: { client: key }
+  });
+
+  win.once('ready-to-show', () => {
+    if (win && !win.isDestroyed()) {
+      win.showInactive();
+      ensurePipAlwaysOnTop(win);
+      const currentPort = activeWebPort || getWebPortFromConfig();
+      if (!latestClientAliases || Object.keys(latestClientAliases).length === 0) {
+        latestClientAliases = getClientAliasesFromConfig();
+      }
+      win.webContents.send('pip:init', {
+        client: key,
+        port: currentPort,
+        activeClients: latestActiveClients,
+        clientAliases: latestClientAliases
+      });
+    }
+  });
+
+  win.on('blur', () => ensurePipAlwaysOnTop(win));
+  win.on('moved', () => ensurePipAlwaysOnTop(win));
+  win.on('closed', () => {
+    pipWindows.delete(key);
+  });
+
+  pipWindows.set(key, win);
+  return win;
+}
+
+let isPipMasterExplicitlyClosed = false;
+
+function isPipOverlayEnabledInConfig() {
+  try {
+    ensureGlobalConfigExists();
+    const globalJsonPath = path.join(PROJECT_DIR, 'configs', 'global.json');
+    if (fs.existsSync(globalJsonPath)) {
+      const parsed = JSON.parse(fs.readFileSync(globalJsonPath, 'utf8'));
+      if (parsed && parsed.globalSettings && parsed.globalSettings.enablePipOverlay !== undefined) {
+        return !!parsed.globalSettings.enablePipOverlay;
+      }
+    }
+  } catch (e) {}
+  return false;
+}
+
+function syncPipOnEngineState(running) {
+  if (running) {
+    const isEnabled = isPipOverlayEnabledInConfig();
+    if (isEnabled && !isPipMasterExplicitlyClosed) {
+      let masterWin = pipWindows.get('master');
+      if (!masterWin || masterWin.isDestroyed()) {
+        createPipWindow('master');
+      } else if (!masterWin.isVisible()) {
+        masterWin.showInactive();
+        ensurePipAlwaysOnTop(masterWin);
+      }
+    }
+  } else {
+    // Only auto-hide master PiP if it was configured as auto-launch overlay
+    const isEnabled = isPipOverlayEnabledInConfig();
+    if (isEnabled) {
+      let masterWin = pipWindows.get('master');
+      if (masterWin && !masterWin.isDestroyed() && masterWin.isVisible()) {
+        masterWin.hide();
+      }
+    }
+  }
+}
+
 function ensureGlobalConfigExists() {
   try {
     const globalJsonPath = path.join(PROJECT_DIR, 'configs', 'global.json');
@@ -428,6 +580,25 @@ function checkBotHealth() {
           });
         }
 
+        if (json.clientAliases) {
+          latestClientAliases = json.clientAliases;
+        } else if (json.globalSettings && json.globalSettings.clientAliases) {
+          latestClientAliases = json.globalSettings.clientAliases;
+        } else if (!latestClientAliases || Object.keys(latestClientAliases).length === 0) {
+          latestClientAliases = getClientAliasesFromConfig();
+        }
+
+        latestActiveClients = (json.activeClients || []).map(String);
+        pipWindows.forEach(pWin => {
+          if (pWin && !pWin.isDestroyed()) {
+            pWin.webContents.send('pip:update', {
+              port: resolvedPort,
+              activeClients: latestActiveClients,
+              clientAliases: latestClientAliases
+            });
+          }
+        });
+
         // If bot is stopped by user or not running, ensure overlay stays hidden
         if (!isBotRunning) {
           syncOverlayOnEngineState(false);
@@ -468,6 +639,18 @@ function checkBotHealth() {
         } else {
           if (overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible()) {
             overlayWindow.hide();
+          }
+        }
+
+        // PiP Floating Overlay Auto-Launch Sync (auto-open on bot start only if enabled in settings)
+        const isPipEnabledInSettings = !!gs.enablePipOverlay;
+        if (isPipEnabledInSettings && !isPipMasterExplicitlyClosed) {
+          let masterPip = pipWindows.get('master');
+          if (!masterPip || masterPip.isDestroyed()) {
+            createPipWindow('master');
+          } else if (!masterPip.isVisible()) {
+            masterPip.showInactive();
+            ensurePipAlwaysOnTop(masterPip);
           }
         }
       } catch (e) {
@@ -512,6 +695,7 @@ function startBotProcess() {
     isBotRunning = true;
     broadcastStatus();
     syncOverlayOnEngineState(true);
+    syncPipOnEngineState(true);
 
     botProcess.stdout.on('data', (data) => {
       const lines = data.toString().split(/\r?\n/);
@@ -524,10 +708,22 @@ function startBotProcess() {
           try {
             const rawJson = trimmed.slice('__OVERLAY_DATA__'.length);
             const overlayData = JSON.parse(rawJson);
+            latestActiveClients = (overlayData.activeClients || []).map(String);
+            if (overlayData.clientAliases) {
+              latestClientAliases = overlayData.clientAliases;
+            }
             if (overlayWindow && !overlayWindow.isDestroyed()) {
               ensureOverlayAlwaysOnTop();
               overlayWindow.webContents.send('overlay:update', overlayData);
             }
+            pipWindows.forEach(pWin => {
+              if (pWin && !pWin.isDestroyed()) {
+                pWin.webContents.send('pip:update', {
+                  activeClients: latestActiveClients,
+                  clientAliases: latestClientAliases
+                });
+              }
+            });
           } catch (e) {}
           return;
         }
@@ -558,6 +754,7 @@ function startBotProcess() {
       isBotRunning = false;
       broadcastStatus();
       syncOverlayOnEngineState(false);
+      syncPipOnEngineState(false);
       checkBotHealth();
     });
 
@@ -567,6 +764,7 @@ function startBotProcess() {
       isBotRunning = false;
       broadcastStatus();
       syncOverlayOnEngineState(false);
+      syncPipOnEngineState(false);
     });
 
     // Start periodic health checking
@@ -579,6 +777,7 @@ function startBotProcess() {
     isBotRunning = false;
     broadcastStatus();
     syncOverlayOnEngineState(false);
+    syncPipOnEngineState(false);
     return { success: false, error: err.message };
   }
 }
@@ -607,6 +806,7 @@ function stopBotProcess() {
   isBotRunning = false;
   broadcastStatus();
   syncOverlayOnEngineState(false);
+  syncPipOnEngineState(false);
   checkBotHealth();
   return { success: true };
 }
@@ -1009,6 +1209,91 @@ ipcMain.handle('overlay:toggle', () => {
   return { visible: overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible() };
 });
 
+// PiP Floating Window IPC Handlers
+ipcMain.handle('pip:toggle', (event, clientId = 'master') => {
+  const key = String(clientId || 'master');
+  if (key === 'master') isPipMasterExplicitlyClosed = false;
+  const existingWin = pipWindows.get(key);
+  if (existingWin && !existingWin.isDestroyed()) {
+    if (existingWin.isVisible()) {
+      existingWin.close();
+      pipWindows.delete(key);
+      if (key === 'master') isPipMasterExplicitlyClosed = true;
+      return { open: false, client: key };
+    } else {
+      existingWin.showInactive();
+      ensurePipAlwaysOnTop(existingWin);
+      return { open: true, client: key };
+    }
+  } else {
+    createPipWindow(key);
+    return { open: true, client: key };
+  }
+});
+
+ipcMain.handle('pip:close', (event, clientId) => {
+  const key = String(clientId || 'master');
+  if (key === 'master') isPipMasterExplicitlyClosed = true;
+  let win = pipWindows.get(key);
+  if (!win && pipWindows.size === 1) {
+    win = pipWindows.values().next().value;
+  }
+  if (win && !win.isDestroyed()) {
+    win.close();
+  }
+  pipWindows.delete(key);
+  return { success: true };
+});
+
+ipcMain.on('pip:resize', (event, { clientId, width, height }) => {
+  const key = String(clientId || 'master');
+  let win = pipWindows.get(key);
+  if (!win && pipWindows.size === 1) {
+    win = pipWindows.values().next().value;
+  }
+  if (win && !win.isDestroyed()) {
+    const w = Math.round(width);
+    const h = Math.round(height);
+    // Bubble mode (64x64) is smaller than the normal minimum size
+    win.setMinimumSize(Math.min(220, w), Math.min(140, h));
+    win.setSize(w, h);
+    try {
+      const { screen } = require('electron');
+      const b = win.getBounds();
+      const wa = screen.getDisplayMatching(b).workArea;
+      const nx = Math.max(wa.x, Math.min(b.x, wa.x + wa.width - b.width));
+      const ny = Math.max(wa.y, Math.min(b.y, wa.y + wa.height - b.height));
+      if (nx !== b.x || ny !== b.y) win.setPosition(nx, ny);
+    } catch (e) {}
+    ensurePipAlwaysOnTop(win);
+  }
+});
+
+ipcMain.on('pip:move', (event, { clientId, dx, dy }) => {
+  const key = String(clientId || 'master');
+  let win = pipWindows.get(key);
+  if (!win && pipWindows.size === 1) {
+    win = pipWindows.values().next().value;
+  }
+  if (win && !win.isDestroyed()) {
+    const [x, y] = win.getPosition();
+    win.setPosition(Math.round(x + (dx || 0)), Math.round(y + (dy || 0)));
+    ensurePipAlwaysOnTop(win);
+  }
+});
+
+ipcMain.handle('pip:focus-client', async (event, clientId) => {
+  try {
+    const currentPort = activeWebPort || getWebPortFromConfig();
+    const http = require('http');
+    const req = http.request(`http://localhost:${currentPort}/api/client-focus/${clientId}`, {
+      method: 'POST'
+    });
+    req.on('error', () => {});
+    req.end();
+  } catch (e) {}
+});
+
 // App Lifecycle
 app.on('second-instance', () => {
   if (mainWindow) {
@@ -1058,6 +1343,12 @@ function exitApplicationCleanly() {
     try { mainWindow.destroy(); } catch (e) {}
     mainWindow = null;
   }
+  pipWindows.forEach(win => {
+    if (win && !win.isDestroyed()) {
+      try { win.destroy(); } catch (e) {}
+    }
+  });
+  pipWindows.clear();
 
   // 3. Terminate bot core process tree
   stopBotProcess();

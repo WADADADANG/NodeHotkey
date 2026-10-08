@@ -121,6 +121,9 @@ global.activePartyTargetRouters = {};
 
 // Real-time execution signal broadcast
 function emitSignal(actionId, eventName, targetId = null) {
+    if (typeof global.emitSignal === 'function' && global.emitSignal !== emitSignal) {
+        return global.emitSignal(actionId, eventName, targetId);
+    }
     if (!global.executionSignals) global.executionSignals = [];
     global.executionSignals.push({
         id: Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -343,7 +346,17 @@ function getClientStatuses() {
     return clientStatuses;
 }
 
-function sendRealtimeOverlayState() {
+let lastOverlayUpdateTime = 0;
+let overlayUpdateTimer = null;
+let lastOverlayPayloadStr = '';
+const OVERLAY_THROTTLE_MS = 200;
+
+function flushRealtimeOverlayState() {
+    if (overlayUpdateTimer) {
+        clearTimeout(overlayUpdateTimer);
+        overlayUpdateTimer = null;
+    }
+    lastOverlayUpdateTime = Date.now();
     const payload = {
         activeClients: activeClients || [],
         clientStatuses: getClientStatuses(),
@@ -352,11 +365,34 @@ function sendRealtimeOverlayState() {
         disabledClients: global.disabledClients || []
     };
     try {
-        console.log('__OVERLAY_DATA__' + JSON.stringify(payload));
+        const payloadStr = JSON.stringify(payload);
+        if (payloadStr !== lastOverlayPayloadStr) {
+            lastOverlayPayloadStr = payloadStr;
+            console.log('__OVERLAY_DATA__' + payloadStr);
+        }
     } catch (e) { }
 }
+
+function sendRealtimeOverlayState(immediate = false) {
+    if (immediate) {
+        flushRealtimeOverlayState();
+        return;
+    }
+    const now = Date.now();
+    const elapsed = now - lastOverlayUpdateTime;
+    if (elapsed >= OVERLAY_THROTTLE_MS) {
+        flushRealtimeOverlayState();
+    } else if (!overlayUpdateTimer) {
+        overlayUpdateTimer = setTimeout(() => {
+            flushRealtimeOverlayState();
+        }, OVERLAY_THROTTLE_MS - elapsed);
+    }
+}
+function sendOverlayUpdate(immediate = false) {
+    sendRealtimeOverlayState(immediate);
+}
 global.sendRealtimeOverlayState = sendRealtimeOverlayState;
-global.sendOverlayUpdate = sendRealtimeOverlayState;
+global.sendOverlayUpdate = sendOverlayUpdate;
 global.getClientStatuses = getClientStatuses;
 
 // Ghost Mouse Jitter state
@@ -662,8 +698,8 @@ global.loadConfigFromFile = loadConfigFromFile;
 // ============================================================================
 // (Variables hoisted to the top to avoid ReferenceError)
 
-function sendOverlayUpdate() {
-    sendRealtimeOverlayState();
+function sendOverlayUpdate(immediate = false) {
+    sendRealtimeOverlayState(immediate);
 }
 global.sendOverlayUpdate = sendOverlayUpdate;
 
@@ -722,7 +758,9 @@ global.abortableSleep = abortableSleep;
 // Auto-reset variables marked with resetOnPause to their default values on pause
 function resetVariablesOnPause() {
     try {
-        let profilesToCheck = (activeProfileObjects && activeProfileObjects.length > 0) ? activeProfileObjects : [];
+        let profilesToCheck = (global.activeProfileObjects && global.activeProfileObjects.length > 0)
+            ? global.activeProfileObjects
+            : ((activeProfileObjects && activeProfileObjects.length > 0) ? activeProfileObjects : []);
         if (profilesToCheck.length === 0) {
             const parsed = readConfig();
             if (parsed && parsed.profiles) {
@@ -917,7 +955,7 @@ global.toggleSuspendState = function (forcedState) {
         syncGhostMouseJitter();
     }
 
-    sendOverlayUpdate();
+    sendOverlayUpdate(true);
     return global.isSuspended;
 };
 
@@ -1590,12 +1628,12 @@ function clientInPageScript({ index, initialPrefix }) {
     }, true);
     window.addEventListener('pagehide', releaseAllStuckPhysicalInputs, true);
 
-    // 4.4 High-frequency OS Window Defocus Sentinel (Instantly detects window defocus at 50ms when user clicks another program)
+    // 4.4 OS Window Defocus Sentinel (Instant release via blur/focusout/visibilitychange events; backup watchdog at 500ms)
     setInterval(() => {
         if (!document.hasFocus() && (heldPhysicalKeys.size > 0 || heldPhysicalButtons.size > 0)) {
             releaseAllStuckPhysicalInputs();
         }
-    }, 50);
+    }, 500);
 
     // 5. 🪟 Real-time Window Bounds Tracker (Auto-syncs position on move, resize, blur & beforeunload)
     let lastReportedBounds = null;
@@ -2096,7 +2134,7 @@ global.closeSingleClient = closeSingleClient;
 
 async function launchSingleClient(clientIndexInput, choiceParam) {
     const clientIndex = parseInt(clientIndexInput, 10);
-    if (isNaN(clientIndex) || clientIndex < 1 || clientIndex > 8) {
+    if (isNaN(clientIndex) || clientIndex < 1) {
         throw new Error(`Invalid client index: ${clientIndexInput}`);
     }
 
@@ -3749,7 +3787,7 @@ async function runEmergencyStopAction(action, callStack) {
         console.log(`[Emergency Stop] Stopped actions on target client(s): ${targets.join(', ')}`);
     }
 
-    sendOverlayUpdate();
+    sendOverlayUpdate(true);
     await fireChain(action, 'onFired', callStack);
 }
 global.runEmergencyStopAction = runEmergencyStopAction;
@@ -3807,6 +3845,9 @@ global.runEmitEventAction = runEmitEventAction;
 global.profileVariables = global.profileVariables || {};
 
 function getVariableKey(action, clientOverride = null) {
+    if (typeof action === 'string') {
+        action = { varName: action, id: action };
+    }
     const scope = action.scope || 'client';
     const varKey = (action.varName || action.name || action.id || 'default').trim();
     // Cross-profile shared: scope === 'global' → store in '__SHARED__' bucket
@@ -3843,17 +3884,15 @@ function getVariableValue(action, clientOverride = null) {
         if (sharedKeys.length > 0 && sharedBucket[sharedKeys[0]] !== undefined) return sharedBucket[sharedKeys[0]];
     }
 
-    // Cross-profile fallback: check other profiles if not in current profile or __SHARED__
-    if (pName !== '__SHARED__') {
-        for (const otherPName of Object.keys(global.profileVariables)) {
-            if (otherPName !== pName && otherPName !== '__SHARED__') {
-                const otherBucket = global.profileVariables[otherPName]?.[varId];
-                if (otherBucket) {
-                    if (otherBucket['global'] !== undefined) return otherBucket['global'];
-                    if (otherBucket[clientStr] !== undefined) return otherBucket[clientStr];
-                    const otherKeys = Object.keys(otherBucket);
-                    if (otherKeys.length > 0 && otherBucket[otherKeys[0]] !== undefined) return otherBucket[otherKeys[0]];
-                }
+    // Cross-profile fallback: check other profiles if not in current profile
+    for (const otherPName of Object.keys(global.profileVariables)) {
+        if (otherPName !== pName) {
+            const otherBucket = global.profileVariables[otherPName]?.[varId];
+            if (otherBucket) {
+                if (otherBucket['global'] !== undefined) return otherBucket['global'];
+                if (otherBucket[clientStr] !== undefined) return otherBucket[clientStr];
+                const otherKeys = Object.keys(otherBucket);
+                if (otherKeys.length > 0 && otherBucket[otherKeys[0]] !== undefined) return otherBucket[otherKeys[0]];
             }
         }
     }
@@ -3893,7 +3932,7 @@ function getNamedVariableValue(varName, actionContext = {}, clientOverride = nul
         varName: varName,
         name: varName,
         id: varName,
-        scope: actionContext.scope || 'global',
+        scope: actionContext.scope || 'client',
         _profileName: actionContext._profileName || 'Active',
         targetClient: actionContext.targetClient || (clientOverride || '1'),
         varType: actionContext.varType || 'string',
@@ -4253,6 +4292,9 @@ function handleActionTrigger(act, firingTriggerId = null) {
 // Fire downstream connected actions for a given source action and event name directly from Graph Engine.
 // callStack prevents infinite loops (A→B→A).
 async function fireChain(sourceAction, eventName, callStack = new Set()) {
+    if (typeof global.fireChain === 'function' && global.fireChain !== fireChain) {
+        return global.fireChain(sourceAction, eventName, callStack);
+    }
     global.fireChain = fireChain;
     if (global.isSuspended || !sourceAction) return;
 

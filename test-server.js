@@ -18,6 +18,43 @@ function broadcastProfileEvent(eventData) {
   }
 }
 
+// PiP Frame Grabber: one shared screenshot per client, de-duplicated across viewers.
+// Prevents overlapping page.screenshot() calls that froze / blacked out PiP feeds.
+const pipFrameCache = new Map(); // clientId -> { buf, ts, pending }
+const PIP_FRAME_MAX_AGE_MS = 90;
+const PIP_FRAME_TIMEOUT_MS = 3000;
+
+function getClientPage(clientId) {
+  const pages = global.clientPages;
+  if (!pages) return null;
+  const page = pages[clientId] || pages[parseInt(clientId, 10)];
+  if (!page || (typeof page.isClosed === 'function' && page.isClosed())) return null;
+  return page;
+}
+
+function grabClientFrame(clientId, page) {
+  let entry = pipFrameCache.get(clientId);
+  if (!entry) {
+    entry = { buf: null, ts: 0, pending: null };
+    pipFrameCache.set(clientId, entry);
+  }
+  if (entry.buf && Date.now() - entry.ts < PIP_FRAME_MAX_AGE_MS) return Promise.resolve(entry.buf);
+  if (entry.pending) return entry.pending;
+
+  const timeout = new Promise(resolve => setTimeout(() => resolve(null), PIP_FRAME_TIMEOUT_MS));
+  const shot = page.screenshot({ type: 'jpeg', quality: 70 }).catch(() => null);
+  entry.pending = Promise.race([shot, timeout]).then(buf => {
+    if (buf) {
+      entry.buf = buf;
+      entry.ts = Date.now();
+    }
+    return buf || null;
+  }).finally(() => {
+    entry.pending = null;
+  });
+  return entry.pending;
+}
+
 function getInitialPort() {
   if (process.env.PORT) {
     const p = parseInt(process.env.PORT, 10);
@@ -66,7 +103,7 @@ function sendJSON(res, status, data) {
 
 const { getCooldownPresets, getCooldownPresetsById, getClassIcons } = require('./cooldown-manager');
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     res.writeHead(204, { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST', 'Access-Control-Allow-Headers': 'Content-Type' });
@@ -228,13 +265,99 @@ const server = http.createServer((req, res) => {
       serverPort: PORT,
       activeClients: activeList,
       clientStatuses: clientStatuses,
-      clientAliases: global.clientAliases || {},
+      clientAliases: (gs && gs.clientAliases) || global.clientAliases || {},
       isSuspended: !!global.isSuspended,
       disabledClients: global.disabledClients || [],
       enableOverlay: gs.enableOverlay !== undefined ? !!gs.enableOverlay : true,
       activeProfiles: cfg.activeProfiles || (cfg.activeProfile ? [cfg.activeProfile] : ['Default']),
       activeProfile: cfg.activeProfile || (cfg.activeProfiles && cfg.activeProfiles[0]) || 'Default'
     });
+  }
+
+  // --- GET /api/client-stream/:clientId → MJPEG Stream (legacy; PiP now polls /api/client-frame) ---
+  const streamMatch = urlPath.match(/^\/api\/client-stream\/(\d+)/);
+  if (streamMatch && req.method === 'GET') {
+    const clientId = streamMatch[1];
+    if (!getClientPage(clientId)) {
+      res.writeHead(404, { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*' });
+      res.end(`Client ${clientId} is offline`);
+      return;
+    }
+
+    res.writeHead(200, {
+      'Content-Type': 'multipart/x-mixed-replace; boundary=frame',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*'
+    });
+
+    let isStreamOpen = true;
+    let busy = false;
+    const interval = setInterval(async () => {
+      if (!isStreamOpen || busy) return;
+      const page = getClientPage(clientId);
+      if (!page) {
+        isStreamOpen = false;
+        clearInterval(interval);
+        res.end();
+        return;
+      }
+      busy = true;
+      try {
+        const frame = await grabClientFrame(clientId, page);
+        if (frame && isStreamOpen) {
+          res.write(`--frame\r\nContent-Type: image/jpeg\r\nContent-Length: ${frame.length}\r\n\r\n`);
+          res.write(frame);
+          res.write('\r\n');
+        }
+      } catch (err) {}
+      busy = false;
+    }, 125);
+
+    req.on('close', () => {
+      isStreamOpen = false;
+      clearInterval(interval);
+    });
+    return;
+  }
+
+  // --- GET /api/client-frame/:clientId → Single JPEG Frame (used by PiP polling) ---
+  const frameMatch = urlPath.match(/^\/api\/client-frame\/(\d+)/);
+  if (frameMatch && req.method === 'GET') {
+    const clientId = frameMatch[1];
+    const page = getClientPage(clientId);
+    if (!page) {
+      res.writeHead(404, { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*' });
+      res.end(`Client ${clientId} is offline`);
+      return;
+    }
+
+    const frame = await grabClientFrame(clientId, page);
+    if (frame) {
+      res.writeHead(200, {
+        'Content-Type': 'image/jpeg',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Access-Control-Allow-Origin': '*'
+      });
+      res.end(frame);
+    } else {
+      res.writeHead(503, { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*' });
+      res.end('Frame not available');
+    }
+    return;
+  }
+
+  // --- POST /api/client-focus/:clientId → Bring client game window to front ---
+  const focusMatch = urlPath.match(/^\/api\/client-focus\/(\d+)/);
+  if (focusMatch && req.method === 'POST') {
+    const clientId = focusMatch[1];
+    const page = global.clientPages ? (global.clientPages[clientId] || global.clientPages[parseInt(clientId, 10)]) : null;
+    if (page && typeof page.bringToFront === 'function' && !page.isClosed()) {
+      await page.bringToFront().catch(() => {});
+      await page.evaluate(() => window.focus()).catch(() => {});
+      return sendJSON(res, 200, { success: true, clientId });
+    }
+    return sendJSON(res, 404, { success: false, error: `Client ${clientId} not found or closed` });
   }
 
   // --- POST /api/client/toggle-enable → toggle enable/disable per client ---
@@ -328,6 +451,52 @@ const server = http.createServer((req, res) => {
         return sendJSON(res, 200, { success: true });
       } catch (e) {
         return sendJSON(res, 400, { error: e.message });
+      }
+    });
+    return;
+  }
+
+  // --- POST /api/client/clear-profile → clear browser profile directory for specific client ---
+  if (urlPath === '/api/client/clear-profile' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', async () => {
+      try {
+        const { clientIndex } = JSON.parse(body || '{}');
+        const idx = parseInt(clientIndex, 10);
+        if (!idx || idx < 1) {
+          return sendJSON(res, 400, { success: false, error: 'Invalid clientIndex' });
+        }
+        const activeList = (global.activeClients || []).map(Number);
+        if (activeList.includes(idx)) {
+          return sendJSON(res, 400, { success: false, error: 'Client is currently active. Please close the game window first.' });
+        }
+
+        const projectPath = __dirname;
+        const profilesDir = path.join(projectPath, 'profiles');
+        const candidates = [
+          idx === 1 ? 'chrome-profile' : `chrome-profile-${idx}`,
+          idx === 1 ? 'edge-profile' : `edge-profile-${idx}`,
+          idx === 1 ? 'firefox-profile' : `firefox-profile-${idx}`
+        ];
+
+        let deletedCount = 0;
+        for (const dirName of candidates) {
+          const targetPath = path.join(profilesDir, dirName);
+          if (fs.existsSync(targetPath)) {
+            try {
+              fs.rmSync(targetPath, { recursive: true, force: true });
+              deletedCount++;
+            } catch (err) {
+              console.warn(`[Storage] Failed to delete ${targetPath}:`, err.message);
+            }
+          }
+        }
+
+        console.log(`🧹 [Storage] Cleared browser profile data for Client ${idx} (${deletedCount} folder(s) removed)`);
+        return sendJSON(res, 200, { success: true, clientIndex: idx, deletedCount });
+      } catch (e) {
+        return sendJSON(res, 400, { success: false, error: e.message });
       }
     });
     return;

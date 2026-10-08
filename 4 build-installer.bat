@@ -49,10 +49,10 @@ if errorlevel 1 (
 )
 
 echo.
-if exist "dist\NodeHotkey-Setup-v3.1.0.exe" (
+if exist "dist\NodeHotkey-Setup-v3.2.0.exe" (
     echo ========================================================
     echo  SUCCESS! Standalone Installer Generated:
-    echo  dist\NodeHotkey-Setup-v3.1.0.exe
+    echo  dist\NodeHotkey-Setup-v3.2.0.exe
     echo ========================================================
     echo.
     explorer dist

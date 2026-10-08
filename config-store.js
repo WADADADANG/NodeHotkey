@@ -13,6 +13,24 @@ const LEGACY_CONFIG_PATH = path.join(__dirname, 'config.json');
 const lastKnownProfileHashes = new Map(); // filename -> sha1
 const internalWriteLocks = new Map(); // filename -> timestamp
 
+// ═════════════════════════════════════════════════════════════════════════════
+// IN-MEMORY REACTIVE CONFIG CACHE (VS Code Configuration Service Pattern)
+// ═════════════════════════════════════════════════════════════════════════════
+let cachedFullConfig = null;
+let isCacheDirty = true;
+let lastCacheTimestamp = 0;
+const CACHE_TTL_MS = 2500; // Background safety fallback in case file watcher notification is delayed
+
+function invalidateConfigCache() {
+  isCacheDirty = true;
+  cachedFullConfig = null;
+}
+
+function cloneConfig(cfg) {
+  if (!cfg) return null;
+  return JSON.parse(JSON.stringify(cfg));
+}
+
 function computeFileHash(filePath) {
   try {
     if (!fs.existsSync(filePath)) return null;
@@ -49,6 +67,7 @@ function migrateLegacyConfig() {
       enableOverlay: true,
       suspendHotkey: "END",
       ghostMouseJitter: { enabled: false, intervalMin: 8000, intervalMax: 25000, maxOffset: 12 },
+      clientSlots: [1, 2, 3, 4, 5, 6, 7, 8],
       clientAliases: {},
       clientUserAgents: {},
       clientProxies: {}
@@ -157,6 +176,7 @@ function updateCreatorIdentity(fields = {}) {
   try {
     fs.writeFileSync(GLOBAL_CONFIG_PATH, JSON.stringify(gData, null, 2), 'utf8');
     internalWriteLocks.set('global.json', Date.now());
+    invalidateConfigCache();
     console.log(`[Config Store] 🆔 Updated Creator Identity: ${gData.creatorIdentity.authorName}`);
     return gData.creatorIdentity;
   } catch (e) {
@@ -165,8 +185,13 @@ function updateCreatorIdentity(fields = {}) {
   }
 }
 
-// Read and assemble full configuration object
-function readConfig() {
+// Read and assemble full configuration object with Reactive In-Memory Caching
+function readConfig(forceRefresh = false) {
+  const now = Date.now();
+  if (!forceRefresh && !isCacheDirty && cachedFullConfig && (now - lastCacheTimestamp < CACHE_TTL_MS)) {
+    return cloneConfig(cachedFullConfig);
+  }
+
   ensureDirs();
   if (fs.existsSync(LEGACY_CONFIG_PATH)) {
     migrateLegacyConfig();
@@ -181,6 +206,7 @@ function readConfig() {
     suspendHotkey: "END",
     webPort: 3088,
     ghostMouseJitter: { enabled: false, intervalMin: 8000, intervalMax: 25000, maxOffset: 12 },
+    clientSlots: [1, 2, 3, 4, 5, 6, 7, 8],
     clientAliases: {},
     clientUserAgents: {},
     clientProxies: {}
@@ -260,10 +286,9 @@ function readConfig() {
     activeProfile = Object.keys(profiles)[0] || 'Default';
   }
 
-  // Filter valid active profiles (empty array is valid)
   activeProfiles = activeProfiles.filter(p => !!profiles[p]);
 
-  return {
+  const fullResult = {
     activeProfile,
     activeProfiles,
     disabledClients,
@@ -271,6 +296,12 @@ function readConfig() {
     creatorIdentity,
     profiles
   };
+
+  cachedFullConfig = fullResult;
+  isCacheDirty = false;
+  lastCacheTimestamp = now;
+
+  return cloneConfig(fullResult);
 }
 
 // Write full configuration object into multi-file structure
@@ -348,6 +379,7 @@ function writeConfig(fullConfig) {
       } catch (e) { }
     }
   }
+  invalidateConfigCache();
 }
 
 // Write a single profile file directly with hash & internal lock update
@@ -367,6 +399,7 @@ function writeSingleProfile(profileName, pData) {
   const newHash = crypto.createHash('sha1').update(newContent).digest('hex');
   lastKnownProfileHashes.set(filename, newHash);
   internalWriteLocks.set(filename, Date.now());
+  invalidateConfigCache();
   return true;
 }
 
@@ -496,6 +529,7 @@ function handleWatchedFileEvent(filename, onExternalChange) {
     } catch (e) { }
 
     console.log(`[Config Store] 🔔 External profile change: "${pName}" (${isNew ? 'Created' : 'Modified'})`);
+    invalidateConfigCache();
 
     if (typeof onExternalChange === 'function') {
       onExternalChange({
@@ -513,6 +547,7 @@ function handleWatchedFileEvent(filename, onExternalChange) {
       lastKnownProfileHashes.delete(filename);
       const pName = path.basename(filename, '.json');
       console.log(`[Config Store] 🔔 External profile deletion: "${pName}"`);
+      invalidateConfigCache();
 
       if (typeof onExternalChange === 'function') {
         onExternalChange({
@@ -563,6 +598,7 @@ function saveGlobalSettingsOnly(globalSettingsPartial) {
     }
     fs.writeFileSync(GLOBAL_CONFIG_PATH, newContent, 'utf8');
     internalWriteLocks.set('global.json', Date.now());
+    invalidateConfigCache();
     return true;
   } catch (e) {
     console.error(`[Config Store Error] Failed to save global settings:`, e.message);
@@ -589,6 +625,7 @@ module.exports = {
   getCreatorIdentity,
   updateCreatorIdentity,
   isInternalRecentWrite,
+  invalidateConfigCache,
   CONFIGS_DIR,
   PROFILES_DIR,
   GLOBAL_CONFIG_PATH

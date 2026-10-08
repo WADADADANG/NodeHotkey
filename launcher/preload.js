@@ -40,6 +40,28 @@ contextBridge.exposeInMainWorld('launcherAPI', {
   resizeOverlay: (w, h) => ipcRenderer.send('overlay:resize', { width: w, height: h }),
   toggleOverlay: () => ipcRenderer.invoke('overlay:toggle'),
 
+  // Dedicated PiP Floating Window Controls
+  togglePiP: (clientId) => ipcRenderer.invoke('pip:toggle', clientId),
+  closePiP: (clientId) => ipcRenderer.invoke('pip:close', clientId),
+  resizePiP: (clientId, w, h) => ipcRenderer.send('pip:resize', { clientId, width: w, height: h }),
+  movePiP: (clientId, dx, dy) => ipcRenderer.send('pip:move', { clientId, dx, dy }),
+  focusGameClient: (clientId) => ipcRenderer.invoke('pip:focus-client', clientId),
+  onPipInit: (callback) => {
+    const subscription = (event, data) => callback(data);
+    ipcRenderer.on('pip:init', subscription);
+    return () => ipcRenderer.removeListener('pip:init', subscription);
+  },
+  onPipSetClient: (callback) => {
+    const subscription = (event, clientId) => callback(clientId);
+    ipcRenderer.on('pip:set-client', subscription);
+    return () => ipcRenderer.removeListener('pip:set-client', subscription);
+  },
+  onPipUpdate: (callback) => {
+    const subscription = (event, data) => callback(data);
+    ipcRenderer.on('pip:update', subscription);
+    return () => ipcRenderer.removeListener('pip:update', subscription);
+  },
+
   // Event Listeners from Main Process
   onOverlayUpdate: (callback) => {
     const subscription = (event, data) => callback(data);

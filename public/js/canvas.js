@@ -2121,46 +2121,59 @@ class NodeCanvasEditor {
     return { x, y };
   }
 
-  renderWires() {
-    let svgContent = `
-      <defs>
-        <filter id="wire-glow-cyan" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <filter id="wire-glow-purple" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <filter id="wire-glow-blue" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <filter id="wire-glow-green" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <filter id="wire-glow-red" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <filter id="wire-glow-pink" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <filter id="wire-glow-amber" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <filter id="wire-glow-default" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-    `;
+  ensureSvgStructure() {
+    if (!this.svgLayer) return;
+    if (this._svgStructured && this.wiresContainer && this.svgLayer.contains(this.wiresContainer)) return;
 
-    // Render active connections as clean static wires
-    this.connections.forEach(conn => {
+    if (!this.svgLayer.querySelector('defs')) {
+      const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      const filters = ['cyan', 'purple', 'blue', 'green', 'red', 'pink', 'amber', 'default'];
+      defs.innerHTML = filters.map(f => `
+        <filter id="wire-glow-${f}" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      `).join('');
+      this.svgLayer.appendChild(defs);
+    }
+
+    let wc = this.svgLayer.querySelector('.wires-container');
+    if (!wc) {
+      wc = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      wc.setAttribute('class', 'wires-container');
+      this.svgLayer.appendChild(wc);
+    }
+    this.wiresContainer = wc;
+
+    let dw = this.svgLayer.querySelector('.canvas-draft-wire');
+    if (!dw) {
+      dw = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      dw.setAttribute('class', 'wire-path wire-draft canvas-draft-wire');
+      dw.style.display = 'none';
+      this.svgLayer.appendChild(dw);
+    }
+    this.draftWireEl = dw;
+
+    let pc = this.svgLayer.querySelector('.pulses-container');
+    if (!pc) {
+      pc = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      pc.setAttribute('class', 'pulses-container');
+      this.svgLayer.appendChild(pc);
+    }
+    this.pulsesContainer = pc;
+
+    this._svgStructured = true;
+  }
+
+  renderWires() {
+    if (!this.svgLayer) return;
+    this.ensureSvgStructure();
+
+    const activeConnIds = new Set();
+
+    // Render active connections as clean retained-mode SVG paths
+    (this.connections || []).forEach(conn => {
+      activeConnIds.add(conn.id);
       const fromPos = this.getPortCenter(conn.fromNodeId, conn.fromPort);
       const toPos = this.getPortCenter(conn.toNodeId, conn.toPort || 'exec_in');
       const fromNode = this.nodes.find(n => n.id === conn.fromNodeId);
@@ -2192,12 +2205,42 @@ class NodeCanvasEditor {
         wireTypeClass = `wire-data wire-${vType}`;
       }
 
-      svgContent += `
-        <g class="wire-group" data-id="${conn.id}">
+      const fullWireClass = `wire-path ${wireTypeClass}`.trim();
+      let group = this.wiresContainer.querySelector(`[data-id="${conn.id}"]`);
+
+      if (group) {
+        const hitbox = group.querySelector('.wire-hitbox');
+        const wirePath = group.querySelector('.wire-path');
+        if (hitbox && hitbox.getAttribute('d') !== pathData) {
+          hitbox.setAttribute('d', pathData);
+        }
+        if (wirePath) {
+          if (wirePath.getAttribute('d') !== pathData) {
+            wirePath.setAttribute('d', pathData);
+          }
+          if (wirePath.getAttribute('class') !== fullWireClass) {
+            wirePath.setAttribute('class', fullWireClass);
+          }
+        }
+      } else {
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('class', 'wire-group');
+        g.setAttribute('data-id', conn.id);
+        g.innerHTML = `
           <path class="wire-hitbox" d="${pathData}" data-id="${conn.id}" stroke="transparent" stroke-width="18" fill="none" style="cursor:pointer;" />
           <path class="wire-path ${wireTypeClass}" d="${pathData}" data-id="${conn.id}" />
-        </g>
-      `;
+        `;
+        this.wiresContainer.appendChild(g);
+      }
+    });
+
+    // Prune removed connections from DOM
+    const existingGroups = this.wiresContainer.querySelectorAll('.wire-group');
+    existingGroups.forEach(g => {
+      const id = g.getAttribute('data-id');
+      if (!activeConnIds.has(id)) {
+        g.remove();
+      }
     });
 
     // Render draft wire if currently dragging
@@ -2240,10 +2283,15 @@ class NodeCanvasEditor {
       } else if (this.draftWire.wireType) {
         draftClass += ` wire-data wire-${this.draftWire.wireType}`;
       }
-      svgContent += `<path class="wire-path ${draftClass}" d="${pathData}" />`;
-    }
 
-    this.svgLayer.innerHTML = svgContent;
+      if (this.draftWireEl) {
+        this.draftWireEl.setAttribute('d', pathData);
+        this.draftWireEl.setAttribute('class', `wire-path ${draftClass} canvas-draft-wire`);
+        this.draftWireEl.style.display = '';
+      }
+    } else if (this.draftWireEl) {
+      this.draftWireEl.style.display = 'none';
+    }
   }
 
   firePulseOnWire(conn, colorOverride = null, onCompleteCallback = null) {
@@ -2363,8 +2411,11 @@ class NodeCanvasEditor {
     const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     g.setAttribute('class', 'wire-pulse-packet');
     g.appendChild(trailPath);
-    g.appendChild(orb);
-    this.svgLayer.appendChild(g);
+    if (this.pulsesContainer) {
+      this.pulsesContainer.appendChild(g);
+    } else {
+      this.svgLayer.appendChild(g);
+    }
 
     // Dynamic travel duration with balanced speed scaling for long wires
     const duration = Math.max(320, Math.min(900, totalLength * 0.55));

@@ -5,10 +5,11 @@
 
 function isNodeWorkflowProfile(profile) {
   if (!profile) return false;
-  const isV3 = typeof profile.version === 'string' && profile.version.startsWith('3.');
   const hasNodes = Array.isArray(profile.nodes);
-  const hasConnections = Array.isArray(profile.connections);
   const hasLegacyActions = Array.isArray(profile.actions) && profile.actions.length > 0;
+  if (hasNodes && !hasLegacyActions) return true;
+  const isV3 = typeof profile.version === 'string' && profile.version.startsWith('3.');
+  const hasConnections = Array.isArray(profile.connections);
   return isV3 && hasNodes && hasConnections && !hasLegacyActions;
 }
 
