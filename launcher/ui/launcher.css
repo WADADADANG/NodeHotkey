@@ -466,6 +466,23 @@ body.app-root-body {
   overflow-y: auto;
 }
 
+.app-view::-webkit-scrollbar {
+  width: 5px;
+}
+
+.app-view::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.app-view::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 4px;
+}
+
+.app-view::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.5);
+}
+
 .app-view.active {
   display: flex;
   flex-direction: column;
@@ -670,6 +687,29 @@ body.app-root-body {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
+  max-height: 204px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  scroll-behavior: smooth;
+}
+
+.client-tiles-grid-4x2::-webkit-scrollbar {
+  width: 5px;
+}
+
+.client-tiles-grid-4x2::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 4px;
+}
+
+.client-tiles-grid-4x2::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 4px;
+}
+
+.client-tiles-grid-4x2::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.6);
 }
 
 .c-matrix-tile {
@@ -910,7 +950,7 @@ body.app-root-body {
   flex-direction: column;
   overflow: hidden;
   flex: 1;
-  min-height: 320px;
+  min-height: 180px;
 }
 
 .terminal-header {
