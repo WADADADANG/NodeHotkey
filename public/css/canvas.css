@@ -2200,34 +2200,117 @@ body.canvas-is-drafting-wire .canvas-node.node-reroute .node-port {
   flex-direction: column;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 10px;
-  padding: 9px 11px;
-  gap: 6px;
+  border-radius: 9px;
+  padding: 0;
   transition: all 0.15s ease;
   position: relative;
+  overflow: hidden;
 }
 
 .variable-card:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(168, 85, 247, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.variable-card.is-expanded {
+  background: rgba(255, 255, 255, 0.04);
   border-color: rgba(168, 85, 247, 0.4);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .variable-card-shared {
   border-left: 3px solid rgba(56, 189, 248, 0.6);
-  background: rgba(56, 189, 248, 0.04);
+  background: rgba(56, 189, 248, 0.03);
 }
 
 .variable-card-shared:hover {
   border-color: rgba(56, 189, 248, 0.5);
-  background: rgba(56, 189, 248, 0.08);
+  background: rgba(56, 189, 248, 0.06);
 }
 
-.variable-card-top {
+/* Accordion Header (Always visible row) */
+.variable-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  user-select: none;
+  min-height: 38px;
+  transition: background 0.15s ease;
+}
+
+.variable-card-header:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.var-header-left {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  flex: 1;
+}
+
+.var-collapse-arrow {
+  font-size: 8.5px;
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.var-collapse-arrow.expanded {
+  transform: rotate(90deg);
+  color: #38bdf8;
+}
+
+.var-header-right {
+  display: flex;
+  align-items: center;
   gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Flash effect when variable changes */
+.variable-card.var-live-flash {
+  border-color: rgba(56, 189, 248, 0.8) !important;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.45);
+}
+
+.variable-card.var-live-flash .variable-card-header {
+  background: rgba(56, 189, 248, 0.14) !important;
+}
+
+/* Accordion Body (Collapsible) */
+.variable-card-body {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 10px 9px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.15);
+  animation: varAccordionSlide 0.2s ease;
+}
+
+.variable-card.is-expanded .variable-card-body {
+  display: flex;
+}
+
+@keyframes varAccordionSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .variable-name {

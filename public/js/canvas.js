@@ -78,6 +78,8 @@ class NodeCanvasEditor {
     this.runtimeVariablesData = null;
     this.runtimeVariableValues = {};
     this.variablesPollTimer = null;
+    this.expandedVariableIds = new Set();
+    this.allVarsExpandedState = false;
 
     this.setupDOM();
     this.updateLiveFlowButtonUI();
@@ -164,6 +166,7 @@ class NodeCanvasEditor {
               <span class="panel-drawer-badge" id="variables-count">0</span>
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
+              <button class="panel-drawer-action-btn" id="btn-toggle-all-vars" onclick="window.nodeCanvas.toggleAllVariables()" title="${window.currentLang === 'en' ? 'Expand / Collapse All' : 'กาง / พับ ทั้งหมด'}">🔽</button>
               <button class="panel-drawer-action-btn" id="btn-refresh-variables" onclick="window.nodeCanvas.fetchRuntimeVariables(true)" title="${window.currentLang === 'en' ? 'Refresh runtime values' : 'รีเฟรชสถานะตัวแปรล่าสุด'}">🔄</button>
               <button class="panel-drawer-close-btn" onclick="window.nodeCanvas.togglePanel('variables', false)" title="${window.currentLang === 'en' ? 'Close' : 'ปิด'}">✕</button>
             </div>
@@ -3805,14 +3808,64 @@ class NodeCanvasEditor {
       valWrap.innerHTML = this.formatLiveVariableValueHTML(vObj);
     }
 
-    const liveRow = cardEl.querySelector('.variable-live-status-row');
-    if (liveRow) {
-      liveRow.classList.remove('var-live-flash');
-      void liveRow.offsetWidth;
-      liveRow.classList.add('var-live-flash');
-      setTimeout(() => {
-        if (liveRow) liveRow.classList.remove('var-live-flash');
-      }, 500);
+    cardEl.classList.remove('var-live-flash');
+    void cardEl.offsetWidth;
+    cardEl.classList.add('var-live-flash');
+    setTimeout(() => {
+      if (cardEl) cardEl.classList.remove('var-live-flash');
+    }, 500);
+  }
+
+  toggleVariableCard(varId) {
+    if (!varId) return;
+    const cardEl = document.getElementById(`var-card-${varId}`);
+    if (!cardEl) return;
+    const isExpanded = cardEl.classList.contains('is-expanded');
+    if (isExpanded) {
+      cardEl.classList.remove('is-expanded');
+      if (this.expandedVariableIds) this.expandedVariableIds.delete(varId);
+      const arrow = cardEl.querySelector('.var-collapse-arrow');
+      if (arrow) arrow.classList.remove('expanded');
+    } else {
+      cardEl.classList.add('is-expanded');
+      if (this.expandedVariableIds) this.expandedVariableIds.add(varId);
+      const arrow = cardEl.querySelector('.var-collapse-arrow');
+      if (arrow) arrow.classList.add('expanded');
+    }
+  }
+
+  toggleAllVariables() {
+    const allVars = this.getAvailableVariables();
+    const shouldExpand = !this.allVarsExpandedState;
+    this.allVarsExpandedState = shouldExpand;
+
+    if (!this.expandedVariableIds) this.expandedVariableIds = new Set();
+    if (shouldExpand) {
+      allVars.forEach(v => this.expandedVariableIds.add(v.id));
+    } else {
+      this.expandedVariableIds.clear();
+    }
+
+    const btn = document.getElementById('btn-toggle-all-vars');
+    if (btn) {
+      btn.textContent = shouldExpand ? '🔼' : '🔽';
+      btn.title = shouldExpand
+        ? (window.currentLang === 'en' ? 'Collapse All' : 'พับทั้งหมด')
+        : (window.currentLang === 'en' ? 'Expand All' : 'กางทั้งหมด');
+    }
+
+    if (this.variablesListEl) {
+      const cards = this.variablesListEl.querySelectorAll('.variable-card');
+      cards.forEach(card => {
+        const arrow = card.querySelector('.var-collapse-arrow');
+        if (shouldExpand) {
+          card.classList.add('is-expanded');
+          if (arrow) arrow.classList.add('expanded');
+        } else {
+          card.classList.remove('is-expanded');
+          if (arrow) arrow.classList.remove('expanded');
+        }
+      });
     }
   }
 
@@ -3925,41 +3978,48 @@ class NodeCanvasEditor {
       const scopeDisplay = isCrossProfile
         ? `📁 ${v.fromProfile}`
         : '🌐 Global';
+      const isExpanded = this.expandedVariableIds && this.expandedVariableIds.has(v.id);
 
       return `
-        <div class="variable-card${isCrossProfile ? ' variable-card-shared' : ''}" id="var-card-${v.id}" data-var-name="${v.name}">
-          <div class="variable-card-top">
-            <span class="variable-name" title="${v.name}">${v.name}</span>
-            <span class="var-type-badge ${typeBadgeClass}">${typeIcon} ${v.type}</span>
-          </div>
-          <!-- Live Runtime Status -->
-          <div class="variable-live-status-row" id="var-live-row-${v.id}">
-            <span class="live-status-label">⚡ ${window.currentLang === 'en' ? 'Live:' : 'สถานะล่าสุด:'}</span>
-            <div class="live-status-val-wrap" id="var-live-val-${v.id}">
-              ${this.formatLiveVariableValueHTML(v)}
+        <div class="variable-card${isCrossProfile ? ' variable-card-shared' : ''}${isExpanded ? ' is-expanded' : ''}" id="var-card-${v.id}" data-var-name="${v.name}">
+          <!-- Compact Collapsible Header (Always visible) -->
+          <div class="variable-card-header" onclick="window.nodeCanvas.toggleVariableCard('${v.id}')" title="${isExpanded ? 'คลิกเพื่อพับ' : 'คลิกเพื่อกางรายละเอียดและปุ่มเครื่องมือ'}">
+            <div class="var-header-left">
+              <span class="var-collapse-arrow${isExpanded ? ' expanded' : ''}">▶</span>
+              <span class="variable-name" title="${v.name}">${v.name}</span>
+            </div>
+            <div class="var-header-right">
+              <span class="var-type-badge ${typeBadgeClass}">${typeIcon} ${v.type}</span>
+              <div class="live-status-val-wrap" id="var-live-val-${v.id}">
+                ${this.formatLiveVariableValueHTML(v)}
+              </div>
             </div>
           </div>
-          <div class="variable-card-meta" style="display:flex; align-items:center; justify-content:space-between; gap:6px; min-width:0;">
-            <div style="display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden;">
-              <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px; color:${isCrossProfile ? '#38bdf8' : 'inherit'}; font-weight:${isCrossProfile ? '600' : 'normal'};" title="${fullScopeTitle}">${scopeDisplay}</span>
-              <span style="font-family:'JetBrains Mono'; opacity:0.85; flex-shrink:0;">Def: ${v.defaultValue !== undefined ? v.defaultValue : '-'}</span>
+
+          <!-- Collapsible Body (Hidden by default, shown when expanded) -->
+          <div class="variable-card-body">
+            <div class="variable-card-meta" style="display:flex; align-items:center; justify-content:space-between; gap:6px; min-width:0;">
+              <div style="display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden;">
+                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px; color:${isCrossProfile ? '#38bdf8' : 'inherit'}; font-weight:${isCrossProfile ? '600' : 'normal'};" title="${fullScopeTitle}">${scopeDisplay}</span>
+                <span style="font-family:'JetBrains Mono'; opacity:0.85; flex-shrink:0;">Def: ${v.defaultValue !== undefined ? v.defaultValue : '-'}</span>
+              </div>
+              ${v.resetOnPause ? `<span style="color:#f59e0b; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3); border-radius:4px; padding:1px 5px; font-size:9.5px; font-weight:700; flex-shrink:0; white-space:nowrap;" title="${canvasT('var_reset_on_pause_hint', 'รีเซ็ตเป็นค่าเริ่มต้นอัตโนมัติเมื่อหยุดบอท')}">🔄 ${canvasT('var_badge_auto_reset', 'รีเซ็ตเมื่อหยุด')}</span>` : ''}
             </div>
-            ${v.resetOnPause ? `<span style="color:#f59e0b; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3); border-radius:4px; padding:1px 5px; font-size:9.5px; font-weight:700; flex-shrink:0; white-space:nowrap;" title="${canvasT('var_reset_on_pause_hint', 'รีเซ็ตเป็นค่าเริ่มต้นอัตโนมัติเมื่อหยุดบอท')}">🔄 ${canvasT('var_badge_auto_reset', 'รีเซ็ตเมื่อหยุด')}</span>` : ''}
-          </div>
-          ${v.description ? `<div style="font-size:10px; color:#94a3b8; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${v.description}">${v.description}</div>` : ''}
-          <div class="variable-actions">
-            <button type="button" class="btn-var-spawn btn-var-get" onclick="window.nodeCanvas.spawnVariableNode('${v.name}', 'var_get')" title="วางโหนด Get Variable ลง Canvas">
-              📥 ${canvasT('var_spawn_get', 'Get')}
-            </button>
-            <button type="button" class="btn-var-spawn btn-var-set" onclick="window.nodeCanvas.spawnVariableNode('${v.name}', 'var_set')" title="วางโหนด Set Variable ลง Canvas">
-              ✏️ ${canvasT('var_spawn_set', 'Set')}
-            </button>
-            <button type="button" class="btn-var-icon" onclick="window.nodeCanvas.openVariableModal('${v.id}', null, '${v.name}')" title="${canvasT('var_btn_edit_tooltip', 'แก้ไขตัวแปร (Edit)')}">
-              ⚙️
-            </button>
-            <button type="button" class="btn-var-icon btn-var-del" onclick="window.nodeCanvas.deleteVariable('${v.id}', '${v.name}')" title="${canvasT('var_btn_del_tooltip', 'ลบตัวแปร (Delete)')}">
-              🗑️
-            </button>
+            ${v.description ? `<div style="font-size:10px; color:#94a3b8; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${this.escapeHtml(v.description)}">${this.escapeHtml(v.description)}</div>` : ''}
+            <div class="variable-actions">
+              <button type="button" class="btn-var-spawn btn-var-get" onclick="window.nodeCanvas.spawnVariableNode('${v.name}', 'var_get')" title="วางโหนด Get Variable ลง Canvas">
+                📥 ${canvasT('var_spawn_get', 'Get')}
+              </button>
+              <button type="button" class="btn-var-spawn btn-var-set" onclick="window.nodeCanvas.spawnVariableNode('${v.name}', 'var_set')" title="วางโหนด Set Variable ลง Canvas">
+                ✏️ ${canvasT('var_spawn_set', 'Set')}
+              </button>
+              <button type="button" class="btn-var-icon" onclick="window.nodeCanvas.openVariableModal('${v.id}', null, '${v.name}')" title="${canvasT('var_btn_edit_tooltip', 'แก้ไขตัวแปร (Edit)')}">
+                ⚙️
+              </button>
+              <button type="button" class="btn-var-icon btn-var-del" onclick="window.nodeCanvas.deleteVariable('${v.id}', '${v.name}')" title="${canvasT('var_btn_del_tooltip', 'ลบตัวแปร (Delete)')}">
+                🗑️
+              </button>
+            </div>
           </div>
         </div>
       `;
