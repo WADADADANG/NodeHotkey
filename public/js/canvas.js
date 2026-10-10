@@ -161,21 +161,21 @@ class NodeCanvasEditor {
         <div class="node-panel-drawer panel-variables" id="node-variables-panel">
           <div class="panel-drawer-header">
             <div class="panel-drawer-title">
-              <span class="panel-drawer-icon">📦</span>
+              <span class="panel-drawer-icon">${this.getNodeIcon('database', 15)}</span>
               <span id="lbl-variables-title">${window.currentLang === 'en' ? 'Variables' : 'ตัวแปร (Variables)'}</span>
               <span class="panel-drawer-badge" id="variables-count">0</span>
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
-              <button class="panel-drawer-action-btn" id="btn-toggle-all-vars" onclick="window.nodeCanvas.toggleAllVariables()" title="${window.currentLang === 'en' ? 'Expand / Collapse All' : 'กาง / พับ ทั้งหมด'}">🔽</button>
-              <button class="panel-drawer-action-btn" id="btn-refresh-variables" onclick="window.nodeCanvas.fetchRuntimeVariables(true)" title="${window.currentLang === 'en' ? 'Refresh runtime values' : 'รีเฟรชสถานะตัวแปรล่าสุด'}">🔄</button>
+              <button class="panel-drawer-action-btn" id="btn-toggle-all-vars" onclick="window.nodeCanvas.toggleAllVariables()" title="${window.currentLang === 'en' ? 'Expand / Collapse All' : 'กาง / พับ ทั้งหมด'}">${this.getNodeIcon('chevrons-up-down', 13)}</button>
+              <button class="panel-drawer-action-btn" id="btn-refresh-variables" onclick="window.nodeCanvas.fetchRuntimeVariables(true)" title="${window.currentLang === 'en' ? 'Refresh runtime values' : 'รีเฟรชสถานะตัวแปรล่าสุด'}">${this.getNodeIcon('loop', 13)}</button>
               <button class="panel-drawer-close-btn" onclick="window.nodeCanvas.togglePanel('variables', false)" title="${window.currentLang === 'en' ? 'Close' : 'ปิด'}">✕</button>
             </div>
           </div>
           <div class="variables-toolbar">
             <button type="button" class="btn-add-variable-hero" onclick="window.nodeCanvas.openVariableModal()">
-              <span>➕ ${canvasT('btn_add_variable', 'สร้างตัวแปรใหม่ (Add Variable)')}</span>
+              <span style="display:inline-flex; align-items:center; gap:5px;">${this.getNodeIcon('plus', 13)} <span>${canvasT('btn_add_variable', 'สร้างตัวแปรใหม่ (Add Variable)')}</span></span>
             </button>
-            <input type="text" class="panel-drawer-search-input" id="variables-search-input" placeholder="${canvasT('var_search_placeholder', '🔍 ค้นหาตัวแปร...')}" oninput="window.nodeCanvas.filterVariables(this.value)" />
+            <input type="text" class="panel-drawer-search-input" id="variables-search-input" placeholder="${canvasT('var_search_placeholder', 'ค้นหาตัวแปร...')}" oninput="window.nodeCanvas.filterVariables(this.value)" />
           </div>
           <div class="variables-list" id="variables-list"></div>
         </div>
@@ -826,11 +826,26 @@ class NodeCanvasEditor {
       move_mouse: 'mouse-pointer-click',
       click_mouse: 'mouse-pointer-click',
       ocr_scan: 'scan-text',
-      pixel_search: 'pipette'
+      pixel_search: 'pipette',
+      edit: 'sliders',
+      delete: 'trash-2',
+      trash: 'trash-2',
+      target: 'crosshair',
+      globe: 'globe',
+      plus: 'plus',
+      'chevron-up': 'chevron-up',
+      'chevron-down': 'chevron-down',
+      'chevrons-up-down': 'chevrons-up-down',
+      'chevron-right': 'chevron-right',
+      refresh: 'refresh-cw',
+      package: 'package',
+      workflow: 'workflow',
+      crosshair: 'crosshair',
+      database: 'database'
     };
 
     const def = window.clientNodeRegistry ? window.clientNodeRegistry.get(type) : null;
-    let iconKey = (def && def.icon) ? def.icon : (typeToKeyMap[type] || 'zap');
+    let iconKey = typeToKeyMap[type] || (def && def.icon ? def.icon : 'zap');
 
     const emojiToKeyMap = {
       '⚡': 'zap',
@@ -3763,11 +3778,11 @@ class NodeCanvasEditor {
         ? `<span class="live-val-pill live-val-true" title="Boolean: TRUE"><span class="live-dot-true"></span> TRUE</span>`
         : `<span class="live-val-pill live-val-false" title="Boolean: FALSE"><span class="live-dot-false"></span> FALSE</span>`;
     } else if (vType === 'number' || typeof val === 'number') {
-      mainPill = `<span class="live-val-pill live-val-number" title="Number: ${val}">🔢 ${val}</span>`;
+      mainPill = `<span class="live-val-pill live-val-number" title="Number: ${val}"><span style="display:inline-flex; align-items:center;">${this.getNodeIcon('format_text', 11)}</span> <span>${val}</span></span>`;
     } else {
       const strVal = String(val);
       const displayStr = strVal.length > 20 ? strVal.substring(0, 18) + '...' : strVal;
-      mainPill = `<span class="live-val-pill live-val-string" title="${this.escapeHtml(strVal)}">📝 "${this.escapeHtml(displayStr)}"</span>`;
+      mainPill = `<span class="live-val-pill live-val-string" title="${this.escapeHtml(strVal)}"><span style="display:inline-flex; align-items:center;">${this.getNodeIcon('step_log', 11)}</span> <span>"${this.escapeHtml(displayStr)}"</span></span>`;
     }
 
     if (!isMultiClient) {
@@ -3848,7 +3863,7 @@ class NodeCanvasEditor {
 
     const btn = document.getElementById('btn-toggle-all-vars');
     if (btn) {
-      btn.textContent = shouldExpand ? '🔼' : '🔽';
+      btn.innerHTML = shouldExpand ? this.getNodeIcon('chevron-up', 13) : this.getNodeIcon('chevron-down', 13);
       btn.title = shouldExpand
         ? (window.currentLang === 'en' ? 'Collapse All' : 'พับทั้งหมด')
         : (window.currentLang === 'en' ? 'Expand All' : 'กางทั้งหมด');
@@ -3938,6 +3953,38 @@ class NodeCanvasEditor {
     }
   }
 
+  getNodesUsingVariable(varName) {
+    if (!varName || !Array.isArray(this.nodes)) return [];
+    const targetName = String(varName).trim();
+    if (!targetName) return [];
+
+    return this.nodes.filter(node => {
+      if (!node || !node.data) return false;
+      const d = node.data;
+
+      // Direct varName match on variable nodes
+      if (d.varName === targetName || d.variableName === targetName || d.name === targetName) {
+        if (node.type === 'var_get' || node.type === 'var_set' || node.type === 'var_branch' || node.type === 'variable_branch' || node.type === 'variable') {
+          return true;
+        }
+      }
+
+      // Condition Group: inspect each condition
+      if (node.type === 'condition_group' && Array.isArray(d.conditions)) {
+        if (d.conditions.some(c => c && (c.varName === targetName || c.variableName === targetName || c.name === targetName))) {
+          return true;
+        }
+      }
+
+      // Check if node data explicitly references this variable
+      if (d.varName === targetName || d.variableName === targetName) {
+        return true;
+      }
+
+      return false;
+    });
+  }
+
   renderVariablesPanel() {
     if (!this.variablesListEl) return;
     const allVars = this.getAvailableVariables();
@@ -3956,7 +4003,7 @@ class NodeCanvasEditor {
     if (filtered.length === 0) {
       this.variablesListEl.innerHTML = `
         <div style="text-align:center; padding:30px 16px; color:var(--muted);">
-          <div style="font-size:28px; margin-bottom:8px;">📦</div>
+          <div style="font-size:28px; margin-bottom:8px; display:inline-flex; align-items:center; justify-content:center; color:#94a3b8;">${this.getNodeIcon('var_set', 28)}</div>
           <div style="font-weight:700; font-size:12px; color:#cbd5e1; margin-bottom:4px;">
             ${this.variablesSearchQuery ? 'ไม่พบตัวแปรที่ค้นหา' : canvasT('var_empty_title', 'ยังไม่มีตัวแปรในโปรไฟล์นี้')}
           </div>
@@ -3969,27 +4016,32 @@ class NodeCanvasEditor {
     }
 
     this.variablesListEl.innerHTML = filtered.map(v => {
+      const usedNodes = this.getNodesUsingVariable(v.name);
       const typeBadgeClass = v.type === 'number' ? 'var-badge-number' : (v.type === 'boolean' ? 'var-badge-boolean' : 'var-badge-string');
-      const typeIcon = v.type === 'number' ? '🔢' : (v.type === 'boolean' ? '🔘' : '📝');
+      const typeIcon = v.type === 'number' ? this.getNodeIcon('format_text', 11) : (v.type === 'boolean' ? this.getNodeIcon('var_branch', 11) : this.getNodeIcon('step_log', 11));
       const isCrossProfile = v.isSharedAcrossProfiles && v.fromProfile;
       const fullScopeTitle = isCrossProfile
-        ? canvasT('var_shared_from', '🌐 แชร์จาก "{name}"').replace('{name}', v.fromProfile)
-        : '🌐 Global Scope';
+        ? canvasT('var_shared_from', 'แชร์จาก "{name}"').replace('{name}', v.fromProfile)
+        : 'Global Scope';
       const scopeDisplay = isCrossProfile
-        ? `📁 ${v.fromProfile}`
-        : '🌐 Global';
+        ? v.fromProfile
+        : 'Global';
       const isExpanded = this.expandedVariableIds && this.expandedVariableIds.has(v.id);
 
       return `
         <div class="variable-card${isCrossProfile ? ' variable-card-shared' : ''}${isExpanded ? ' is-expanded' : ''}" id="var-card-${v.id}" data-var-name="${v.name}">
           <!-- Compact Collapsible Header (Always visible) -->
-          <div class="variable-card-header" onclick="window.nodeCanvas.toggleVariableCard('${v.id}')" title="${isExpanded ? 'คลิกเพื่อพับ' : 'คลิกเพื่อกางรายละเอียดและปุ่มเครื่องมือ'}">
+          <div class="variable-card-header" onclick="window.nodeCanvas.toggleVariableCard('${v.id}')" title="${isExpanded ? 'คลิกเพื่อพับ' : 'คลิกเพื่อกางรายละเอียดและโหนดที่เรียกใช้'}">
             <div class="var-header-left">
-              <span class="var-collapse-arrow${isExpanded ? ' expanded' : ''}">▶</span>
+              <span class="var-collapse-arrow${isExpanded ? ' expanded' : ''}">${this.getNodeIcon('chevron-right', 11)}</span>
               <span class="variable-name" title="${v.name}">${v.name}</span>
+              <span class="var-ref-badge${usedNodes.length > 0 ? ' has-nodes' : ''}" title="${usedNodes.length} ${window.currentLang === 'en' ? 'nodes referencing this variable' : 'โหนดที่เรียกใช้'}">
+                <span style="display:inline-flex; align-items:center;">${this.getNodeIcon('workflow', 10)}</span>
+                <span>${usedNodes.length}</span>
+              </span>
             </div>
             <div class="var-header-right">
-              <span class="var-type-badge ${typeBadgeClass}">${typeIcon} ${v.type}</span>
+              <span class="var-type-badge ${typeBadgeClass}"><span style="display:inline-flex; align-items:center;">${typeIcon}</span> <span>${v.type}</span></span>
               <div class="live-status-val-wrap" id="var-live-val-${v.id}">
                 ${this.formatLiveVariableValueHTML(v)}
               </div>
@@ -4000,24 +4052,58 @@ class NodeCanvasEditor {
           <div class="variable-card-body">
             <div class="variable-card-meta" style="display:flex; align-items:center; justify-content:space-between; gap:6px; min-width:0;">
               <div style="display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden;">
-                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px; color:${isCrossProfile ? '#38bdf8' : 'inherit'}; font-weight:${isCrossProfile ? '600' : 'normal'};" title="${fullScopeTitle}">${scopeDisplay}</span>
+                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px; color:${isCrossProfile ? '#38bdf8' : 'inherit'}; font-weight:${isCrossProfile ? '600' : 'normal'}; display:inline-flex; align-items:center; gap:4px;" title="${fullScopeTitle}">
+                  <span style="display:inline-flex; align-items:center; opacity:0.8;">${this.getNodeIcon('globe', 11)}</span>
+                  <span>${scopeDisplay}</span>
+                </span>
                 <span style="font-family:'JetBrains Mono'; opacity:0.85; flex-shrink:0;">Def: ${v.defaultValue !== undefined ? v.defaultValue : '-'}</span>
               </div>
-              ${v.resetOnPause ? `<span style="color:#f59e0b; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3); border-radius:4px; padding:1px 5px; font-size:9.5px; font-weight:700; flex-shrink:0; white-space:nowrap;" title="${canvasT('var_reset_on_pause_hint', 'รีเซ็ตเป็นค่าเริ่มต้นอัตโนมัติเมื่อหยุดบอท')}">🔄 ${canvasT('var_badge_auto_reset', 'รีเซ็ตเมื่อหยุด')}</span>` : ''}
+              ${v.resetOnPause ? `<span style="color:#f59e0b; background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.3); border-radius:4px; padding:1px 5px; font-size:9.5px; font-weight:700; flex-shrink:0; white-space:nowrap; display:inline-flex; align-items:center; gap:3px;" title="${canvasT('var_reset_on_pause_hint', 'รีเซ็ตเป็นค่าเริ่มต้นอัตโนมัติเมื่อหยุดบอท')}"><span style="display:inline-flex; align-items:center;">${this.getNodeIcon('loop', 10)}</span> <span>${canvasT('var_badge_auto_reset', 'รีเซ็ตเมื่อหยุด')}</span></span>` : ''}
             </div>
             ${v.description ? `<div style="font-size:10px; color:#94a3b8; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${this.escapeHtml(v.description)}">${this.escapeHtml(v.description)}</div>` : ''}
+
+            <!-- Referencing Action Nodes on Canvas -->
+            <div class="var-referencing-section">
+              <div class="var-ref-section-title">
+                <span style="display:inline-flex; align-items:center; gap:4px;">
+                  <span style="color:#38bdf8; display:inline-flex;">${this.getNodeIcon('workflow', 12)}</span>
+                  <span>${window.currentLang === 'en' ? 'Used by Nodes on Canvas' : 'Action Node ที่เรียกใช้ตัวแปรนี้'}</span>
+                </span>
+                <span class="var-ref-count-pill">${usedNodes.length}</span>
+              </div>
+              ${usedNodes.length === 0 ? `
+                <div class="var-ref-empty">${window.currentLang === 'en' ? 'No Action Nodes currently using this variable' : 'ยังไม่มีโหนดที่เรียกใช้บน Canvas'}</div>
+              ` : `
+                <div class="var-ref-nodes-list">
+                  ${usedNodes.map(n => {
+                    const nIcon = this.getNodeIcon(n.type, 13);
+                    const nTitle = n.title || this.getNodeTypeLabel(n.type);
+                    const nTypeLabel = this.getNodeTypeLabel(n.type);
+                    return `
+                      <div class="var-ref-node-item" onclick="event.stopPropagation(); window.nodeCanvas.focusNode('${n.id}')" title="${window.currentLang === 'en' ? 'Click to jump to this node on Canvas' : 'คลิกเพื่อเลื่อนไปยังตำแหน่งของโหนดนี้บน Canvas'}">
+                        <span class="var-ref-node-icon">${nIcon}</span>
+                        <span class="var-ref-node-title">${this.escapeHtml(nTitle)}</span>
+                        <span class="var-ref-node-type">${this.escapeHtml(nTypeLabel)}</span>
+                        <span class="var-ref-jump-icon" title="${window.currentLang === 'en' ? 'Jump to node' : 'ไปยังตำแหน่งโหนด'}">${this.getNodeIcon('crosshair', 11)}</span>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              `}
+            </div>
+
             <div class="variable-actions">
               <button type="button" class="btn-var-spawn btn-var-get" onclick="window.nodeCanvas.spawnVariableNode('${v.name}', 'var_get')" title="วางโหนด Get Variable ลง Canvas">
-                📥 ${canvasT('var_spawn_get', 'Get')}
+                <span style="display:inline-flex; align-items:center; gap:4px;">${this.getNodeIcon('var_get', 12)} <span>${canvasT('var_spawn_get', 'Get')}</span></span>
               </button>
               <button type="button" class="btn-var-spawn btn-var-set" onclick="window.nodeCanvas.spawnVariableNode('${v.name}', 'var_set')" title="วางโหนด Set Variable ลง Canvas">
-                ✏️ ${canvasT('var_spawn_set', 'Set')}
+                <span style="display:inline-flex; align-items:center; gap:4px;">${this.getNodeIcon('var_set', 12)} <span>${canvasT('var_spawn_set', 'Set')}</span></span>
               </button>
               <button type="button" class="btn-var-icon" onclick="window.nodeCanvas.openVariableModal('${v.id}', null, '${v.name}')" title="${canvasT('var_btn_edit_tooltip', 'แก้ไขตัวแปร (Edit)')}">
-                ⚙️
+                <span style="display:inline-flex; align-items:center;">${this.getNodeIcon('edit', 12)}</span>
               </button>
               <button type="button" class="btn-var-icon btn-var-del" onclick="window.nodeCanvas.deleteVariable('${v.id}', '${v.name}')" title="${canvasT('var_btn_del_tooltip', 'ลบตัวแปร (Delete)')}">
-                🗑️
+                <span style="display:inline-flex; align-items:center;">${this.getNodeIcon('delete', 12)}</span>
               </button>
             </div>
           </div>
@@ -4238,9 +4324,9 @@ class NodeCanvasEditor {
       <div class="variable-modal-dialog">
         <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
           <div style="font-weight:700; font-size:14px; color:#fff; display:flex; align-items:center; gap:8px;">
-            <span>📦</span>
+            <span style="display:inline-flex; align-items:center; color:#38bdf8;">${this.getNodeIcon('database', 16)}</span>
             <span>${isEdit ? canvasT('var_modal_title_edit', 'แก้ไขข้อมูลตัวแปร') : canvasT('var_modal_title_new', 'สร้างตัวแปร Blueprint ใหม่')}</span>
-            ${sourceProfileName ? `<span style="font-size:10px; color:#38bdf8; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); border-radius:4px; padding:1px 6px; font-weight:600;">📁 ${sourceProfileName}</span>` : ''}
+            ${sourceProfileName ? `<span style="font-size:10px; color:#38bdf8; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.25); border-radius:4px; padding:1px 6px; font-weight:600; display:inline-flex; align-items:center; gap:4px;">${this.getNodeIcon('globe', 11)} ${sourceProfileName}</span>` : ''}
           </div>
           <button type="button" style="background:transparent; border:none; color:var(--muted); font-size:16px; cursor:pointer;" onclick="window.nodeCanvas.closeVariableModal()">✕</button>
         </div>
@@ -4255,17 +4341,17 @@ class NodeCanvasEditor {
           <div class="inspector-field-group" style="margin-bottom:12px;">
             <label class="inspector-label">${canvasT('var_type_label', 'ชนิดข้อมูล (Data Type)')}</label>
             <select id="modal-var-type" class="inspector-select" onchange="window.nodeCanvas.onModalTypeChange(this.value)">
-              <option value="boolean" ${varType === 'boolean' ? 'selected' : ''}>${canvasT('var_type_bool', '🔘 Boolean (True / False - สีแดง)')}</option>
-              <option value="number" ${varType === 'number' ? 'selected' : ''}>${canvasT('var_type_num', '🔢 Number (ตัวเลขจำนวนเต็ม/ทศนิยม - สีฟ้า)')}</option>
-              <option value="string" ${varType === 'string' ? 'selected' : ''}>${canvasT('var_type_str', '📝 String (ข้อความตัวอักษร - สีชมพู)')}</option>
+              <option value="boolean" ${varType === 'boolean' ? 'selected' : ''}>${canvasT('var_type_bool', 'Boolean (True / False - สีแดง)')}</option>
+              <option value="number" ${varType === 'number' ? 'selected' : ''}>${canvasT('var_type_num', 'Number (ตัวเลขจำนวนเต็ม/ทศนิยม - สีฟ้า)')}</option>
+              <option value="string" ${varType === 'string' ? 'selected' : ''}>${canvasT('var_type_str', 'String (ข้อความตัวอักษร - สีชมพู)')}</option>
             </select>
           </div>
 
           <div class="inspector-field-group" style="margin-bottom:12px;">
             <label class="inspector-label">${canvasT('var_scope_label', 'ขอบเขต (Scope)')}</label>
             <select id="modal-var-scope" class="inspector-select">
-              <option value="global" ${varScope === 'global' ? 'selected' : ''}>${canvasT('var_scope_global', '🌐 Global (แชร์ข้ามทุกโปรไฟล์ที่ Active)')}</option>
-              <option value="client" ${varScope === 'client' ? 'selected' : ''}>${canvasT('var_scope_client', '🖥️ Client (เฉพาะหน้าจอ/โปรไฟล์นี้)')}</option>
+              <option value="global" ${varScope === 'global' ? 'selected' : ''}>${canvasT('var_scope_global', 'Global (แชร์ข้ามทุกโปรไฟล์ที่ Active)')}</option>
+              <option value="client" ${varScope === 'client' ? 'selected' : ''}>${canvasT('var_scope_client', 'Client (เฉพาะหน้าจอ/โปรไฟล์นี้)')}</option>
             </select>
             <span style="font-size:10px; color:var(--muted); margin-top:3px; display:block;">${canvasT('var_scope_hint', 'Global = โปรไฟล์อื่นที่ Active อยู่สามารถอ่าน/เขียนตัวแปรนี้ร่วมกันได้')}</span>
           </div>
@@ -4281,7 +4367,7 @@ class NodeCanvasEditor {
           <div class="var-toggle-card ${resetOnPause ? 'active' : ''}" id="modal-var-reset-card" onclick="window.nodeCanvas.toggleVarResetSwitch()">
             <div style="flex:1; display:flex; flex-direction:column; gap:3px;">
               <div style="font-size:12.5px; font-weight:700; color:#f1f5f9; display:flex; align-items:center; gap:8px;">
-                <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:rgba(168,85,247,0.18); border:1px solid rgba(168,85,247,0.3); font-size:13px; line-height:1;">🔄</span>
+                <span style="display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:rgba(168,85,247,0.18); border:1px solid rgba(168,85,247,0.3); color:#c084fc;">${this.getNodeIcon('loop', 12)}</span>
                 <span>${canvasT('var_reset_on_pause_label', 'รีเซ็ตเมื่อหยุดบอท (Reset on Pause / END)')}</span>
               </div>
               <div style="font-size:10.5px; color:#94a3b8; line-height:1.45; padding-left:32px;">
@@ -4304,9 +4390,11 @@ class NodeCanvasEditor {
           <div class="modal-live-status-card" id="modal-live-status-box">
             <div style="display:flex; align-items:center; justify-content:space-between;">
               <span style="font-size:11px; font-weight:700; color:#cbd5e1; display:flex; align-items:center; gap:6px;">
-                <span>⚡</span> <span>${window.currentLang === 'en' ? 'Live Runtime Value:' : 'สถานะตัวแปรล่าสุดในหน่วยความจำ:'}</span>
+                <span style="color:#f59e0b; display:inline-flex;">${this.getNodeIcon('zap', 12)}</span> <span>${window.currentLang === 'en' ? 'Live Runtime Value:' : 'สถานะตัวแปรล่าสุดในหน่วยความจำ:'}</span>
               </span>
-              <button type="button" class="btn-refresh-live-modal" onclick="window.nodeCanvas.refreshModalLiveValue('${varName}')" title="รีเฟรชค่าล่าสุด">🔄 ${window.currentLang === 'en' ? 'Refresh' : 'รีเฟรช'}</button>
+              <button type="button" class="btn-refresh-live-modal" onclick="window.nodeCanvas.refreshModalLiveValue('${varName}')" title="รีเฟรชค่าล่าสุด">
+                <span style="display:inline-flex; align-items:center; gap:4px;">${this.getNodeIcon('loop', 10)} <span>${window.currentLang === 'en' ? 'Refresh' : 'รีเฟรช'}</span></span>
+              </button>
             </div>
             <div id="modal-live-val-content" style="margin-top:7px; display:flex; justify-content:flex-start;">
               ${this.formatLiveVariableValueHTML(vObj)}
