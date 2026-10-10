@@ -580,7 +580,7 @@
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_var_name', 'Variable Name')}</label>
         <select class="inspector-select" onchange="window.nodeCanvas.selectVariableForNode('${node.id}', this.value)" style="font-family:'JetBrains Mono'; font-weight:700; color:#ec4899;">
-          ${!vName ? `<option value="" disabled selected>${selectPlaceholder}</option>` : (!hasCurrent ? `<option value="${vName}" selected>⚠️ ${vName} (Custom)</option>` : '')}
+          ${!vName ? `<option value="" disabled selected>${selectPlaceholder}</option>` : (!hasCurrent ? `<option value="${vName}" selected>⚠️ ${vName} (${window.currentLang === 'en' ? 'Not Found / Deleted' : 'ไม่พบตัวแปร / ถูกลบ'})</option>` : '')}
           ${varOptions}
         </select>
       </div>
@@ -678,7 +678,7 @@
       <div class="inspector-field-group">
         <label class="inspector-label">${canvasT('inspector_var_name', 'Variable Name')}</label>
         <select class="inspector-select" onchange="window.nodeCanvas.selectVariableForNode('${node.id}', this.value)" style="font-family:'JetBrains Mono'; font-weight:700; color:#a855f7;">
-          ${!vName ? `<option value="" disabled selected>${selectPlaceholder}</option>` : (!hasCurrent ? `<option value="${vName}" selected>⚠️ ${vName} (Custom)</option>` : '')}
+          ${!vName ? `<option value="" disabled selected>${selectPlaceholder}</option>` : (!hasCurrent ? `<option value="${vName}" selected>⚠️ ${vName} (${window.currentLang === 'en' ? 'Not Found / Deleted' : 'ไม่พบตัวแปร / ถูกลบ'})</option>` : '')}
           ${varOptions}
         </select>
       </div>
@@ -2057,7 +2057,10 @@
         <label class="inspector-label">${canvasT('inspector_variable_target_label', isEn ? 'Target Variable to Check' : 'เลือกตัวแปรที่ต้องการตรวจสอบ')}</label>
         <select class="inspector-select" onchange="window.nodeCanvas.setVariableBranchTarget('${node.id}', this.value)">
           <option value="">${canvasT('inspector_select_variable_check', isEn ? '-- Select Variable to Check --' : '-- เลือกตัวแปรที่ต้องการตรวจสอบ --')}</option>
-          ${allVars.length === 0 ? `
+          ${selectedVarName && !allVars.some(v => v.name === selectedVarName) ? `
+            <option value="var:${selectedVarName}" selected>⚠️ ${selectedVarName} (${isEn ? 'Not Found / Deleted' : 'ไม่พบตัวแปร / ถูกลบ'})</option>
+          ` : ''}
+          ${allVars.length === 0 && !selectedVarName ? `
             <option value="" disabled>(${canvasT('inspector_no_variables_found', isEn ? 'No variables found in profile or canvas' : 'ยังไม่มีตัวแปรในโปรไฟล์')})</option>
           ` : allVars.map(v => {
             const typeIcon = v.type === 'boolean' ? '🔘' : (v.type === 'number' ? '🔢' : '🔤');

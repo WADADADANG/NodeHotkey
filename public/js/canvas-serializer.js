@@ -236,9 +236,9 @@
         zoom: this.zoom,
         pan: this.pan
       },
-      variables: (typeof this.getAvailableVariables === 'function'
-        ? this.getAvailableVariables().filter(v => !v.isSharedAcrossProfiles)
-        : (this.variables || [])),
+      variables: Array.isArray(this.variables)
+        ? JSON.parse(JSON.stringify(this.variables.filter(v => !v.isSharedAcrossProfiles)))
+        : [],
       nodes: cleanNodes,
       connections: this.connections
     };

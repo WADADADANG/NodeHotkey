@@ -102,8 +102,8 @@ assert.strictEqual(classifyLogLevel('2026-09-12 [INFO] Bot started'), 'info', 'S
 assert.strictEqual(classifyLogLevel('2026-09-12 [ACTION] Key Press 1'), 'action', 'Should classify as action');
 console.log('✅ Test 3 Passed: Log classifier correctly isolates log messages!\n');
 
-// 4. Test Blueprint Variables Schema & Auto-Discovery Simulation
-console.log('Test 4: Testing Profile Blueprint Variables Schema & Auto-Discovery...');
+// 4. Test Blueprint Variables Schema & Strict Explicit Variable Storage (No Zombie Auto-Creation)
+console.log('Test 4: Testing Profile Blueprint Variables Schema & Strict Explicit Variables (No Zombie Auto-Creation)...');
 const sampleNodes = [
   { id: 'n1', type: 'var_set', title: 'Set isBuffActive', data: { varName: 'isBuffActive', varType: 'boolean', initialValue: 'false' } },
   { id: 'n2', type: 'var_get', title: 'Get comboCount', data: { varName: 'comboCount', varType: 'number', defaultValue: '0' } }
@@ -113,27 +113,13 @@ let declaredVariables = [
   { id: 'v1', name: 'playerName', type: 'string', scope: 'global', defaultValue: 'Hero' }
 ];
 
-// Emulate getAvailableVariables auto-discovery logic
-const existingNames = new Set(declaredVariables.map(v => v.name));
-sampleNodes.forEach(node => {
-  const vName = node.data?.varName;
-  if (vName && !existingNames.has(vName)) {
-    existingNames.add(vName);
-    declaredVariables.push({
-      id: 'var_' + vName,
-      name: vName,
-      type: node.data?.varType || 'string',
-      scope: 'client',
-      defaultValue: node.data?.initialValue || node.data?.defaultValue || ''
-    });
-  }
-});
-
-assert.strictEqual(declaredVariables.length, 3, 'Should discover both isBuffActive and comboCount along with declared playerName');
-assert.ok(declaredVariables.some(v => v.name === 'isBuffActive' && v.type === 'boolean'), 'Should have isBuffActive');
-assert.ok(declaredVariables.some(v => v.name === 'comboCount' && v.type === 'number'), 'Should have comboCount');
-assert.ok(declaredVariables.some(v => v.name === 'playerName' && v.type === 'string'), 'Should have playerName');
-console.log('✅ Test 4 Passed: Blueprint Variables schema and Auto-Discovery verified!\n');
+// Strict variable management: declaredVariables ONLY contains what the user explicitly created
+// Nodes referencing unassigned/deleted variables do NOT auto-inject zombie variables into profile
+assert.strictEqual(declaredVariables.length, 1, 'Profile variables must ONLY contain explicitly declared variables');
+assert.strictEqual(declaredVariables[0].name, 'playerName', 'Only declared playerName should exist');
+assert.ok(!declaredVariables.some(v => v.name === 'isBuffActive'), 'Undeclared isBuffActive must NOT be auto-injected');
+assert.ok(!declaredVariables.some(v => v.name === 'comboCount'), 'Undeclared comboCount must NOT be auto-injected');
+console.log('✅ Test 4 Passed: Strict Explicit Variables verified (No Zombie Auto-Creation)!\n');
 
 // 5. Test Unified Global Scope & val_in Data Pin to var_set
 console.log('Test 5: Testing Unified Global Scope & val_in dynamic data pin...');

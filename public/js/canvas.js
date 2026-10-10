@@ -3619,48 +3619,9 @@ class NodeCanvasEditor {
       }
     });
 
-    // Auto-discovery from nodes on current canvas (var_set, variable, var_get, var_branch)
     const existingNames = new Set(this.variables.map(v => v.name));
 
-    this.nodes.forEach(node => {
-      if (node.type === 'var_set' || node.type === 'variable' || node.type === 'var_get' || node.type === 'var_branch') {
-        const d = node.data || {};
-        
-        // Clean legacy dummy names on existing nodes
-        if (d.varName === 'myVar' || d.varName === 'my_var') {
-          d.varName = '';
-          if (node.title === 'myVar' || node.title === 'Set myVar' || node.title === 'Get myVar') {
-            node.title = (node.type === 'var_get' ? 'Get Variable' : 'Set Variable');
-          }
-        }
-
-        const vName = d.varName || (d.conditionTargetId && String(d.conditionTargetId).startsWith('var:') ? String(d.conditionTargetId).replace('var:', '') : null);
-        
-        // Never auto-create myVar, my_var, Variable, or empty placeholder variables
-        if (!vName || vName === 'myVar' || vName === 'my_var' || vName === 'Variable') return;
-
-        if (!existingNames.has(vName)) {
-          existingNames.add(vName);
-          const vType = d.varType || (node.type === 'var_get' ? 'string' : 'boolean');
-          const defVal = d.defaultValue !== undefined
-            ? d.defaultValue
-            : (d.initialValue !== undefined ? d.initialValue : (vType === 'boolean' ? 'false' : (vType === 'number' ? '0' : '')));
-
-          this.variables.push({
-            id: 'var_' + vName.replace(/[^a-zA-Z0-9_]/g, '_'),
-            name: vName,
-            type: vType,
-            scope: d.scope || 'global',
-            targetClient: d.targetClient || 'all',
-            defaultValue: String(defVal),
-            resetOnPause: d.resetOnPause === true || d.resetOnPause === 'true',
-            description: ''
-          });
-        }
-      }
-    });
-
-    // Cross-profile discovery: pull variables from other active profiles
+    // Cross-profile variables: ONLY pull variables explicitly declared in other active profiles' variables arrays (never from nodes)
     const crossProfileVars = [];
     if (window.fullConfig && window.fullConfig.profiles && window.fullConfig.activeProfiles) {
       const currentProfileName = this.currentProfileName || window.currentEditProfile || '';
@@ -3673,7 +3634,7 @@ class NodeCanvasEditor {
         const profObj = window.fullConfig.profiles[pName];
         if (!profObj) return;
 
-        // From profile's variables array (use deterministic stable ID)
+        // ONLY from profile's explicit variables array
         const vars = Array.isArray(profObj.variables) ? profObj.variables : [];
         vars.forEach(v => {
           if (!v || !v.name || existingNames.has(v.name)) return;
@@ -3688,30 +3649,6 @@ class NodeCanvasEditor {
             defaultValue: v.defaultValue !== undefined ? String(v.defaultValue) : '',
             resetOnPause: v.resetOnPause === true || v.resetOnPause === 'true',
             description: v.description || '',
-            fromProfile: pName,
-            isSharedAcrossProfiles: true,
-            isReadOnly: false
-          });
-        });
-
-        // From variable nodes on that profile's canvas (use deterministic stable ID)
-        const nodes = Array.isArray(profObj.nodes) ? profObj.nodes : [];
-        nodes.forEach(node => {
-          if (node.type !== 'var_set' && node.type !== 'variable' && node.type !== 'var_get' && node.type !== 'var_branch') return;
-          const d = node.data || {};
-          const vName = d.varName || (d.conditionTargetId && String(d.conditionTargetId).startsWith('var:') ? String(d.conditionTargetId).replace('var:', '') : (node.title ? node.title.replace(/^(Get |Set )/, '') : null));
-          if (!vName || existingNames.has(vName)) return;
-          existingNames.add(vName);
-          const stableId = `xvar_${pName}_${vName}`;
-          crossProfileVars.push({
-            id: stableId,
-            name: vName,
-            type: d.varType || 'boolean',
-            scope: d.scope || 'global',
-            targetClient: d.targetClient || 'all',
-            defaultValue: d.defaultValue !== undefined ? String(d.defaultValue) : (d.initialValue !== undefined ? String(d.initialValue) : ''),
-            resetOnPause: d.resetOnPause === true || d.resetOnPause === 'true',
-            description: '',
             fromProfile: pName,
             isSharedAcrossProfiles: true,
             isReadOnly: false
@@ -3918,6 +3855,30 @@ class NodeCanvasEditor {
     } else {
       this.variables = this.variables.filter(it => it.id !== varId && it.name !== v.name);
     }
+
+    // Explicitly unassign and clear this variable from all nodes on current canvas
+    this.nodes.forEach(n => {
+      const d = n.data || {};
+      if (d.varName === v.name) {
+        d.varName = '';
+        if (n.title && n.title.includes(v.name)) {
+          n.title = (n.type === 'var_get') ? 'Get Variable' : (n.type === 'var_set' || n.type === 'variable' ? 'Set Variable' : n.title.replace(v.name, '').trim());
+        }
+      }
+      if (d.conditionTargetId === 'var:' + v.name || d.conditionTargetId === v.name) {
+        d.conditionTargetId = '';
+        if (n.title && n.title.includes(v.name)) {
+          n.title = 'Variable Branch';
+        }
+      }
+      if (n.type === 'condition_group' && Array.isArray(d.conditions)) {
+        d.conditions.forEach(cond => {
+          if (cond.varName === v.name) cond.varName = '';
+          if (cond.target === 'var:' + v.name || cond.target === v.name) cond.target = '';
+        });
+      }
+    });
+    this.render();
 
     this.renderVariablesPanel();
     this.addHistory('🗑️', `ลบตัวแปร "${v.name}"`);
@@ -4182,17 +4143,42 @@ class NodeCanvasEditor {
       }
     }
 
-    // If renamed, update nodes on current canvas
+    // If renamed, cascade update ALL referencing nodes across the current canvas
     if (oldName && oldName !== rawName) {
       this.nodes.forEach(n => {
-        if ((n.type === 'var_set' || n.type === 'variable' || n.type === 'var_get') && n.data?.varName === oldName) {
-          n.data.varName = rawName;
-          n.data.varType = type;
-          n.data.scope = 'global';
-          n.data.targetClient = 'all';
-          if (n.title.includes(oldName)) {
+        const d = n.data || {};
+        // 1. var_set, variable, var_get
+        if (n.type === 'var_set' || n.type === 'variable' || n.type === 'var_get') {
+          if (d.varName === oldName) {
+            d.varName = rawName;
+            d.varType = type;
+            if (n.title && n.title.includes(oldName)) {
+              n.title = n.title.replace(oldName, rawName);
+            }
+          }
+        }
+        // 2. var_branch, branch, action_branch, condition
+        if (n.type === 'var_branch' || n.type === 'branch' || n.type === 'action_branch' || n.type === 'condition') {
+          if (d.varName === oldName) {
+            d.varName = rawName;
+            d.varType = type;
+          }
+          if (d.conditionTargetId === 'var:' + oldName) {
+            d.conditionTargetId = 'var:' + rawName;
+          } else if (d.conditionTargetId === oldName) {
+            d.conditionTargetId = rawName;
+          }
+          if (n.title && n.title.includes(oldName)) {
             n.title = n.title.replace(oldName, rawName);
           }
+        }
+        // 3. condition_group (Multi-Condition)
+        if (n.type === 'condition_group' && Array.isArray(d.conditions)) {
+          d.conditions.forEach(cond => {
+            if (cond.varName === oldName) cond.varName = rawName;
+            if (cond.target === 'var:' + oldName) cond.target = 'var:' + rawName;
+            else if (cond.target === oldName) cond.target = rawName;
+          });
         }
       });
       this.render();
