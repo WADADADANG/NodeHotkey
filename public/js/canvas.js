@@ -3982,11 +3982,15 @@ class NodeCanvasEditor {
   }
 
   getNodesUsingVariable(varName) {
-    if (!varName || !Array.isArray(this.nodes)) return [];
+    if (!varName) return [];
     const targetName = String(varName).trim();
     if (!targetName) return [];
 
-    return this.nodes.filter(node => {
+    const currentProfileName = this.currentProfileName || window.currentEditProfile || 'Default';
+    const results = [];
+    const seenNodeKeys = new Set();
+
+    const checkNodeMatches = (node) => {
       if (!node || !node.data) return false;
       const d = node.data;
 
@@ -4010,7 +4014,69 @@ class NodeCanvasEditor {
       }
 
       return false;
-    });
+    };
+
+    // 1. Scan current canvas nodes (most fresh, in-memory)
+    if (Array.isArray(this.nodes)) {
+      this.nodes.forEach(node => {
+        if (checkNodeMatches(node)) {
+          const key = `${currentProfileName}::${node.id}`;
+          seenNodeKeys.add(key);
+          results.push({
+            id: node.id,
+            type: node.type,
+            title: node.title,
+            data: node.data,
+            profileName: currentProfileName,
+            isCurrentProfile: true
+          });
+        }
+      });
+    }
+
+    // 2. Scan all other profiles in fullConfig.profiles
+    if (window.fullConfig && window.fullConfig.profiles) {
+      Object.keys(window.fullConfig.profiles).forEach(pName => {
+        if (pName === currentProfileName) return; // already scanned above
+        const pObj = window.fullConfig.profiles[pName];
+        if (!pObj || !Array.isArray(pObj.nodes)) return;
+
+        pObj.nodes.forEach(node => {
+          if (checkNodeMatches(node)) {
+            const key = `${pName}::${node.id}`;
+            if (!seenNodeKeys.has(key)) {
+              seenNodeKeys.add(key);
+              results.push({
+                id: node.id,
+                type: node.type,
+                title: node.title,
+                data: node.data,
+                profileName: pName,
+                isCurrentProfile: false
+              });
+            }
+          }
+        });
+      });
+    }
+
+    return results;
+  }
+
+  jumpToVariableNode(targetProfileName, nodeId) {
+    const currentProf = this.currentProfileName || window.currentEditProfile;
+    if (targetProfileName && targetProfileName !== currentProf) {
+      if (typeof window.switchToEditProfile === 'function') {
+        window.switchToEditProfile(targetProfileName);
+      } else if (typeof window.loadProfileToUI === 'function' && window.fullConfig?.profiles?.[targetProfileName]) {
+        window.loadProfileToUI(window.fullConfig.profiles[targetProfileName]);
+      }
+      setTimeout(() => {
+        this.focusNode(nodeId);
+      }, 100);
+    } else {
+      this.focusNode(nodeId);
+    }
   }
 
   renderVariablesPanel() {
@@ -4107,10 +4173,18 @@ class NodeCanvasEditor {
                     const nIcon = this.getNodeIcon(n.type, 13);
                     const nTitle = n.title || this.getNodeTypeLabel(n.type);
                     const nTypeLabel = this.getNodeTypeLabel(n.type);
+                    const profileBadge = (!n.isCurrentProfile && n.profileName)
+                      ? `<span class="var-ref-node-profile" title="${canvasT('var_node_in_profile', 'อยู่ในโปรไฟล์')}: ${this.escapeHtml(n.profileName)}">${this.escapeHtml(n.profileName)}</span>`
+                      : '';
+                    const jumpTooltip = n.isCurrentProfile
+                      ? (window.currentLang === 'en' ? 'Click to jump to this node on Canvas' : 'คลิกเพื่อเลื่อนไปยังตำแหน่งของโหนดนี้บน Canvas')
+                      : (window.currentLang === 'en' ? `Click to switch to profile "${n.profileName}" and jump to node` : `คลิกเพื่อสลับไปโปรไฟล์ "${n.profileName}" และเลื่อนไปยังโหนดนี้`);
+
                     return `
-                      <div class="var-ref-node-item" onclick="event.stopPropagation(); window.nodeCanvas.focusNode('${n.id}')" title="${window.currentLang === 'en' ? 'Click to jump to this node on Canvas' : 'คลิกเพื่อเลื่อนไปยังตำแหน่งของโหนดนี้บน Canvas'}">
+                      <div class="var-ref-node-item" onclick="event.stopPropagation(); window.nodeCanvas.jumpToVariableNode('${this.escapeHtml(n.profileName || '')}', '${n.id}')" title="${jumpTooltip}">
                         <span class="var-ref-node-icon">${nIcon}</span>
                         <span class="var-ref-node-title">${this.escapeHtml(nTitle)}</span>
+                        ${profileBadge}
                         <span class="var-ref-node-type">${this.escapeHtml(nTypeLabel)}</span>
                         <span class="var-ref-jump-icon" title="${window.currentLang === 'en' ? 'Jump to node' : 'ไปยังตำแหน่งโหนด'}">${this.getNodeIcon('crosshair', 11)}</span>
                       </div>
