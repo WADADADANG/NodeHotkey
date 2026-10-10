@@ -701,7 +701,12 @@ class NodeCanvasEditor {
     if (!profile) return;
     this.currentProfileName = profile.name || window.currentEditProfile || 'Default';
     this.closeInspector();
-    this.closeAllDrawers();
+
+    // Preserve open drawers (e.g. Variables panel, Outliner, History) across profile changes
+    const wasVariablesOpen = this.variablesPanel && this.variablesPanel.classList.contains('open');
+    const wasOutlinerOpen = this.outlinerPanel && this.outlinerPanel.classList.contains('open');
+    const wasHistoryOpen = this.historyPanel && this.historyPanel.classList.contains('open');
+
     this.hideNodeCatalog();
     this.hidePortContextMenu();
     this.historyTimeline = [];
@@ -735,7 +740,30 @@ class NodeCanvasEditor {
     this.updateTransform();
     this.render();
     this.getAvailableVariables();
-    this.renderVariablesPanel();
+
+    // Re-render open drawers with the new profile's data without closing
+    if (wasVariablesOpen) {
+      if (this.variablesPanel) this.variablesPanel.classList.add('open');
+      if (this.btnToggleVariables) this.btnToggleVariables.classList.add('active');
+      this.renderVariablesPanel();
+      this.startVariablesPolling();
+      this.fetchRuntimeVariables(true);
+    } else {
+      this.renderVariablesPanel();
+    }
+
+    if (wasOutlinerOpen) {
+      if (this.outlinerPanel) this.outlinerPanel.classList.add('open');
+      if (this.btnToggleOutliner) this.btnToggleOutliner.classList.add('active');
+      this.renderOutliner();
+    }
+
+    if (wasHistoryOpen) {
+      if (this.historyPanel) this.historyPanel.classList.add('open');
+      if (this.btnToggleHistory) this.btnToggleHistory.classList.add('active');
+      this.renderHistory();
+    }
+
     this.updateLiveFlowButtonUI();
     this.addHistory('📂', `เปิดโปรไฟล์ "${profile.name || 'Default'}"`);
   }
