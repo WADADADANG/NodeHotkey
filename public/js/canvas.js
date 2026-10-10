@@ -4112,7 +4112,7 @@ class NodeCanvasEditor {
     this.variablesListEl.innerHTML = filtered.map(v => {
       const usedNodes = this.getNodesUsingVariable(v.name);
       const typeBadgeClass = v.type === 'number' ? 'var-badge-number' : (v.type === 'boolean' ? 'var-badge-boolean' : 'var-badge-string');
-      const typeIcon = v.type === 'number' ? this.getNodeIcon('format_text', 11) : (v.type === 'boolean' ? this.getNodeIcon('var_branch', 11) : this.getNodeIcon('step_log', 11));
+      const typeIcon = v.type === 'number' ? this.getNodeIcon('format_text', 12) : (v.type === 'boolean' ? this.getNodeIcon('var_branch', 12) : this.getNodeIcon('step_log', 12));
       const isCrossProfile = v.isSharedAcrossProfiles && v.fromProfile;
       const fullScopeTitle = isCrossProfile
         ? canvasT('var_shared_from', 'แชร์จาก "{name}"').replace('{name}', v.fromProfile)
@@ -4135,7 +4135,7 @@ class NodeCanvasEditor {
               </span>
             </div>
             <div class="var-header-right">
-              <span class="var-type-badge ${typeBadgeClass}"><span style="display:inline-flex; align-items:center;">${typeIcon}</span> <span>${v.type}</span></span>
+              <span class="var-type-badge ${typeBadgeClass}" title="Type: ${v.type ? v.type.toUpperCase() : 'STRING'}">${typeIcon}</span>
               <div class="live-status-val-wrap" id="var-live-val-${v.id}">
                 ${this.formatLiveVariableValueHTML(v)}
               </div>
