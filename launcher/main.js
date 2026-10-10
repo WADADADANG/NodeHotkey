@@ -157,7 +157,7 @@ function broadcastStatus() {
   if (!mainWindow || mainWindow.isDestroyed()) return;
   mainWindow.webContents.send('bot:status-change', {
     running: isBotRunning,
-    restarting: isRestarting
+    restarting: isRestarting || isProcessTransitioning
   });
   if (tray && typeof tray.updateMenu === 'function') {
     tray.updateMenu();
@@ -678,26 +678,34 @@ function checkBotHealth() {
 }
 
 // Bot Process Management
-function startBotProcess() {
-  if (isBotRunning || botProcess) return { success: true, alreadyRunning: true };
+let isProcessTransitioning = false;
+let isStoppingByUser = false;
 
+async function startBotProcess() {
+  if (isBotRunning || botProcess || isProcessTransitioning) {
+    return { success: true, alreadyRunning: !!(isBotRunning || botProcess) };
+  }
+
+  isProcessTransitioning = true;
   activeWebPort = getWebPortFromConfig();
   broadcastLog('🚀 Starting NodeHotkey Core Engine (node bot.js)...', 'info');
   const botJs = path.join(PROJECT_DIR, 'bot.js');
 
   try {
-    botProcess = spawn('node', [botJs], {
+    const spawnedProcess = spawn('node', [botJs], {
       cwd: PROJECT_DIR,
       env: { ...process.env, FORCE_COLOR: '1' },
       windowsHide: true
     });
 
+    botProcess = spawnedProcess;
     isBotRunning = true;
+    isProcessTransitioning = false;
     broadcastStatus();
     syncOverlayOnEngineState(true);
     syncPipOnEngineState(true);
 
-    botProcess.stdout.on('data', (data) => {
+    spawnedProcess.stdout.on('data', (data) => {
       const lines = data.toString().split(/\r?\n/);
       lines.forEach(line => {
         const trimmed = line.trim();
@@ -732,7 +740,7 @@ function startBotProcess() {
       });
     });
 
-    botProcess.stderr.on('data', (data) => {
+    spawnedProcess.stderr.on('data', (data) => {
       const lines = data.toString().split(/\r?\n/);
       lines.forEach(line => {
         if (line.trim()) {
@@ -741,7 +749,7 @@ function startBotProcess() {
       });
     });
 
-    botProcess.on('close', (code) => {
+    spawnedProcess.on('close', (code) => {
       if (isStoppingByUser) {
         broadcastLog(`🛑 NodeHotkey Engine stopped cleanly.`, 'info');
         isStoppingByUser = false;
@@ -750,21 +758,27 @@ function startBotProcess() {
       } else {
         broadcastLog(`❌ NodeHotkey Engine exited unexpectedly with code ${code}`, 'error');
       }
-      botProcess = null;
-      isBotRunning = false;
-      broadcastStatus();
-      syncOverlayOnEngineState(false);
-      syncPipOnEngineState(false);
-      checkBotHealth();
+
+      // Guard: only clear reference if this process is still the active botProcess
+      if (botProcess === spawnedProcess) {
+        botProcess = null;
+        isBotRunning = false;
+        broadcastStatus();
+        syncOverlayOnEngineState(false);
+        syncPipOnEngineState(false);
+        checkBotHealth();
+      }
     });
 
-    botProcess.on('error', (err) => {
+    spawnedProcess.on('error', (err) => {
       broadcastLog(`❌ Failed to start NodeHotkey: ${err.message}`, 'error');
-      botProcess = null;
-      isBotRunning = false;
-      broadcastStatus();
-      syncOverlayOnEngineState(false);
-      syncPipOnEngineState(false);
+      if (botProcess === spawnedProcess) {
+        botProcess = null;
+        isBotRunning = false;
+        broadcastStatus();
+        syncOverlayOnEngineState(false);
+        syncPipOnEngineState(false);
+      }
     });
 
     // Start periodic health checking
@@ -773,6 +787,7 @@ function startBotProcess() {
 
     return { success: true };
   } catch (err) {
+    isProcessTransitioning = false;
     broadcastLog(`❌ Spawn Error: ${err.message}`, 'error');
     isBotRunning = false;
     broadcastStatus();
@@ -782,28 +797,54 @@ function startBotProcess() {
   }
 }
 
-let isStoppingByUser = false;
-
-function stopBotProcess() {
+async function stopBotProcess() {
   if (!isBotRunning && !botProcess) return { success: true };
-
-  isStoppingByUser = true;
-  broadcastLog('🛑 Stopping NodeHotkey Core Engine...', 'warn');
-  if (botProcess) {
-    try {
-      // Windows tree-kill
-      if (process.platform === 'win32') {
-        spawn('taskkill', ['/pid', botProcess.pid, '/f', '/t']);
-      } else {
-        botProcess.kill('SIGTERM');
-      }
-    } catch (e) {
-      try { botProcess.kill('SIGKILL'); } catch (err) {}
-    }
+  if (isProcessTransitioning) {
+    await new Promise(r => setTimeout(r, 600));
+    if (!isBotRunning && !botProcess) return { success: true };
   }
 
-  botProcess = null;
-  isBotRunning = false;
+  isProcessTransitioning = true;
+  isStoppingByUser = true;
+  broadcastLog('🛑 Stopping NodeHotkey Core Engine...', 'warn');
+
+  const proc = botProcess;
+  if (proc) {
+    await new Promise((resolve) => {
+      let resolved = false;
+      const done = () => {
+        if (!resolved) {
+          resolved = true;
+          resolve();
+        }
+      };
+
+      proc.once('close', done);
+      proc.once('exit', done);
+
+      try {
+        if (process.platform === 'win32') {
+          spawn('taskkill', ['/pid', String(proc.pid), '/f', '/t']);
+        } else {
+          proc.kill('SIGTERM');
+        }
+      } catch (e) {
+        try { proc.kill('SIGKILL'); } catch (err) {}
+      }
+
+      // Safety timeout: 2000ms max wait
+      setTimeout(done, 2000);
+    });
+
+    // Brief 250ms breather so OS network stack fully unbinds socket on port 3088
+    await new Promise(r => setTimeout(r, 250));
+  }
+
+  if (botProcess === proc) {
+    botProcess = null;
+    isBotRunning = false;
+  }
+  isProcessTransitioning = false;
   broadcastStatus();
   syncOverlayOnEngineState(false);
   syncPipOnEngineState(false);
@@ -812,12 +853,13 @@ function stopBotProcess() {
 }
 
 async function restartBotProcess() {
+  if (isProcessTransitioning) return { success: false, busy: true };
   isRestarting = true;
   broadcastStatus();
   broadcastLog('🔄 Restarting NodeHotkey Engine...', 'warn');
-  stopBotProcess();
-  await new Promise(r => setTimeout(r, 1200));
-  startBotProcess();
+  await stopBotProcess();
+  await new Promise(r => setTimeout(r, 400));
+  await startBotProcess();
   isRestarting = false;
   broadcastStatus();
   return { success: true };
@@ -934,12 +976,12 @@ function clearDirContents(targetDir) {
 }
 
 // IPC Handlers
-ipcMain.handle('bot:start', () => startBotProcess());
-ipcMain.handle('bot:stop', () => stopBotProcess());
-ipcMain.handle('bot:restart', () => restartBotProcess());
+ipcMain.handle('bot:start', async () => await startBotProcess());
+ipcMain.handle('bot:stop', async () => await stopBotProcess());
+ipcMain.handle('bot:restart', async () => await restartBotProcess());
 ipcMain.handle('bot:get-status', () => ({
   running: isBotRunning,
-  restarting: isRestarting,
+  restarting: isRestarting || isProcessTransitioning,
   logPath: logManager.getLogFilePath()
 }));
 

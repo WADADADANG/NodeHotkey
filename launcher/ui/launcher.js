@@ -250,6 +250,7 @@
   let currentView = 'dashboard';
   let isRunning = false;
   let isRestarting = false;
+  let isEngineTransitioning = false;
   let autoScroll = true;
   let currentFilter = 'all';
   let searchQuery = '';
@@ -379,9 +380,18 @@
   };
 
   window.startBotFromStudio = async function() {
-    if (isRestarting) return;
-    setBtnLoading('Starting...');
-    await api.startBot();
+    if (isRestarting || isEngineTransitioning) return;
+    isEngineTransitioning = true;
+    try {
+      setBtnLoading('Starting...');
+      await api.startBot();
+    } catch (err) {
+      console.error('startBotFromStudio error:', err);
+    } finally {
+      setTimeout(() => {
+        isEngineTransitioning = false;
+      }, 400);
+    }
   };
 
   if (tabNavDashboard) tabNavDashboard.onclick = () => switchView('dashboard');
@@ -2249,13 +2259,24 @@
   // 5. Button Action Handlers
   if (btnToggleEngine) {
     btnToggleEngine.onclick = async () => {
-      if (isRestarting) return;
-      if (isRunning) {
-        setBtnLoading('Stopping...');
-        await api.stopBot();
-      } else {
-        setBtnLoading('Starting...');
-        await api.startBot();
+      if (isRestarting || isEngineTransitioning) return;
+      isEngineTransitioning = true;
+      btnToggleEngine.style.pointerEvents = 'none';
+      try {
+        if (isRunning) {
+          setBtnLoading('Stopping...');
+          await api.stopBot();
+        } else {
+          setBtnLoading('Starting...');
+          await api.startBot();
+        }
+      } catch (err) {
+        console.error('Toggle engine error:', err);
+      } finally {
+        setTimeout(() => {
+          isEngineTransitioning = false;
+          if (btnToggleEngine) btnToggleEngine.style.pointerEvents = '';
+        }, 400);
       }
     };
   }

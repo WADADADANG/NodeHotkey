@@ -1,17 +1,21 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NodeHotkey Studio Pro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Prompt:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="launcher.css">
   <link rel="stylesheet" href="../../public/css/node-docs.css">
 </head>
+
 <body class="app-root-body">
-  
+
   <!-- ══════════════════════════════════════════════════════════
        1. LEFT SIDEBAR NAVIGATION (UNIFIED DEV STYLE ~190px)
   ══════════════════════════════════════════════════════════ -->
@@ -22,7 +26,8 @@
         <div class="brand-logo-gem">⚡</div>
         <div class="brand-title-wrap">
           <span class="brand-name-text">NodeHotkey</span>
-          <span class="brand-badge-text" id="brand-badge-version"><span class="brand-badge-dot"></span> Studio Pro v3.2</span>
+          <span class="brand-badge-text" id="brand-badge-version"><span class="brand-badge-dot"></span> Studio Pro
+            v3.2</span>
         </div>
       </div>
 
@@ -57,19 +62,23 @@
 
         <span class="menu-section-label" style="margin-top:8px;" id="menu-lbl-docs">Documentation</span>
 
-        <button class="sidebar-nav-btn" id="tab-nav-docs" title="คู่มือสอนการใช้งาน Action Node ทั้งหมด (Wiki & Blueprint Reference)">
+        <button class="sidebar-nav-btn" id="tab-nav-docs"
+          title="คู่มือสอนการใช้งาน Action Node ทั้งหมด (Wiki & Blueprint Reference)">
           <div class="nav-btn-left">
             <span class="nav-btn-icon">📚</span>
             <span id="nav-lbl-docs">Node Wiki</span>
           </div>
-          <span class="nav-pill-badge" id="badge-docs-count" style="background:rgba(59,130,246,0.18); color:#60a5fa; border:1px solid rgba(59,130,246,0.35);">29 Nodes</span>
+          <span class="nav-pill-badge" id="badge-docs-count"
+            style="background:rgba(59,130,246,0.18); color:#60a5fa; border:1px solid rgba(59,130,246,0.35);">29
+            Nodes</span>
         </button>
       </nav>
     </div>
 
     <!-- Bottom Action Button: Master Engine Toggle -->
     <div class="sidebar-bottom-actions">
-      <button id="btn-toggle-engine" class="btn-toggle-engine-sidebar btn-start" title="เริ่ม/หยุดการทำงานของบอททั้งหมด">
+      <button id="btn-toggle-engine" class="btn-toggle-engine-sidebar btn-start"
+        title="เริ่ม/หยุดการทำงานของบอททั้งหมด">
         <span id="hero-icon">▶</span>
         <span id="hero-title">เริ่มการทำงาน</span>
       </button>
@@ -81,7 +90,7 @@
        2. RIGHT MAIN CONTENT WORKSPACE
   ══════════════════════════════════════════════════════════ -->
   <main class="main-content-layout">
-    
+
     <!-- Topbar Header (Breadcrumbs + Quick Tools + GitHub + Lang + Window Controls) -->
     <header class="launcher-topbar" id="titlebar">
       <div class="topbar-drag-area">
@@ -95,11 +104,13 @@
       <div class="topbar-right-utils">
         <!-- Studio Custom Action Buttons (Shown in Action Node view) -->
         <div id="studio-topbar-actions" style="display:none; align-items:center; gap:6px;">
-          <button id="btn-reload-studio" class="btn-topbar-tool" onclick="window.reloadEditorFrame()" title="รีโหลดหน้า Action Node Studio">
+          <button id="btn-reload-studio" class="btn-topbar-tool" onclick="window.reloadEditorFrame()"
+            title="รีโหลดหน้า Action Node Studio">
             <span>🔄</span>
             <span id="lbl-reload-studio">Reload</span>
           </button>
-          <button id="btn-open-browser-studio" class="btn-topbar-tool" onclick="window.openEditorInBrowser()" title="เปิดในเบราว์เซอร์แยก (Google Chrome / Edge)">
+          <button id="btn-open-browser-studio" class="btn-topbar-tool" onclick="window.openEditorInBrowser()"
+            title="เปิดในเบราว์เซอร์แยก (Google Chrome / Edge)">
             <span>↗️</span>
             <span id="lbl-browser-studio">Browser</span>
           </button>
@@ -121,7 +132,8 @@
         <!-- GitHub Pill -->
         <a href="#" id="btn-top-github" class="btn-util-pill" title="เปิด GitHub Repository">
           <svg viewBox="0 0 16 16" class="util-svg">
-            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+            <path
+              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
           </svg>
           <span>GitHub</span>
         </a>
@@ -145,11 +157,11 @@
 
     <!-- Main Views Container -->
     <div class="views-wrapper">
-      
+
       <!-- ================= VIEW 1: DASHBOARD & CLIENT MATRIX ================= -->
       <div class="app-view active" id="view-dashboard">
         <div class="dashboard-scroll-layout">
-          
+
           <!-- Top Diagnostics 4 Cards -->
           <section class="diagnostics-grid">
             <!-- Card 1: Engine Process -->
@@ -198,12 +210,18 @@
             <div class="matrix-panel-head">
               <div class="matrix-title-group">
                 <span style="font-size:13px;">🎮</span>
-                <span style="font-weight:800; font-size:12px; color:#fff;" id="matrix-title-label">CLIENT CONTROL MATRIX</span>
+                <span style="font-weight:800; font-size:12px; color:#fff;" id="matrix-title-label">CLIENT CONTROL
+                  MATRIX</span>
               </div>
               <div class="matrix-action-buttons">
-                <button id="btn-matrix-pip" class="btn-matrix-action pip" onclick="if(window.launcherAPI&&window.launcherAPI.togglePiP)window.launcherAPI.togglePiP('master')" title="เปิด/ปิด หน้าต่างลอยส่องจอเกม (Picture-in-Picture) พร้อมแถบสลับจอและโหมดตารางในตัว">📺 จอลอย PiP</button>
-                <button id="btn-matrix-launch-all" class="btn-matrix-action launch" onclick="window.launchAllClients && window.launchAllClients()">🚀 เปิดทุกจอ</button>
-                <button id="btn-matrix-stop-all" class="btn-matrix-action stop" onclick="window.stopAllClients && window.stopAllClients()">⏹️ ปิดทุกจอ</button>
+                <button id="btn-matrix-pip" class="btn-matrix-action pip"
+                  onclick="if(window.launcherAPI&&window.launcherAPI.togglePiP)window.launcherAPI.togglePiP('master')"
+                  title="เปิด/ปิด หน้าต่างลอยส่องจอเกม (Picture-in-Picture) พร้อมแถบสลับจอและโหมดตารางในตัว">📺 จอลอย
+                  PiP</button>
+                <button id="btn-matrix-launch-all" class="btn-matrix-action launch"
+                  onclick="window.launchAllClients && window.launchAllClients()">🚀 เปิดทุกจอ</button>
+                <button id="btn-matrix-stop-all" class="btn-matrix-action stop"
+                  onclick="window.stopAllClients && window.stopAllClients()">⏹️ ปิดทุกจอ</button>
               </div>
             </div>
 
@@ -237,7 +255,8 @@
                 </div>
 
                 <div class="terminal-actions">
-                  <button id="btn-toggle-autoscroll" class="term-btn active" title="เลื่อนหน้าจออัตโนมัติ (Auto-scroll)">⬇️ Auto-scroll</button>
+                  <button id="btn-toggle-autoscroll" class="term-btn active"
+                    title="เลื่อนหน้าจออัตโนมัติ (Auto-scroll)">⬇️ Auto-scroll</button>
                   <button id="btn-clear-terminal" class="term-btn" title="ล้างหน้าจอ Terminal">🗑️ ล้าง</button>
                 </div>
               </div>
@@ -247,7 +266,8 @@
             <div class="terminal-body" id="terminal-body">
               <div class="log-welcome-banner">
                 <div class="banner-title">⚡ NodeHotkey Control Center Ready</div>
-                <div class="banner-sub">Logs are streamed in real-time and automatically rotated into daily folders. Text is read-only and freely selectable for copy.</div>
+                <div class="banner-sub">Logs are streamed in real-time and automatically rotated into daily folders.
+                  Text is read-only and freely selectable for copy.</div>
               </div>
               <div class="log-entries" id="log-entries"></div>
             </div>
@@ -271,15 +291,20 @@
       <div class="app-view" id="view-editor">
         <div class="editor-view-container" style="position:relative; width:100%; height:100%;">
           <iframe id="editor-frame" class="editor-iframe" src="about:blank"></iframe>
-          
+
           <!-- Offline Placeholder Panel (Shown when Bot Engine is stopped) -->
-          <div id="editor-offline-placeholder" style="display:none; position:absolute; inset:0; background:var(--bg-card); z-index:10; flex-direction:column; align-items:center; justify-content:center; gap:16px; text-align:center; padding:20px;">
+          <div id="editor-offline-placeholder"
+            style="display:none; position:absolute; inset:0; background:var(--bg-card); z-index:10; flex-direction:column; align-items:center; justify-content:center; gap:16px; text-align:center; padding:20px;">
             <div style="font-size:48px; filter:drop-shadow(0 4px 12px rgba(239,68,68,0.3));">🛑</div>
             <div style="max-width:440px;">
-              <h2 id="lbl-offline-head" style="margin:0 0 8px 0; font-size:18px; font-weight:800; color:#fff;">Bot Engine Offline</h2>
-              <p id="lbl-offline-desc" style="margin:0; font-size:12.5px; color:var(--muted); line-height:1.5;">Web Server และระบบบอทยังไม่ได้เริ่มทำงาน กรุณากดปุ่มเพื่อเริ่มใช้งาน Action Node Studio</p>
+              <h2 id="lbl-offline-head" style="margin:0 0 8px 0; font-size:18px; font-weight:800; color:#fff;">Bot
+                Engine Offline</h2>
+              <p id="lbl-offline-desc" style="margin:0; font-size:12.5px; color:var(--muted); line-height:1.5;">Web
+                Server และระบบบอทยังไม่ได้เริ่มทำงาน กรุณากดปุ่มเพื่อเริ่มใช้งาน Action Node Studio</p>
             </div>
-            <button type="button" class="btn-matrix-action launch" id="btn-start-engine-from-studio" onclick="window.startBotFromStudio()" style="padding:10px 24px; font-size:13px; font-weight:800; border-radius:8px; display:flex; align-items:center; gap:8px;">
+            <button type="button" class="btn-matrix-action launch" id="btn-start-engine-from-studio"
+              onclick="window.startBotFromStudio()"
+              style="padding:10px 24px; font-size:13px; font-weight:800; border-radius:8px; display:flex; align-items:center; gap:8px;">
               <span>▶️</span>
               <span id="lbl-offline-btn">Start Bot Engine Now</span>
             </button>
@@ -289,20 +314,28 @@
 
       <!-- ================= VIEW 3: SYSTEM SETTINGS ================= -->
       <div class="app-view" id="view-settings">
-        <div class="settings-page-container" style="max-width: 720px; margin: 0 auto; padding: 20px 10px; display: flex; flex-direction: column; gap: 14px;">
-          
+        <div class="settings-page-container"
+          style="max-width: 720px; margin: 0 auto; padding: 20px 10px; display: flex; flex-direction: column; gap: 14px;">
+
           <!-- 1. Emergency Pause Hotkey -->
           <div class="settings-card-box">
             <div class="setting-row-head" id="lbl-setting-head-emergency">⌨️ Global Emergency Pause Hotkey</div>
-            <div class="setting-row-body" style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+            <div class="setting-row-body"
+              style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
               <div>
                 <div class="setting-label" id="lbl-setting-key-title">ปุ่มระงับการทำงานฉุกเฉิน</div>
-                <div class="setting-desc" id="lbl-setting-key-desc">กดเพื่อสั่งหยุดลูป คิวสกิล และปล่อยปุ่มค้างทั้งหมดในเกมทันที (คลิกที่กล่องเพื่อกดบันทึกปุ่มใหม่)</div>
+                <div class="setting-desc" id="lbl-setting-key-desc">กดเพื่อสั่งหยุดลูป คิวสกิล
+                  และปล่อยปุ่มค้างทั้งหมดในเกมทันที (คลิกที่กล่องเพื่อกดบันทึกปุ่มใหม่)</div>
               </div>
               <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-                <input type="text" id="setting-suspend-key" value="END" class="setting-input-key" readonly onclick="window.startRecordingSuspendKey()" title="คลิกแล้วกดปุ่มบนคีย์บอร์ดที่ต้องการ" style="width:100px; text-align:center; cursor:pointer; font-weight:800; font-family:var(--font-mono); background:#0f172a; border:1px solid #3b82f6; color:#60a5fa; padding:6px 10px; border-radius:6px;" />
-                <button type="button" class="btn-topbar-tool" onclick="window.openLauncherKeyPicker()" title="เปิดคีย์บอร์ดเสมือนจริง (Visual Key Picker)" style="padding:6px 10px; height:32px; border-color:#3b82f6; color:#60a5fa; background:rgba(59,130,246,0.1);">⌨️</button>
-                <button type="button" class="btn-topbar-tool" onclick="window.clearSuspendKey()" title="ล้างปุ่มลัด" style="padding:6px 10px; height:32px;">✕</button>
+                <input type="text" id="setting-suspend-key" value="END" class="setting-input-key" readonly
+                  onclick="window.startRecordingSuspendKey()" title="คลิกแล้วกดปุ่มบนคีย์บอร์ดที่ต้องการ"
+                  style="width:100px; text-align:center; cursor:pointer; font-weight:800; font-family:var(--font-mono); background:#0f172a; border:1px solid #3b82f6; color:#60a5fa; padding:6px 10px; border-radius:6px;" />
+                <button type="button" class="btn-topbar-tool" onclick="window.openLauncherKeyPicker()"
+                  title="เปิดคีย์บอร์ดเสมือนจริง (Visual Key Picker)"
+                  style="padding:6px 10px; height:32px; border-color:#3b82f6; color:#60a5fa; background:rgba(59,130,246,0.1);">⌨️</button>
+                <button type="button" class="btn-topbar-tool" onclick="window.clearSuspendKey()" title="ล้างปุ่มลัด"
+                  style="padding:6px 10px; height:32px;">✕</button>
               </div>
             </div>
           </div>
@@ -310,85 +343,120 @@
           <!-- 2. Desktop Overlay HUD -->
           <div class="settings-card-box">
             <div class="setting-row-head" id="lbl-setting-head-overlay">🖥️ Desktop Overlay HUD</div>
-            <div class="setting-row-body" style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+            <div class="setting-row-body"
+              style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
               <div>
                 <div class="setting-label" id="lbl-setting-overlay-title">เปิดใช้งาน Desktop Overlay HUD</div>
-                <div class="setting-desc" id="lbl-setting-overlay-desc">แสดงแถบสถานะโปร่งแสงบนหน้าจอเกมแบบ Real-time (เปิด/ปิด อัตโนมัติตามบอท)</div>
+                <div class="setting-desc" id="lbl-setting-overlay-desc">แสดงแถบสถานะโปร่งแสงบนหน้าจอเกมแบบ Real-time
+                  (เปิด/ปิด อัตโนมัติตามบอท)</div>
               </div>
-              <input type="checkbox" id="setting-enable-overlay" class="setting-checkbox" onchange="window.saveSettingsFromUI()" style="width:18px; height:18px; cursor:pointer; accent-color:#10b981;" />
+              <input type="checkbox" id="setting-enable-overlay" class="setting-checkbox"
+                onchange="window.saveSettingsFromUI()"
+                style="width:18px; height:18px; cursor:pointer; accent-color:#10b981;" />
             </div>
           </div>
 
           <!-- 1.2 PiP Floating Screen Overlay (Picture-in-Picture) -->
           <div class="settings-card-box">
             <div class="setting-row-head" id="lbl-setting-head-pip">📱 PiP Floating Screen Overlay (ส่องจออิสระ)</div>
-            <div class="setting-row-body" style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+            <div class="setting-row-body"
+              style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
               <div>
                 <div class="setting-label" id="lbl-setting-pip-title">เปิดใช้งาน PiP Floating Screen Overlay</div>
-                <div class="setting-desc" id="lbl-setting-pip-desc">เปิดหน้าต่างลอยส่องจอเกมอื่น ๆ พร้อมแถบสลับจอ [1] - [8] และโหมดตาราง CCTV ในตัว (เปิด/ปิด อัตโนมัติตามบอท)</div>
+                <div class="setting-desc" id="lbl-setting-pip-desc">เปิดหน้าต่างลอยส่องจอเกมอื่น ๆ พร้อมแถบสลับจอ [1] -
+                  [8] และโหมดตาราง CCTV ในตัว (เปิด/ปิด อัตโนมัติตามบอท)</div>
               </div>
-              <input type="checkbox" id="setting-enable-pip" class="setting-checkbox" onchange="window.saveSettingsFromUI()" style="width:18px; height:18px; cursor:pointer; accent-color:#0284c7;" />
+              <input type="checkbox" id="setting-enable-pip" class="setting-checkbox"
+                onchange="window.saveSettingsFromUI()"
+                style="width:18px; height:18px; cursor:pointer; accent-color:#0284c7;" />
             </div>
           </div>
 
           <!-- 2.1 Hardware & GPU Acceleration -->
           <div class="settings-card-box">
             <div class="setting-row-head" id="lbl-setting-head-gpu">🚀 Hardware & GPU Acceleration</div>
-            <div class="setting-row-body" style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+            <div class="setting-row-body"
+              style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
               <div>
-                <div class="setting-label" id="lbl-setting-gpu-title">เร่งความเร็วด้วยการ์ดจอแยก (High-Performance GPU / D3D11)</div>
-                <div class="setting-desc" id="lbl-setting-gpu-desc">บังคับให้เบราว์เซอร์ใช้การ์ดจอแยก (NVIDIA/AMD) และ Direct3D 11 Canvas Acceleration ช่วยลดโหลด CPU และลดอาการแลค</div>
+                <div class="setting-label" id="lbl-setting-gpu-title">เร่งความเร็วด้วยการ์ดจอแยก (High-Performance GPU /
+                  D3D11)</div>
+                <div class="setting-desc" id="lbl-setting-gpu-desc">บังคับให้เบราว์เซอร์ใช้การ์ดจอแยก (NVIDIA/AMD) และ
+                  Direct3D 11 Canvas Acceleration ช่วยลดโหลด CPU และลดอาการแลค</div>
               </div>
-              <input type="checkbox" id="setting-gpu-acceleration" class="setting-checkbox" onchange="window.saveSettingsFromUI()" style="width:18px; height:18px; cursor:pointer; accent-color:#10b981;" />
+              <input type="checkbox" id="setting-gpu-acceleration" class="setting-checkbox"
+                onchange="window.saveSettingsFromUI()"
+                style="width:18px; height:18px; cursor:pointer; accent-color:#10b981;" />
             </div>
           </div>
 
           <!-- 2.2 Auto-Start Bot Engine on Open -->
           <div class="settings-card-box">
-            <div class="setting-row-head" id="lbl-setting-head-autostart">⚡ Auto-Start Bot Engine</div>
-            <div class="setting-row-body" style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+            <div class="setting-row-head" id="lbl-setting-head-autostart">Auto-Start Bot Engine</div>
+            <div class="setting-row-body"
+              style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
               <div>
-                <div class="setting-label" id="lbl-setting-autostart-title">เริ่มการทำงาน Bot Engine อัตโนมัติเมื่อเปิดโปรแกรม</div>
-                <div class="setting-desc" id="lbl-setting-autostart-desc">หากปิดไว้ โปรแกรมจะเปิดมาในสถานะหยุดรอ (Stopped) เพื่อให้คุณกดเริ่มทำงานเองเมื่อพร้อม</div>
+                <div class="setting-label" id="lbl-setting-autostart-title">เริ่มการทำงาน Bot Engine
+                  อัตโนมัติเมื่อเปิดโปรแกรม</div>
+                <div class="setting-desc" id="lbl-setting-autostart-desc">หากปิดไว้ โปรแกรมจะเปิดมาในสถานะหยุดรอ
+                  (Stopped) เพื่อให้คุณกดเริ่มทำงานเองเมื่อพร้อม</div>
               </div>
-              <input type="checkbox" id="setting-auto-start-bot" class="setting-checkbox" onchange="window.saveSettingsFromUI()" style="width:18px; height:18px; cursor:pointer; accent-color:#10b981;" />
+              <input type="checkbox" id="setting-auto-start-bot" class="setting-checkbox"
+                onchange="window.saveSettingsFromUI()"
+                style="width:18px; height:18px; cursor:pointer; accent-color:#10b981;" />
             </div>
           </div>
 
           <!-- 3. Human Random Jitter -->
           <div class="settings-card-box">
             <div class="setting-row-head" id="lbl-setting-head-jitter">🛡️ Anti-Detect & Ghost Mouse Jitter</div>
-            <div class="setting-row-body" style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+            <div class="setting-row-body"
+              style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
               <div>
-                <div class="setting-label" id="lbl-setting-jitter-title">สุ่มหน่วงเวลาการกดปุ่มและขยับเมาส์ (Human Random Jitter)</div>
-                <div class="setting-desc" id="lbl-setting-jitter-desc">จำลองพฤติกรรมมนุษย์ด้วยการสุ่มขยับเมาส์เล็กน้อยและหน่วงเวลากดปุ่มเพื่อป้องกันการตรวจจับ</div>
+                <div class="setting-label" id="lbl-setting-jitter-title">สุ่มหน่วงเวลาการกดปุ่มและขยับเมาส์ (Human
+                  Random Jitter)</div>
+                <div class="setting-desc" id="lbl-setting-jitter-desc">
+                  จำลองพฤติกรรมมนุษย์ด้วยการสุ่มขยับเมาส์เล็กน้อยและหน่วงเวลากดปุ่มเพื่อป้องกันการตรวจจับ</div>
               </div>
-              <input type="checkbox" id="setting-enable-jitter" class="setting-checkbox" onchange="window.toggleJitterSubSettings(); window.saveSettingsFromUI();" style="width:18px; height:18px; cursor:pointer; accent-color:#10b981;" />
+              <input type="checkbox" id="setting-enable-jitter" class="setting-checkbox"
+                onchange="window.toggleJitterSubSettings(); window.saveSettingsFromUI();"
+                style="width:18px; height:18px; cursor:pointer; accent-color:#10b981;" />
             </div>
 
             <!-- Expandable Jitter Sub-Settings Panel -->
-            <div id="jitter-sub-settings" style="display:none; margin-top:12px; padding:12px; background:rgba(0,0,0,0.25); border-radius:6px; border:1px dashed rgba(255,255,255,0.08); display:flex; flex-direction:column; gap:10px;">
+            <div id="jitter-sub-settings"
+              style="display:none; margin-top:12px; padding:12px; background:rgba(0,0,0,0.25); border-radius:6px; border:1px dashed rgba(255,255,255,0.08); display:flex; flex-direction:column; gap:10px;">
               <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
                 <div>
-                  <div style="font-size:12px; font-weight:700; color:#e2e8f0;" id="lbl-jitter-interval-title">⏱️ ช่วงเวลาสุ่มขยับเมาส์ (Interval Min - Max)</div>
-                  <div style="font-size:10.5px; color:var(--muted);" id="lbl-jitter-interval-desc">ระบบจะสุ่มขยับเมาส์อัตโนมัติทุกๆ ช่วงเวลานี้ (หน่วยเป็น มิลลิวินาที / ms)</div>
+                  <div style="font-size:12px; font-weight:700; color:#e2e8f0;" id="lbl-jitter-interval-title">⏱️
+                    ช่วงเวลาสุ่มขยับเมาส์ (Interval Min - Max)</div>
+                  <div style="font-size:10.5px; color:var(--muted);" id="lbl-jitter-interval-desc">
+                    ระบบจะสุ่มขยับเมาส์อัตโนมัติทุกๆ ช่วงเวลานี้ (หน่วยเป็น มิลลิวินาที / ms)</div>
                 </div>
                 <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-                  <input type="number" id="setting-jitter-min" min="1000" step="500" value="8000" onchange="window.saveSettingsFromUI()" style="width:75px; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:5px; padding:4px 6px; color:#fff; font-size:11.5px; font-family:var(--font-mono); text-align:center;" />
+                  <input type="number" id="setting-jitter-min" min="1000" step="500" value="8000"
+                    onchange="window.saveSettingsFromUI()"
+                    style="width:75px; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:5px; padding:4px 6px; color:#fff; font-size:11.5px; font-family:var(--font-mono); text-align:center;" />
                   <span style="font-size:11px; color:var(--muted);">-</span>
-                  <input type="number" id="setting-jitter-max" min="1000" step="500" value="25000" onchange="window.saveSettingsFromUI()" style="width:75px; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:5px; padding:4px 6px; color:#fff; font-size:11.5px; font-family:var(--font-mono); text-align:center;" />
+                  <input type="number" id="setting-jitter-max" min="1000" step="500" value="25000"
+                    onchange="window.saveSettingsFromUI()"
+                    style="width:75px; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:5px; padding:4px 6px; color:#fff; font-size:11.5px; font-family:var(--font-mono); text-align:center;" />
                   <span style="font-size:11px; color:var(--muted);">ms</span>
                 </div>
               </div>
 
-              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px dashed rgba(255,255,255,0.05); padding-top:8px;">
+              <div
+                style="display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px dashed rgba(255,255,255,0.05); padding-top:8px;">
                 <div>
-                  <div style="font-size:12px; font-weight:700; color:#e2e8f0;" id="lbl-jitter-offset-title">🎯 ระยะการขยับพิกัดเมาส์ (Max Pixel Offset)</div>
-                  <div style="font-size:10.5px; color:var(--muted);" id="lbl-jitter-offset-desc">ระยะทางพิกัดที่เมาส์จะสุ่มเคลื่อนที่รอบตำแหน่งเดิม (หน่วยเป็น พิกเซล / px)</div>
+                  <div style="font-size:12px; font-weight:700; color:#e2e8f0;" id="lbl-jitter-offset-title">🎯
+                    ระยะการขยับพิกัดเมาส์ (Max Pixel Offset)</div>
+                  <div style="font-size:10.5px; color:var(--muted);" id="lbl-jitter-offset-desc">
+                    ระยะทางพิกัดที่เมาส์จะสุ่มเคลื่อนที่รอบตำแหน่งเดิม (หน่วยเป็น พิกเซล / px)</div>
                 </div>
                 <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
                   <span style="font-size:11px; color:var(--muted);">±</span>
-                  <input type="number" id="setting-jitter-offset" min="1" max="100" value="12" onchange="window.saveSettingsFromUI()" style="width:75px; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:5px; padding:4px 6px; color:#fff; font-size:11.5px; font-family:var(--font-mono); text-align:center;" />
+                  <input type="number" id="setting-jitter-offset" min="1" max="100" value="12"
+                    onchange="window.saveSettingsFromUI()"
+                    style="width:75px; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:5px; padding:4px 6px; color:#fff; font-size:11.5px; font-family:var(--font-mono); text-align:center;" />
                   <span style="font-size:11px; color:var(--muted);">px</span>
                 </div>
               </div>
@@ -398,27 +466,36 @@
           <!-- 4. Target Game URL Keyword -->
           <div class="settings-card-box">
             <div class="setting-row-head" id="lbl-setting-head-url">🌐 Target Game URL Filter</div>
-            <div class="setting-row-body" style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+            <div class="setting-row-body"
+              style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
               <div style="flex:1;">
                 <div class="setting-label" id="lbl-setting-url-title">คีย์เวิร์ด URL สำหรับตรวจจับจอเกม</div>
-                <div class="setting-desc" id="lbl-setting-url-desc">ระบบจะค้นหาแท็บเบราว์เซอร์ที่มีคำนี้เพื่อเชื่อมต่อ CDP อัตโนมัติ</div>
+                <div class="setting-desc" id="lbl-setting-url-desc">ระบบจะค้นหาแท็บเบราว์เซอร์ที่มีคำนี้เพื่อเชื่อมต่อ
+                  CDP อัตโนมัติ</div>
               </div>
-              <input type="text" id="setting-target-url" placeholder="universe.flyff.com" onchange="window.saveSettingsFromUI()" style="width:200px; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:6px; padding:6px 10px; color:#fff; font-size:12px; font-family:var(--font-mono); outline:none;" />
+              <input type="text" id="setting-target-url" placeholder="universe.flyff.com"
+                onchange="window.saveSettingsFromUI()"
+                style="width:200px; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:6px; padding:6px 10px; color:#fff; font-size:12px; font-family:var(--font-mono); outline:none;" />
             </div>
           </div>
 
           <!-- 5. Web Server & Dashboard Port -->
           <div class="settings-card-box">
             <div class="setting-row-head" id="lbl-setting-head-port">🔌 Web Server & Dashboard Port</div>
-            <div class="setting-row-body" style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+            <div class="setting-row-body"
+              style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
               <div style="flex:1;">
                 <div class="setting-label" id="lbl-setting-port-title">พอร์ตสำหรับ Web Dashboard & Studio</div>
-                <div class="setting-desc" id="lbl-setting-port-desc">หมายเลข Port สำหรับ Web Server (ค่าเริ่มต้น: 3088 ป้องกันการชนกับพอร์ต 3000 ของโปรเจกต์อื่น)</div>
-                <div style="font-size:11px; color:#eab308; margin-top:4px;" id="lbl-setting-port-restart-note">⚡ มีผลเมื่อ Stop แล้ว Start ใหม่ หรือกด Restart Bot Engine</div>
+                <div class="setting-desc" id="lbl-setting-port-desc">หมายเลข Port สำหรับ Web Server (ค่าเริ่มต้น: 3088
+                  ป้องกันการชนกับพอร์ต 3000 ของโปรเจกต์อื่น)</div>
+                <div style="font-size:11px; color:#eab308; margin-top:4px;" id="lbl-setting-port-restart-note">⚡
+                  มีผลเมื่อ Stop แล้ว Start ใหม่ หรือกด Restart Bot Engine</div>
               </div>
               <div style="display:flex; align-items:center; gap:8px;">
                 <span style="font-size:12px; color:var(--text-muted); font-family:var(--font-mono);">Port:</span>
-                <input type="number" id="setting-web-port" min="1024" max="65535" step="1" value="3088" onchange="window.saveSettingsFromUI()" style="width:100px; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:6px; padding:6px 10px; color:#fff; font-size:12px; font-family:var(--font-mono); outline:none; text-align:center;" />
+                <input type="number" id="setting-web-port" min="1024" max="65535" step="1" value="3088"
+                  onchange="window.saveSettingsFromUI()"
+                  style="width:100px; background:var(--bg-card-alt); border:1px solid var(--border); border-radius:6px; padding:6px 10px; color:#fff; font-size:12px; font-family:var(--font-mono); outline:none; text-align:center;" />
               </div>
             </div>
           </div>
@@ -432,44 +509,57 @@
 
             <!-- Two Sub-Cards Grid: Logs and Screenshots -->
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px;">
-              
+
               <!-- Sub-Card 1: Logs Storage -->
-              <div style="background:var(--bg-card-alt); border:1px solid var(--border); border-radius:8px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; gap:10px;">
+              <div
+                style="background:var(--bg-card-alt); border:1px solid var(--border); border-radius:8px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; gap:10px;">
                 <div>
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <span style="font-weight:700; font-size:12px; color:#38bdf8; display:flex; align-items:center; gap:6px;">
+                    <span
+                      style="font-weight:700; font-size:12px; color:#38bdf8; display:flex; align-items:center; gap:6px;">
                       <span>📁</span> <span id="lbl-storage-logs-title">System Logs</span>
                     </span>
-                    <span id="storage-logs-size" style="font-size:11px; font-weight:800; color:#fff; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3); border-radius:4px; padding:2px 6px; font-family:var(--font-mono);">0 B</span>
+                    <span id="storage-logs-size"
+                      style="font-size:11px; font-weight:800; color:#fff; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3); border-radius:4px; padding:2px 6px; font-family:var(--font-mono);">0
+                      B</span>
                   </div>
                   <div style="font-size:10px; color:var(--text-dim);" id="storage-logs-detail">0 files in logs/</div>
                 </div>
                 <div style="display:flex; gap:6px;">
-                  <button type="button" class="btn-topbar-tool" id="btn-storage-open-logs" style="flex:1; justify-content:center; padding:5px 8px; font-size:11px;">
+                  <button type="button" class="btn-topbar-tool" id="btn-storage-open-logs"
+                    style="flex:1; justify-content:center; padding:5px 8px; font-size:11px;">
                     <span>📂</span> <span id="lbl-storage-open-logs">เปิดโฟลเดอร์</span>
                   </button>
-                  <button type="button" class="btn-topbar-tool" id="btn-storage-clear-logs" style="justify-content:center; padding:5px 10px; font-size:11px; color:#f87171; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.08);">
+                  <button type="button" class="btn-topbar-tool" id="btn-storage-clear-logs"
+                    style="justify-content:center; padding:5px 10px; font-size:11px; color:#f87171; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.08);">
                     <span>🗑️</span> <span id="lbl-storage-clear-logs">ล้าง</span>
                   </button>
                 </div>
               </div>
 
               <!-- Sub-Card 2: Screenshots Storage -->
-              <div style="background:var(--bg-card-alt); border:1px solid var(--border); border-radius:8px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; gap:10px;">
+              <div
+                style="background:var(--bg-card-alt); border:1px solid var(--border); border-radius:8px; padding:12px; display:flex; flex-direction:column; justify-content:space-between; gap:10px;">
                 <div>
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <span style="font-weight:700; font-size:12px; color:#a855f7; display:flex; align-items:center; gap:6px;">
+                    <span
+                      style="font-weight:700; font-size:12px; color:#a855f7; display:flex; align-items:center; gap:6px;">
                       <span>📸</span> <span id="lbl-storage-shots-title">Screenshots</span>
                     </span>
-                    <span id="storage-shots-size" style="font-size:11px; font-weight:800; color:#fff; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.3); border-radius:4px; padding:2px 6px; font-family:var(--font-mono);">0 B</span>
+                    <span id="storage-shots-size"
+                      style="font-size:11px; font-weight:800; color:#fff; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.3); border-radius:4px; padding:2px 6px; font-family:var(--font-mono);">0
+                      B</span>
                   </div>
-                  <div style="font-size:10px; color:var(--text-dim);" id="storage-shots-detail">0 images in screenshots/</div>
+                  <div style="font-size:10px; color:var(--text-dim);" id="storage-shots-detail">0 images in screenshots/
+                  </div>
                 </div>
                 <div style="display:flex; gap:6px;">
-                  <button type="button" class="btn-topbar-tool" id="btn-storage-open-shots" style="flex:1; justify-content:center; padding:5px 8px; font-size:11px;">
+                  <button type="button" class="btn-topbar-tool" id="btn-storage-open-shots"
+                    style="flex:1; justify-content:center; padding:5px 8px; font-size:11px;">
                     <span>📂</span> <span id="lbl-storage-open-shots">เปิดโฟลเดอร์</span>
                   </button>
-                  <button type="button" class="btn-topbar-tool" id="btn-storage-clear-shots" style="justify-content:center; padding:5px 10px; font-size:11px; color:#f87171; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.08);">
+                  <button type="button" class="btn-topbar-tool" id="btn-storage-clear-shots"
+                    style="justify-content:center; padding:5px 10px; font-size:11px; color:#f87171; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.08);">
                     <span>🗑️</span> <span id="lbl-storage-clear-shots">ล้าง</span>
                   </button>
                 </div>
@@ -478,18 +568,23 @@
             </div>
 
             <!-- Total Storage Bar & Master Clear Button -->
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:rgba(0,0,0,0.25); border:1px dashed rgba(255,255,255,0.08); border-radius:6px;">
+            <div
+              style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:rgba(0,0,0,0.25); border:1px dashed rgba(255,255,255,0.08); border-radius:6px;">
               <div style="display:flex; align-items:center; gap:8px;">
-                <button type="button" class="btn-topbar-tool" id="btn-storage-refresh" title="รีเฟรชขนาดพื้นที่" style="padding:4px 8px; font-size:11px;">
+                <button type="button" class="btn-topbar-tool" id="btn-storage-refresh" title="รีเฟรชขนาดพื้นที่"
+                  style="padding:4px 8px; font-size:11px;">
                   <span>🔄</span>
                 </button>
                 <div style="font-size:11px; color:#cbd5e1;">
                   <span id="lbl-storage-total-title">พื้นที่จัดเก็บรวม:</span>
-                  <strong id="storage-total-size" style="color:#fbbf24; font-family:var(--font-mono); margin-left:4px;">0 B</strong>
-                  <span id="storage-total-files" style="color:var(--text-dim); font-size:10px; margin-left:4px;">(0 ไฟล์)</span>
+                  <strong id="storage-total-size"
+                    style="color:#fbbf24; font-family:var(--font-mono); margin-left:4px;">0 B</strong>
+                  <span id="storage-total-files" style="color:var(--text-dim); font-size:10px; margin-left:4px;">(0
+                    ไฟล์)</span>
                 </div>
               </div>
-              <button type="button" id="btn-storage-clear-all" class="btn-matrix-action stop" style="padding:6px 14px; font-size:11px; font-weight:700; border-radius:6px; display:flex; align-items:center; gap:6px;">
+              <button type="button" id="btn-storage-clear-all" class="btn-matrix-action stop"
+                style="padding:6px 14px; font-size:11px; font-weight:700; border-radius:6px; display:flex; align-items:center; gap:6px;">
                 <span>🔥</span>
                 <span id="lbl-storage-clear-all">ล้างข้อมูลทั้งหมด (Logs + Screenshots)</span>
               </button>
@@ -510,32 +605,42 @@
 
   <!-- ════════ CLIENT INDIVIDUAL SETTINGS MODAL (ORIGINAL SYSTEM) ════════ -->
   <!-- ════════ CLIENT INDIVIDUAL SETTINGS MODAL ════════ -->
-  <div class="modal-overlay" id="client-settings-modal" style="display:none;" onclick="if(event.target===this) closeClientSettingsModal()">
-    <div class="modal-card" style="width: 500px; max-width: 94%; background: #0b1120; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); padding: 18px 20px;">
-      
+  <div class="modal-overlay" id="client-settings-modal" style="display:none;"
+    onclick="if(event.target===this) closeClientSettingsModal()">
+    <div class="modal-card"
+      style="width: 500px; max-width: 94%; background: #0b1120; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); padding: 18px 20px;">
+
       <!-- Modal Header -->
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px; margin-bottom:16px;">
-        <h3 id="client-settings-modal-title" style="margin:0; font-size:13.5px; font-weight:700; color:#f1f5f9; display:flex; align-items:center; gap:8px;">
+      <div
+        style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px; margin-bottom:16px;">
+        <h3 id="client-settings-modal-title"
+          style="margin:0; font-size:13.5px; font-weight:700; color:#f1f5f9; display:flex; align-items:center; gap:8px;">
           <span style="color:#94a3b8; font-size:14px;">⚙</span>
           <span id="client-settings-modal-name">Client Settings</span>
         </h3>
-        <button class="win-btn close" onclick="closeClientSettingsModal()" style="width:24px; height:24px; border-radius:4px; opacity:0.75;">✕</button>
+        <button class="win-btn close" onclick="closeClientSettingsModal()"
+          style="width:24px; height:24px; border-radius:4px; opacity:0.75;">✕</button>
       </div>
 
       <input type="hidden" id="modal-client-idx" value="1" />
 
       <div style="display:flex; flex-direction:column; gap:14px;">
-        
+
         <!-- 1. Browser Selection Section -->
         <div>
-          <label id="lbl-modal-browser-title" style="font-size:11px; font-weight:600; color:#cbd5e1; display:block; margin-bottom:6px; letter-spacing:0.2px;">
+          <label id="lbl-modal-browser-title"
+            style="font-size:11px; font-weight:600; color:#cbd5e1; display:block; margin-bottom:6px; letter-spacing:0.2px;">
             Browser Engine & Mode
           </label>
-          <select id="modal-client-browser" style="width:100%; background:#131c31; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:7px 10px; color:#f8fafc; font-size:11.5px; outline:none;">
-            <option id="opt-browser-chrome-std" value="1" style="background:#0f172a; color:#fff;">Google Chrome (Standard)</option>
-            <option id="opt-browser-chrome-app" value="1-app" style="background:#0f172a; color:#fff;">Google Chrome (App Mode)</option>
+          <select id="modal-client-browser"
+            style="width:100%; background:#131c31; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:7px 10px; color:#f8fafc; font-size:11.5px; outline:none;">
+            <option id="opt-browser-chrome-std" value="1" style="background:#0f172a; color:#fff;">Google Chrome
+              (Standard)</option>
+            <option id="opt-browser-chrome-app" value="1-app" style="background:#0f172a; color:#fff;">Google Chrome (App
+              Mode)</option>
             <option id="opt-browser-edge-std" value="2" style="background:#0f172a; color:#fff;">Microsoft Edge</option>
-            <option id="opt-browser-edge-app" value="2-app" style="background:#0f172a; color:#fff;">Microsoft Edge (App Mode)</option>
+            <option id="opt-browser-edge-app" value="2-app" style="background:#0f172a; color:#fff;">Microsoft Edge (App
+              Mode)</option>
             <option id="opt-browser-firefox" value="3" style="background:#0f172a; color:#fff;">Mozilla Firefox</option>
           </select>
         </div>
@@ -543,56 +648,76 @@
         <!-- 2. User-Agent Section -->
         <div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <label id="lbl-modal-ua-title" style="font-size:11px; font-weight:600; color:#cbd5e1; letter-spacing:0.2px;">
+            <label id="lbl-modal-ua-title"
+              style="font-size:11px; font-weight:600; color:#cbd5e1; letter-spacing:0.2px;">
               User-Agent (Anti-Detect)
             </label>
             <div style="display:flex; gap:5px;">
-              <button type="button" id="btn-modal-random-ua" class="btn-topbar-tool" onclick="randomizeModalUA()" style="padding:2px 8px; font-size:10.5px; color:#94a3b8; border-color:rgba(255,255,255,0.12); background:rgba(255,255,255,0.04);">Random</button>
-              <button type="button" id="btn-modal-clear-ua" class="btn-topbar-tool" onclick="clearModalUA()" style="padding:2px 8px; font-size:10.5px; color:#94a3b8; border-color:rgba(255,255,255,0.12); background:rgba(255,255,255,0.04);">Clear</button>
+              <button type="button" id="btn-modal-random-ua" class="btn-topbar-tool" onclick="randomizeModalUA()"
+                style="padding:2px 8px; font-size:10.5px; color:#94a3b8; border-color:rgba(255,255,255,0.12); background:rgba(255,255,255,0.04);">Random</button>
+              <button type="button" id="btn-modal-clear-ua" class="btn-topbar-tool" onclick="clearModalUA()"
+                style="padding:2px 8px; font-size:10.5px; color:#94a3b8; border-color:rgba(255,255,255,0.12); background:rgba(255,255,255,0.04);">Clear</button>
             </div>
           </div>
-          <input type="text" id="modal-client-ua" placeholder="Default Browser User-Agent (Empty)" style="width:100%; background:#131c31; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:7px 10px; color:#f8fafc; font-family:var(--font-mono); font-size:11px; outline:none;" />
+          <input type="text" id="modal-client-ua" placeholder="Default Browser User-Agent (Empty)"
+            style="width:100%; background:#131c31; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:7px 10px; color:#f8fafc; font-family:var(--font-mono); font-size:11px; outline:none;" />
         </div>
 
         <!-- 3. IP / Proxy Section -->
         <div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <label id="lbl-modal-proxy-title" style="font-size:11px; font-weight:600; color:#cbd5e1; letter-spacing:0.2px;">
+            <label id="lbl-modal-proxy-title"
+              style="font-size:11px; font-weight:600; color:#cbd5e1; letter-spacing:0.2px;">
               Network / Proxy Settings
             </label>
-            <button type="button" id="btn-modal-clear-proxy" class="btn-topbar-tool" onclick="clearModalProxy()" style="padding:2px 8px; font-size:10.5px; color:#94a3b8; border-color:rgba(255,255,255,0.12); background:rgba(255,255,255,0.04);">Clear</button>
+            <button type="button" id="btn-modal-clear-proxy" class="btn-topbar-tool" onclick="clearModalProxy()"
+              style="padding:2px 8px; font-size:10.5px; color:#94a3b8; border-color:rgba(255,255,255,0.12); background:rgba(255,255,255,0.04);">Clear</button>
           </div>
-          <input type="text" id="modal-client-proxy" placeholder="http://ip:port or socks5://ip:port or ip:port:user:pass" style="width:100%; background:#131c31; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:7px 10px; color:#f8fafc; font-family:var(--font-mono); font-size:11px; outline:none;" />
-          <span id="lbl-modal-proxy-desc" style="font-size:10px; color:#64748b; margin-top:4px; display:block;">แยก IP สำหรับแต่ละหน้าจอเพื่อความปลอดภัยในการเชื่อมต่อ</span>
+          <input type="text" id="modal-client-proxy"
+            placeholder="http://ip:port or socks5://ip:port or ip:port:user:pass"
+            style="width:100%; background:#131c31; border:1px solid rgba(255,255,255,0.1); border-radius:6px; padding:7px 10px; color:#f8fafc; font-family:var(--font-mono); font-size:11px; outline:none;" />
+          <span id="lbl-modal-proxy-desc" style="font-size:10px; color:#64748b; margin-top:4px; display:block;">แยก IP
+            สำหรับแต่ละหน้าจอเพื่อความปลอดภัยในการเชื่อมต่อ</span>
         </div>
 
         <!-- 4. Window Position & Bounds -->
-        <div style="background:rgba(18,26,45,0.5); border:1px solid rgba(255,255,255,0.07); border-radius:8px; padding:10px 12px;">
+        <div
+          style="background:rgba(18,26,45,0.5); border:1px solid rgba(255,255,255,0.07); border-radius:8px; padding:10px 12px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <label id="lbl-modal-bounds-title" style="font-size:11px; font-weight:600; color:#cbd5e1; letter-spacing:0.2px;">
+            <label id="lbl-modal-bounds-title"
+              style="font-size:11px; font-weight:600; color:#cbd5e1; letter-spacing:0.2px;">
               Window Position & Bounds
             </label>
-            <button type="button" id="btn-modal-reset-bounds" class="btn-topbar-tool" onclick="resetModalWindowBounds()" style="padding:2px 8px; font-size:10.5px; color:#cbd5e1; border-color:rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); cursor:pointer;">
+            <button type="button" id="btn-modal-reset-bounds" class="btn-topbar-tool" onclick="resetModalWindowBounds()"
+              style="padding:2px 8px; font-size:10.5px; color:#cbd5e1; border-color:rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); cursor:pointer;">
               Reset Position
             </button>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#94a3b8;">
             <span id="lbl-modal-bounds-coord">พิกัดหน้าต่าง:</span>
-            <span id="modal-client-bounds-info" style="font-family:var(--font-mono); font-weight:600; color:#e2e8f0;">Default (Auto)</span>
+            <span id="modal-client-bounds-info"
+              style="font-family:var(--font-mono); font-weight:600; color:#e2e8f0;">Default (Auto)</span>
           </div>
-          <span id="lbl-modal-bounds-hint" style="font-size:9.5px; color:#64748b; margin-top:4px; display:block; line-height:1.3;">รีเซ็ตตำแหน่งหน้าต่างกลับมาตรงกลางจอหลัก หากหน้าต่างเกมหลุดออกนอกจอ</span>
+          <span id="lbl-modal-bounds-hint"
+            style="font-size:9.5px; color:#64748b; margin-top:4px; display:block; line-height:1.3;">รีเซ็ตตำแหน่งหน้าต่างกลับมาตรงกลางจอหลัก
+            หากหน้าต่างเกมหลุดออกนอกจอ</span>
         </div>
 
         <!-- 5. Browser Profile Data & Cache Section -->
-        <div style="background:rgba(18,26,45,0.5); border:1px solid rgba(255,255,255,0.07); border-radius:8px; padding:10px 12px;">
+        <div
+          style="background:rgba(18,26,45,0.5); border:1px solid rgba(255,255,255,0.07); border-radius:8px; padding:10px 12px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-              <label id="lbl-modal-clear-profile-title" style="font-size:11px; font-weight:600; color:#cbd5e1; display:block; margin-bottom:2px; letter-spacing:0.2px;">
+              <label id="lbl-modal-clear-profile-title"
+                style="font-size:11px; font-weight:600; color:#cbd5e1; display:block; margin-bottom:2px; letter-spacing:0.2px;">
                 Browser Cache & Profile
               </label>
-              <span id="lbl-modal-clear-profile-desc" style="font-size:9.5px; color:#64748b; display:block;">ล้าง Cookie, แคช และประวัติการล็อกอินของจอนี้</span>
+              <span id="lbl-modal-clear-profile-desc" style="font-size:9.5px; color:#64748b; display:block;">ล้าง
+                Cookie, แคช และประวัติการล็อกอินของจอนี้</span>
             </div>
-            <button type="button" id="btn-modal-clear-profile" class="btn-topbar-tool" onclick="clearModalClientProfileData()" style="padding:4px 10px; font-size:11px; font-weight:600; color:#f87171; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.08); cursor:pointer;">
+            <button type="button" id="btn-modal-clear-profile" class="btn-topbar-tool"
+              onclick="clearModalClientProfileData()"
+              style="padding:4px 10px; font-size:11px; font-weight:600; color:#f87171; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.08); cursor:pointer;">
               Clear Data
             </button>
           </div>
@@ -601,9 +726,13 @@
       </div>
 
       <!-- Modal Footer -->
-      <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">
-        <button id="btn-modal-settings-cancel" class="btn-topbar-tool" onclick="closeClientSettingsModal()" style="padding:6px 14px; font-size:11px; color:#94a3b8; border-color:rgba(255,255,255,0.12);">Cancel</button>
-        <button id="btn-modal-settings-save" class="btn-primary" style="padding:6px 16px; font-size:11.5px; font-weight:600; border-radius:6px; background:#2563eb; color:#fff; border:1px solid #3b82f6; cursor:pointer;" onclick="saveClientSettingsFromModal()">Save Settings</button>
+      <div
+        style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">
+        <button id="btn-modal-settings-cancel" class="btn-topbar-tool" onclick="closeClientSettingsModal()"
+          style="padding:6px 14px; font-size:11px; color:#94a3b8; border-color:rgba(255,255,255,0.12);">Cancel</button>
+        <button id="btn-modal-settings-save" class="btn-primary"
+          style="padding:6px 16px; font-size:11.5px; font-weight:600; border-radius:6px; background:#2563eb; color:#fff; border:1px solid #3b82f6; cursor:pointer;"
+          onclick="saveClientSettingsFromModal()">Save Settings</button>
       </div>
     </div>
   </div>
@@ -611,12 +740,14 @@
   <!-- Update Notification Modal -->
   <div class="modal-overlay" id="update-modal" style="display:none; z-index:300;">
     <div class="modal-card" style="width: 520px; max-width: 95%;">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed var(--border); padding-bottom:10px; margin-bottom:12px;">
+      <div
+        style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed var(--border); padding-bottom:10px; margin-bottom:12px;">
         <h3 style="margin:0; font-size:14px; font-weight:800; color:#fff; display:flex; align-items:center; gap:6px;">
           <span>✨</span>
           <span id="lbl-update-modal-title">ตรวจสอบการอัปเดตระบบ</span>
         </h3>
-        <button class="win-btn close" id="btn-close-update-modal" style="width:24px; height:24px; border-radius:4px;">✕</button>
+        <button class="win-btn close" id="btn-close-update-modal"
+          style="width:24px; height:24px; border-radius:4px;">✕</button>
       </div>
       <div class="modal-body" id="update-modal-body">
         <div style="display:flex; align-items:center; gap:10px; padding:12px 0;">
@@ -624,37 +755,50 @@
           <span>กำลังตรวจสอบสถานะ Git Remote...</span>
         </div>
       </div>
-      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05);">
+      <div class="modal-footer"
+        style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05);">
         <button class="btn-topbar-tool" id="btn-cancel-update" style="padding:6px 14px;">ยกเลิก</button>
-        <button class="btn-matrix-action launch" id="btn-perform-update" style="display:none; padding:6px 18px; font-size:11.5px; font-weight:800;">📥 ดาวน์โหลดและอัปเดตทันที</button>
+        <button class="btn-matrix-action launch" id="btn-perform-update"
+          style="display:none; padding:6px 18px; font-size:11.5px; font-weight:800;">📥 ดาวน์โหลดและอัปเดตทันที</button>
       </div>
     </div>
   </div>
 
   <!-- Unsaved Changes Warning Modal for Action Node Studio -->
-  <div class="modal-overlay" id="unsaved-reload-modal" style="display:none; z-index:350;" onclick="if(event.target===this) window.closeUnsavedReloadModal()">
-    <div class="modal-card" style="width: 480px; max-width: 94%; background: #0f172a; border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 12px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.7);">
-      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px; margin-bottom:14px;">
-        <h3 style="margin:0; font-size:14px; font-weight:800; color:#fbbf24; display:flex; align-items:center; gap:8px;">
+  <div class="modal-overlay" id="unsaved-reload-modal" style="display:none; z-index:350;"
+    onclick="if(event.target===this) window.closeUnsavedReloadModal()">
+    <div class="modal-card"
+      style="width: 480px; max-width: 94%; background: #0f172a; border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 12px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.7);">
+      <div class="modal-header"
+        style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px; margin-bottom:14px;">
+        <h3
+          style="margin:0; font-size:14px; font-weight:800; color:#fbbf24; display:flex; align-items:center; gap:8px;">
           <span>⚠️</span>
           <span id="lbl-unsaved-modal-title">ตรวจพบการแก้ไขที่ยังไม่ได้บันทึก</span>
         </h3>
-        <button class="win-btn close" onclick="window.closeUnsavedReloadModal()" style="width:24px; height:24px; border-radius:4px;">✕</button>
+        <button class="win-btn close" onclick="window.closeUnsavedReloadModal()"
+          style="width:24px; height:24px; border-radius:4px;">✕</button>
       </div>
       <div class="modal-body" style="font-size:12px; color:#cbd5e1; line-height:1.6;">
         <div id="lbl-unsaved-modal-desc">
-          คุณมีการแก้ไขผังในหน้า <strong>Action Node Studio</strong> ที่ยังไม่ได้กดบันทึก!<br/>
+          คุณมีการแก้ไขผังในหน้า <strong>Action Node Studio</strong> ที่ยังไม่ได้กดบันทึก!<br />
           หากทำการรีโหลดในตอนนี้ ข้อมูลที่คุณเพิ่งแก้ไขจะสูญหายทันที
         </div>
-        <div style="margin-top:12px; background:rgba(245, 158, 11, 0.1); border:1px solid rgba(245, 158, 11, 0.25); border-radius:8px; padding:10px 12px; font-size:11.5px; color:#fde68a;">
-          💡 <strong id="lbl-unsaved-modal-hint-title">คำแนะนำ:</strong> <span id="lbl-unsaved-modal-hint-desc">กดปุ่ม <strong>"ปิด เพื่อกลับไปบันทึกเอง"</strong> ด้านล่าง แล้วกดปุ่ม 💾 บันทึก (หรือ Ctrl+S) ในหน้า Action Node ก่อนที่จะรีโหลดครับ</span>
+        <div
+          style="margin-top:12px; background:rgba(245, 158, 11, 0.1); border:1px solid rgba(245, 158, 11, 0.25); border-radius:8px; padding:10px 12px; font-size:11.5px; color:#fde68a;">
+          💡 <strong id="lbl-unsaved-modal-hint-title">คำแนะนำ:</strong> <span id="lbl-unsaved-modal-hint-desc">กดปุ่ม
+            <strong>"ปิด เพื่อกลับไปบันทึกเอง"</strong> ด้านล่าง แล้วกดปุ่ม 💾 บันทึก (หรือ Ctrl+S) ในหน้า Action Node
+            ก่อนที่จะรีโหลดครับ</span>
         </div>
       </div>
-      <div class="modal-footer" style="display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">
-        <button type="button" class="btn-topbar-tool" onclick="window.forceDiscardAndReload()" id="btn-unsaved-discard" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.35); background:rgba(239, 68, 68, 0.1); padding:6px 12px; font-size:11.5px; border-radius:6px; cursor:pointer;">
+      <div class="modal-footer"
+        style="display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">
+        <button type="button" class="btn-topbar-tool" onclick="window.forceDiscardAndReload()" id="btn-unsaved-discard"
+          style="color:#ef4444; border-color:rgba(239, 68, 68, 0.35); background:rgba(239, 68, 68, 0.1); padding:6px 12px; font-size:11.5px; border-radius:6px; cursor:pointer;">
           🔄 ละทิ้งและรีโหลด
         </button>
-        <button type="button" class="btn-hero-primary" onclick="window.closeUnsavedReloadModal()" id="btn-unsaved-back" style="padding:6px 16px; font-size:12px; font-weight:700; border-radius:6px; background:#eab308; color:#000; border:none; cursor:pointer;">
+        <button type="button" class="btn-hero-primary" onclick="window.closeUnsavedReloadModal()" id="btn-unsaved-back"
+          style="padding:6px 16px; font-size:12px; font-weight:700; border-radius:6px; background:#eab308; color:#000; border:none; cursor:pointer;">
           ✕ ปิด เพื่อกลับไปบันทึกเอง
         </button>
       </div>
@@ -662,28 +806,39 @@
   </div>
 
   <!-- Storage Cleanup Confirmation Modal -->
-  <div class="modal-overlay" id="storage-confirm-modal" style="display:none; z-index:350;" onclick="if(event.target===this) window.closeStorageConfirmModal()">
-    <div class="modal-card" style="width: 440px; max-width: 94%; background: #0f172a; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 12px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
-      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px; margin-bottom:14px;">
-        <h3 style="margin:0; font-size:14px; font-weight:800; color:#f87171; display:flex; align-items:center; gap:8px;">
+  <div class="modal-overlay" id="storage-confirm-modal" style="display:none; z-index:350;"
+    onclick="if(event.target===this) window.closeStorageConfirmModal()">
+    <div class="modal-card"
+      style="width: 440px; max-width: 94%; background: #0f172a; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 12px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+      <div class="modal-header"
+        style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px; margin-bottom:14px;">
+        <h3
+          style="margin:0; font-size:14px; font-weight:800; color:#f87171; display:flex; align-items:center; gap:8px;">
           <span>🗑️</span>
           <span id="lbl-storage-modal-title">ยืนยันการล้างข้อมูล</span>
         </h3>
-        <button class="win-btn close" onclick="window.closeStorageConfirmModal()" style="width:24px; height:24px; border-radius:4px;">✕</button>
+        <button class="win-btn close" onclick="window.closeStorageConfirmModal()"
+          style="width:24px; height:24px; border-radius:4px;">✕</button>
       </div>
       <div class="modal-body" style="font-size:12px; color:#cbd5e1; line-height:1.6;">
         <div id="lbl-storage-modal-desc">
           คุณต้องการลบไฟล์ Logs ทั้งหมดใช่หรือไม่?
         </div>
-        <div style="margin-top:12px; background:rgba(239, 68, 68, 0.08); border:1px solid rgba(239, 68, 68, 0.25); border-radius:8px; padding:10px 12px; font-size:11px; color:#fca5a5;">
-          ⚠️ <strong id="lbl-storage-modal-warn-head">คำเตือน:</strong> <span id="lbl-storage-modal-warn-text">ไฟล์จะถูกลบถาวรออกจากเครื่องและไม่สามารถกู้คืนได้ (โฟลเดอร์หลักจะยังคงอยู่และระบบจะสร้างไฟล์ใหม่อัตโนมัติเมื่อมีการบันทึก)</span>
+        <div
+          style="margin-top:12px; background:rgba(239, 68, 68, 0.08); border:1px solid rgba(239, 68, 68, 0.25); border-radius:8px; padding:10px 12px; font-size:11px; color:#fca5a5;">
+          ⚠️ <strong id="lbl-storage-modal-warn-head">คำเตือน:</strong> <span
+            id="lbl-storage-modal-warn-text">ไฟล์จะถูกลบถาวรออกจากเครื่องและไม่สามารถกู้คืนได้
+            (โฟลเดอร์หลักจะยังคงอยู่และระบบจะสร้างไฟล์ใหม่อัตโนมัติเมื่อมีการบันทึก)</span>
         </div>
       </div>
-      <div class="modal-footer" style="display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">
-        <button type="button" class="btn-topbar-tool" onclick="window.closeStorageConfirmModal()" id="btn-storage-modal-cancel" style="padding:6px 14px; font-size:11.5px; border-radius:6px; cursor:pointer;">
+      <div class="modal-footer"
+        style="display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">
+        <button type="button" class="btn-topbar-tool" onclick="window.closeStorageConfirmModal()"
+          id="btn-storage-modal-cancel" style="padding:6px 14px; font-size:11.5px; border-radius:6px; cursor:pointer;">
           ✕ ยกเลิก
         </button>
-        <button type="button" onclick="window.executeStorageClear()" id="btn-storage-modal-confirm" style="padding:6px 16px; font-size:12px; font-weight:700; border-radius:6px; background:#ef4444; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
+        <button type="button" onclick="window.executeStorageClear()" id="btn-storage-modal-confirm"
+          style="padding:6px 16px; font-size:12px; font-weight:700; border-radius:6px; background:#ef4444; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
           <span>🔥</span> <span id="lbl-storage-modal-confirm-text">ยืนยันการลบ</span>
         </button>
       </div>
@@ -691,31 +846,41 @@
   </div>
 
   <!-- Delete Client Slot Confirmation Modal -->
-  <div class="modal-overlay" id="delete-slot-confirm-modal" style="display:none; z-index:350;" onclick="if(event.target===this) window.closeDeleteSlotModal()">
-    <div class="modal-card" style="width: 440px; max-width: 94%; background: #0f172a; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 12px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
-      <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px; margin-bottom:14px;">
-        <h3 style="margin:0; font-size:14px; font-weight:800; color:#f87171; display:flex; align-items:center; gap:8px;">
+  <div class="modal-overlay" id="delete-slot-confirm-modal" style="display:none; z-index:350;"
+    onclick="if(event.target===this) window.closeDeleteSlotModal()">
+    <div class="modal-card"
+      style="width: 440px; max-width: 94%; background: #0f172a; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 12px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+      <div class="modal-header"
+        style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px; margin-bottom:14px;">
+        <h3
+          style="margin:0; font-size:14px; font-weight:800; color:#f87171; display:flex; align-items:center; gap:8px;">
           <span>🗑️</span>
           <span id="lbl-del-slot-modal-title">ยืนยันการลบช่องจอ</span>
         </h3>
-        <button class="win-btn close" onclick="window.closeDeleteSlotModal()" style="width:24px; height:24px; border-radius:4px;">✕</button>
+        <button class="win-btn close" onclick="window.closeDeleteSlotModal()"
+          style="width:24px; height:24px; border-radius:4px;">✕</button>
       </div>
       <div class="modal-body" style="font-size:12px; color:#cbd5e1; line-height:1.6;">
         <div id="lbl-del-slot-modal-desc" style="font-size:13px; font-weight:600; color:#fff;">
           คุณต้องการลบช่อง Client นี้ใช่หรือไม่?
         </div>
-        <div style="margin-top:12px; background:rgba(59, 130, 246, 0.08); border:1px solid rgba(59, 130, 246, 0.25); border-radius:8px; padding:10px 12px; font-size:11px; color:#93c5fd;">
+        <div
+          style="margin-top:12px; background:rgba(59, 130, 246, 0.08); border:1px solid rgba(59, 130, 246, 0.25); border-radius:8px; padding:10px 12px; font-size:11px; color:#93c5fd;">
           💡 <strong id="lbl-del-slot-modal-hint-head">ข้อมูลสำคัญ:</strong>
           <span id="lbl-del-slot-modal-hint-text">
-            หลังลบ ตำแหน่งนี้จะกลายเป็นช่องว่าง โดยจะไม่เปลี่ยนเลขประจำตัวของจออื่นๆ และคุณสามารถกดสร้างกลับมาใหม่เมื่อใดก็ได้
+            หลังลบ ตำแหน่งนี้จะกลายเป็นช่องว่าง โดยจะไม่เปลี่ยนเลขประจำตัวของจออื่นๆ
+            และคุณสามารถกดสร้างกลับมาใหม่เมื่อใดก็ได้
           </span>
         </div>
       </div>
-      <div class="modal-footer" style="display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">
-        <button type="button" class="btn-topbar-tool" onclick="window.closeDeleteSlotModal()" id="btn-del-slot-modal-cancel" style="padding:6px 14px; font-size:11.5px; border-radius:6px; cursor:pointer;">
+      <div class="modal-footer"
+        style="display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08);">
+        <button type="button" class="btn-topbar-tool" onclick="window.closeDeleteSlotModal()"
+          id="btn-del-slot-modal-cancel" style="padding:6px 14px; font-size:11.5px; border-radius:6px; cursor:pointer;">
           ✕ ยกเลิก
         </button>
-        <button type="button" onclick="window.confirmExecuteDeleteSlot()" id="btn-del-slot-modal-confirm" style="padding:6px 16px; font-size:12px; font-weight:700; border-radius:6px; background:#ef4444; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
+        <button type="button" onclick="window.confirmExecuteDeleteSlot()" id="btn-del-slot-modal-confirm"
+          style="padding:6px 16px; font-size:12px; font-weight:700; border-radius:6px; background:#ef4444; color:#fff; border:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
           <span>🗑️</span> <span id="lbl-del-slot-modal-confirm-btn">ยืนยันการลบ</span>
         </button>
       </div>
@@ -723,36 +888,49 @@
   </div>
 
   <!-- Visual Key Picker & Editor Modal -->
-  <div class="modal-overlay" id="launcher-key-picker-modal" style="display:none; z-index:300;" onclick="if(event.target===this) window.closeLauncherKeyPicker()">
-    <div class="modal-card" style="width: 880px; max-width: 96%; max-height: 90vh; overflow-y: auto; background: #0d1424; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 20px;">
-      
+  <div class="modal-overlay" id="launcher-key-picker-modal" style="display:none; z-index:300;"
+    onclick="if(event.target===this) window.closeLauncherKeyPicker()">
+    <div class="modal-card"
+      style="width: 880px; max-width: 96%; max-height: 90vh; overflow-y: auto; background: #0d1424; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 20px;">
+
       <!-- Header -->
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
+      <div
+        style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
         <h3 style="margin:0; font-size:15px; font-weight:800; color:#fff; display:flex; align-items:center; gap:8px;">
           <span>⌨️</span>
           <span id="lbl-vk-modal-title">Visual Key Picker & Editor</span>
         </h3>
         <div style="display:flex; align-items:center; gap:8px;">
-          <button type="button" class="btn-topbar-tool" id="btn-vk-toggle-manual" onclick="window.toggleLauncherManualMode()" style="padding:4px 10px; font-size:11px; border-color:#3b82f6; color:#60a5fa; background:rgba(59,130,246,0.1);">
+          <button type="button" class="btn-topbar-tool" id="btn-vk-toggle-manual"
+            onclick="window.toggleLauncherManualMode()"
+            style="padding:4px 10px; font-size:11px; border-color:#3b82f6; color:#60a5fa; background:rgba(59,130,246,0.1);">
             ✏️ Switch to Manual Typing
           </button>
-          <button type="button" class="win-btn close" onclick="window.closeLauncherKeyPicker()" style="width:24px; height:24px; border-radius:4px;">✕</button>
+          <button type="button" class="win-btn close" onclick="window.closeLauncherKeyPicker()"
+            style="width:24px; height:24px; border-radius:4px;">✕</button>
         </div>
       </div>
 
       <!-- Preview Bar -->
-      <div style="background:rgba(0,0,0,0.4); border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between;">
-        <div id="launcher-vk-preview" style="font-family:var(--font-mono); font-size:16px; font-weight:800; color:#38bdf8;">END</div>
+      <div
+        style="background:rgba(0,0,0,0.4); border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between;">
+        <div id="launcher-vk-preview"
+          style="font-family:var(--font-mono); font-size:16px; font-weight:800; color:#38bdf8;">END</div>
         <div style="display:flex; gap:6px;">
-          <button type="button" class="btn-topbar-tool" onclick="window.popLauncherVirtualKey()" style="padding:4px 10px; font-size:11px;">⌫ Backspace</button>
-          <button type="button" class="btn-topbar-tool" onclick="window.clearLauncherVirtualKey()" style="padding:4px 10px; font-size:11px; color:#ef4444; border-color:rgba(239,68,68,0.3);">✕ Clear</button>
+          <button type="button" class="btn-topbar-tool" onclick="window.popLauncherVirtualKey()"
+            style="padding:4px 10px; font-size:11px;">⌫ Backspace</button>
+          <button type="button" class="btn-topbar-tool" onclick="window.clearLauncherVirtualKey()"
+            style="padding:4px 10px; font-size:11px; color:#ef4444; border-color:rgba(239,68,68,0.3);">✕ Clear</button>
         </div>
       </div>
 
       <!-- Manual Area (Hidden by default) -->
       <div id="launcher-vk-manual-area" style="display:none; flex-direction:column; gap:8px; margin-bottom:14px;">
-        <label style="font-size:11.5px; color:var(--text-muted); font-weight:600;" id="lbl-vk-manual-desc">พิมพ์ปุ่มที่ต้องการ (เช่น "END", "F12", "PAUSE", "ALT + F1"):</label>
-        <input type="text" id="launcher-vk-manual-input" placeholder="e.g. END or F12" style="background:var(--bg-card-alt); border:1px solid var(--border); border-radius:6px; padding:8px 12px; color:#fff; font-family:var(--font-mono); font-size:14px; outline:none; width:100%;" oninput="window.onLauncherManualInput(this.value)">
+        <label style="font-size:11.5px; color:var(--text-muted); font-weight:600;"
+          id="lbl-vk-manual-desc">พิมพ์ปุ่มที่ต้องการ (เช่น "END", "F12", "PAUSE", "ALT + F1"):</label>
+        <input type="text" id="launcher-vk-manual-input" placeholder="e.g. END or F12"
+          style="background:var(--bg-card-alt); border:1px solid var(--border); border-radius:6px; padding:8px 12px; color:#fff; font-family:var(--font-mono); font-size:14px; outline:none; width:100%;"
+          oninput="window.onLauncherManualInput(this.value)">
       </div>
 
       <!-- Key Picker Area (100% Full Mechanical Keyboard Layout) -->
@@ -819,7 +997,8 @@
 
             <!-- Row 3: ASDF -->
             <div class="vk-row">
-              <button type="button" class="keycap u-1-75" onclick="window.pressLauncherVirtualKey('CAPS LOCK')">Caps Lock</button>
+              <button type="button" class="keycap u-1-75" onclick="window.pressLauncherVirtualKey('CAPS LOCK')">Caps
+                Lock</button>
               <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('A')">A</button>
               <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('S')">S</button>
               <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('D')">D</button>
@@ -831,12 +1010,14 @@
               <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('L')">L</button>
               <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey(';')">;</button>
               <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('\'')">'</button>
-              <button type="button" class="keycap u-2-25" onclick="window.pressLauncherVirtualKey('ENTER')">Enter</button>
+              <button type="button" class="keycap u-2-25"
+                onclick="window.pressLauncherVirtualKey('ENTER')">Enter</button>
             </div>
 
             <!-- Row 4: ZXCV -->
             <div class="vk-row">
-              <button type="button" class="keycap vk-mod-btn u-2-25" data-mod="SHIFT" onclick="window.toggleLauncherModifier('SHIFT')">Shift</button>
+              <button type="button" class="keycap vk-mod-btn u-2-25" data-mod="SHIFT"
+                onclick="window.toggleLauncherModifier('SHIFT')">Shift</button>
               <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('Z')">Z</button>
               <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('X')">X</button>
               <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('C')">C</button>
@@ -847,19 +1028,25 @@
               <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey(',')">,</button>
               <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('.')">.</button>
               <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('/')">/</button>
-              <button type="button" class="keycap vk-mod-btn u-2-75" data-mod="SHIFT" onclick="window.toggleLauncherModifier('SHIFT')">Shift</button>
+              <button type="button" class="keycap vk-mod-btn u-2-75" data-mod="SHIFT"
+                onclick="window.toggleLauncherModifier('SHIFT')">Shift</button>
             </div>
 
             <!-- Row 5: Modifiers & Space -->
             <div class="vk-row">
-              <button type="button" class="keycap vk-mod-btn u-1-25" data-mod="CTRL" onclick="window.toggleLauncherModifier('CTRL')">Ctrl</button>
+              <button type="button" class="keycap vk-mod-btn u-1-25" data-mod="CTRL"
+                onclick="window.toggleLauncherModifier('CTRL')">Ctrl</button>
               <button type="button" class="keycap u-1-25" onclick="window.pressLauncherVirtualKey('WIN')">Win</button>
-              <button type="button" class="keycap vk-mod-btn u-1-25" data-mod="LEFT ALT" onclick="window.toggleLauncherModifier('LEFT ALT')">Alt</button>
-              <button type="button" class="keycap u-6-25" onclick="window.pressLauncherVirtualKey('SPACE')">Space</button>
-              <button type="button" class="keycap vk-mod-btn u-1-25" data-mod="LEFT ALT" onclick="window.toggleLauncherModifier('LEFT ALT')">Alt</button>
+              <button type="button" class="keycap vk-mod-btn u-1-25" data-mod="LEFT ALT"
+                onclick="window.toggleLauncherModifier('LEFT ALT')">Alt</button>
+              <button type="button" class="keycap u-6-25"
+                onclick="window.pressLauncherVirtualKey('SPACE')">Space</button>
+              <button type="button" class="keycap vk-mod-btn u-1-25" data-mod="LEFT ALT"
+                onclick="window.toggleLauncherModifier('LEFT ALT')">Alt</button>
               <button type="button" class="keycap u-1-25" onclick="window.pressLauncherVirtualKey('FN')">Fn</button>
               <button type="button" class="keycap u-1-25" onclick="window.pressLauncherVirtualKey('MENU')">Menu</button>
-              <button type="button" class="keycap vk-mod-btn u-1-25" data-mod="CTRL" onclick="window.toggleLauncherModifier('CTRL')">Ctrl</button>
+              <button type="button" class="keycap vk-mod-btn u-1-25" data-mod="CTRL"
+                onclick="window.toggleLauncherModifier('CTRL')">Ctrl</button>
             </div>
           </div>
 
@@ -867,19 +1054,24 @@
           <div class="vk-section" style="width:130px; justify-content:space-between;">
             <div style="display:flex; flex-direction:column; gap:6px;">
               <div class="vk-row">
-                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('PRINTSCREEN')">PrtSc</button>
-                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('SCROLLLOCK')">ScrLk</button>
-                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('PAUSE')">Pause</button>
+                <button type="button" class="keycap u-1"
+                  onclick="window.pressLauncherVirtualKey('PRINTSCREEN')">PrtSc</button>
+                <button type="button" class="keycap u-1"
+                  onclick="window.pressLauncherVirtualKey('SCROLLLOCK')">ScrLk</button>
+                <button type="button" class="keycap u-1"
+                  onclick="window.pressLauncherVirtualKey('PAUSE')">Pause</button>
               </div>
               <div class="vk-row">
                 <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('INSERT')">Ins</button>
                 <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('HOME')">Home</button>
-                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('PAGEUP')">PgUp</button>
+                <button type="button" class="keycap u-1"
+                  onclick="window.pressLauncherVirtualKey('PAGEUP')">PgUp</button>
               </div>
               <div class="vk-row">
                 <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('DELETE')">Del</button>
                 <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('END')">End</button>
-                <button type="button" class="keycap u-1" onclick="window.pressLauncherVirtualKey('PAGEDOWN')">PgDn</button>
+                <button type="button" class="keycap u-1"
+                  onclick="window.pressLauncherVirtualKey('PAGEDOWN')">PgDn</button>
               </div>
             </div>
 
@@ -904,14 +1096,17 @@
               <!-- Row 1 -->
               <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMLOCK')">Num</button>
               <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD_DIVIDE')">/</button>
-              <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD_MULTIPLY')">*</button>
-              <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD_SUBTRACT')">-</button>
+              <button type="button" class="keycap"
+                onclick="window.pressLauncherVirtualKey('NUMPAD_MULTIPLY')">*</button>
+              <button type="button" class="keycap"
+                onclick="window.pressLauncherVirtualKey('NUMPAD_SUBTRACT')">-</button>
 
               <!-- Row 2 -->
               <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD7')">7</button>
               <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD8')">8</button>
               <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD9')">9</button>
-              <button type="button" class="keycap" style="grid-row: span 2; height: 100%; min-height: 81px;" onclick="window.pressLauncherVirtualKey('NUMPAD_ADD')">+</button>
+              <button type="button" class="keycap" style="grid-row: span 2; height: 100%; min-height: 81px;"
+                onclick="window.pressLauncherVirtualKey('NUMPAD_ADD')">+</button>
 
               <!-- Row 3 -->
               <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD4')">4</button>
@@ -922,10 +1117,12 @@
               <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD1')">1</button>
               <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD2')">2</button>
               <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD3')">3</button>
-              <button type="button" class="keycap" style="grid-row: span 2; height: 100%; min-height: 81px;" onclick="window.pressLauncherVirtualKey('NUMPAD_ENTER')">Ent</button>
+              <button type="button" class="keycap" style="grid-row: span 2; height: 100%; min-height: 81px;"
+                onclick="window.pressLauncherVirtualKey('NUMPAD_ENTER')">Ent</button>
 
               <!-- Row 5 -->
-              <button type="button" class="keycap" style="grid-column: span 2;" onclick="window.pressLauncherVirtualKey('NUMPAD0')">0</button>
+              <button type="button" class="keycap" style="grid-column: span 2;"
+                onclick="window.pressLauncherVirtualKey('NUMPAD0')">0</button>
               <button type="button" class="keycap" onclick="window.pressLauncherVirtualKey('NUMPAD_DECIMAL')">.</button>
             </div>
           </div>
@@ -934,9 +1131,12 @@
       </div>
 
       <!-- Footer Buttons -->
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
-        <button type="button" class="btn-topbar-tool" onclick="window.closeLauncherKeyPicker()" style="padding:6px 14px;">Cancel</button>
-        <button type="button" class="btn-matrix-action launch" onclick="window.applyLauncherKeyPicker()" style="padding:6px 18px; font-size:11.5px; font-weight:800;">💾 Apply Key</button>
+      <div
+        style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
+        <button type="button" class="btn-topbar-tool" onclick="window.closeLauncherKeyPicker()"
+          style="padding:6px 14px;">Cancel</button>
+        <button type="button" class="btn-matrix-action launch" onclick="window.applyLauncherKeyPicker()"
+          style="padding:6px 18px; font-size:11.5px; font-weight:800;">💾 Apply Key</button>
       </div>
 
     </div>
@@ -948,4 +1148,5 @@
   <script src="../../public/js/components/node-docs.js"></script>
   <script src="launcher.js"></script>
 </body>
+
 </html>
