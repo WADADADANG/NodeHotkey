@@ -888,6 +888,19 @@ function resetVariablesOnPause() {
 
                 resetDetails.push(`${varId}=${parsed}`);
                 resetCount++;
+
+                try {
+                    if (typeof emitSignal === 'function') {
+                        emitSignal(varId, 'variable_changed', {
+                            varName: varId,
+                            val: parsed,
+                            pName: profName,
+                            clientStr: 'all',
+                            isReset: true,
+                            timestamp: Date.now()
+                        });
+                    }
+                } catch (sigErr) { }
             };
 
             // 1. Check profile.variables
@@ -3989,8 +4002,23 @@ function setVariableValue(action, val, clientOverride = null) {
         global.profileVariables['__SHARED__'][varId]['global'] = val;
         global.profileVariables['__SHARED__'][varId][clientStr] = val;
     }
+
+    try {
+        if (typeof emitSignal === 'function') {
+            const actId = (typeof action === 'object' && action && action.id) ? action.id : varId;
+            emitSignal(actId, 'variable_changed', {
+                varName: varId,
+                val: val,
+                pName: pName,
+                clientStr: clientStr,
+                timestamp: Date.now()
+            });
+        }
+    } catch (sigErr) { }
+
     return val;
 }
+global.setVariableValue = setVariableValue;
 
 function getNamedVariableValue(varName, actionContext = {}, clientOverride = null) {
     if (typeof actionContext === 'string' || typeof actionContext === 'number') {

@@ -74,6 +74,11 @@ class NodeCanvasEditor {
     this.liveFlowEnabled = savedLiveFlow !== null ? savedLiveFlow === 'true' : true;
     this.wireStyle = localStorage.getItem('nodehotkey_wire_style') || 'bezier';
 
+    // Runtime Variable values state
+    this.runtimeVariablesData = null;
+    this.runtimeVariableValues = {};
+    this.variablesPollTimer = null;
+
     this.setupDOM();
     this.updateLiveFlowButtonUI();
     this.bindEvents();
@@ -158,7 +163,10 @@ class NodeCanvasEditor {
               <span id="lbl-variables-title">${window.currentLang === 'en' ? 'Variables' : 'ตัวแปร (Variables)'}</span>
               <span class="panel-drawer-badge" id="variables-count">0</span>
             </div>
-            <button class="panel-drawer-close-btn" onclick="window.nodeCanvas.togglePanel('variables', false)" title="${window.currentLang === 'en' ? 'Close' : 'ปิด'}">✕</button>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button class="panel-drawer-action-btn" id="btn-refresh-variables" onclick="window.nodeCanvas.fetchRuntimeVariables(true)" title="${window.currentLang === 'en' ? 'Refresh runtime values' : 'รีเฟรชสถานะตัวแปรล่าสุด'}">🔄</button>
+              <button class="panel-drawer-close-btn" onclick="window.nodeCanvas.togglePanel('variables', false)" title="${window.currentLang === 'en' ? 'Close' : 'ปิด'}">✕</button>
+            </div>
           </div>
           <div class="variables-toolbar">
             <button type="button" class="btn-add-variable-hero" onclick="window.nodeCanvas.openVariableModal()">
@@ -2703,6 +2711,10 @@ class NodeCanvasEditor {
   }
 
   handleRealExecutionSignal(sig) {
+    if (sig && sig.eventName === 'variable_changed') {
+      this.handleVariableChangedSignal(sig);
+      return;
+    }
     if (this.liveFlowEnabled === false) return;
     const actionId = sig.actionId;
     const eventName = sig.eventName;
@@ -3547,6 +3559,8 @@ class NodeCanvasEditor {
 
       if (panelName === 'variables') {
         this.renderVariablesPanel();
+        this.fetchRuntimeVariables(true);
+        this.startVariablesPolling();
         if (this.variablesSearchInput) {
           setTimeout(() => this.variablesSearchInput.focus(), 50);
         }
@@ -3561,10 +3575,14 @@ class NodeCanvasEditor {
     } else {
       targetPanel.classList.remove('open');
       if (targetBtn) targetBtn.classList.remove('active');
+      if (panelName === 'variables') {
+        this.stopVariablesPolling();
+      }
     }
   }
 
   closeAllDrawers() {
+    this.stopVariablesPolling();
     if (this.outlinerPanel) this.outlinerPanel.classList.remove('open');
     if (this.variablesPanel) this.variablesPanel.classList.remove('open');
     if (this.historyPanel) this.historyPanel.classList.remove('open');
@@ -3668,6 +3686,205 @@ class NodeCanvasEditor {
     this.renderVariablesPanel();
   }
 
+  escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  async fetchRuntimeVariables(forceRender = false) {
+    try {
+      const res = await fetch('/api/variables');
+      if (res.ok) {
+        const data = await res.json();
+        this.runtimeVariablesData = data || {};
+        this.runtimeVariableValues = (data && data.variables) ? data.variables : {};
+        if (forceRender && this.variablesPanel && this.variablesPanel.classList.contains('open')) {
+          this.renderVariablesPanel();
+        } else {
+          this.updateVariableCardsLiveValues();
+        }
+      }
+    } catch (err) {
+      // ignore network errors
+    }
+  }
+
+  startVariablesPolling() {
+    this.stopVariablesPolling();
+    this.variablesPollTimer = setInterval(() => {
+      if (this.variablesPanel && this.variablesPanel.classList.contains('open')) {
+        this.fetchRuntimeVariables(false);
+      } else {
+        this.stopVariablesPolling();
+      }
+    }, 1500);
+  }
+
+  stopVariablesPolling() {
+    if (this.variablesPollTimer) {
+      clearInterval(this.variablesPollTimer);
+      this.variablesPollTimer = null;
+    }
+  }
+
+  formatLiveVariableValueHTML(v) {
+    if (!v || !v.name) return '';
+    const runtimeEntry = this.runtimeVariableValues ? this.runtimeVariableValues[v.name] : null;
+    const hasLiveVal = runtimeEntry && runtimeEntry.currentValue !== undefined;
+    const clientValues = (runtimeEntry && runtimeEntry.clientValues) ? runtimeEntry.clientValues : null;
+
+    if (!hasLiveVal) {
+      const defVal = v.defaultValue !== undefined ? v.defaultValue : '-';
+      const defLabel = window.currentLang === 'en' ? 'Default' : 'ค่าเริ่มต้น';
+      return `<span class="live-val-pill live-val-default" title="${window.currentLang === 'en' ? 'Not yet changed at runtime (using default)' : 'ยังไม่มีการเปลี่ยนแปลงในหน่วยความจำ (ใช้ค่าเริ่มต้น)'}">
+        <span class="live-dot-default"></span> ${defLabel}: ${this.escapeHtml(defVal)}
+      </span>`;
+    }
+
+    const val = runtimeEntry.currentValue;
+    const vType = v.type || (typeof val);
+
+    // Check if there are multiple clients with values (e.g. client 1, client 2)
+    const clientKeys = clientValues ? Object.keys(clientValues).filter(k => k !== 'global' && clientValues[k] !== undefined) : [];
+    const isMultiClient = clientKeys.length > 1;
+
+    let mainPill = '';
+    if (vType === 'boolean' || typeof val === 'boolean' || val === 'true' || val === 'false') {
+      const isTrue = (val === true || val === 'true');
+      mainPill = isTrue
+        ? `<span class="live-val-pill live-val-true" title="Boolean: TRUE"><span class="live-dot-true"></span> TRUE</span>`
+        : `<span class="live-val-pill live-val-false" title="Boolean: FALSE"><span class="live-dot-false"></span> FALSE</span>`;
+    } else if (vType === 'number' || typeof val === 'number') {
+      mainPill = `<span class="live-val-pill live-val-number" title="Number: ${val}">🔢 ${val}</span>`;
+    } else {
+      const strVal = String(val);
+      const displayStr = strVal.length > 20 ? strVal.substring(0, 18) + '...' : strVal;
+      mainPill = `<span class="live-val-pill live-val-string" title="${this.escapeHtml(strVal)}">📝 "${this.escapeHtml(displayStr)}"</span>`;
+    }
+
+    if (!isMultiClient) {
+      return mainPill;
+    }
+
+    // Render multi-client breakdown
+    const clientPills = clientKeys.map(k => {
+      const cVal = clientValues[k];
+      let cDisp = '';
+      if (typeof cVal === 'boolean' || cVal === 'true' || cVal === 'false') {
+        cDisp = (cVal === true || cVal === 'true') ? '<span style="color:#4ade80;">TRUE</span>' : '<span style="color:#f87171;">FALSE</span>';
+      } else {
+        cDisp = `<span style="color:#38bdf8;">${this.escapeHtml(String(cVal))}</span>`;
+      }
+      return `<span class="live-client-mini-tag"><span class="live-client-num">C${k}:</span> ${cDisp}</span>`;
+    }).join('');
+
+    return `
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:3px;">
+        ${mainPill}
+        <div class="live-client-breakdown">${clientPills}</div>
+      </div>
+    `;
+  }
+
+  updateSingleVariableLiveValue(varName) {
+    if (!this.variablesListEl) return;
+    const allVars = this.getAvailableVariables();
+    const vObj = allVars.find(v => v.name === varName);
+    if (!vObj) return;
+
+    const cardEl = document.getElementById(`var-card-${vObj.id}`) || this.variablesListEl.querySelector(`[data-var-name="${varName}"]`);
+    if (!cardEl) return;
+
+    const valWrap = cardEl.querySelector(`#var-live-val-${vObj.id}`) || cardEl.querySelector('.live-status-val-wrap');
+    if (valWrap) {
+      valWrap.innerHTML = this.formatLiveVariableValueHTML(vObj);
+    }
+
+    const liveRow = cardEl.querySelector('.variable-live-status-row');
+    if (liveRow) {
+      liveRow.classList.remove('var-live-flash');
+      void liveRow.offsetWidth;
+      liveRow.classList.add('var-live-flash');
+      setTimeout(() => {
+        if (liveRow) liveRow.classList.remove('var-live-flash');
+      }, 500);
+    }
+  }
+
+  updateVariableCardsLiveValues() {
+    if (!this.variablesListEl) return;
+    const allVars = this.getAvailableVariables();
+    allVars.forEach(v => {
+      const cardEl = document.getElementById(`var-card-${v.id}`) || this.variablesListEl.querySelector(`[data-var-name="${v.name}"]`);
+      if (cardEl) {
+        const valWrap = cardEl.querySelector(`#var-live-val-${v.id}`) || cardEl.querySelector('.live-status-val-wrap');
+        if (valWrap) {
+          valWrap.innerHTML = this.formatLiveVariableValueHTML(v);
+        }
+      }
+    });
+  }
+
+  async refreshModalLiveValue(varName) {
+    await this.fetchRuntimeVariables(false);
+    const modalLiveContent = document.getElementById('modal-live-val-content');
+    if (modalLiveContent && varName) {
+      const allVars = this.getAvailableVariables();
+      const vObj = allVars.find(v => v.name === varName) || { name: varName, type: 'string' };
+      modalLiveContent.innerHTML = this.formatLiveVariableValueHTML(vObj);
+      if (typeof window.toast === 'function') {
+        window.toast(`อัปเดตสถานะล่าสุดของ "${varName}" แล้ว`, 'info');
+      }
+    }
+  }
+
+  handleVariableChangedSignal(sig) {
+    const data = (typeof sig.targetId === 'object' && sig.targetId !== null) ? sig.targetId : {};
+    const varName = data.varName || sig.actionId;
+    if (!varName) return;
+
+    if (!this.runtimeVariableValues) this.runtimeVariableValues = {};
+    if (!this.runtimeVariableValues[varName]) {
+      this.runtimeVariableValues[varName] = {
+        name: varName,
+        currentValue: data.val,
+        clientValues: {}
+      };
+    } else {
+      this.runtimeVariableValues[varName].currentValue = data.val;
+      if (!this.runtimeVariableValues[varName].clientValues) {
+        this.runtimeVariableValues[varName].clientValues = {};
+      }
+    }
+
+    if (data.clientStr && data.clientStr !== 'all') {
+      this.runtimeVariableValues[varName].clientValues[data.clientStr] = data.val;
+    } else if (data.clientStr === 'all') {
+      if (this.runtimeVariableValues[varName].clientValues) {
+        Object.keys(this.runtimeVariableValues[varName].clientValues).forEach(k => {
+          this.runtimeVariableValues[varName].clientValues[k] = data.val;
+        });
+      }
+      this.runtimeVariableValues[varName].clientValues['global'] = data.val;
+    }
+
+    this.updateSingleVariableLiveValue(varName);
+
+    // Also update modal if currently viewing/editing this variable
+    const modalLiveContent = document.getElementById('modal-live-val-content');
+    const modalVarNameInput = document.getElementById('modal-var-name');
+    if (modalLiveContent && modalVarNameInput && modalVarNameInput.value === varName) {
+      const allVars = this.getAvailableVariables();
+      const vObj = allVars.find(v => v.name === varName) || { name: varName, type: 'string' };
+      modalLiveContent.innerHTML = this.formatLiveVariableValueHTML(vObj);
+    }
+  }
+
   renderVariablesPanel() {
     if (!this.variablesListEl) return;
     const allVars = this.getAvailableVariables();
@@ -3710,10 +3927,17 @@ class NodeCanvasEditor {
         : '🌐 Global';
 
       return `
-        <div class="variable-card${isCrossProfile ? ' variable-card-shared' : ''}" id="var-card-${v.id}">
+        <div class="variable-card${isCrossProfile ? ' variable-card-shared' : ''}" id="var-card-${v.id}" data-var-name="${v.name}">
           <div class="variable-card-top">
             <span class="variable-name" title="${v.name}">${v.name}</span>
             <span class="var-type-badge ${typeBadgeClass}">${typeIcon} ${v.type}</span>
+          </div>
+          <!-- Live Runtime Status -->
+          <div class="variable-live-status-row" id="var-live-row-${v.id}">
+            <span class="live-status-label">⚡ ${window.currentLang === 'en' ? 'Live:' : 'สถานะล่าสุด:'}</span>
+            <div class="live-status-val-wrap" id="var-live-val-${v.id}">
+              ${this.formatLiveVariableValueHTML(v)}
+            </div>
           </div>
           <div class="variable-card-meta" style="display:flex; align-items:center; justify-content:space-between; gap:6px; min-width:0;">
             <div style="display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden;">
@@ -4010,10 +4234,25 @@ class NodeCanvasEditor {
             <input type="checkbox" id="modal-var-reset-on-pause" ${resetOnPause ? 'checked' : ''} style="display:none;" />
           </div>
 
-          <div class="inspector-field-group" style="margin-bottom:16px;">
+          <div class="inspector-field-group" style="margin-bottom:14px;">
             <label class="inspector-label">${canvasT('var_desc_label', 'คำอธิบาย (Optional)')}</label>
             <input type="text" id="modal-var-desc" class="inspector-input" value="${desc}" placeholder="${canvasT('var_desc_placeholder', 'อธิบายหน้าที่ของตัวแปรนี้...')}" />
           </div>
+
+          <!-- Live Runtime Value in Modal -->
+          ${isEdit ? `
+          <div class="modal-live-status-card" id="modal-live-status-box">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-size:11px; font-weight:700; color:#cbd5e1; display:flex; align-items:center; gap:6px;">
+                <span>⚡</span> <span>${window.currentLang === 'en' ? 'Live Runtime Value:' : 'สถานะตัวแปรล่าสุดในหน่วยความจำ:'}</span>
+              </span>
+              <button type="button" class="btn-refresh-live-modal" onclick="window.nodeCanvas.refreshModalLiveValue('${varName}')" title="รีเฟรชค่าล่าสุด">🔄 ${window.currentLang === 'en' ? 'Refresh' : 'รีเฟรช'}</button>
+            </div>
+            <div id="modal-live-val-content" style="margin-top:7px; display:flex; justify-content:flex-start;">
+              ${this.formatLiveVariableValueHTML(vObj)}
+            </div>
+          </div>
+          ` : ''}
 
           <div style="display:flex; justify-content:flex-end; gap:8px; border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;">
             <button type="button" class="btn btn-ghost" onclick="window.nodeCanvas.closeVariableModal()">${canvasT('var_btn_cancel', 'ยกเลิก')}</button>

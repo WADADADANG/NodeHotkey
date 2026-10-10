@@ -253,6 +253,81 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
+  // --- GET /api/variables → runtime variables state ---
+  if (urlPath === '/api/variables' && req.method === 'GET') {
+    const rawVars = global.profileVariables || {};
+    const summary = {};
+    for (const [pName, pVars] of Object.entries(rawVars)) {
+      if (!pVars || typeof pVars !== 'object') continue;
+      for (const [vName, vClients] of Object.entries(pVars)) {
+        if (!summary[vName]) {
+          summary[vName] = {
+            name: vName,
+            profiles: {},
+            currentValue: undefined,
+            clientValues: {}
+          };
+        }
+        summary[vName].profiles[pName] = vClients;
+        if (vClients && typeof vClients === 'object') {
+          Object.assign(summary[vName].clientValues, vClients);
+          if (vClients.global !== undefined) {
+            summary[vName].currentValue = vClients.global;
+          } else if (vClients['1'] !== undefined && summary[vName].currentValue === undefined) {
+            summary[vName].currentValue = vClients['1'];
+          } else {
+            const keys = Object.keys(vClients);
+            if (keys.length > 0 && summary[vName].currentValue === undefined) {
+              summary[vName].currentValue = vClients[keys[0]];
+            }
+          }
+        }
+      }
+    }
+    return sendJSON(res, 200, {
+      variables: summary,
+      raw: rawVars
+    });
+  }
+
+  // --- POST /api/variables/set → manually set runtime variable value ---
+  if (urlPath === '/api/variables/set' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+        const { varName, value, client, profile } = payload;
+        if (!varName) {
+          return sendJSON(res, 400, { error: 'varName is required' });
+        }
+        if (typeof global.setVariableValue === 'function') {
+          global.setVariableValue({
+            varName,
+            name: varName,
+            id: varName,
+            scope: client === 'global' ? 'global' : 'client',
+            _profileName: profile || 'Active',
+            targetClient: client || '1'
+          }, value, client || null);
+        } else {
+          if (!global.profileVariables) global.profileVariables = {};
+          const p = profile || '__SHARED__';
+          if (!global.profileVariables[p]) global.profileVariables[p] = {};
+          if (!global.profileVariables[p][varName]) global.profileVariables[p][varName] = {};
+          global.profileVariables[p][varName][client || 'global'] = value;
+          if (typeof global.emitSignal === 'function') {
+            global.emitSignal(varName, 'variable_changed', { varName, val: value, pName: p, clientStr: client || 'global', timestamp: Date.now() });
+          }
+        }
+        return sendJSON(res, 200, { success: true, varName, value });
+      } catch (err) {
+        return sendJSON(res, 500, { error: err.message });
+      }
+    });
+    return;
+  }
+
   // --- GET /api/status or /api/active-clients → active clients list & their statuses ---
   if ((urlPath === '/api/status' || urlPath === '/api/active-clients') && req.method === 'GET') {
     const activeList = global.activeClients || [];
