@@ -204,6 +204,7 @@ let activeLoopStates = {};
 let activeSequencerLoops = {};
 let activeOnceSequencers = {};
 let activeOnceBuffSequences = {};
+let activeOnceForwardActions = {};
 let isBuffSequenceRunning = {};
 let isSequencerRunning = {};
 let buffSequenceTokens = {};  // Per-action cancellation tokens: { actionId: tokenNumber }
@@ -215,6 +216,7 @@ global.activeLoopStates = activeLoopStates;
 global.activeSequencerLoops = activeSequencerLoops;
 global.activeOnceSequencers = activeOnceSequencers;
 global.activeOnceBuffSequences = activeOnceBuffSequences;
+global.activeOnceForwardActions = activeOnceForwardActions;
 global.isBuffSequenceRunning = isBuffSequenceRunning;
 global.isSequencerRunning = isSequencerRunning;
 global.pressedRemapKeys = pressedRemapKeys;
@@ -284,13 +286,14 @@ function getClientStatuses() {
                     icon: '⚓',
                     detail: `Key ${a.targetKey || '1'}`
                 });
-            } else if (a.mode === 'forward' && pressedRemapKeys[`${a.id}-${clientStr}`]) {
+            } else if (a.mode === 'forward' && (pressedRemapKeys[`${a.id}-${clientStr}`] || activeOnceForwardActions[`${a.id}-${clientStr}`])) {
+                const targetKeyDisplay = a.targetKey || (Array.isArray(a.keys) && a.keys.length > 0 ? a.keys[0] : '1');
                 runningActions.push({
                     id: a.id,
                     name: a.name || 'Key Forward',
                     type: 'forward',
                     icon: '⚡',
-                    detail: `${a.trigger?.value || 'Key'} ➜ ${a.targetKey || '1'}`
+                    detail: a.trigger?.value ? `${a.trigger.value} ➜ ${targetKeyDisplay}` : `Forward: ${targetKeyDisplay}`
                 });
             } else if ((a.mode === 'party_heal' || a.mode === 'party_buff' || a.mode === 'party_scanner' || a.mode === 'party_slot' || a.mode === 'party_target_router' || a.mode === 'party_target') && global.activePartyTargetRouters && global.activePartyTargetRouters[a.id]) {
                 const info = global.activePartyTargetRouters[a.id];
@@ -3109,6 +3112,17 @@ async function runSinglePressAction(action, callStack) {
     }
     if (global.isSuspended) return;
     if (action.mode === 'forward') {
+        const forwardTargets = getActionTargets(target);
+        forwardTargets.forEach(cIdx => {
+            activeOnceForwardActions[`${action.id}-${cIdx}`] = true;
+        });
+        sendOverlayUpdate(true);
+        setTimeout(() => {
+            forwardTargets.forEach(cIdx => {
+                delete activeOnceForwardActions[`${action.id}-${cIdx}`];
+            });
+            sendOverlayUpdate();
+        }, 500);
         await fireChain(action, 'onKeyDown', callStack);
         await fireChain(action, 'onActivated', callStack);
     }
