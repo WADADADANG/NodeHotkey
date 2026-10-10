@@ -370,7 +370,7 @@ export function getActionTargetsList(targetClientString) {
     ? gs.clientSlots.map(String)
     : ['1', '2', '3', '4', '5', '6', '7', '8'];
 
-  if (!targetClientString) return [defaultSlots[0] || '1'];
+  if (!targetClientString) return [];
   if (targetClientString === 'all' || targetClientString === 'both') {
     return defaultSlots;
   }
@@ -419,9 +419,10 @@ export function renderTargetClientSelector(act) {
       style="background:${allActiveColor}; border:1px solid ${allBorderColor}; color:${allTextColor}; padding:0 12px; height:32px; border-radius:16px; font-size:11px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: all 0.2s; outline:none; text-transform:uppercase;">
       ${TRANSLATIONS[currentLang].allClients || 'All'}
     </button>
+    ${selectedTargets.length === 0 ? `<span style="font-size:11px; font-weight:700; color:#f87171; margin-left:4px; padding:2px 8px; background:rgba(248,113,113,0.12); border:1px solid rgba(248,113,113,0.3); border-radius:10px;">⚠️ ${currentLang === 'en' ? 'No Client Selected' : 'ยังไม่ได้เลือกจอ'}</span>` : ''}
   </div>`;
 
-  html += `<input type="hidden" class="action-target-client" value="${escapeHtml(act.targetClient || '1')}">`;
+  html += `<input type="hidden" class="action-target-client" value="${escapeHtml(act.targetClient || '')}">`;
   return html;
 }
 
@@ -1276,24 +1277,23 @@ export function toggleClientSelection(btn, actionId) {
   if (!act) return;
 
   const val = btn.getAttribute('data-value');
-  let currentVal = act.targetClient || '1';
+  let currentVal = act.targetClient !== undefined ? String(act.targetClient) : '';
 
   const gs = (window.fullConfig && window.fullConfig.globalSettings) || {};
   const availableSlots = (Array.isArray(gs.clientSlots) && gs.clientSlots.length > 0)
     ? gs.clientSlots
     : [1, 2, 3, 4, 5, 6, 7, 8];
-  const firstSlotStr = String(availableSlots[0] || '1');
 
   let targets = [];
   if (currentVal === 'all' || currentVal === 'both') {
     targets = availableSlots.map(String);
-  } else {
+  } else if (currentVal !== '') {
     targets = currentVal.split(',').map(s => s.trim()).filter(Boolean);
   }
 
   if (val === 'all') {
     if (btn.classList.contains('selected')) {
-      act.targetClient = firstSlotStr;
+      act.targetClient = '';
     } else {
       act.targetClient = 'all';
     }
@@ -1304,10 +1304,10 @@ export function toggleClientSelection(btn, actionId) {
       targets.push(val);
     }
 
-    targets.sort((a, b) => parseInt(a) - parseInt(b));
+    targets.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
 
     if (targets.length === 0) {
-      act.targetClient = firstSlotStr;
+      act.targetClient = '';
     } else if (targets.length === availableSlots.length) {
       act.targetClient = 'all';
     } else {

@@ -162,8 +162,8 @@ export function applyVirtualKeyboard() {
             if (targetType === 'comma_keys') {
               act.keys = finalVal.split(',').map(s => s.trim()).filter(Boolean);
             } else if (act.mode === 'forward' || act.mode === 'key_hold' || targetType === 'targetKey') {
-              act.targetKey = finalVal;
-              act.keys = [finalVal];
+              act.targetKey = finalVal || '';
+              act.keys = finalVal ? [finalVal] : [];
             } else {
               act.keys = finalVal.split(',').map(s => s.trim()).filter(Boolean);
             }
@@ -183,11 +183,11 @@ export function applyVirtualKeyboard() {
             if (targetType === 'comma_keys') {
               node.data.keys = finalVal.split(',').map(s => s.trim()).filter(Boolean);
             } else if (node.type === 'forwarder' || node.type === 'key_hold' || targetType === 'targetKey') {
-              node.data.targetKey = finalVal;
-              node.data.keys = [finalVal];
+              node.data.targetKey = finalVal || '';
+              node.data.keys = finalVal ? [finalVal] : [];
             } else {
-              node.data.keys = finalVal ? [finalVal] : ['1'];
-              node.data.targetKey = finalVal || '1';
+              node.data.keys = finalVal ? [finalVal] : [];
+              node.data.targetKey = finalVal || '';
             }
           } else if (targetType && (targetType.startsWith('sequencer_step_') || targetType.startsWith('macro_step_'))) {
             const stepIdx = parseInt(targetType.replace('sequencer_step_', '').replace('macro_step_', ''), 10);

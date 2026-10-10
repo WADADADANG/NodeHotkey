@@ -120,6 +120,11 @@ function handleRecordingKeyDown(e) {
 
   const cleanKey = mapJsKeyToGlobalListenerKey(e);
 
+  if (cleanKey === 'BACKSPACE' || cleanKey === 'DELETE') {
+    applyRecordedKey('');
+    return;
+  }
+
   const restrictedKeys = [
     'ESCAPE',
     'META', 'LEFT META', 'RIGHT META',

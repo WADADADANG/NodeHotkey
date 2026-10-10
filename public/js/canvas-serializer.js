@@ -12,7 +12,7 @@
       const type = node.type;
       let cleanData = { enabled: d.enabled !== false };
 
-      const def = window.clientNodeRegistry ? window.clientNodeRegistry.get(type) : null;
+      const def = (typeof window !== 'undefined' && window.clientNodeRegistry) ? window.clientNodeRegistry.get(type) : null;
       if (def && Array.isArray(def.schema) && def.schema.length > 0) {
         for (const field of def.schema) {
           const key = field.key;
@@ -33,26 +33,26 @@
         if (d.customCooldownMs) cleanData.customCooldownMs = parseInt(d.customCooldownMs, 10);
       } else if (type === 'trigger') {
         cleanData.triggerType = d.triggerType || 'keyboard';
-        cleanData.triggerValue = d.triggerValue || '1';
+        cleanData.triggerValue = d.triggerValue || '';
       } else if (type === 'key_press') {
-        cleanData.targetClient = d.targetClient || '1';
-        cleanData.keys = Array.isArray(d.keys) ? d.keys : (d.keys ? [d.keys] : ['1']);
+        cleanData.targetClient = d.targetClient !== undefined ? d.targetClient : '';
+        cleanData.keys = Array.isArray(d.keys) ? d.keys : (d.keys ? [d.keys] : []);
         if (d.delayAfter !== undefined && parseInt(d.delayAfter, 10) > 0) {
           cleanData.delayAfter = parseInt(d.delayAfter, 10);
         }
         if (d.cooldownPresetId) cleanData.cooldownPresetId = d.cooldownPresetId;
         if (d.customCooldownMs) cleanData.customCooldownMs = parseInt(d.customCooldownMs, 10);
       } else if (type === 'loop') {
-        cleanData.targetClient = d.targetClient || '1';
-        cleanData.keys = Array.isArray(d.keys) ? d.keys : (d.keys ? [d.keys] : ['1']);
+        cleanData.targetClient = d.targetClient !== undefined ? d.targetClient : '';
+        cleanData.keys = Array.isArray(d.keys) ? d.keys : (d.keys ? [d.keys] : []);
         cleanData.interval = d.interval !== undefined ? parseInt(d.interval, 10) : 1000;
         if (d.jitter !== undefined && parseInt(d.jitter, 10) > 0) cleanData.jitter = parseInt(d.jitter, 10);
         cleanData.executeImmediately = d.executeImmediately !== false;
         if (d.cooldownPresetId) cleanData.cooldownPresetId = d.cooldownPresetId;
         if (d.customCooldownMs) cleanData.customCooldownMs = parseInt(d.customCooldownMs, 10);
       } else if (type === 'buff_sequence') {
-        cleanData.targetClient = d.targetClient || '1';
-        cleanData.keys = Array.isArray(d.keys) ? d.keys : (d.keys ? [d.keys] : ['1', '2']);
+        cleanData.targetClient = d.targetClient !== undefined ? d.targetClient : '';
+        cleanData.keys = Array.isArray(d.keys) ? d.keys : (d.keys ? [d.keys] : []);
         cleanData.delayBuff = d.delayBuff !== undefined ? parseInt(d.delayBuff, 10) : 800;
         if (d.delayAfter !== undefined && parseInt(d.delayAfter, 10) > 0) cleanData.delayAfter = parseInt(d.delayAfter, 10);
         if (d.cooldownPresetId) cleanData.cooldownPresetId = d.cooldownPresetId;
@@ -65,7 +65,7 @@
         cleanData.varName = cleanVarName;
         cleanData.varType = d.varType || 'boolean';
         cleanData.scope = d.scope || 'client';
-        cleanData.targetClient = d.targetClient || '1';
+        cleanData.targetClient = d.targetClient !== undefined ? d.targetClient : '';
         cleanData.initialValue = d.initialValue !== undefined ? d.initialValue : 'false';
         cleanData.operation = d.operation || 'set_true';
         cleanData.opValue = d.opValue !== undefined ? d.opValue : '';
@@ -75,7 +75,7 @@
         cleanData.varName = cleanVarName;
         cleanData.varType = d.varType || 'string';
         cleanData.scope = d.scope || 'client';
-        cleanData.targetClient = d.targetClient || '1';
+        cleanData.targetClient = d.targetClient !== undefined ? d.targetClient : '';
         cleanData.defaultValue = d.defaultValue !== undefined ? d.defaultValue : '';
       } else if (type === 'action_branch' || type === 'branch' || type === 'condition') {
         cleanData.conditionTargetId = d.conditionTargetId || '';
@@ -88,7 +88,7 @@
         cleanData.conditionRule = d.conditionRule || (cleanData.varType === 'boolean' ? 'is_true' : 'equals');
         if (d.conditionValue !== undefined) cleanData.conditionValue = d.conditionValue;
       } else if (type === 'client_check' || type === 'check_client' || type === 'client_status') {
-        cleanData.targetClient = String(d.targetClient || '1').split(',')[0].trim() || '1';
+        cleanData.targetClient = d.targetClient !== undefined ? String(d.targetClient).split(',')[0].trim() : '';
         cleanData.checkRule = d.checkRule || 'is_active';
       } else if (type === 'condition_group') {
         cleanData.logicMode = (d.logicMode || 'AND').toUpperCase();
@@ -100,7 +100,7 @@
           value: c.value !== undefined ? c.value : '',
           actionId: c.actionId || '',
           actionRule: c.actionRule || 'is_running',
-          targetClient: c.targetClient || '1',
+          targetClient: c.targetClient !== undefined ? c.targetClient : '',
           clientRule: c.clientRule || 'is_active'
         })) : [];
       } else if (type === 'reroute' || type === 'knot') {
@@ -109,9 +109,9 @@
         cleanData.controlOperation = d.controlOperation || 'toggle';
         cleanData.controlTargetIds = Array.isArray(d.controlTargetIds) ? d.controlTargetIds : (d.controlTargetId ? [d.controlTargetId] : []);
       } else if (type === 'forwarder') {
-        cleanData.targetKey = d.targetKey || (Array.isArray(d.keys) && d.keys[0]) || '1';
-        cleanData.keys = [cleanData.targetKey];
-        cleanData.targetClient = d.targetClient || 'all';
+        cleanData.targetKey = d.targetKey !== undefined ? d.targetKey : ((Array.isArray(d.keys) && d.keys[0]) || '');
+        cleanData.keys = cleanData.targetKey ? [cleanData.targetKey] : (Array.isArray(d.keys) ? d.keys : []);
+        cleanData.targetClient = d.targetClient !== undefined ? d.targetClient : 'all';
         if (d.delayActivation) {
           cleanData.delayActivation = true;
           cleanData.activationDelayMs = parseInt(d.activationDelayMs, 10) || 1000;
@@ -121,7 +121,7 @@
         if (d.customCooldownMs) cleanData.customCooldownMs = parseInt(d.customCooldownMs, 10);
       } else if (type === 'emergency_stop') {
         cleanData.stopScope = d.stopScope || 'all';
-        if (cleanData.stopScope === 'client') cleanData.targetClient = d.targetClient || '1';
+        if (cleanData.stopScope === 'client') cleanData.targetClient = d.targetClient !== undefined ? d.targetClient : '';
         cleanData.showOverlayNotice = d.showOverlayNotice !== false;
       } else if (type === 'sound') {
         cleanData.soundSource = d.soundSource || 'preset';
@@ -139,27 +139,27 @@
         cleanData.payload = d.payload !== undefined ? d.payload : '';
         cleanData.timeoutMs = d.timeoutMs !== undefined ? parseInt(d.timeoutMs, 10) : 5000;
       } else if (type === 'macro_group') {
-        cleanData.targetClient = d.targetClient || '1';
+        cleanData.targetClient = d.targetClient !== undefined ? d.targetClient : '';
         cleanData.repeatCount = d.repeatCount || 1;
         cleanData.steps = Array.isArray(d.steps) ? d.steps : [];
         if (d.cooldownPresetId) cleanData.cooldownPresetId = d.cooldownPresetId;
         if (d.customCooldownMs) cleanData.customCooldownMs = parseInt(d.customCooldownMs, 10);
       } else if (type === 'key_hold') {
-        cleanData.targetKey = d.targetKey || (Array.isArray(d.keys) && d.keys[0]) || '1';
-        cleanData.keys = [cleanData.targetKey];
-        cleanData.targetClient = d.targetClient || '1';
+        cleanData.targetKey = d.targetKey !== undefined ? d.targetKey : ((Array.isArray(d.keys) && d.keys[0]) || '');
+        cleanData.keys = cleanData.targetKey ? [cleanData.targetKey] : (Array.isArray(d.keys) ? d.keys : []);
+        cleanData.targetClient = d.targetClient !== undefined ? d.targetClient : '';
         if (d.cooldownPresetId) cleanData.cooldownPresetId = d.cooldownPresetId;
         if (d.customCooldownMs) cleanData.customCooldownMs = parseInt(d.customCooldownMs, 10);
       } else if (type === 'sequencer') {
         cleanData.modeType = d.modeType || 'loop';
-        cleanData.targetClient = d.targetClient || '1';
+        cleanData.targetClient = d.targetClient !== undefined ? d.targetClient : '';
         cleanData.interval = d.interval !== undefined ? Math.max(0, parseInt(d.interval, 10)) : 1000;
         cleanData.repeatCount = d.repeatCount !== undefined ? Math.max(1, parseInt(d.repeatCount, 10)) : 1;
         cleanData.delayAfter = d.delayAfter !== undefined ? parseInt(d.delayAfter, 10) : 0;
         cleanData.steps = Array.isArray(d.steps) ? d.steps.map(s => {
           const delayVal = s.delay !== undefined ? parseInt(s.delay, 10) : (s.castTimeMs !== undefined ? parseInt(s.castTimeMs, 10) : 800);
           return {
-            key: s.key || '1',
+            key: s.key || '',
             delay: delayVal,
             castTimeMs: delayVal
           };
@@ -167,7 +167,7 @@
         if (d.cooldownPresetId) cleanData.cooldownPresetId = d.cooldownPresetId;
         if (d.customCooldownMs) cleanData.customCooldownMs = parseInt(d.customCooldownMs, 10);
       } else if (type === 'loop_scheduler') {
-        cleanData.targetClient = d.targetClient || '1';
+        cleanData.targetClient = d.targetClient !== undefined ? d.targetClient : '';
         cleanData.collisionGuardMs = d.collisionGuardMs !== undefined ? parseInt(d.collisionGuardMs, 10) : 800;
         cleanData.items = Array.isArray(d.items) ? d.items.map((it, idx) => ({
           id: it.id || `item_${idx}`,
@@ -178,23 +178,23 @@
           enabled: it.enabled !== false
         })) : [];
       } else if (type === 'party_scanner') {
-        cleanData.targetClient = String(d.targetClient || '1').split(',')[0].trim() || '1';
+        cleanData.targetClient = d.targetClient !== undefined ? String(d.targetClient).split(',')[0].trim() : '';
         cleanData.scanIntervalMs = d.scanIntervalMs !== undefined ? parseInt(d.scanIntervalMs, 10) : 250;
         cleanData.lowHpThreshold = d.lowHpThreshold !== undefined ? parseInt(d.lowHpThreshold, 10) : 70;
         cleanData.showOverlay = d.showOverlay !== false;
       } else if (type === 'party_slot') {
-        cleanData.targetClient = String(d.targetClient || '1').split(',')[0].trim() || '1';
+        cleanData.targetClient = d.targetClient !== undefined ? String(d.targetClient).split(',')[0].trim() : '';
         cleanData.targetSlot = d.targetSlot !== undefined ? parseInt(d.targetSlot, 10) : 1;
         cleanData.scanRegion = d.scanRegion || 'auto';
         cleanData.delayAfterClick = d.delayAfterClick !== undefined ? parseInt(d.delayAfterClick, 10) : 80;
         cleanData.showOverlay = d.showOverlay !== false;
       } else if (type === 'party_heal') {
-        cleanData.targetClient = String(d.targetClient || '1').split(',')[0].trim() || '1';
+        cleanData.targetClient = d.targetClient !== undefined ? String(d.targetClient).split(',')[0].trim() : '';
         cleanData.lowHpThreshold = d.lowHpThreshold !== undefined ? parseInt(d.lowHpThreshold, 10) : 70;
         cleanData.delayAfterClick = d.delayAfterClick !== undefined ? parseInt(d.delayAfterClick, 10) : 80;
         cleanData.showOverlay = d.showOverlay !== false;
       } else if (type === 'party_buff') {
-        cleanData.targetClient = String(d.targetClient || '1').split(',')[0].trim() || '1';
+        cleanData.targetClient = d.targetClient !== undefined ? String(d.targetClient).split(',')[0].trim() : '';
         cleanData.delayAfterClick = d.delayAfterClick !== undefined ? parseInt(d.delayAfterClick, 10) : 80;
         cleanData.showOverlay = d.showOverlay !== false;
       } else if (type === 'tts') {
@@ -205,7 +205,7 @@
       } else if (type === 'step_log') {
         cleanData.message = d.message !== undefined ? d.message : '';
       } else if (type === 'screenshot') {
-        cleanData.targetClient = String(d.targetClient || '1').split(',')[0].trim() || '1';
+        cleanData.targetClient = d.targetClient !== undefined ? String(d.targetClient).split(',')[0].trim() : '';
         cleanData.captureRegion = d.captureRegion || 'active_client';
         cleanData.subfolder = d.subfolder || '';
         cleanData.prefix = d.prefix || 'error_snap';
@@ -251,6 +251,9 @@
       Object.assign(window.NodeCanvasEditor.prototype, SerializerExtension);
     } else if (typeof window !== 'undefined') {
       setTimeout(applyExtension, 10);
+    }
+    if (typeof module !== 'undefined') {
+      module.exports = SerializerExtension;
     }
   }
 

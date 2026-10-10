@@ -195,7 +195,8 @@
           <label class="inspector-label">${canvasT('inspector_key_to_press', 'Key to Press')}</label>
           <div style="display:flex; align-items:center; gap:6px;">
             <input type="text" class="inspector-input" value="${(node.data?.keys || []).join(', ') || node.data?.targetKey || ''}" placeholder="${window.currentLang === 'en' ? 'Click to record key...' : 'คลิกเพื่อบันทึกคีย์...'}" readonly onfocus="if(window.startRecordingKey) window.startRecordingKey(this, '${node.id}', 'single_key')" onblur="if(window.stopRecordingKey) window.stopRecordingKey(this)" style="flex:1; cursor:pointer; text-align:center; font-family:'JetBrains Mono'; font-weight:700; color:#60a5fa;" />
-            <button type="button" class="btn btn-ghost" onclick="if(window.openVirtualKeyboard) window.openVirtualKeyboard(this.previousElementSibling, '${node.id}', 'single_key')" style="height:36px; padding:0 10px; border-color:#3b82f6; color:#60a5fa; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="Virtual Keyboard">⌨️</button>
+            <button type="button" class="btn btn-ghost" onclick="const inp = this.parentElement.querySelector('input'); if(inp){ inp.value = ''; window.nodeCanvas.updateNodeData('${node.id}', 'keys', []); window.nodeCanvas.updateNodeData('${node.id}', 'targetKey', ''); window.nodeCanvas.render(); window.nodeCanvas.openInspector('${node.id}'); }" style="height:36px; padding:0 8px; border-color:rgba(239,68,68,0.4); color:#ef4444; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="${window.currentLang === 'en' ? 'Clear Key' : 'ลบคีย์'}">✕</button>
+            <button type="button" class="btn btn-ghost" onclick="if(window.openVirtualKeyboard) window.openVirtualKeyboard(this.previousElementSibling.previousElementSibling, '${node.id}', 'single_key')" style="height:36px; padding:0 10px; border-color:#3b82f6; color:#60a5fa; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="Virtual Keyboard">⌨️</button>
           </div>
         </div>
         <div class="inspector-field-group">
@@ -257,8 +258,9 @@
         <div class="inspector-field-group">
           <label class="inspector-label">${canvasT('inspector_hold_key', 'Hold Target Key')}</label>
           <div style="display:flex; align-items:center; gap:6px;">
-            <input type="text" class="inspector-input" value="${node.data?.targetKey || (node.data?.keys || [])[0] || '1'}" placeholder="${window.currentLang === 'en' ? 'Click to record key...' : 'คลิกเพื่อบันทึกคีย์...'}" readonly onfocus="if(window.startRecordingKey) window.startRecordingKey(this, '${node.id}', 'targetKey')" onblur="if(window.stopRecordingKey) window.stopRecordingKey(this)" onchange="if(window.nodeCanvas?.updateNodeData) window.nodeCanvas.updateNodeData('${node.id}', 'targetKey', this.value.trim());" style="flex:1; cursor:pointer; text-align:center; font-family:'JetBrains Mono'; font-weight:700; color:#60a5fa;" />
-            <button type="button" class="btn btn-ghost" onclick="if(window.openVirtualKeyboard) window.openVirtualKeyboard(this.previousElementSibling, '${node.id}', 'targetKey')" style="height:36px; padding:0 10px; border-color:#3b82f6; color:#60a5fa; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="Virtual Keyboard">⌨️</button>
+            <input type="text" class="inspector-input" value="${node.data?.targetKey || (node.data?.keys || [])[0] || ''}" placeholder="${window.currentLang === 'en' ? 'Click to record key...' : 'คลิกเพื่อบันทึกคีย์...'}" readonly onfocus="if(window.startRecordingKey) window.startRecordingKey(this, '${node.id}', 'targetKey')" onblur="if(window.stopRecordingKey) window.stopRecordingKey(this)" onchange="if(window.nodeCanvas?.updateNodeData) window.nodeCanvas.updateNodeData('${node.id}', 'targetKey', this.value.trim());" style="flex:1; cursor:pointer; text-align:center; font-family:'JetBrains Mono'; font-weight:700; color:#60a5fa;" />
+            <button type="button" class="btn btn-ghost" onclick="const inp = this.parentElement.querySelector('input'); if(inp){ inp.value = ''; window.nodeCanvas.updateNodeData('${node.id}', 'targetKey', ''); window.nodeCanvas.updateNodeData('${node.id}', 'keys', []); window.nodeCanvas.render(); window.nodeCanvas.openInspector('${node.id}'); }" style="height:36px; padding:0 8px; border-color:rgba(239,68,68,0.4); color:#ef4444; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="${window.currentLang === 'en' ? 'Clear Key' : 'ลบคีย์'}">✕</button>
+            <button type="button" class="btn btn-ghost" onclick="if(window.openVirtualKeyboard) window.openVirtualKeyboard(this.previousElementSibling.previousElementSibling, '${node.id}', 'targetKey')" style="height:36px; padding:0 10px; border-color:#3b82f6; color:#60a5fa; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="Virtual Keyboard">⌨️</button>
           </div>
         </div>
         <div class="inspector-field-group">
@@ -272,8 +274,9 @@
         <div class="inspector-field-group">
           <label class="inspector-label">${canvasT('inspector_forward_key', 'Forward Target Key')}</label>
           <div style="display:flex; align-items:center; gap:6px;">
-            <input type="text" class="inspector-input" value="${node.data?.targetKey || (node.data?.keys || [])[0] || '1'}" placeholder="e.g. 1 or F1" readonly onfocus="if(window.startRecordingKey) window.startRecordingKey(this, '${node.id}', 'targetKey')" onblur="if(window.stopRecordingKey) window.stopRecordingKey(this)" onchange="if(window.nodeCanvas?.updateNodeData) { window.nodeCanvas.updateNodeData('${node.id}', 'targetKey', this.value.trim()); window.nodeCanvas.updateNodeData('${node.id}', 'keys', [this.value.trim()]); }" style="flex:1; cursor:pointer; text-align:center; font-family:'JetBrains Mono'; font-weight:700; color:#60a5fa;" />
-            <button type="button" class="btn btn-ghost" onclick="if(window.openVirtualKeyboard) window.openVirtualKeyboard(this.previousElementSibling, '${node.id}', 'targetKey')" style="height:36px; padding:0 10px; border-color:#3b82f6; color:#60a5fa; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="Virtual Keyboard">⌨️</button>
+            <input type="text" class="inspector-input" value="${node.data?.targetKey || (node.data?.keys || [])[0] || ''}" placeholder="e.g. 1 or F1" readonly onfocus="if(window.startRecordingKey) window.startRecordingKey(this, '${node.id}', 'targetKey')" onblur="if(window.stopRecordingKey) window.stopRecordingKey(this)" onchange="if(window.nodeCanvas?.updateNodeData) { window.nodeCanvas.updateNodeData('${node.id}', 'targetKey', this.value.trim()); window.nodeCanvas.updateNodeData('${node.id}', 'keys', this.value.trim() ? [this.value.trim()] : []); }" style="flex:1; cursor:pointer; text-align:center; font-family:'JetBrains Mono'; font-weight:700; color:#60a5fa;" />
+            <button type="button" class="btn btn-ghost" onclick="const inp = this.parentElement.querySelector('input'); if(inp){ inp.value = ''; window.nodeCanvas.updateNodeData('${node.id}', 'targetKey', ''); window.nodeCanvas.updateNodeData('${node.id}', 'keys', []); window.nodeCanvas.render(); window.nodeCanvas.openInspector('${node.id}'); }" style="height:36px; padding:0 8px; border-color:rgba(239,68,68,0.4); color:#ef4444; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="${window.currentLang === 'en' ? 'Clear Key' : 'ลบคีย์'}">✕</button>
+            <button type="button" class="btn btn-ghost" onclick="if(window.openVirtualKeyboard) window.openVirtualKeyboard(this.previousElementSibling.previousElementSibling, '${node.id}', 'targetKey')" style="height:36px; padding:0 10px; border-color:#3b82f6; color:#60a5fa; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="Virtual Keyboard">⌨️</button>
           </div>
         </div>
         <div class="inspector-field-group">
@@ -1361,9 +1364,9 @@
                            node.type === 'client_check' || node.type === 'check_client' || node.type === 'client_status' ||
                            (clientField && (clientField.allowMultiple === false || clientField.singleSelect === true));
 
-    let rawVal = String(node.data?.targetClient || '1');
+    let rawVal = node.data?.targetClient !== undefined ? String(node.data.targetClient) : '';
     if (isSingleSelect && (rawVal === 'all' || rawVal === 'both' || rawVal.includes(','))) {
-      rawVal = rawVal.split(',')[0].trim() || '1';
+      rawVal = rawVal.split(',')[0].trim();
       if (node.data) node.data.targetClient = rawVal;
     }
 
@@ -1375,7 +1378,7 @@
 
     if (isAllSelected) {
       selectedList = availableSlots.map(String);
-    } else {
+    } else if (rawVal !== '') {
       selectedList = rawVal.split(',').map(s => s.trim()).filter(Boolean);
       if (isSingleSelect && selectedList.length > 1) {
         selectedList = [selectedList[0]];
@@ -1410,13 +1413,28 @@
           ALL
         </button>
       `;
+      if (selectedList.length === 0) {
+        buttonsHTML += `
+          <span style="font-size:11px; font-weight:700; color:#f87171; margin-left:4px; padding:2px 8px; background:rgba(248,113,113,0.12); border:1px solid rgba(248,113,113,0.3); border-radius:10px;">
+            ⚠️ ${isEn ? 'No Client Selected' : 'ยังไม่ได้เลือกจอ'}
+          </span>
+        `;
+      }
     } else {
-      const activeClient = selectedList[0] || '1';
-      buttonsHTML += `
-        <span style="font-size:11px; font-weight:700; color:#38bdf8; margin-left:4px; padding:2px 8px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3); border-radius:10px;">
-          🎯 ${isEn ? `Client ${activeClient} (Single)` : `จอที่ ${activeClient} (จอเดียว)`}
-        </span>
-      `;
+      const activeClient = selectedList[0];
+      if (activeClient) {
+        buttonsHTML += `
+          <span style="font-size:11px; font-weight:700; color:#38bdf8; margin-left:4px; padding:2px 8px; background:rgba(56,189,248,0.12); border:1px solid rgba(56,189,248,0.3); border-radius:10px;">
+            🎯 ${isEn ? `Client ${activeClient} (Single)` : `จอที่ ${activeClient} (จอเดียว)`}
+          </span>
+        `;
+      } else {
+        buttonsHTML += `
+          <span style="font-size:11px; font-weight:700; color:#f87171; margin-left:4px; padding:2px 8px; background:rgba(248,113,113,0.12); border:1px solid rgba(248,113,113,0.3); border-radius:10px;">
+            ⚠️ ${isEn ? 'No Client Selected' : 'ยังไม่ได้เลือกจอ'}
+          </span>
+        `;
+      }
     }
     buttonsHTML += '</div>';
     return buttonsHTML;
@@ -2207,6 +2225,7 @@
                 <label style="font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px;">${isEn ? 'Variable Name' : 'เลือกตัวแปร'}</label>
                 <select class="inspector-select-sm" onchange="window.nodeCanvas.updateConditionGroupItem('${node.id}', ${idx}, 'varName', this.value)">
                   <option value="">${isEn ? '-- Select Variable --' : '-- เลือกตัวแปร --'}</option>
+                  ${varName && !allVars.some(v => v.name === varName) ? `<option value="${varName}" selected>⚠️ ${varName} (${isEn ? 'Not Found / Deleted' : 'ไม่พบตัวแปร / ถูกลบ'})</option>` : ''}
                   ${allVars.map(v => `<option value="${v.name}" ${v.name === varName ? 'selected' : ''}>${v.name} (${v.type || 'bool'})</option>`).join('')}
                 </select>
               </div>
@@ -2350,16 +2369,12 @@
     if (!node.data) node.data = {};
     if (!Array.isArray(node.data.conditions)) node.data.conditions = [];
 
-    const allVars = typeof this.getAvailableVariables === 'function' ? this.getAvailableVariables() : (this.variables || []);
-    const defaultVar = allVars[0] ? allVars[0].name : '';
-    const defaultVarType = allVars[0] ? (allVars[0].type || 'boolean') : 'boolean';
-
     node.data.conditions.push({
       type: 'variable',
-      varName: defaultVar,
-      varType: defaultVarType,
-      rule: defaultVarType === 'boolean' ? 'is_true' : 'equals',
-      value: defaultVarType === 'boolean' ? '' : '0'
+      varName: '',
+      varType: 'boolean',
+      rule: 'is_true',
+      value: ''
     });
 
     this.render();
@@ -2387,10 +2402,9 @@
 
     cond.type = newType;
     if (newType === 'variable') {
-      const allVars = typeof this.getAvailableVariables === 'function' ? this.getAvailableVariables() : (this.variables || []);
-      cond.varName = allVars[0] ? allVars[0].name : '';
-      cond.varType = allVars[0] ? (allVars[0].type || 'boolean') : 'boolean';
-      cond.rule = cond.varType === 'boolean' ? 'is_true' : 'equals';
+      cond.varName = '';
+      cond.varType = 'boolean';
+      cond.rule = 'is_true';
       cond.value = '';
     } else if (newType === 'action') {
       cond.actionId = '';
@@ -2661,36 +2675,36 @@
     if (!node.data) node.data = {};
 
     const isVisionNode = ['party_slot', 'party_scanner', 'party_heal', 'party_buff', 'screenshot'].includes(node.type);
-    const def = window.clientNodeRegistry ? window.clientNodeRegistry.get(node.type) : null;
+    const def = (typeof window !== 'undefined' && window.clientNodeRegistry) ? window.clientNodeRegistry.get(node.type) : null;
     const clientField = def && Array.isArray(def.schema) ? def.schema.find(f => f.key === 'targetClient') : null;
     const isSingleSelect = isVisionNode || node.type === 'client_check' || node.type === 'check_client' || node.type === 'client_status' || (clientField && (clientField.allowMultiple === false || clientField.singleSelect === true));
 
-    const availableSlots = (window.fullConfig && window.fullConfig.globalSettings && Array.isArray(window.fullConfig.globalSettings.clientSlots) && window.fullConfig.globalSettings.clientSlots.length > 0)
+    const availableSlots = (typeof window !== 'undefined' && window.fullConfig && window.fullConfig.globalSettings && Array.isArray(window.fullConfig.globalSettings.clientSlots) && window.fullConfig.globalSettings.clientSlots.length > 0)
       ? window.fullConfig.globalSettings.clientSlots
       : [1, 2, 3, 4, 5, 6, 7, 8];
     const firstSlotStr = String(availableSlots[0] || '1');
 
     if (isSingleSelect) {
-      const targetStr = (val === 'all' || val === 'both') ? firstSlotStr : String(val);
-      node.data.targetClient = targetStr;
+      const currentVal = node.data.targetClient !== undefined ? String(node.data.targetClient) : '';
+      node.data.targetClient = (currentVal === String(val)) ? '' : String(val);
       this.renderNodes();
       this.openInspector(node.id);
-      this.addHistory('🎯', `เปลี่ยนจอเป้าหมายของ "${node.title || node.type}" เป็น [Client ${targetStr}]`);
+      this.addHistory('🎯', `เปลี่ยนจอเป้าหมายของ "${node.title || node.type}" เป็น [${node.data.targetClient || 'ว่าง'}]`);
       this.onProfileChanged();
       return;
     }
 
-    let currentVal = node.data.targetClient || firstSlotStr;
+    let currentVal = node.data.targetClient !== undefined ? String(node.data.targetClient) : '';
     let targets = [];
     if (currentVal === 'all' || currentVal === 'both') {
       targets = availableSlots.map(String);
-    } else {
-      targets = String(currentVal).split(',').map(s => s.trim()).filter(Boolean);
+    } else if (currentVal !== '') {
+      targets = currentVal.split(',').map(s => s.trim()).filter(Boolean);
     }
 
     if (val === 'all') {
       if (currentVal === 'all') {
-        node.data.targetClient = firstSlotStr;
+        node.data.targetClient = '';
       } else {
         node.data.targetClient = 'all';
       }
@@ -2704,7 +2718,7 @@
       targets.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
 
       if (targets.length === 0) {
-        node.data.targetClient = firstSlotStr;
+        node.data.targetClient = '';
       } else if (targets.length === availableSlots.length) {
         node.data.targetClient = 'all';
       } else {
@@ -2714,7 +2728,7 @@
 
     this.renderNodes();
     this.openInspector(node.id);
-    this.addHistory('🎯', `เปลี่ยนจอเป้าหมายของ "${node.title || node.type}" เป็น [${node.data.targetClient}]`);
+    this.addHistory('🎯', `เปลี่ยนจอเป้าหมายของ "${node.title || node.type}" เป็น [${node.data.targetClient || 'ว่าง'}]`);
     this.onProfileChanged();
   },
 
@@ -2753,6 +2767,9 @@
       Object.assign(window.NodeCanvasEditor.prototype, InspectorExtension);
     } else if (typeof window !== 'undefined') {
       setTimeout(applyExtension, 10);
+    }
+    if (typeof module !== 'undefined') {
+      module.exports = InspectorExtension;
     }
   }
 

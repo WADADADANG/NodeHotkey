@@ -452,8 +452,8 @@ async function initApp() {
           } else if (type === 'comma_keys') {
             node.data.keys = value.split(',').map(s => s.trim()).filter(Boolean);
           } else if (type === 'single_key' || type === 'targetKey') {
-            node.data.targetKey = value;
-            node.data.keys = value ? [value] : ['1'];
+            node.data.targetKey = value || '';
+            node.data.keys = value ? [value] : [];
           } else if (type && (type.startsWith('sequencer_step_') || type.startsWith('macro_step_'))) {
             const stepIdx = parseInt(type.replace('sequencer_step_', '').replace('macro_step_', ''), 10);
             if (Array.isArray(node.data.steps) && node.data.steps[stepIdx]) {

@@ -1018,6 +1018,79 @@ assert.strictEqual(bot.isActionRunning('act_delay_ctrl_test'), false, 'Delay nod
 
 console.log('✅ Test 22 Passed: Action Controller successfully stopped running Delay Node!\n');
 
+// -------------------------------------------------------------
+// Test 23: Testing Strict "No Silent Fallback" Guarantees across Targets & Keys
+// -------------------------------------------------------------
+console.log('Test 23: Testing Strict "No Silent Fallback" Guarantees across Targets & Keys...');
+
+// 1. Bot getActionTargets returns empty array when targetClient is empty/null/undefined
+assert.deepStrictEqual(bot.getActionTargets(''), [], 'getActionTargets("") must return [] instead of defaulting to Client 1');
+assert.deepStrictEqual(bot.getActionTargets(null), [], 'getActionTargets(null) must return [] instead of defaulting to Client 1');
+assert.deepStrictEqual(bot.getActionTargets(undefined), [], 'getActionTargets(undefined) must return [] instead of defaulting to Client 1');
+assert.deepStrictEqual(bot.getActionTargets('1,4'), ['1', '4'], 'getActionTargets("1,4") must return ["1", "4"]');
+
+// 2. Serializer fidelity: TargetKey & TargetClient preserve empty values without defaulting to '1'
+const CanvasSerializer = require('../public/js/canvas-serializer');
+const testEmptyForwarder = {
+  id: 'node_fwd_empty',
+  type: 'forwarder',
+  title: 'Forwarder',
+  data: { targetKey: '', keys: [], targetClient: '' }
+};
+const testEmptyKeyHold = {
+  id: 'node_hold_empty',
+  type: 'key_hold',
+  title: 'Key Hold',
+  data: { targetKey: '', keys: [], targetClient: '' }
+};
+const mockEditor = {
+  nodes: [testEmptyForwarder, testEmptyKeyHold],
+  variables: [],
+  connections: []
+};
+const exportedProfile = CanvasSerializer.exportProfileData.call(mockEditor);
+const serializedFwd = exportedProfile.nodes[0].data;
+assert.strictEqual(serializedFwd.targetKey, '', 'Forwarder targetKey must remain empty string without defaulting to "1"');
+assert.deepStrictEqual(serializedFwd.keys, [], 'Forwarder keys must remain empty array without defaulting to ["1"]');
+assert.strictEqual(serializedFwd.targetClient, '', 'Forwarder targetClient must remain empty string without defaulting to "1"');
+
+const serializedHold = exportedProfile.nodes[1].data;
+assert.strictEqual(serializedHold.targetKey, '', 'Key Hold targetKey must remain empty string without defaulting to "1"');
+assert.deepStrictEqual(serializedHold.keys, [], 'Key Hold keys must remain empty array without defaulting to ["1"]');
+assert.strictEqual(serializedHold.targetClient, '', 'Key Hold targetClient must remain empty string without defaulting to "1"');
+
+// 3. Multi-select deselection simulation: Deselecting all clients leaves targetClient empty ('')
+const canvasInspector = require('../public/js/canvas-inspector');
+const mockNodeCanvasObj = {
+  nodes: [
+    { id: 'node_test_multi', type: 'forwarder', data: { targetClient: '1,4' } },
+    { id: 'node_test_single', type: 'party_scanner', data: { targetClient: '2' } }
+  ],
+  renderNodes: () => {},
+  openInspector: () => {},
+  addHistory: () => {},
+  onProfileChanged: () => {}
+};
+canvasInspector.nodes = mockNodeCanvasObj.nodes;
+canvasInspector.renderNodes = mockNodeCanvasObj.renderNodes;
+canvasInspector.openInspector = mockNodeCanvasObj.openInspector;
+canvasInspector.addHistory = mockNodeCanvasObj.addHistory;
+canvasInspector.onProfileChanged = mockNodeCanvasObj.onProfileChanged;
+
+// Deselect 1 from '1,4' -> becomes '4'
+canvasInspector.toggleClientSelection('node_test_multi', '1');
+assert.strictEqual(mockNodeCanvasObj.nodes[0].data.targetClient, '4', 'Deselecting client 1 should leave client 4');
+
+// Deselect 4 -> becomes '' (NO fallback to client 1)
+canvasInspector.toggleClientSelection('node_test_multi', '4');
+assert.strictEqual(mockNodeCanvasObj.nodes[0].data.targetClient, '', 'Deselecting all clients must leave targetClient as empty string (NO fallback to Client 1)');
+
+// Single-select toggle: clicking already selected client deselects it to ''
+canvasInspector.toggleClientSelection('node_test_single', '2');
+assert.strictEqual(mockNodeCanvasObj.nodes[1].data.targetClient, '', 'Clicking selected single client should toggle it to empty string');
+
+console.log('✅ Test 23 Passed: Strict "No Silent Fallback" guarantees verified across Targets, Keys & Serializer!\n');
+
 console.log('🎉 All Step Log, Blueprint Variable, Community Icon & Clean Hub Tests Passed Successfully!');
 process.exit(0);
 })();

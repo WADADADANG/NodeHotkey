@@ -404,12 +404,12 @@ let ghostMouseJitterConfig = { enabled: false, intervalMin: 8000, intervalMax: 2
 let ghostMouseJitterTimers = {}; // clientIndex -> timeout handle
 
 function getActionTargets(targetClientString) {
-    if (!targetClientString) return ['1'];
+    if (!targetClientString && targetClientString !== 0) return [];
     if (targetClientString === 'all' || targetClientString === 'both') {
         return activeClients.map(String);
     }
-    const split = targetClientString.split(',').map(s => s.trim()).filter(Boolean);
-    return split.length > 0 ? split : ['1'];
+    const split = String(targetClientString).split(',').map(s => s.trim()).filter(Boolean);
+    return split;
 }
 
 function isTargetMatched(targetClientString, clientStr) {
@@ -423,7 +423,8 @@ function ensureKeyHoldPulse(act) {
     if (!act || !activeHoldStates[act.id]) return;
     if (keyHoldPulseTimers[act.id]) return;
 
-    const targetKey = act.targetKey || '1';
+    const targetKey = act.targetKey;
+    if (!targetKey) return;
     const targets = getActionTargets(act.targetClient).map(x => parseInt(x, 10));
     const formattedKey = formatKeyForPlaywright(targetKey);
 
@@ -457,7 +458,8 @@ function releaseHeldKeyForAction(act) {
         delete keyHoldPulseTimers[act.id];
     }
     if (activeHoldStates[act.id]) {
-        const targetKey = act.targetKey || '1';
+        const targetKey = act.targetKey;
+        if (!targetKey) return;
         let targets = getActionTargets(act.targetClient).map(x => parseInt(x, 10));
         console.log(`⚓ [Action] Released Key Hold for "${act.name || act.id}" (${targetKey}) on Client(s) [${targets.join(', ')}]`);
         for (let t of targets) {
@@ -2668,12 +2670,12 @@ function isClientEnabled(clientIdxStr) {
 }
 
 function getActionTargets(targetStr) {
-    if (!targetStr) return ['1'].filter(isClientEnabled);
+    if (!targetStr && targetStr !== 0) return [];
     let raw = [];
     if (targetStr === 'all' || targetStr === 'both') {
         raw = activeClients.map(String);
     } else {
-        raw = targetStr.split(',').map(s => s.trim()).filter(Boolean);
+        raw = String(targetStr).split(',').map(s => s.trim()).filter(Boolean);
     }
     return raw.filter(isClientEnabled);
 }
@@ -3815,7 +3817,7 @@ async function runEmergencyStopAction(action, callStack) {
         });
         console.log(`[Emergency Stop] Stopped all actions in profile "${profileName || 'Current'}"!`);
     } else if (scope === 'client') {
-        const targets = getActionTargets(action.targetClient || '1');
+        const targets = getActionTargets(action.targetClient);
         targets.forEach(t => {
             isBuffSequenceRunning[String(t)] = false;
             delete isSequencerRunning[String(t)];
@@ -5280,6 +5282,7 @@ if (typeof module !== 'undefined') {
         stopAllLoops,
         releaseAllHeldKeys,
         resetClientWindowBounds,
-        resetVariablesOnPause
+        resetVariablesOnPause,
+        getActionTargets
     };
 }

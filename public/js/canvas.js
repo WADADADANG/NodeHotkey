@@ -1032,7 +1032,7 @@ class NodeCanvasEditor {
           }
           bodyHTML = `
           <div class="node-info-row">
-            <span>Target:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
+            <span>Target:</span> <span class="node-info-value">${node.data?.targetClient ? `Client ${node.data.targetClient}` : '⚠️ ยังไม่เลือก'}</span>
           </div>
           <div class="node-info-row">
             <span>Key:</span> <span class="node-info-value">${(node.data?.keys || []).join(', ') || node.data?.targetKey || '-'}</span>
@@ -1060,10 +1060,10 @@ class NodeCanvasEditor {
           }
           bodyHTML = `
           <div class="node-info-row">
-            <span>Target:</span> <span class="node-info-value">Client ${node.data?.targetClient || '1'}</span>
+            <span>Target:</span> <span class="node-info-value">${node.data?.targetClient ? `Client ${node.data.targetClient}` : '⚠️ ยังไม่เลือก'}</span>
           </div>
           <div class="node-info-row">
-            <span>Hold Key:</span> <span class="node-info-value" style="color:#ef4444; font-weight:700;">${node.data?.targetKey || (node.data?.keys || [])[0] || '1'}</span>
+            <span>Hold Key:</span> <span class="node-info-value" style="color:#ef4444; font-weight:700;">${node.data?.targetKey || (node.data?.keys || [])[0] || '-'}</span>
           </div>
           ${cdBadgeHTML}
         `;
@@ -1275,10 +1275,10 @@ class NodeCanvasEditor {
           }
           bodyHTML = `
           <div class="node-info-row">
-            <span>Forward:</span> <span class="node-info-value">${node.data?.targetKey || (node.data?.keys || [])[0] || 'Key'}</span>
+            <span>Forward:</span> <span class="node-info-value">${node.data?.targetKey || (node.data?.keys || [])[0] || '-'}</span>
           </div>
           <div class="node-info-row">
-            <span>To:</span> <span class="node-info-value">Client ${node.data?.targetClient || 'All'}</span>
+            <span>To:</span> <span class="node-info-value">${node.data?.targetClient ? (node.data.targetClient === 'all' ? 'All Clients' : `Client ${node.data.targetClient}`) : '⚠️ ยังไม่เลือก'}</span>
           </div>
           ${cdBadgeHTML}
         `;
@@ -3372,7 +3372,7 @@ class NodeCanvasEditor {
     } else if (type === 'buff_sequence') {
       initialData = { targetClient: '1', keys: ['1', '2'], delayBuff: 800, delayAfter: 0, enabled: true };
     } else if (type === 'key_press') {
-      initialData = { targetClient: '1', keys: ['1'], delayAfter: 0, enabled: true };
+      initialData = { targetClient: '1', keys: [], delayAfter: 0, enabled: true };
     } else if (type === 'delay') {
       initialData = { delayMs: 1000, enabled: true };
     } else if (type === 'action_branch' || type === 'branch' || type === 'condition') {
@@ -3388,7 +3388,7 @@ class NodeCanvasEditor {
     } else if (type === 'control') {
       initialData = { controlOperation: 'toggle', controlTargetIds: [], enabled: true };
     } else if (type === 'forwarder') {
-      initialData = { targetKey: '1', keys: ['1'], targetClient: 'all', delayAfter: 0, delayActivation: false, activationDelayMs: 1000, enabled: true };
+      initialData = { targetKey: '', keys: [], targetClient: 'all', delayAfter: 0, delayActivation: false, activationDelayMs: 1000, enabled: true };
     } else if (type === 'emergency_stop') {
       initialData = { stopScope: 'all', targetClient: '1', showOverlayNotice: true, enabled: true };
     } else if (type === 'sound') {
@@ -3404,7 +3404,7 @@ class NodeCanvasEditor {
         enabled: true
       };
     } else if (type === 'key_hold') {
-      initialData = { targetKey: '1', targetClient: '1', enabled: true };
+      initialData = { targetKey: '', targetClient: '1', enabled: true };
     } else if (type === 'screenshot') {
       initialData = {
         targetClient: '1',
@@ -4415,7 +4415,7 @@ class NodeCanvasEditor {
       } else if (node.type === 'buff_sequence') {
         metaText = `Skills: <strong>${(node.data?.keys || []).join(',')}</strong> (${node.data?.delayBuff || 800}ms)`;
       } else if (node.type === 'key_press') {
-        metaText = `Key: <strong>${(node.data?.keys || []).join(',') || node.data?.targetKey || '-'}</strong> (Client ${node.data?.targetClient || '1'})`;
+        metaText = `Key: <strong>${(node.data?.keys || []).join(',') || node.data?.targetKey || '-'}</strong> (${node.data?.targetClient ? `Client ${node.data.targetClient}` : '⚠️ ไม่ได้เลือกจอ'})`;
       } else if (node.type === 'delay') {
         metaText = `Delay: <strong>${node.data?.delayMs ?? node.data?.interval ?? 1000}ms</strong>`;
       } else if (node.type === 'condition') {
@@ -4423,11 +4423,11 @@ class NodeCanvasEditor {
       } else if (node.type === 'control') {
         metaText = `Op: <strong>${(node.data?.controlOperation || 'toggle').toUpperCase()}</strong>`;
       } else if (node.type === 'forwarder') {
-        metaText = `Key: <strong>${node.data?.targetKey || (node.data?.keys || [])[0] || '-'}</strong> ➔ Client ${node.data?.targetClient || 'All'}`;
+        metaText = `Key: <strong>${node.data?.targetKey || (node.data?.keys || [])[0] || '-'}</strong> ➔ ${node.data?.targetClient ? (node.data.targetClient === 'all' ? 'All Clients' : `Client ${node.data.targetClient}`) : '⚠️ ไม่ได้เลือกจอ'}`;
       } else if (node.type === 'macro_group') {
         metaText = `Steps: <strong>${(node.data?.steps || []).length}</strong> actions`;
       } else {
-        metaText = `Client <strong>${node.data?.targetClient || '1'}</strong>`;
+        metaText = node.data?.targetClient ? `Client <strong>${node.data.targetClient}</strong>` : '⚠️ <strong>ไม่ได้เลือกจอ</strong>';
       }
 
       listHTML += `

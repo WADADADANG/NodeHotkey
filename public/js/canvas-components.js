@@ -60,9 +60,9 @@
         const isEn = window.currentLang === 'en';
         const isVisionNode = ['party_slot', 'party_scanner', 'party_heal', 'party_buff', 'screenshot'].includes(node?.type);
         const isSingleSelect = field.allowMultiple === false || field.singleSelect === true || isVisionNode;
-        let rawVal = String(value !== undefined ? value : (node.data?.[field.key || 'targetClient'] || '1'));
+        let rawVal = String(value !== undefined ? value : (node.data?.[field.key || 'targetClient'] !== undefined ? node.data[field.key || 'targetClient'] : ''));
         if (isSingleSelect && (rawVal === 'all' || rawVal === 'both' || rawVal.includes(','))) {
-          rawVal = rawVal.split(',')[0].trim() || '1';
+          rawVal = rawVal.split(',')[0].trim();
           if (node.data) node.data[field.key || 'targetClient'] = rawVal;
         }
 
@@ -74,7 +74,7 @@
         const isAllSelected = !isSingleSelect && (rawVal === 'all' || rawVal === 'both');
         if (isAllSelected) {
           selectedList = availableSlots.map(String);
-        } else {
+        } else if (rawVal !== '') {
           selectedList = rawVal.split(',').map(s => s.trim()).filter(Boolean);
           if (isSingleSelect && selectedList.length > 1) {
             selectedList = [selectedList[0]];
@@ -84,9 +84,15 @@
         const label = canvasT(field.labelKey, field.label || (isEn ? 'Target Client Screen' : 'เลือกจอเป้าหมาย (Client)'));
 
         let clientBadge = '';
+        let badgeColor = '#38bdf8';
         if (isSingleSelect) {
-          const currentTarget = selectedList[0] || String(availableSlots[0] || '1');
-          clientBadge = isEn ? `Client ${currentTarget} (Single)` : `จอที่ ${currentTarget} (จอเดียว)`;
+          const currentTarget = selectedList[0];
+          if (currentTarget) {
+            clientBadge = isEn ? `Client ${currentTarget} (Single)` : `จอที่ ${currentTarget} (จอเดียว)`;
+          } else {
+            clientBadge = isEn ? '⚠️ None' : '⚠️ ยังไม่ได้เลือก';
+            badgeColor = '#f87171';
+          }
         } else if (rawVal === 'all') {
           clientBadge = isEn ? 'All Clients' : 'ทุกจอเกม';
         } else if (selectedList.length === 1) {
@@ -94,7 +100,8 @@
         } else if (selectedList.length > 1) {
           clientBadge = isEn ? `Clients ${selectedList.join(',')}` : `จอที่ ${selectedList.join(',')}`;
         } else {
-          clientBadge = isEn ? 'None' : 'ไม่มี';
+          clientBadge = isEn ? '⚠️ None' : '⚠️ ยังไม่ได้เลือก';
+          badgeColor = '#f87171';
         }
 
         let buttonsHTML = '';
@@ -135,7 +142,7 @@
           <div class="inspector-field-group">
             <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
               <label class="inspector-label" style="margin:0;">${label}</label>
-              <span style="font-size:10.5px; font-weight:700; color:#38bdf8;">
+              <span style="font-size:10.5px; font-weight:700; color:${badgeColor};">
                 ${clientBadge}
               </span>
             </div>
@@ -252,16 +259,18 @@
       },
 
       key_recorder(field, value, node) {
-        const val = value || node.data?.[field.key] || '1';
+        const val = value !== undefined ? value : (node.data?.[field.key] !== undefined ? node.data[field.key] : '');
         const label = canvasT(field.labelKey, field.label || 'Target Key');
         const placeholderText = (typeof window !== 'undefined' && window.currentLang === 'en') ? 'Click to record key...' : 'คลิกเพื่อบันทึกคีย์...';
+        const keyField = field.key || 'targetKey';
 
         return `
           <div class="inspector-field-group">
             <label class="inspector-label">${label}</label>
             <div style="display:flex; align-items:center; gap:6px;">
-              <input type="text" class="inspector-input" value="${val}" placeholder="${placeholderText}" readonly onfocus="if(window.startRecordingKey) window.startRecordingKey(this, '${node.id}', '${field.key || 'targetKey'}')" onblur="if(window.stopRecordingKey) window.stopRecordingKey(this)" onchange="if(window.nodeCanvas?.updateNodeData) window.nodeCanvas.updateNodeData('${node.id}', '${field.key || 'targetKey'}', this.value.trim());" style="flex:1; cursor:pointer; text-align:center; font-family:'JetBrains Mono'; font-weight:700; color:#60a5fa;" />
-              <button type="button" class="btn btn-ghost" onclick="if(window.openVirtualKeyboard) window.openVirtualKeyboard(this.previousElementSibling, '${node.id}', '${field.key || 'targetKey'}')" style="height:36px; padding:0 10px; border-color:#3b82f6; color:#60a5fa; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="Virtual Keyboard">⌨️</button>
+              <input type="text" class="inspector-input" value="${val}" placeholder="${placeholderText}" readonly onfocus="if(window.startRecordingKey) window.startRecordingKey(this, '${node.id}', '${keyField}')" onblur="if(window.stopRecordingKey) window.stopRecordingKey(this)" onchange="if(window.nodeCanvas?.updateNodeData) { window.nodeCanvas.updateNodeData('${node.id}', '${keyField}', this.value.trim()); if('${keyField}' === 'targetKey') window.nodeCanvas.updateNodeData('${node.id}', 'keys', this.value.trim() ? [this.value.trim()] : []); }" style="flex:1; cursor:pointer; text-align:center; font-family:'JetBrains Mono'; font-weight:700; color:#60a5fa;" />
+              <button type="button" class="btn btn-ghost" onclick="const inp = this.parentElement.querySelector('input'); if(inp){ inp.value = ''; if(window.nodeCanvas?.updateNodeData){ window.nodeCanvas.updateNodeData('${node.id}', '${keyField}', ''); if('${keyField}' === 'targetKey') window.nodeCanvas.updateNodeData('${node.id}', 'keys', []); window.nodeCanvas.render(); window.nodeCanvas.openInspector('${node.id}'); } }" style="height:36px; padding:0 8px; border-color:rgba(239,68,68,0.4); color:#ef4444; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="${typeof window !== 'undefined' && window.currentLang === 'en' ? 'Clear Key' : 'ลบคีย์'}">✕</button>
+              <button type="button" class="btn btn-ghost" onclick="if(window.openVirtualKeyboard) window.openVirtualKeyboard(this.previousElementSibling.previousElementSibling, '${node.id}', '${keyField}')" style="height:36px; padding:0 10px; border-color:#3b82f6; color:#60a5fa; border-radius:8px; display:flex; align-items:center; justify-content:center;" title="Virtual Keyboard">⌨️</button>
             </div>
           </div>
         `;
