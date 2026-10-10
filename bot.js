@@ -205,6 +205,7 @@ let activeSequencerLoops = {};
 let activeOnceSequencers = {};
 let activeOnceBuffSequences = {};
 let activeOnceForwardActions = {};
+let activeOnceForwardTimers = {};
 let isBuffSequenceRunning = {};
 let isSequencerRunning = {};
 let buffSequenceTokens = {};  // Per-action cancellation tokens: { actionId: tokenNumber }
@@ -3096,45 +3097,45 @@ async function runSinglePressAction(action, callStack) {
     const forwardTargets = isForward ? getActionTargets(target) : [];
     if (isForward) {
         forwardTargets.forEach(cIdx => {
-            activeOnceForwardActions[`${action.id}-${cIdx}`] = true;
+            const trackingKey = `${action.id}-${cIdx}`;
+            activeOnceForwardActions[trackingKey] = true;
+            if (activeOnceForwardTimers[trackingKey]) {
+                clearTimeout(activeOnceForwardTimers[trackingKey]);
+            }
+            activeOnceForwardTimers[trackingKey] = setTimeout(() => {
+                delete activeOnceForwardActions[trackingKey];
+                delete activeOnceForwardTimers[trackingKey];
+                sendOverlayUpdate(true);
+            }, 180);
         });
         sendOverlayUpdate(true);
     }
 
     let allPassed = true;
-    try {
-        const keysToSend = (Array.isArray(action.keys) && action.keys.length > 0)
-            ? action.keys
-            : (action.targetKey ? [action.targetKey] : []);
-        if (keysToSend.length > 0) {
-            for (let key of keysToSend) {
-                const ok = await sendKey(action, key, null, callStack);
-                if (ok === false) {
-                    allPassed = false;
-                    break;
-                }
+    const keysToSend = (Array.isArray(action.keys) && action.keys.length > 0)
+        ? action.keys
+        : (action.targetKey ? [action.targetKey] : []);
+    if (keysToSend.length > 0) {
+        for (let key of keysToSend) {
+            const ok = await sendKey(action, key, null, callStack);
+            if (ok === false) {
+                allPassed = false;
+                break;
             }
         }
-        if (!allPassed) return;
-        const delayAfter = action.delayAfter !== undefined ? parseInt(action.delayAfter, 10) : 0;
-        if (delayAfter > 0) {
-            const ok = await abortableSleep(delayAfter, action.id);
-            if (!ok || global.isSuspended) return;
-        }
-        if (global.isSuspended) return;
-        if (isForward) {
-            await fireChain(action, 'onKeyDown', callStack);
-            await fireChain(action, 'onActivated', callStack);
-        }
-        await fireChain(action, 'onComplete', callStack);
-    } finally {
-        if (isForward) {
-            forwardTargets.forEach(cIdx => {
-                delete activeOnceForwardActions[`${action.id}-${cIdx}`];
-            });
-            sendOverlayUpdate(true);
-        }
     }
+    if (!allPassed) return;
+    const delayAfter = action.delayAfter !== undefined ? parseInt(action.delayAfter, 10) : 0;
+    if (delayAfter > 0) {
+        const ok = await abortableSleep(delayAfter, action.id);
+        if (!ok || global.isSuspended) return;
+    }
+    if (global.isSuspended) return;
+    if (isForward) {
+        await fireChain(action, 'onKeyDown', callStack);
+        await fireChain(action, 'onActivated', callStack);
+    }
+    await fireChain(action, 'onComplete', callStack);
 }
 
 // Run delay only (Pure Delay / Timer Only, no keypresses sent)
