@@ -3091,42 +3091,50 @@ async function runSinglePressAction(action, callStack) {
     if (global.isSuspended) return;
     const target = action.targetClient || '1';
     console.log(`⚡ [Action] Single Press: "${action.name}" on Client ${target}`);
-    let allPassed = true;
-    const keysToSend = (Array.isArray(action.keys) && action.keys.length > 0)
-        ? action.keys
-        : (action.targetKey ? [action.targetKey] : []);
-    if (keysToSend.length > 0) {
-        for (let key of keysToSend) {
-            const ok = await sendKey(action, key, null, callStack);
-            if (ok === false) {
-                allPassed = false;
-                break;
-            }
-        }
-    }
-    if (!allPassed) return;
-    const delayAfter = action.delayAfter !== undefined ? parseInt(action.delayAfter, 10) : 0;
-    if (delayAfter > 0) {
-        const ok = await abortableSleep(delayAfter, action.id);
-        if (!ok || global.isSuspended) return;
-    }
-    if (global.isSuspended) return;
-    if (action.mode === 'forward') {
-        const forwardTargets = getActionTargets(target);
+
+    const isForward = action.mode === 'forward';
+    const forwardTargets = isForward ? getActionTargets(target) : [];
+    if (isForward) {
         forwardTargets.forEach(cIdx => {
             activeOnceForwardActions[`${action.id}-${cIdx}`] = true;
         });
         sendOverlayUpdate(true);
-        setTimeout(() => {
+    }
+
+    let allPassed = true;
+    try {
+        const keysToSend = (Array.isArray(action.keys) && action.keys.length > 0)
+            ? action.keys
+            : (action.targetKey ? [action.targetKey] : []);
+        if (keysToSend.length > 0) {
+            for (let key of keysToSend) {
+                const ok = await sendKey(action, key, null, callStack);
+                if (ok === false) {
+                    allPassed = false;
+                    break;
+                }
+            }
+        }
+        if (!allPassed) return;
+        const delayAfter = action.delayAfter !== undefined ? parseInt(action.delayAfter, 10) : 0;
+        if (delayAfter > 0) {
+            const ok = await abortableSleep(delayAfter, action.id);
+            if (!ok || global.isSuspended) return;
+        }
+        if (global.isSuspended) return;
+        if (isForward) {
+            await fireChain(action, 'onKeyDown', callStack);
+            await fireChain(action, 'onActivated', callStack);
+        }
+        await fireChain(action, 'onComplete', callStack);
+    } finally {
+        if (isForward) {
             forwardTargets.forEach(cIdx => {
                 delete activeOnceForwardActions[`${action.id}-${cIdx}`];
             });
-            sendOverlayUpdate();
-        }, 500);
-        await fireChain(action, 'onKeyDown', callStack);
-        await fireChain(action, 'onActivated', callStack);
+            sendOverlayUpdate(true);
+        }
     }
-    await fireChain(action, 'onComplete', callStack);
 }
 
 // Run delay only (Pure Delay / Timer Only, no keypresses sent)
@@ -5092,7 +5100,7 @@ function startGlobalListeners() {
                                 fireChain(act, 'onKeyDown');
                                 fireChain(act, 'onActivated');
                             }
-                            sendOverlayUpdate();
+                            sendOverlayUpdate(true);
                         }
                     }
                 } else if (isUp) {
@@ -5107,12 +5115,7 @@ function startGlobalListeners() {
                             console.error(`[Forward Error] [Client ${clientIndex}] Failed pressKeyHoldUp("${targetKey}"):`, err.message);
                         });
                         if (clientIndex === targets[0]) fireChain(act, 'onKeyUp');
-                        // For delayed-activation actions: give overlay 120ms to render ⚡ before going back to Standby.
-                        if (act.delayActivation) {
-                            setTimeout(() => sendOverlayUpdate(), 120);
-                        } else {
-                            sendOverlayUpdate();
-                        }
+                        sendOverlayUpdate(true);
                     }
                 }
             }
