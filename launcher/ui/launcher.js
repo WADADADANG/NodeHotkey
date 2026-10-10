@@ -495,6 +495,9 @@
       settingGpuHead: "🚀 Hardware & GPU Acceleration",
       settingGpuTitle: "เร่งความเร็วด้วยการ์ดจอแยก (High-Performance GPU / D3D11)",
       settingGpuDesc: "บังคับให้เบราว์เซอร์ใช้การ์ดจอแยก (NVIDIA/AMD) และ Direct3D 11 Canvas Acceleration ช่วยลดโหลด CPU และลดอาการแลค",
+      settingAutoStartHead: "⚡ Auto-Start Bot Engine",
+      settingAutoStartTitle: "เริ่มการทำงาน Bot Engine อัตโนมัติเมื่อเปิดโปรแกรม",
+      settingAutoStartDesc: "หากปิดไว้ โปรแกรมจะเปิดมาในสถานะหยุดรอ (Stopped) เพื่อให้คุณกดเริ่มทำงานเองเมื่อพร้อม",
       settingJitterHead: "🛡️ Anti-Detect & Ghost Mouse Jitter",
       settingJitter: "สุ่มหน่วงเวลาการกดปุ่มและขยับเมาส์ (Human Random Jitter)",
       settingJitterDesc: "จำลองพฤติกรรมมนุษย์ด้วยการสุ่มขยับเมาส์เล็กน้อยและหน่วงเวลากดปุ่มเพื่อป้องกันการตรวจจับ",
@@ -669,6 +672,9 @@
       settingGpuHead: "🚀 Hardware & GPU Acceleration",
       settingGpuTitle: "High-Performance GPU Acceleration (Discrete GPU / D3D11)",
       settingGpuDesc: "Force browsers to use dedicated discrete GPU (NVIDIA/AMD) and Direct3D 11 Canvas Acceleration to reduce CPU load and eliminate lag",
+      settingAutoStartHead: "⚡ Auto-Start Bot Engine",
+      settingAutoStartTitle: "Automatically Start Bot Engine on Launch",
+      settingAutoStartDesc: "If disabled, the application opens in Stopped / Standby state so you can start it manually when ready",
       settingJitterHead: "🛡️ Anti-Detect & Ghost Mouse Jitter",
       settingJitter: "Human Random Jitter (Anti-Detect)",
       settingJitterDesc: "Add natural ±15ms human jitter and subtle mouse shifts to prevent bot detection",
@@ -967,6 +973,12 @@
     if (lblHeadGpu) lblHeadGpu.textContent = t.settingGpuHead;
     if (lblGpuTitle) lblGpuTitle.textContent = t.settingGpuTitle;
     if (lblGpuDesc) lblGpuDesc.textContent = t.settingGpuDesc;
+    const lblHeadAutoStart = document.getElementById('lbl-setting-head-autostart');
+    const lblAutoStartTitle = document.getElementById('lbl-setting-autostart-title');
+    const lblAutoStartDesc = document.getElementById('lbl-setting-autostart-desc');
+    if (lblHeadAutoStart) lblHeadAutoStart.textContent = t.settingAutoStartHead;
+    if (lblAutoStartTitle) lblAutoStartTitle.textContent = t.settingAutoStartTitle;
+    if (lblAutoStartDesc) lblAutoStartDesc.textContent = t.settingAutoStartDesc;
     if (lblHeadJit) lblHeadJit.textContent = t.settingJitterHead;
     if (lblJitTitle) lblJitTitle.textContent = t.settingJitter;
     if (lblJitDesc) lblJitDesc.textContent = t.settingJitterDesc;
@@ -1169,6 +1181,10 @@
     if (gpuCb) {
       gpuCb.checked = gs.gpuAcceleration !== false;
     }
+    const autoStartCb = document.getElementById('setting-auto-start-bot');
+    if (autoStartCb) {
+      autoStartCb.checked = !!gs.autoStartBot;
+    }
     if (jitterCb) {
       const gmj = gs.ghostMouseJitter || {};
       jitterCb.checked = !!gmj.enabled;
@@ -1211,6 +1227,8 @@
       if (overlayCb) newSettings.enableOverlay = overlayCb.checked;
       if (pipCb) newSettings.enablePipOverlay = pipCb.checked;
       if (gpuCb) newSettings.gpuAcceleration = gpuCb.checked;
+      const autoStartCb = document.getElementById('setting-auto-start-bot');
+      if (autoStartCb) newSettings.autoStartBot = autoStartCb.checked;
       if (jitterCb) {
         newSettings.ghostMouseJitter = {
           enabled: jitterCb.checked,

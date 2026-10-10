@@ -12,6 +12,7 @@
     "enableOverlay": false,
     "suspendHotkey": "END",
     "webPort": 3088,
+    "autoStartBot": false,
     "ghostMouseJitter": {
       "enabled": false,
       "intervalMin": 8000,

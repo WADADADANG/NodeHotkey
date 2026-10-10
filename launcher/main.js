@@ -1304,14 +1304,27 @@ app.on('second-instance', () => {
   }
 });
 
+function shouldAutoStartBot() {
+  try {
+    const globalJsonPath = path.join(PROJECT_DIR, 'configs', 'global.json');
+    if (fs.existsSync(globalJsonPath)) {
+      const data = JSON.parse(fs.readFileSync(globalJsonPath, 'utf8'));
+      return !!(data && data.globalSettings && data.globalSettings.autoStartBot === true);
+    }
+  } catch (e) {}
+  return false;
+}
+
 app.whenReady().then(() => {
   createWindow();
   createTray();
 
-  // Auto-start bot on launcher open
-  setTimeout(() => {
-    startBotProcess();
-  }, 600);
+  // Auto-start bot on launcher open only if explicitly enabled in settings (default: false)
+  if (shouldAutoStartBot()) {
+    setTimeout(() => {
+      startBotProcess();
+    }, 600);
+  }
 
   // Background health check & diagnostics heartbeat
   healthCheckInterval = setInterval(checkBotHealth, 1000);
