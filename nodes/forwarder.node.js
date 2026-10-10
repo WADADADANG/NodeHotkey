@@ -14,7 +14,7 @@ module.exports = {
   icon: 'share-2',
   color: '#64748b',
   inputs: ['in'],
-  outputs: ['onComplete'],
+  outputs: ['onKeyDown', 'onActivated', 'onComplete'],
   defaultData: {
     targetClient: '1',
     targetKey: '1'

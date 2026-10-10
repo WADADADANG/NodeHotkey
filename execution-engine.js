@@ -109,13 +109,17 @@ class NodeExecutionEngine {
 
     if (normConn === normReq) return true;
 
-    // Generic Flow Continuation group (completion / next) - explicitly excludes onStop, onKeyDown, etc.
+    // Generic Flow Continuation group (completion / next) - explicitly excludes onStop, etc.
     const genericCompletion = ['next', 'execout', 'oncomplete', 'onsuccess', 'onfired', 'onselected', 'out'];
     const genericInputs = ['in', 'execin', 'triggerin', 'input'];
 
     const isConnGeneric = genericCompletion.includes(normConn);
     const isReqGeneric = genericCompletion.includes(normReq);
     if (isConnGeneric && isReqGeneric) return true;
+
+    // Forwarder output pins aliases: onKeyDown and onActivated can act as flow continuation when firing or wired to generic completion
+    const forwarderFlowPorts = ['onkeydown', 'onactivated', 'oncomplete', 'next', 'out', 'execout', 'onsuccess', 'onfired'];
+    if (forwarderFlowPorts.includes(normConn) && forwarderFlowPorts.includes(normReq)) return true;
 
     const isConnGenericInput = genericInputs.includes(normConn);
     const isReqGenericInput = genericInputs.includes(normReq);

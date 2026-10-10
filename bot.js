@@ -3108,6 +3108,10 @@ async function runSinglePressAction(action, callStack) {
         if (!ok || global.isSuspended) return;
     }
     if (global.isSuspended) return;
+    if (action.mode === 'forward') {
+        await fireChain(action, 'onKeyDown', callStack);
+        await fireChain(action, 'onActivated', callStack);
+    }
     await fireChain(action, 'onComplete', callStack);
 }
 
