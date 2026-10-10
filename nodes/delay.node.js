@@ -36,7 +36,7 @@ module.exports = {
 
     if (delay > 0) {
       const ok = typeof global.abortableSleep === 'function'
-        ? await global.abortableSleep(delay, action.id)
+        ? await global.abortableSleep(delay, action.id || action.nodeId)
         : await new Promise(res => setTimeout(res, delay));
       if (!ok || global.isSuspended) {
         console.log(`[Delay Node] Interrupted / Aborted: "${action.name || 'Delay'}"`);

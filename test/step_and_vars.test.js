@@ -984,6 +984,54 @@ assert.ok(!indexContent.includes('community-preview.js'), 'index.html should not
 
 console.log('✅ Test 21 Passed: Community Hub Clean Profile Layout verified!\n');
 
+// 22. Test Action Controller stopping active Delay Node
+console.log('Test 22: Testing Action Controller (action_control) stopping actively running Delay Node...');
+global.isActionRunning = bot.isActionRunning;
+assert.ok(nodeRegistry.has('control'), 'NodeRegistry must contain control node');
+const testDelayAction = {
+  id: 'act_delay_ctrl_test',
+  name: 'Test Controllable Delay',
+  mode: 'delay',
+  delayMs: 2000,
+  enabled: true
+};
+global.activeActions = [testDelayAction];
+
+let delayCompleteFired = false;
+global.fireChain = async (action, event) => {
+  if (event === 'onComplete' && action.id === 'act_delay_ctrl_test') {
+    delayCompleteFired = true;
+  }
+};
+
+// Start Delay node in background
+const controlledDelayPromise = delayDef.execute({}, testDelayAction, []);
+
+// Brief sleep to ensure Delay is actively sleeping
+await new Promise(r => setTimeout(r, 60));
+
+// Verify Delay is reported as running
+assert.strictEqual(bot.isActionRunning('act_delay_ctrl_test'), true, 'Delay node should be reported as running while sleeping');
+
+// Trigger Action Controller with 'stop' operation targeting the Delay Node
+const controlAction = {
+  id: 'act_control_stop_delay',
+  name: 'Stop Delay via Action Control',
+  mode: 'control',
+  controlOperation: 'stop',
+  controlTargetIds: ['act_delay_ctrl_test'],
+  enabled: true
+};
+await bot.runActionControl(controlAction);
+
+// Await the delay execution result
+const controlledDelayResult = await controlledDelayPromise;
+assert.strictEqual(controlledDelayResult, false, 'Delay node must return false when stopped by Action Controller');
+assert.strictEqual(delayCompleteFired, false, 'Delay node must NOT fire onComplete when stopped by Action Controller');
+assert.strictEqual(bot.isActionRunning('act_delay_ctrl_test'), false, 'Delay node should not be running after being stopped');
+
+console.log('✅ Test 22 Passed: Action Controller successfully stopped running Delay Node!\n');
+
 console.log('🎉 All Step Log, Blueprint Variable, Community Icon & Clean Hub Tests Passed Successfully!');
 process.exit(0);
 })();

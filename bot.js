@@ -712,21 +712,49 @@ global.sendOverlayUpdate = sendOverlayUpdate;
 // =================================================================
 let globalAbortController = new AbortController();
 const actionAbortControllers = new Map();
+global.actionAbortControllers = actionAbortControllers;
 
 function abortAction(actionId) {
-    const ctrl = actionAbortControllers.get(actionId);
+    if (!actionId) return;
+    let ctrl = actionAbortControllers.get(actionId);
+    let matchedId = actionId;
+    if (!ctrl) {
+        const altId = String(actionId).startsWith('node_') ? String(actionId).slice(5) : `node_${actionId}`;
+        ctrl = actionAbortControllers.get(altId);
+        if (ctrl) matchedId = altId;
+    }
     if (ctrl) {
         ctrl.abort();
-        actionAbortControllers.delete(actionId);
+        actionAbortControllers.delete(matchedId);
+        const otherAlt = String(matchedId).startsWith('node_') ? String(matchedId).slice(5) : `node_${matchedId}`;
+        actionAbortControllers.delete(otherAlt);
     }
 }
+global.abortAction = abortAction;
 
 function abortableSleep(ms, actionId) {
     if (ms <= 0) return Promise.resolve(!global.isSuspended);
     if (global.isSuspended) return Promise.resolve(false);
 
-    const actionSignal = actionId ? actionAbortControllers.get(actionId)?.signal : null;
+    let createdCtrl = false;
+    let ctrl = actionId ? actionAbortControllers.get(actionId) : null;
+    const altId = actionId ? (String(actionId).startsWith('node_') ? String(actionId).slice(5) : `node_${actionId}`) : null;
+    if (actionId && !ctrl && altId) {
+        ctrl = actionAbortControllers.get(altId);
+    }
+    if (actionId && !ctrl) {
+        ctrl = new AbortController();
+        actionAbortControllers.set(actionId, ctrl);
+        if (altId) actionAbortControllers.set(altId, ctrl);
+        createdCtrl = true;
+    }
+
+    const actionSignal = ctrl ? ctrl.signal : null;
     if (actionSignal?.aborted || globalAbortController.signal.aborted) {
+        if (createdCtrl) {
+            actionAbortControllers.delete(actionId);
+            if (altId) actionAbortControllers.delete(altId);
+        }
         return Promise.resolve(false);
     }
 
@@ -743,6 +771,10 @@ function abortableSleep(ms, actionId) {
             globalAbortController.signal.removeEventListener('abort', onAbort);
             if (actionSignal) {
                 actionSignal.removeEventListener('abort', onAbort);
+            }
+            if (createdCtrl) {
+                if (actionAbortControllers.get(actionId) === ctrl) actionAbortControllers.delete(actionId);
+                if (altId && actionAbortControllers.get(altId) === ctrl) actionAbortControllers.delete(altId);
             }
         };
 
@@ -3153,7 +3185,7 @@ async function runDelayOnlyAction(action, callStack) {
     console.log(`⏳ [Action] Delay Only Started: "${action.name}" (Waiting ${delay}ms)...`);
     await fireChain(action, 'onBeforeStart', callStack);
     if (delay > 0) {
-        const ok = await abortableSleep(delay, action.id);
+        const ok = await abortableSleep(delay, action.id || action.nodeId);
         if (!ok || global.isSuspended) {
             console.log(`⏳ [Action] Delay Only Cancelled / Interrupted: "${action.name}"`);
             return;
@@ -4510,8 +4542,9 @@ async function runActionControl(act, callStack) {
     }
     resolvedStack.add(stackKey);
 
+    const actionList = (global.activeActions && global.activeActions.length > 0) ? global.activeActions : activeActions;
     for (const targetId of targetIds) {
-        const targetAction = activeActions.find(a => a.id === targetId || a.id === `node_${targetId}` || (a.nodeId && a.nodeId === targetId));
+        const targetAction = actionList.find(a => a.id === targetId || a.id === `node_${targetId}` || (a.nodeId && a.nodeId === targetId));
         if (!targetAction || !targetAction.enabled) {
             console.log(`[Action Control] Target action "${targetId}" is missing or disabled — skipping.`);
             continue;
@@ -4664,6 +4697,43 @@ async function runActionControl(act, callStack) {
             if (op === 'start' || op === 'toggle') {
                 await runSinglePressAction(targetAction, resolvedStack).catch(err => console.error(err));
             }
+        } else if (targetAction.mode === 'delay' || targetAction.mode === 'delay_only') {
+            const isRunning = isActionRunning(targetAction.id) || (targetAction.nodeId && isActionRunning(targetAction.nodeId));
+            if (op === 'stop') {
+                emitSignal(act.id, 'control_stop', targetAction.id);
+                abortAction(targetAction.id);
+                if (targetAction.nodeId && targetAction.nodeId !== targetAction.id) {
+                    abortAction(targetAction.nodeId);
+                }
+                abortAction(targetId);
+                console.log(`[Action Control] Stopped / Cancelled Delay: "${targetAction.name}"`);
+            } else if (op === 'start') {
+                if (!isRunning) {
+                    emitSignal(act.id, 'control_start', targetAction.id);
+                    if (global.nodeRegistry && global.nodeRegistry.has(targetAction.mode)) {
+                        global.nodeRegistry.execute(targetAction.mode, { clientPages, activeClients }, targetAction, resolvedStack).catch(err => console.error(err));
+                    } else {
+                        runDelayOnlyAction(targetAction, resolvedStack).catch(err => console.error(err));
+                    }
+                }
+            } else { // toggle
+                if (isRunning) {
+                    emitSignal(act.id, 'control_stop', targetAction.id);
+                    abortAction(targetAction.id);
+                    if (targetAction.nodeId && targetAction.nodeId !== targetAction.id) {
+                        abortAction(targetAction.nodeId);
+                    }
+                    abortAction(targetId);
+                    console.log(`[Action Control] Toggled (Stopped) Delay: "${targetAction.name}"`);
+                } else {
+                    emitSignal(act.id, 'control_start', targetAction.id);
+                    if (global.nodeRegistry && global.nodeRegistry.has(targetAction.mode)) {
+                        global.nodeRegistry.execute(targetAction.mode, { clientPages, activeClients }, targetAction, resolvedStack).catch(err => console.error(err));
+                    } else {
+                        runDelayOnlyAction(targetAction, resolvedStack).catch(err => console.error(err));
+                    }
+                }
+            }
         } else if (targetAction.mode === 'variable') {
             await runVariableAction(targetAction, resolvedStack).catch(err => console.error(err));
         } else if (targetAction.mode === 'control' || targetAction.mode === 'action_control') {
@@ -4688,8 +4758,12 @@ function isActionRunning(actionId) {
     if (typeof global.isActionRunning === 'function' && global.isActionRunning !== isActionRunning) {
         return global.isActionRunning(actionId);
     }
-    const act = activeActions.find(a => a.id === actionId || a.id === `node_${actionId}` || (a.nodeId && a.nodeId === actionId));
-    if (!act) return false;
+    const actionList = (global.activeActions && global.activeActions.length > 0) ? global.activeActions : activeActions;
+    const act = actionList.find(a => a.id === actionId || a.id === `node_${actionId}` || (a.nodeId && a.nodeId === actionId));
+    if (!act) {
+        const altId = String(actionId).startsWith('node_') ? String(actionId).slice(5) : `node_${actionId}`;
+        return !!(actionAbortControllers.has(actionId) || actionAbortControllers.has(altId));
+    }
 
     if (act.mode === 'loop') {
         return !!(activeLoopStates[act.id] && activeLoopStates[act.id].running);
@@ -4705,9 +4779,13 @@ function isActionRunning(actionId) {
         }
     } else if (act.mode === 'loop_scheduler') {
         return !!(activeSchedulerStates[act.id] && activeSchedulerStates[act.id].running);
+    } else if (act.mode === 'delay' || act.mode === 'delay_only') {
+        const altId = String(act.id).startsWith('node_') ? String(act.id).slice(5) : `node_${act.id}`;
+        return !!(actionAbortControllers.has(act.id) || actionAbortControllers.has(altId) || (act.nodeId && actionAbortControllers.has(act.nodeId)));
     }
     return false;
 }
+global.isActionRunning = isActionRunning;
 
 async function runActionCondition(act, callStack) {
     const targetId = act.conditionTargetId || act.varName;
@@ -5192,6 +5270,11 @@ if (typeof module !== 'undefined') {
         getVariableKey,
         runActionCondition,
         runConditionGroupAction,
+        runActionControl,
+        abortAction,
+        abortableSleep,
+        isActionRunning,
+        runDelayOnlyAction,
         runEmergencyStopAction,
         runRerouteAction,
         stopAllLoops,
