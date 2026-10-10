@@ -5001,11 +5001,16 @@ function startGlobalListeners() {
         const isUp = e.state === "UP";
         if (!isDown && !isUp) return;
 
+        let isRepeat = false;
         // Track global physical key state for anti-stuck watchdog
         if (e.name) {
             const upperKey = e.name.trim().toUpperCase();
             if (isDown) {
-                physicallyPressedKeys.add(upperKey);
+                if (physicallyPressedKeys.has(upperKey)) {
+                    isRepeat = true;
+                } else {
+                    physicallyPressedKeys.add(upperKey);
+                }
             } else if (isUp) {
                 physicallyPressedKeys.delete(upperKey);
             }
@@ -5021,15 +5026,15 @@ function startGlobalListeners() {
         }
 
         // Handle global suspend hotkey toggle
-        if (isDown && suspendHotkey && e.name && matchKeyTrigger(suspendHotkey, e.name, down, false)) {
+        if (isDown && !isRepeat && suspendHotkey && e.name && matchKeyTrigger(suspendHotkey, e.name, down, false)) {
             global.toggleSuspendState();
             return;
         }
 
         if (global.isSuspended) return;
 
-        // 1. Handle normal actions (loop, buff_sequence, single_press, sound_alert, emergency_stop, etc.) strictly on DOWN state
-        if (isDown) {
+        // 1. Handle normal actions (loop, buff_sequence, single_press, sound_alert, emergency_stop, etc.) strictly on FIRST DOWN state (ignore OS repeat)
+        if (isDown && !isRepeat) {
             const matchedActions = [];
             for (const act of activeActions) {
                 if (!act.enabled || act.mode === 'forward') continue;
