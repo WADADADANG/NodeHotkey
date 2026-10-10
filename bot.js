@@ -205,7 +205,7 @@ let activeSequencerLoops = {};
 let activeOnceSequencers = {};
 let activeOnceBuffSequences = {};
 let activeOnceForwardActions = {};
-let activeOnceForwardTimers = {};
+let physicalKeyToForwardActions = {}; // Maps physicalKey -> Set of trackingKeys
 let isBuffSequenceRunning = {};
 let isSequencerRunning = {};
 let buffSequenceTokens = {};  // Per-action cancellation tokens: { actionId: tokenNumber }
@@ -3099,14 +3099,22 @@ async function runSinglePressAction(action, callStack) {
         forwardTargets.forEach(cIdx => {
             const trackingKey = `${action.id}-${cIdx}`;
             activeOnceForwardActions[trackingKey] = true;
-            if (activeOnceForwardTimers[trackingKey]) {
-                clearTimeout(activeOnceForwardTimers[trackingKey]);
+
+            // Link to whatever physical keys are currently pressed
+            if (physicallyPressedKeys && physicallyPressedKeys.size > 0) {
+                for (const pk of physicallyPressedKeys) {
+                    if (!physicalKeyToForwardActions[pk]) {
+                        physicalKeyToForwardActions[pk] = new Set();
+                    }
+                    physicalKeyToForwardActions[pk].add(trackingKey);
+                }
+            } else {
+                // If triggered via API / click without physical key, clear after brief pulse
+                setTimeout(() => {
+                    delete activeOnceForwardActions[trackingKey];
+                    sendOverlayUpdate(true);
+                }, 200);
             }
-            activeOnceForwardTimers[trackingKey] = setTimeout(() => {
-                delete activeOnceForwardActions[trackingKey];
-                delete activeOnceForwardTimers[trackingKey];
-                sendOverlayUpdate(true);
-            }, 180);
         });
         sendOverlayUpdate(true);
     }
@@ -5014,6 +5022,13 @@ function startGlobalListeners() {
                 }
             } else if (isUp) {
                 physicallyPressedKeys.delete(upperKey);
+                if (physicalKeyToForwardActions[upperKey]) {
+                    for (const tKey of physicalKeyToForwardActions[upperKey]) {
+                        delete activeOnceForwardActions[tKey];
+                    }
+                    delete physicalKeyToForwardActions[upperKey];
+                    sendOverlayUpdate(true);
+                }
             }
         }
 
