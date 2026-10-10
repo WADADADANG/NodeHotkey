@@ -2189,11 +2189,32 @@ body.canvas-is-drafting-wire .canvas-node.node-reroute .node-port {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden !important;
   padding: 8px 10px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   max-height: calc(100vh - 220px);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.variables-list::-webkit-scrollbar {
+  width: 5px;
+  height: 0px;
+}
+
+.variables-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.variables-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.variables-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.45);
 }
 
 .variable-card {
@@ -2609,6 +2630,28 @@ body.canvas-is-drafting-wire .canvas-node.node-reroute .node-port {
   gap: 3px;
   max-height: 130px;
   overflow-y: auto;
+  overflow-x: hidden !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  padding-right: 2px;
+}
+
+.var-ref-nodes-list::-webkit-scrollbar {
+  width: 4px;
+  height: 0px !important;
+}
+
+.var-ref-nodes-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.var-ref-nodes-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+}
+
+.var-ref-nodes-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.45);
 }
 
 .var-ref-node-item {
@@ -2624,6 +2667,9 @@ body.canvas-is-drafting-wire .canvas-node.node-reroute .node-port {
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .var-ref-node-item:hover {
@@ -2656,6 +2702,10 @@ body.canvas-is-drafting-wire .canvas-node.node-reroute .node-port {
   background: rgba(255, 255, 255, 0.06);
   padding: 1px 4px;
   border-radius: 3px;
+  max-width: 105px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   flex-shrink: 0;
 }
 
